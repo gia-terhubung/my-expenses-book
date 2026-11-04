@@ -1,6 +1,6 @@
 {
-  "id": "9f00fa8a-dd98-4937-b506-2c570e4fa50f",
-  "prevId": "f08cb3c7-d6a3-42d9-acf4-7e54159f919a",
+  "id": "0d2b0389-4725-4c7a-acfb-aa9835db72de",
+  "prevId": "693e42c3-c7e6-4773-ae12-df6913033adb",
   "version": "6",
   "dialect": "sqlite",
   "tables": {
@@ -78,6 +78,14 @@
           "notNull": true,
           "autoincrement": false,
           "default": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
         }
       },
       "indexes": {},
@@ -221,7 +229,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "line_items_receipt_id_idx": {
+          "name": "line_items_receipt_id_idx",
+          "columns": [
+            "receipt_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

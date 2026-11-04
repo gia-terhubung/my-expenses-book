@@ -20,6 +20,7 @@ export const categories = sqliteTable("categories", {
   icon: text("icon"),
   color: text("color"),
   isDefault: integer("is_default", { mode: "boolean" }).notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
 });
 
 export const folders = sqliteTable("folders", {
@@ -29,6 +30,15 @@ export const folders = sqliteTable("folders", {
   defaultCurrency: text("default_currency"),
 });
 
+// !!! FTS WARNING !!!
+// `receipts_fts` (external-content FTS5) is kept in sync by triggers
+// receipts_fts_ai / _ad / _au defined in migrations/0001_fts.sql. Any migration
+// that rebuilds `receipts` (drizzle-kit "recreate" pattern: CREATE __new_receipts;
+// INSERT..SELECT; DROP receipts; RENAME) drops those triggers and may change
+// rowids. Such a migration MUST re-create the three triggers and then run
+//   INSERT INTO receipts_fts(receipts_fts) VALUES('rebuild');
+// The same applies to any restore path that copies receipt rows.
+// migrations.test.ts asserts the triggers exist after a full migrate.
 export const receipts = sqliteTable(
   "receipts",
   {
@@ -76,10 +86,14 @@ export const receiptPages = sqliteTable(
   (t) => [index("receipt_pages_receipt_id_idx").on(t.receiptId)],
 );
 
-export const lineItems = sqliteTable("line_items", {
-  ...base,
-  receiptId: text("receipt_id").notNull(),
-  description: text("description").notNull(),
-  qty: integer("qty"),
-  amountMinor: integer("amount_minor").notNull(),
-});
+export const lineItems = sqliteTable(
+  "line_items",
+  {
+    ...base,
+    receiptId: text("receipt_id").notNull(),
+    description: text("description").notNull(),
+    qty: integer("qty"),
+    amountMinor: integer("amount_minor").notNull(),
+  },
+  (t) => [index("line_items_receipt_id_idx").on(t.receiptId)],
+);

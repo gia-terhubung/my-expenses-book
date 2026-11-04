@@ -9,6 +9,6 @@ export function listCategories(db: AppDb): Category[] {
     .select()
     .from(categories)
     .where(isNull(categories.deletedAt))
-    .orderBy(desc(categories.isDefault), asc(categories.createdAt), asc(categories.id))
+    .orderBy(desc(categories.isDefault), asc(categories.sortOrder), asc(categories.nameKey), asc(categories.customName), asc(categories.id))
     .all();
 }

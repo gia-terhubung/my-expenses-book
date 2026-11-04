@@ -8,7 +8,7 @@ import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import * as schema from "./schema";
 import { migrationsFolder } from "./testing/testDb";
 import type { AppDb } from "./types";
-import { searchReceipts } from "./repositories/receipts";
+import { createReceipt, searchReceipts, updateReceipt } from "./repositories/receipts";
 
 const RECEIPT_SQL = `INSERT INTO receipts (id, created_at, updated_at, version, merchant, purchased_at_local,
   purchased_at_utc, scanned_at_utc, currency, total_minor, parse_source, status, fx_approximate, raw_ocr_text)
@@ -39,6 +39,33 @@ describe("migrations", () => {
     // Last migration rebuilds the index, so pre-existing rows are searchable.
     expect(searchReceipts(db as unknown as AppDb, "indom")).toHaveLength(1);
     expect(searchReceipts(db as unknown as AppDb, "kopi")).toHaveLength(1);
+
+    // Guard: a future table-recreate migration must not drop the FTS triggers.
+    const triggers = raw
+      .prepare("SELECT name FROM sqlite_master WHERE type='trigger' ORDER BY name")
+      .all();
+    expect(triggers).toEqual([
+      { name: "receipts_fts_ad" },
+      { name: "receipts_fts_ai" },
+      { name: "receipts_fts_au" },
+    ]);
+
+    // Guard: insert + update through the repositories keep search in sync.
+    const appDb = db as unknown as AppDb;
+    const r = createReceipt(appDb, {
+      merchant: "Alfamart",
+      purchasedAtLocal: "2026-01-02T00:00:00",
+      purchasedAtUtc: 2,
+      scannedAtUtc: 2,
+      currency: "IDR",
+      totalMinor: 1,
+      parseSource: "manual",
+    });
+    expect(searchReceipts(appDb, "alfa").map((x) => x.id)).toEqual([r.id]);
+    updateReceipt(appDb, r.id, { merchant: "Circle K" });
+    expect(searchReceipts(appDb, "alfa")).toEqual([]);
+    expect(searchReceipts(appDb, "circle").map((x) => x.id)).toEqual([r.id]);
+    fs.rmSync(tmp, { recursive: true, force: true });
   });
 
   it("re-running migrate is a no-op and keeps data", () => {

@@ -24,4 +24,11 @@ describe("categories repository", () => {
       expect(c.version).toBe(1);
     }
   });
+
+  it("orders defaults by sort_order, ending with other", () => {
+    const list = listCategories(testDb());
+    expect(list[0].id).toBe("default:food_drink");
+    expect(list[list.length - 1].id).toBe("default:other");
+    expect(list.map((c) => c.sortOrder)).toEqual([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
+  });
 });

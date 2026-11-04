@@ -8,7 +8,8 @@ CREATE TABLE `categories` (
 	`custom_name` text,
 	`icon` text,
 	`color` text,
-	`is_default` integer DEFAULT false NOT NULL
+	`is_default` integer DEFAULT false NOT NULL,
+	`sort_order` integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `folders` (
@@ -34,6 +35,7 @@ CREATE TABLE `line_items` (
 	`amount_minor` integer NOT NULL
 );
 --> statement-breakpoint
+CREATE INDEX `line_items_receipt_id_idx` ON `line_items` (`receipt_id`);--> statement-breakpoint
 CREATE TABLE `receipt_pages` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer NOT NULL,
