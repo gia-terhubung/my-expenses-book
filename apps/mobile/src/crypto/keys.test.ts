@@ -2,6 +2,7 @@ import {
   deriveKey,
   getOrCreateMasterKey,
   MasterKeyCorruptError,
+  resetMasterKey,
   toHex,
   type SecretStore,
 } from "./keys";
@@ -13,6 +14,9 @@ function memoryStore(): SecretStore & { data: Map<string, string> } {
     get: async (k) => data.get(k) ?? null,
     set: async (k, v) => {
       data.set(k, v);
+    },
+    delete: async (k) => {
+      data.delete(k);
     },
   };
 }
@@ -56,6 +60,7 @@ describe("getOrCreateMasterKey hardening", () => {
         return snapshot;
       },
       set,
+      delete: async (k) => void data.delete(k),
     };
     const [a, b] = await Promise.all([getOrCreateMasterKey(store), getOrCreateMasterKey(store)]);
     expect(toHex(a)).toBe(toHex(b));
@@ -73,6 +78,7 @@ describe("getOrCreateMasterKey hardening", () => {
       set: async (k, v) => {
         data.set(k, v);
       },
+      delete: async (k) => void data.delete(k),
     };
     await expect(getOrCreateMasterKey(store)).rejects.toThrow("boom");
     fail = false;
@@ -104,5 +110,24 @@ describe("deriveKey", () => {
       "429433026431108dc544a154647b9032f8adfb7ad71011775daef6219c348a90",
     );
     expect(toHex(deriveKey(master, "prefs"))).toBe("316a78e93926a79ebd163bef76e43348");
+  });
+});
+
+describe("resetMasterKey", () => {
+  it("deletes the stored key so the next call creates a new one", async () => {
+    const store = memoryStore();
+    const first = toHex(await getOrCreateMasterKey(store));
+    await resetMasterKey(store);
+    expect(store.data.has("meb.masterKey.v1")).toBe(false);
+    const second = toHex(await getOrCreateMasterKey(store));
+    expect(second).not.toBe(first);
+  });
+
+  it("recovers from a corrupt stored key", async () => {
+    const store = memoryStore();
+    store.data.set("meb.masterKey.v1", "garbage");
+    await expect(getOrCreateMasterKey(store)).rejects.toBeInstanceOf(MasterKeyCorruptError);
+    await resetMasterKey(store);
+    expect((await getOrCreateMasterKey(store)).length).toBe(32);
   });
 });

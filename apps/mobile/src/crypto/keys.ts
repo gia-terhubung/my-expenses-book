@@ -5,6 +5,7 @@ export type KeyPurpose = "db" | "images" | "prefs";
 export interface SecretStore {
   get(k: string): Promise<string | null>;
   set(k: string, v: string): Promise<void>;
+  delete(k: string): Promise<void>;
 }
 
 const MASTER_KEY_NAME = "meb.masterKey.v1";
@@ -62,4 +63,11 @@ export function deriveKey(master: Uint8Array, purpose: KeyPurpose): Uint8Array {
   return new Uint8Array(
     hkdfSync("sha256", master, new Uint8Array(0), `meb-${purpose}-v1`, KEY_LENGTH[purpose]),
   );
+}
+
+/** Deletes the stored master key (only for the confirmed "erase all local data" reset). */
+export async function resetMasterKey(store: SecretStore): Promise<void> {
+  // Drop any memoized load first so a later getOrCreateMasterKey re-reads the store.
+  inFlight.delete(store);
+  await store.delete(MASTER_KEY_NAME);
 }

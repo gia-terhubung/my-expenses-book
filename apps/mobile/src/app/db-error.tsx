@@ -5,7 +5,7 @@ import { Button, Text, TextInput, View } from "react-native";
 const CONFIRM_WORD = "RESET";
 
 /** Shown by DatabaseProvider when the data cannot be unlocked. Reset is destructive and confirmed. */
-export function DbErrorScreen({ onReset }: { onReset: () => void }) {
+export function DbErrorScreen({ onReset }: { onReset: () => void | Promise<void> }) {
   const [typed, setTyped] = useState("");
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 16 }}>

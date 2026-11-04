@@ -2,6 +2,14 @@ import { drizzle } from "drizzle-orm/expo-sqlite/driver";
 import * as SQLite from "expo-sqlite";
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import {
+  deriveKey,
+  getOrCreateMasterKey,
+  resetMasterKey,
+  toHex,
+  type SecretStore,
+} from "@/crypto/keys";
+
 import * as schema from "./schema";
 import type { AppDb } from "./types";
 
@@ -11,6 +19,13 @@ export class DbKeyMismatchError extends Error {
   constructor() {
     super("Database cannot be unlocked with the current key.");
     this.name = "DbKeyMismatchError";
+  }
+}
+
+export class DbNotEncryptedError extends Error {
+  constructor() {
+    super("SQLCipher is not available in this build; refusing to open an unencrypted database.");
+    this.name = "DbNotEncryptedError";
   }
 }
 
@@ -32,33 +47,66 @@ export function openDatabase(opts: {
   if (!/^[0-9a-f]{64}$/.test(opts.keyHex)) throw new Error("Invalid database key format.");
   const open = opts.open ?? ((n: string) => SQLite.openDatabaseSync(n));
   const raw = open(opts.name ?? DB_NAME);
+  const closeQuietly = () => {
+    try {
+      raw.closeSync();
+    } catch (e) {
+      if (typeof __DEV__ !== "undefined" && __DEV__) console.warn("closeSync failed", e);
+    }
+  };
   try {
+    // Without SQLCipher, PRAGMA key silently no-ops and the DB would be plaintext.
+    const cipher = raw.getFirstSync<{ cipher_version?: string }>("PRAGMA cipher_version");
+    if (!cipher?.cipher_version) throw new DbNotEncryptedError();
     raw.execSync(`PRAGMA key = "x'${opts.keyHex}'"`);
     // PRAGMA key never fails; the first real read does.
     raw.getFirstSync("SELECT count(*) FROM sqlite_master");
   } catch (e) {
-    try {
-      raw.closeSync();
-    } catch {
-      // ignore close failure; original error matters
-    }
+    closeQuietly();
     if (isWrongKeyError(e)) throw new DbKeyMismatchError();
     throw e;
   }
   return drizzle(raw, { schema }) as unknown as AppDb;
 }
 
+/** Loads/creates the master key, derives the db key and opens the DB. */
+export async function openWithStore(opts: {
+  store: SecretStore;
+  open?: (name: string) => SQLiteDatabase;
+}): Promise<AppDb> {
+  const master = await getOrCreateMasterKey(opts.store);
+  return openDatabase({ keyHex: toHex(deriveKey(master, "db")), open: opts.open });
+}
+
+function isNotFoundError(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : String(e);
+  return /not found|no such file|does not exist/i.test(message);
+}
+
 /**
- * Deletes the DB file (and -wal/-shm if present). Only for the explicit, confirmed
- * reset on the db-error screen.
+ * Deletes the DB file (native delete also removes -wal/-shm). A missing file counts as
+ * already deleted; any other error is rethrown.
  */
-export function deleteDatabaseFiles(name: string = DB_NAME): void {
-  SQLite.deleteDatabaseSync(name);
-  for (const suffix of ["-wal", "-shm"]) {
-    try {
-      SQLite.deleteDatabaseSync(name + suffix);
-    } catch {
-      // sidecar not present
-    }
+export function deleteDatabaseFiles(
+  name: string = DB_NAME,
+  del: (name: string) => void = (n) => SQLite.deleteDatabaseSync(n),
+): void {
+  try {
+    del(name);
+  } catch (e) {
+    if (!isNotFoundError(e)) throw e;
   }
+}
+
+/**
+ * Confirmed "erase all local app data": DB files first, then the master key. If the file
+ * delete fails the key is kept, so the data is not left unreadable-but-present.
+ * TODO: prefs (MMKV) and images join this reset in later tasks.
+ */
+export async function resetLocalData(opts: {
+  store: SecretStore;
+  deleteFiles?: () => void;
+}): Promise<void> {
+  (opts.deleteFiles ?? (() => deleteDatabaseFiles()))();
+  await resetMasterKey(opts.store);
 }

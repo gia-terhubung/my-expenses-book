@@ -4,10 +4,10 @@ import type { ReactNode } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 
 import { DbErrorScreen } from "@/app/db-error";
-import { deriveKey, getOrCreateMasterKey, MasterKeyCorruptError, toHex } from "@/crypto/keys";
+import { MasterKeyCorruptError } from "@/crypto/keys";
 import { expoSecretStore } from "@/crypto/secureStore";
 
-import { DbKeyMismatchError, deleteDatabaseFiles, openDatabase } from "./client";
+import { DbKeyMismatchError, openWithStore, resetLocalData } from "./client";
 import migrations from "./migrations/migrations";
 import type { AppDb } from "./types";
 
@@ -55,28 +55,36 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const master = await getOrCreateMasterKey(expoSecretStore);
-        const db = openDatabase({ keyHex: toHex(deriveKey(master, "db")) });
+    openWithStore({ store: expoSecretStore }).then(
+      (db) => {
         if (!cancelled) setState({ status: "ready", db });
-      } catch (e) {
+      },
+      (e) => {
         if (cancelled) return;
         if (e instanceof DbKeyMismatchError || e instanceof MasterKeyCorruptError) {
           setState({ status: "locked" });
         } else {
           setState({ status: "failed", message: e instanceof Error ? e.message : String(e) });
         }
-      }
-    })();
+      },
+    );
     return () => {
       cancelled = true;
     };
   }, [attempt]);
 
-  // Only path allowed to delete the DB; DbErrorScreen gates it behind typing RESET.
-  const reset = useCallback(() => {
-    deleteDatabaseFiles();
+  // Only path allowed to delete the DB and key; DbErrorScreen gates it behind typing RESET.
+  // A failure shows an error state (no retry loop); the locked handle was already closed.
+  const reset = useCallback(async () => {
+    try {
+      await resetLocalData({ store: expoSecretStore });
+    } catch (e) {
+      setState({
+        status: "failed",
+        message: `Reset failed: ${e instanceof Error ? e.message : String(e)}`,
+      });
+      return;
+    }
     setState({ status: "opening" });
     setAttempt((a) => a + 1);
   }, []);

@@ -1,6 +1,15 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
-import { DbKeyMismatchError, openDatabase } from "./client";
+import { MasterKeyCorruptError, type SecretStore } from "@/crypto/keys";
+
+import {
+  DbKeyMismatchError,
+  DbNotEncryptedError,
+  deleteDatabaseFiles,
+  openDatabase,
+  openWithStore,
+  resetLocalData,
+} from "./client";
 
 // Native module; only the injected `open` is used in these tests.
 jest.mock("expo-sqlite", () => ({}));
@@ -8,13 +17,17 @@ jest.mock("expo-sqlite", () => ({}));
 const KEY = "ab".repeat(32);
 const WRONG_KEY_MESSAGE = "Error code 26: file is not a database";
 
-function fakeOpen(opts: { readError?: Error; log: string[] }) {
+function fakeOpen(opts: { readError?: Error; cipherVersion?: string | null; log: string[] }) {
   const db = {
     execSync: (sql: string) => {
       opts.log.push(sql);
     },
     getFirstSync: (sql: string) => {
       opts.log.push(sql);
+      if (sql === "PRAGMA cipher_version") {
+        const v = opts.cipherVersion === undefined ? "4.17.0 community" : opts.cipherVersion;
+        return v === null ? null : { cipher_version: v };
+      }
       if (opts.readError) throw opts.readError;
       return { c: 0 };
     },
@@ -39,11 +52,21 @@ describe("openDatabase", () => {
     expect(() => openDatabase({ keyHex: KEY, open })).toThrow(err);
   });
 
-  it("returns a db; first statement is exactly PRAGMA key", () => {
+  it("returns a db; cipher_version check first, then PRAGMA key before any data access", () => {
     const log: string[] = [];
     const db = openDatabase({ keyHex: KEY, open: fakeOpen({ log }) });
     expect(db).toBeDefined();
-    expect(log[0]).toBe(`PRAGMA key = "x'${KEY}'"`);
+    expect(log[0]).toBe("PRAGMA cipher_version");
+    expect(log[1]).toBe(`PRAGMA key = "x'${KEY}'"`);
+    expect(log[2]).toBe("SELECT count(*) FROM sqlite_master");
+  });
+
+  it.each([null, ""])("throws DbNotEncryptedError and closes when cipher_version is %j", (v) => {
+    const log: string[] = [];
+    const open = fakeOpen({ cipherVersion: v, log });
+    expect(() => openDatabase({ keyHex: KEY, open })).toThrow(DbNotEncryptedError);
+    expect(log).toContain("close");
+    expect(log.some((l) => l.startsWith("PRAGMA key"))).toBe(false);
   });
 
   it("opens meb.db by default", () => {
@@ -63,5 +86,72 @@ describe("openDatabase", () => {
     const log: string[] = [];
     expect(() => openDatabase({ keyHex: "zz", open: fakeOpen({ log }) })).toThrow(/key/i);
     expect(log).toHaveLength(0);
+  });
+});
+
+describe("deleteDatabaseFiles", () => {
+  it("treats a database-not-found error as already deleted", () => {
+    const del = jest.fn(() => {
+      throw new Error("Database not found: meb.db");
+    });
+    expect(() => deleteDatabaseFiles("meb.db", del)).not.toThrow();
+  });
+
+  it("rethrows any other delete error", () => {
+    const err = new Error("permission denied");
+    expect(() =>
+      deleteDatabaseFiles("meb.db", () => {
+        throw err;
+      }),
+    ).toThrow(err);
+  });
+});
+
+describe("reset flow", () => {
+  function store(initial?: string): SecretStore & { data: Map<string, string> } {
+    const data = new Map<string, string>();
+    if (initial) data.set("meb.masterKey.v1", initial);
+    return {
+      data,
+      get: async (k) => data.get(k) ?? null,
+      set: async (k, v) => void data.set(k, v),
+      delete: async (k) => void data.delete(k),
+    };
+  }
+
+  it("corrupt key -> locked; after resetLocalData -> opens fresh", async () => {
+    const s = store("garbage");
+    const open = fakeOpen({ log: [] });
+    await expect(openWithStore({ store: s, open })).rejects.toBeInstanceOf(MasterKeyCorruptError);
+
+    const deleteFiles = jest.fn();
+    await resetLocalData({ store: s, deleteFiles });
+    expect(deleteFiles).toHaveBeenCalledTimes(1);
+
+    await expect(openWithStore({ store: s, open })).resolves.toBeDefined();
+    expect(s.data.get("meb.masterKey.v1")).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("deletes files before the key, and keeps the key if file delete fails", async () => {
+    const s = store("ab".repeat(32));
+    const order: string[] = [];
+    const sd = s.delete;
+    s.delete = async (k) => {
+      order.push("key");
+      await sd(k);
+    };
+    await resetLocalData({ store: s, deleteFiles: () => void order.push("files") });
+    expect(order).toEqual(["files", "key"]);
+
+    const s2 = store("cd".repeat(32));
+    await expect(
+      resetLocalData({
+        store: s2,
+        deleteFiles: () => {
+          throw new Error("boom");
+        },
+      }),
+    ).rejects.toThrow("boom");
+    expect(s2.data.has("meb.masterKey.v1")).toBe(true);
   });
 });

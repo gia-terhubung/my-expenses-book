@@ -8,4 +8,5 @@ const options: SecureStore.SecureStoreOptions = {
 export const expoSecretStore: SecretStore = {
   get: (k) => SecureStore.getItemAsync(k, options),
   set: (k, v) => SecureStore.setItemAsync(k, v, options),
+  delete: (k) => SecureStore.deleteItemAsync(k, options),
 };
