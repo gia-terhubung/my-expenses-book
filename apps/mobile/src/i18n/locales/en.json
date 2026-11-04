@@ -1,0 +1,69 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "done": "Done",
+    "next": "Next",
+    "back": "Back",
+    "continue": "Continue",
+    "loading": "Loading…",
+    "search": "Search",
+    "error": "Something went wrong"
+  },
+  "tabs": {
+    "receipts": "Receipts",
+    "folders": "Folders",
+    "scan": "Scan",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "onboarding": {
+    "welcome": "Welcome to My Expenses Book",
+    "languageTitle": "Choose your language",
+    "currencyTitle": "Choose your home currency",
+    "currencyHint": "Totals and reports use this currency. You can change it later.",
+    "lockTitle": "Protect your receipts",
+    "lockHint": "Require Face ID, fingerprint or your device passcode to open the app.",
+    "lockEnable": "Turn on app lock",
+    "lockSkip": "Not now",
+    "getStarted": "Get started"
+  },
+  "lock": {
+    "title": "My Expenses Book is locked",
+    "unlock": "Unlock",
+    "reason": "Unlock to view your receipts",
+    "failed": "Authentication failed. Try again.",
+    "unavailable": "Biometrics are not available on this device. Your device passcode will be used."
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "homeCurrency": "Home currency",
+    "appLock": "App lock",
+    "lockTimeout": "Lock after",
+    "lockTimeoutImmediately": "Immediately",
+    "lockTimeoutMinutes_one": "{{count}} minute",
+    "lockTimeoutMinutes_other": "{{count}} minutes",
+    "taxYearStart": "Tax year starts in",
+    "backup": "Backup",
+    "about": "About"
+  },
+  "dbError": {
+    "title": "Your data can't be unlocked on this device. Restore from a backup or reset.",
+    "resetWarning": "Resetting permanently deletes all data on this device. Type {{word}} to confirm.",
+    "resetButton": "Reset data"
+  },
+  "categories": {
+    "food_drink": "Food & Drink",
+    "transport": "Transport",
+    "lodging": "Lodging",
+    "groceries": "Groceries",
+    "shopping": "Shopping",
+    "utilities": "Utilities",
+    "health": "Health",
+    "office": "Office",
+    "entertainment": "Entertainment",
+    "other": "Other"
+  }
+}

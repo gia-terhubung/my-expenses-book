@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import { createPrefs } from "@/prefs/prefs";
 import { MasterKeyCorruptError, type SecretStore } from "@/crypto/keys";
 
 import {
@@ -125,7 +126,7 @@ describe("reset flow", () => {
     await expect(openWithStore({ store: s, open })).rejects.toBeInstanceOf(MasterKeyCorruptError);
 
     const deleteFiles = jest.fn();
-    await resetLocalData({ store: s, deleteFiles });
+    await resetLocalData({ store: s, deleteFiles, wipePrefs: jest.fn() });
     expect(deleteFiles).toHaveBeenCalledTimes(1);
 
     await expect(openWithStore({ store: s, open })).resolves.toBeDefined();
@@ -140,18 +141,49 @@ describe("reset flow", () => {
       order.push("key");
       await sd(k);
     };
-    await resetLocalData({ store: s, deleteFiles: () => void order.push("files") });
-    expect(order).toEqual(["files", "key"]);
+    await resetLocalData({
+      store: s,
+      deleteFiles: () => void order.push("files"),
+      wipePrefs: () => void order.push("prefs"),
+    });
+    expect(order).toEqual(["files", "prefs", "key"]);
 
     const s2 = store("cd".repeat(32));
     await expect(
       resetLocalData({
         store: s2,
+        wipePrefs: jest.fn(),
         deleteFiles: () => {
           throw new Error("boom");
         },
       }),
     ).rejects.toThrow("boom");
+    expect(s2.data.has("meb.masterKey.v1")).toBe(true);
+  });
+
+  it("wipes prefs on reset, and keeps the key if the prefs wipe fails", async () => {
+    const kv = new Map<string, string>([["homeCurrency", '"IDR"']]);
+    const prefs = createPrefs({
+      getString: (k) => kv.get(k),
+      set: (k, v) => void kv.set(k, v),
+      delete: (k) => void kv.delete(k),
+    });
+    const s = store("ab".repeat(32));
+    await resetLocalData({ store: s, deleteFiles: jest.fn(), wipePrefs: () => prefs.reset() });
+    expect(prefs.get("homeCurrency")).toBeNull();
+    expect(kv.size).toBe(0);
+    expect(s.data.has("meb.masterKey.v1")).toBe(false);
+
+    const s2 = store("cd".repeat(32));
+    await expect(
+      resetLocalData({
+        store: s2,
+        deleteFiles: jest.fn(),
+        wipePrefs: () => {
+          throw new Error("prefs boom");
+        },
+      }),
+    ).rejects.toThrow("prefs boom");
     expect(s2.data.has("meb.masterKey.v1")).toBe(true);
   });
 });

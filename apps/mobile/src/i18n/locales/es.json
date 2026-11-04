@@ -1,0 +1,69 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "done": "Listo",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "loading": "Cargando…",
+    "search": "Buscar",
+    "error": "Algo salió mal"
+  },
+  "tabs": {
+    "receipts": "Recibos",
+    "folders": "Carpetas",
+    "scan": "Escanear",
+    "reports": "Informes",
+    "settings": "Ajustes"
+  },
+  "onboarding": {
+    "welcome": "Te damos la bienvenida a My Expenses Book",
+    "languageTitle": "Elige tu idioma",
+    "currencyTitle": "Elige tu moneda principal",
+    "currencyHint": "Los totales y los informes usan esta moneda. Puedes cambiarla más tarde.",
+    "lockTitle": "Protege tus recibos",
+    "lockHint": "Exige Face ID, huella digital o el código del dispositivo para abrir la app.",
+    "lockEnable": "Activar bloqueo de la app",
+    "lockSkip": "Ahora no",
+    "getStarted": "Empezar"
+  },
+  "lock": {
+    "title": "My Expenses Book está bloqueada",
+    "unlock": "Desbloquear",
+    "reason": "Desbloquea para ver tus recibos",
+    "failed": "Falló la autenticación. Inténtalo de nuevo.",
+    "unavailable": "La biometría no está disponible en este dispositivo. Se usará el código del dispositivo."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "homeCurrency": "Moneda principal",
+    "appLock": "Bloqueo de la app",
+    "lockTimeout": "Bloquear después de",
+    "lockTimeoutImmediately": "Inmediatamente",
+    "lockTimeoutMinutes_one": "{{count}} minuto",
+    "lockTimeoutMinutes_other": "{{count}} minutos",
+    "taxYearStart": "El año fiscal comienza en",
+    "backup": "Copia de seguridad",
+    "about": "Acerca de"
+  },
+  "dbError": {
+    "title": "No se pueden desbloquear tus datos en este dispositivo. Restaura una copia de seguridad o restablece.",
+    "resetWarning": "Al restablecer se eliminan de forma permanente todos los datos de este dispositivo. Escribe {{word}} para confirmar.",
+    "resetButton": "Restablecer datos"
+  },
+  "categories": {
+    "food_drink": "Comida y bebida",
+    "transport": "Transporte",
+    "lodging": "Alojamiento",
+    "groceries": "Supermercado",
+    "shopping": "Compras",
+    "utilities": "Servicios",
+    "health": "Salud",
+    "office": "Oficina",
+    "entertainment": "Ocio",
+    "other": "Otros"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "common": {
+    "cancel": "Batal",
+    "save": "Simpan",
+    "delete": "Hapus",
+    "done": "Selesai",
+    "next": "Berikutnya",
+    "back": "Kembali",
+    "continue": "Lanjutkan",
+    "loading": "Memuat…",
+    "search": "Cari",
+    "error": "Terjadi kesalahan"
+  },
+  "tabs": {
+    "receipts": "Struk",
+    "folders": "Folder",
+    "scan": "Pindai",
+    "reports": "Laporan",
+    "settings": "Pengaturan"
+  },
+  "onboarding": {
+    "welcome": "Selamat datang di My Expenses Book",
+    "languageTitle": "Pilih bahasa Anda",
+    "currencyTitle": "Pilih mata uang utama Anda",
+    "currencyHint": "Total dan laporan memakai mata uang ini. Anda dapat mengubahnya nanti.",
+    "lockTitle": "Lindungi struk Anda",
+    "lockHint": "Wajibkan Face ID, sidik jari, atau kode sandi perangkat untuk membuka aplikasi.",
+    "lockEnable": "Aktifkan kunci aplikasi",
+    "lockSkip": "Nanti saja",
+    "getStarted": "Mulai"
+  },
+  "lock": {
+    "title": "My Expenses Book terkunci",
+    "unlock": "Buka kunci",
+    "reason": "Buka kunci untuk melihat struk Anda",
+    "failed": "Autentikasi gagal. Coba lagi.",
+    "unavailable": "Biometrik tidak tersedia di perangkat ini. Kode sandi perangkat akan digunakan."
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "language": "Bahasa",
+    "homeCurrency": "Mata uang utama",
+    "appLock": "Kunci aplikasi",
+    "lockTimeout": "Kunci setelah",
+    "lockTimeoutImmediately": "Segera",
+    "lockTimeoutMinutes_one": "{{count}} menit",
+    "lockTimeoutMinutes_other": "{{count}} menit",
+    "taxYearStart": "Tahun pajak dimulai pada",
+    "backup": "Cadangan",
+    "about": "Tentang"
+  },
+  "dbError": {
+    "title": "Data Anda tidak dapat dibuka di perangkat ini. Pulihkan dari cadangan atau setel ulang.",
+    "resetWarning": "Menyetel ulang akan menghapus semua data di perangkat ini secara permanen. Ketik {{word}} untuk mengonfirmasi.",
+    "resetButton": "Setel ulang data"
+  },
+  "categories": {
+    "food_drink": "Makanan & Minuman",
+    "transport": "Transportasi",
+    "lodging": "Akomodasi",
+    "groceries": "Belanja Harian",
+    "shopping": "Belanja",
+    "utilities": "Tagihan & Utilitas",
+    "health": "Kesehatan",
+    "office": "Kantor",
+    "entertainment": "Hiburan",
+    "other": "Lainnya"
+  }
+}

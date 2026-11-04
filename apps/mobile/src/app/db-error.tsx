@@ -1,19 +1,21 @@
 import { Redirect } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Text, TextInput, View } from "react-native";
 
 const CONFIRM_WORD = "RESET";
 
 /** Shown by DatabaseProvider when the data cannot be unlocked. Reset is destructive and confirmed. */
 export function DbErrorScreen({ onReset }: { onReset: () => void | Promise<void> }) {
+  const { t } = useTranslation();
   const [typed, setTyped] = useState("");
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 16 }}>
       <Text style={{ fontSize: 20, fontWeight: "600" }}>
-        Your data can&apos;t be unlocked on this device. Restore from a backup or reset.
+        {t("dbError.title")}
       </Text>
       <Text>
-        Resetting permanently deletes all data on this device. Type {CONFIRM_WORD} to confirm.
+        {t("dbError.resetWarning", { word: CONFIRM_WORD })}
       </Text>
       <TextInput
         value={typed}
@@ -24,7 +26,7 @@ export function DbErrorScreen({ onReset }: { onReset: () => void | Promise<void>
         style={{ borderWidth: 1, borderRadius: 8, padding: 12 }}
       />
       <Button
-        title="Reset data"
+        title={t("dbError.resetButton")}
         color="#b00020"
         disabled={typed !== CONFIRM_WORD}
         onPress={onReset}

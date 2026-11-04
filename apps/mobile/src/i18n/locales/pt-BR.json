@@ -1,0 +1,69 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "done": "Concluir",
+    "next": "Avançar",
+    "back": "Voltar",
+    "continue": "Continuar",
+    "loading": "Carregando…",
+    "search": "Buscar",
+    "error": "Algo deu errado"
+  },
+  "tabs": {
+    "receipts": "Recibos",
+    "folders": "Pastas",
+    "scan": "Escanear",
+    "reports": "Relatórios",
+    "settings": "Ajustes"
+  },
+  "onboarding": {
+    "welcome": "Boas-vindas ao My Expenses Book",
+    "languageTitle": "Escolha seu idioma",
+    "currencyTitle": "Escolha sua moeda principal",
+    "currencyHint": "Os totais e relatórios usam esta moeda. Você pode alterá-la depois.",
+    "lockTitle": "Proteja seus recibos",
+    "lockHint": "Exija Face ID, impressão digital ou a senha do aparelho para abrir o app.",
+    "lockEnable": "Ativar bloqueio do app",
+    "lockSkip": "Agora não",
+    "getStarted": "Começar"
+  },
+  "lock": {
+    "title": "O My Expenses Book está bloqueado",
+    "unlock": "Desbloquear",
+    "reason": "Desbloqueie para ver seus recibos",
+    "failed": "Falha na autenticação. Tente novamente.",
+    "unavailable": "A biometria não está disponível neste aparelho. A senha do aparelho será usada."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "homeCurrency": "Moeda principal",
+    "appLock": "Bloqueio do app",
+    "lockTimeout": "Bloquear após",
+    "lockTimeoutImmediately": "Imediatamente",
+    "lockTimeoutMinutes_one": "{{count}} minuto",
+    "lockTimeoutMinutes_other": "{{count}} minutos",
+    "taxYearStart": "O ano fiscal começa em",
+    "backup": "Backup",
+    "about": "Sobre"
+  },
+  "dbError": {
+    "title": "Não foi possível desbloquear seus dados neste aparelho. Restaure um backup ou redefina.",
+    "resetWarning": "Redefinir exclui permanentemente todos os dados deste aparelho. Digite {{word}} para confirmar.",
+    "resetButton": "Redefinir dados"
+  },
+  "categories": {
+    "food_drink": "Alimentação e bebidas",
+    "transport": "Transporte",
+    "lodging": "Hospedagem",
+    "groceries": "Mercado",
+    "shopping": "Compras",
+    "utilities": "Contas e serviços",
+    "health": "Saúde",
+    "office": "Escritório",
+    "entertainment": "Lazer",
+    "other": "Outros"
+  }
+}

@@ -6,6 +6,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { DbErrorScreen } from "@/app/db-error";
 import { MasterKeyCorruptError } from "@/crypto/keys";
 import { expoSecretStore } from "@/crypto/secureStore";
+import { deletePrefsStorage } from "@/prefs/storage";
 
 import { DbKeyMismatchError, openWithStore, resetLocalData } from "./client";
 import migrations from "./migrations/migrations";
@@ -77,7 +78,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   // A failure shows an error state (no retry loop); the locked handle was already closed.
   const reset = useCallback(async () => {
     try {
-      await resetLocalData({ store: expoSecretStore });
+      await resetLocalData({ store: expoSecretStore, wipePrefs: deletePrefsStorage });
     } catch (e) {
       setState({
         status: "failed",
