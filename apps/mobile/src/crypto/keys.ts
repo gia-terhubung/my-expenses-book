@@ -24,12 +24,37 @@ function fromHex(hex: string): Uint8Array {
   return out;
 }
 
-export async function getOrCreateMasterKey(store: SecretStore): Promise<Uint8Array> {
+export class MasterKeyCorruptError extends Error {
+  constructor() {
+    super("Stored master key is malformed; refusing to overwrite it.");
+    this.name = "MasterKeyCorruptError";
+  }
+}
+
+const inFlight = new WeakMap<SecretStore, Promise<Uint8Array>>();
+
+async function loadOrCreate(store: SecretStore): Promise<Uint8Array> {
   const existing = await store.get(MASTER_KEY_NAME);
-  if (existing && /^[0-9a-f]{64}$/.test(existing)) return fromHex(existing);
+  if (existing !== null) {
+    if (!/^[0-9a-f]{64}$/.test(existing)) throw new MasterKeyCorruptError();
+    return fromHex(existing);
+  }
   const key = new Uint8Array(randomBytes(32));
   await store.set(MASTER_KEY_NAME, toHex(key));
   return key;
+}
+
+export function getOrCreateMasterKey(store: SecretStore): Promise<Uint8Array> {
+  const pending = inFlight.get(store);
+  if (pending) return pending;
+  const p = loadOrCreate(store);
+  inFlight.set(store, p);
+  // Clear on settle so a failure can be retried and later calls re-read the store.
+  const clear = () => {
+    if (inFlight.get(store) === p) inFlight.delete(store);
+  };
+  p.then(clear, clear);
+  return p;
 }
 
 export function deriveKey(master: Uint8Array, purpose: KeyPurpose): Uint8Array {
