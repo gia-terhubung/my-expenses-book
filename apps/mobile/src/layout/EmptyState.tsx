@@ -1,12 +1,14 @@
 import { StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/theme/ThemeProvider";
 
 /** Placeholder screen body: translated title plus empty-state text. */
 export function EmptyState({ title, message, children }: { title: string; message?: string; children?: React.ReactNode }) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.fill, { backgroundColor: theme.colors.background, padding: theme.spacing.xl, gap: theme.spacing.md }]}>
+    <View style={[styles.fill, { backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingTop: insets.top + theme.spacing.xl, gap: theme.spacing.md }]}>
       <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
         {title}
       </Text>

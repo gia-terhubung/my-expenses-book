@@ -5,11 +5,11 @@ import { useSyncExternalStore } from "react";
 import { initI18n } from "@/i18n";
 import { useWindowClass } from "@/layout/useWindowClass";
 
-import TabsLayout from "./_layout";
-import Folders from "./folders";
-import Index from "./index";
-import Search from "./search";
-import Settings from "./settings";
+import TabsLayout from "@/app/(tabs)/_layout";
+import Folders from "@/app/(tabs)/folders";
+import Index from "@/app/(tabs)/index";
+import Search from "@/app/(tabs)/search";
+import Settings from "@/app/(tabs)/settings";
 
 // Mutable window class that re-renders subscribers, like a real resize would.
 type WC = "compact" | "medium" | "expanded";
