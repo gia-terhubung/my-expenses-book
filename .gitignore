@@ -1,3 +1,4 @@
 .superpowers/
 .DS_Store
-spikes/receipts/
+**/spikes/receipts/
+**/spikes/ocr-dumps/
