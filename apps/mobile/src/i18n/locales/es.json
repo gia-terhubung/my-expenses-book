@@ -16,7 +16,8 @@
     "folders": "Carpetas",
     "scan": "Escanear",
     "reports": "Informes",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "search": "Buscar"
   },
   "onboarding": {
     "welcome": "Te damos la bienvenida a My Expenses Book",
@@ -47,7 +48,8 @@
     "lockTimeoutMinutes_other": "{{count}} minutos",
     "taxYearStart": "El año fiscal comienza en",
     "backup": "Copia de seguridad",
-    "about": "Acerca de"
+    "about": "Acerca de",
+    "devTools": "Herramientas de desarrollo"
   },
   "dbError": {
     "title": "No se pueden desbloquear tus datos en este dispositivo. Restaura una copia de seguridad o restablece.",
@@ -65,5 +67,14 @@
     "office": "Oficina",
     "entertainment": "Ocio",
     "other": "Otros"
+  },
+  "empty": {
+    "receipts": "Aún no hay recibos. Los recibos escaneados aparecerán aquí.",
+    "search": "Busca tus recibos por comercio, nota o importe.",
+    "folders": "Aún no hay carpetas. Crea una para agrupar recibos.",
+    "document": "Los detalles del recibo aparecerán aquí."
+  },
+  "document": {
+    "title": "Recibo"
   }
 }

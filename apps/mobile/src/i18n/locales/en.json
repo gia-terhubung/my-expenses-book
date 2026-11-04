@@ -16,7 +16,8 @@
     "folders": "Folders",
     "scan": "Scan",
     "reports": "Reports",
-    "settings": "Settings"
+    "settings": "Settings",
+    "search": "Search"
   },
   "onboarding": {
     "welcome": "Welcome to My Expenses Book",
@@ -47,7 +48,8 @@
     "lockTimeoutMinutes_other": "{{count}} minutes",
     "taxYearStart": "Tax year starts in",
     "backup": "Backup",
-    "about": "About"
+    "about": "About",
+    "devTools": "Developer tools"
   },
   "dbError": {
     "title": "Your data can't be unlocked on this device. Restore from a backup or reset.",
@@ -65,5 +67,14 @@
     "office": "Office",
     "entertainment": "Entertainment",
     "other": "Other"
+  },
+  "empty": {
+    "receipts": "No receipts yet. Scanned receipts will show up here.",
+    "search": "Search your receipts by merchant, note or amount.",
+    "folders": "No folders yet. Create one to group receipts.",
+    "document": "Receipt details will appear here."
+  },
+  "document": {
+    "title": "Receipt"
   }
 }

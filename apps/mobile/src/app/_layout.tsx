@@ -6,6 +6,7 @@ import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { initI18n } from "@/i18n";
 import { resolveLanguage } from "@/i18n/resolve";
 import { PrefsProvider } from "@/prefs/PrefsProvider";
+import { ThemeProvider } from "@/theme/ThemeProvider";
 
 // Provides global crypto.getRandomValues (needed by uuidv7).
 install();
@@ -16,10 +17,14 @@ initI18n(resolveLanguage(getLocales()));
 
 export default function RootLayout() {
   return (
-    <DatabaseProvider>
-      <PrefsProvider>
-        <Stack />
-      </PrefsProvider>
-    </DatabaseProvider>
+    <ThemeProvider>
+      <DatabaseProvider>
+        <PrefsProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
+          </Stack>
+        </PrefsProvider>
+      </DatabaseProvider>
+    </ThemeProvider>
   );
 }

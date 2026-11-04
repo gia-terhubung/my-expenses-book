@@ -16,7 +16,8 @@
     "folders": "Folder",
     "scan": "Pindai",
     "reports": "Laporan",
-    "settings": "Pengaturan"
+    "settings": "Pengaturan",
+    "search": "Cari"
   },
   "onboarding": {
     "welcome": "Selamat datang di My Expenses Book",
@@ -47,7 +48,8 @@
     "lockTimeoutMinutes_other": "{{count}} menit",
     "taxYearStart": "Tahun pajak dimulai pada",
     "backup": "Cadangan",
-    "about": "Tentang"
+    "about": "Tentang",
+    "devTools": "Alat pengembang"
   },
   "dbError": {
     "title": "Data Anda tidak dapat dibuka di perangkat ini. Pulihkan dari cadangan atau setel ulang.",
@@ -65,5 +67,14 @@
     "office": "Kantor",
     "entertainment": "Hiburan",
     "other": "Lainnya"
+  },
+  "empty": {
+    "receipts": "Belum ada struk. Struk yang dipindai akan muncul di sini.",
+    "search": "Cari struk berdasarkan toko, catatan, atau jumlah.",
+    "folders": "Belum ada folder. Buat satu untuk mengelompokkan struk.",
+    "document": "Detail struk akan muncul di sini."
+  },
+  "document": {
+    "title": "Struk"
   }
 }

@@ -16,7 +16,8 @@
     "folders": "Pastas",
     "scan": "Escanear",
     "reports": "Relatórios",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "search": "Buscar"
   },
   "onboarding": {
     "welcome": "Boas-vindas ao My Expenses Book",
@@ -47,7 +48,8 @@
     "lockTimeoutMinutes_other": "{{count}} minutos",
     "taxYearStart": "O ano fiscal começa em",
     "backup": "Backup",
-    "about": "Sobre"
+    "about": "Sobre",
+    "devTools": "Ferramentas de desenvolvedor"
   },
   "dbError": {
     "title": "Não foi possível desbloquear seus dados neste aparelho. Restaure um backup ou redefina.",
@@ -65,5 +67,14 @@
     "office": "Escritório",
     "entertainment": "Lazer",
     "other": "Outros"
+  },
+  "empty": {
+    "receipts": "Nenhum recibo ainda. Os recibos digitalizados aparecerão aqui.",
+    "search": "Busque seus recibos por estabelecimento, nota ou valor.",
+    "folders": "Nenhuma pasta ainda. Crie uma para agrupar recibos.",
+    "document": "Os detalhes do recibo aparecerão aqui."
+  },
+  "document": {
+    "title": "Recibo"
   }
 }
