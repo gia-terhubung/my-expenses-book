@@ -14,13 +14,29 @@ export function LockScreen({ onUnlock }: { onUnlock: () => Promise<boolean> }) {
 
   return (
     <View
-      style={[StyleSheet.absoluteFill, styles.center, { backgroundColor: colors.background, padding: spacing.xl }]}
+      style={[
+        StyleSheet.absoluteFill,
+        styles.center,
+        { backgroundColor: colors.background, padding: spacing.xl },
+      ]}
       testID="lock-screen"
     >
-      <View style={{ maxWidth: 420, width: "100%", alignItems: "center", gap: spacing.lg }}>
-        <Text style={[type.title, { color: colors.text, textAlign: "center" }]}>{t("lock.title")}</Text>
+      <View
+        style={{
+          maxWidth: 420,
+          width: "100%",
+          alignItems: "center",
+          gap: spacing.lg,
+        }}
+      >
+        <Text style={[type.title, { color: colors.text, textAlign: "center" }]}>
+          {t("lock.title")}
+        </Text>
         {failed ? (
-          <Text accessibilityRole="alert" style={[type.body, { color: colors.danger, textAlign: "center" }]}>
+          <Text
+            accessibilityRole="alert"
+            style={[type.body, { color: colors.danger, textAlign: "center" }]}
+          >
             {t("lock.failed")}
           </Text>
         ) : null}
@@ -36,7 +52,9 @@ export function LockScreen({ onUnlock }: { onUnlock: () => Promise<boolean> }) {
             justifyContent: "center",
           }}
         >
-          <Text style={[type.body, { color: colors.onPrimary, fontWeight: "600" }]}>
+          <Text
+            style={[type.body, { color: colors.onPrimary, fontWeight: "600" }]}
+          >
             {failed ? t("lock.retry") : t("lock.unlock")}
           </Text>
         </Pressable>
@@ -45,4 +63,6 @@ export function LockScreen({ onUnlock }: { onUnlock: () => Promise<boolean> }) {
   );
 }
 
-const styles = StyleSheet.create({ center: { alignItems: "center", justifyContent: "center" } });
+const styles = StyleSheet.create({
+  center: { alignItems: "center", justifyContent: "center" },
+});
