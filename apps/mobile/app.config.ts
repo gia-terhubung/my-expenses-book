@@ -31,6 +31,7 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    ["expo-sqlite", { useSQLCipher: true }],
     [
       "expo-splash-screen",
       {
