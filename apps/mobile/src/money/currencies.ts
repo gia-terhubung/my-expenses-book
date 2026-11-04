@@ -4,7 +4,7 @@
  * codes (XAU, XDR, XTS, XXX, CLF, UYI, ...) are intentionally excluded.
  * IDR is 2 per ISO even though it is used without decimals in practice.
  */
-export const CURRENCIES: ReadonlyArray<{ code: string; exponent: number }> = [
+export const CURRENCIES: readonly { code: string; exponent: number }[] = [
   { code: 'AED', exponent: 2 },
   { code: 'AFN', exponent: 2 },
   { code: 'ALL', exponent: 2 },
