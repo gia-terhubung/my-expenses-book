@@ -18,12 +18,12 @@ function memoryStore(): SecretStore & { data: Map<string, string> } {
 }
 
 describe("getOrCreateMasterKey", () => {
-  it("creates 32 bytes, stores 64 hex chars under mrb.masterKey.v1", async () => {
+  it("creates 32 bytes, stores 64 hex chars under meb.masterKey.v1", async () => {
     const store = memoryStore();
     const key = await getOrCreateMasterKey(store);
     expect(key).toBeInstanceOf(Uint8Array);
     expect(key.length).toBe(32);
-    const stored = store.data.get("mrb.masterKey.v1");
+    const stored = store.data.get("meb.masterKey.v1");
     expect(stored).toMatch(/^[0-9a-f]{64}$/);
     expect(stored).toBe(toHex(key));
   });
@@ -39,9 +39,9 @@ describe("getOrCreateMasterKey", () => {
 describe("getOrCreateMasterKey hardening", () => {
   it("throws MasterKeyCorruptError and never overwrites a malformed value", async () => {
     const store = memoryStore();
-    store.data.set("mrb.masterKey.v1", "garbage");
+    store.data.set("meb.masterKey.v1", "garbage");
     await expect(getOrCreateMasterKey(store)).rejects.toBeInstanceOf(MasterKeyCorruptError);
-    expect(store.data.get("mrb.masterKey.v1")).toBe("garbage");
+    expect(store.data.get("meb.masterKey.v1")).toBe("garbage");
   });
 
   it("concurrent first-run calls share one key and one set", async () => {
@@ -98,11 +98,11 @@ describe("deriveKey", () => {
   });
 
   // Hardcoded vectors pin the derivation (HKDF-SHA256, empty salt, info
-  // "mrb-<purpose>-v1") across crypto implementations. Recompute if info strings change.
+  // "meb-<purpose>-v1") across crypto implementations. Recompute if info strings change.
   it("matches pinned known answers", () => {
     expect(toHex(deriveKey(master, "db"))).toBe(
-      "536fff079a95fbec4366bae52ee637aac02fefca3b3f2fcd3ddf15e90e02259d",
+      "429433026431108dc544a154647b9032f8adfb7ad71011775daef6219c348a90",
     );
-    expect(toHex(deriveKey(master, "prefs"))).toBe("747118e646f253c9cfad94804faad278");
+    expect(toHex(deriveKey(master, "prefs"))).toBe("316a78e93926a79ebd163bef76e43348");
   });
 });

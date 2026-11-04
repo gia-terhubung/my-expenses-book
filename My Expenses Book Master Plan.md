@@ -1,12 +1,12 @@
-# Master Project Plan: My Receipt Book (Offline-First Privacy Scanner)
+# Master Project Plan: My Expenses Book (Offline-First Privacy Scanner)
 
 ## 1. Executive Summary & Product Vision
 
-**My Receipt Book** is a private, lightning-fast document and receipt scanner that operates 100% locally on-device. Unlike cloud-dependent, subscription-heavy competitors (e.g., *Easy Expense*), it guarantees zero telemetry, zero mandatory account sign-ups, and complete data ownership. It features automated smart parsing (merchant name, totals, tax, dates), global multi-currency support, precise timestamp/timezone tracking, multilingual readiness, full-text offline search, and a subscription-free monetization model powered by a "Buy the Developer a Coffee" tip jar.
+**My Expenses Book** is a private, lightning-fast document and receipt scanner that operates 100% locally on-device. Unlike cloud-dependent, subscription-heavy competitors (e.g., *Easy Expense*), it guarantees zero telemetry, zero mandatory account sign-ups, and complete data ownership. It features automated smart parsing (merchant name, totals, tax, dates), global multi-currency support, precise timestamp/timezone tracking, multilingual readiness, full-text offline search, and a subscription-free monetization model powered by a "Buy the Developer a Coffee" tip jar.
 
 ## 2. Competitive Advantage & Positioning
 
-* **Zero Cloud Dependency by Default:** Unlike apps that force users onto remote servers and demand account creation, My Receipt Book stores all data locally in a secure SQLite database. Cloud backup is strictly an optional, user-initiated opt-in feature for the future.
+* **Zero Cloud Dependency by Default:** Unlike apps that force users onto remote servers and demand account creation, My Expenses Book stores all data locally in a secure SQLite database. Cloud backup is strictly an optional, user-initiated opt-in feature for the future.
 * **Subscription-Free Simplicity:** No recurring monthly fees or locked scan limits. Free core utility with a friendly "Buy the Developer a Coffee" tip jar ($2.99, $4.99, $9.99 tiers).
 * **Global & Travel-Ready:** Built from the ground up to handle multi-currency conversions and timezone preservation locally without needing constant internet connectivity.
 

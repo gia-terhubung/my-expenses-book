@@ -1,16 +1,16 @@
-# My Receipt Book — M0 Spikes + M1 Foundation Implementation Plan
+# My Expenses Book — M0 Spikes + M1 Foundation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Prove the risky native libraries on both platforms (M0), then ship a running, encrypted, localized, lockable, adaptive app shell with the full v1 data layer (M1) — ready for M2 capture & parse.
 
-**Repo layout:** monorepo `My Receipt Book/` — `apps/mobile/` (this plan), `apps/web/` (Next.js, later), `docs/` at root. **All file paths and commands in this plan are relative to `apps/mobile/` unless they start with `docs/`.** Each app keeps its own `package.json`; add workspaces only when `apps/web` lands and shares code.
+**Repo layout:** monorepo `My Expenses Book/` — `apps/mobile/` (this plan), `apps/web/` (Next.js, later), `docs/` at root. **All file paths and commands in this plan are relative to `apps/mobile/` unless they start with `docs/`.** Each app keeps its own `package.json`; add workspaces only when `apps/web` lands and shares code.
 
 **Architecture:** Expo dev-build app (Expo SDK 58, React Native 0.88), Expo Router routes in `src/app/` (template default), all non-route logic in `src/` by responsibility. Pure logic (crypto derivation, money, schema/repositories, i18n resolution, window classes) is tested in Node with Jest; native behaviour is verified on simulators/emulators with written checklists. DB = SQLCipher `expo-sqlite` + Drizzle; repositories accept a generic sync SQLite Drizzle DB so tests run them on `better-sqlite3`.
 
 **Tech Stack:** Expo SDK 58, TypeScript strict, Expo Router, expo-sqlite (SQLCipher), drizzle-orm + drizzle-kit, better-sqlite3 (tests only), react-native-mmkv, expo-secure-store, react-native-quick-crypto, uuidv7, i18next + react-i18next + expo-localization, expo-local-authentication, react-native-document-scanner-plugin, Jest (jest-expo) + @testing-library/react-native.
 
-**Spec:** `docs/superpowers/specs/2026-11-04-my-receipt-book-design.md`
+**Spec:** `docs/superpowers/specs/2026-11-04-my-expenses-book-design.md`
 
 ## Global Constraints
 
@@ -23,8 +23,8 @@
 - Languages: `en` (default/fallback), `id`, `es`, `pt-BR`.
 - Window classes: compact <600dp, medium 600–839dp, expanded ≥840dp. Never branch on device model.
 - No orientation lock; Android `resizeableActivity=true`; iOS `supportsTablet: true`, no `requireFullScreen`.
-- Android `allowBackup=false` *(builder's call: OS backup would restore an encrypted DB without its Keystore key → unreadable; spec chose app-level `.mrb` backup instead)*.
-- Bundle id / package: `com.terhubung.myreceiptbook` *(placeholder — confirm before store submission)*.
+- Android `allowBackup=false` *(builder's call: OS backup would restore an encrypted DB without its Keystore key → unreadable; spec chose app-level `.meb` backup instead)*.
+- Bundle id / package: `com.terhubung.myexpensesbook` *(placeholder — confirm before store submission)*.
 - TypeScript `strict: true`; path alias `@/*` → `src/*`.
 
 ## Review Focus
@@ -50,7 +50,7 @@
 - Produces: `npm test` (Jest, two projects: `node` for `src/**/*.test.ts`, `jest-expo` for `*.test.tsx`), `npm run typecheck` (`tsc --noEmit`), `@/*` alias.
 
 - [ ] **Step 1:** `npm install`, then `npm run reset-project` (drop example screens; delete the `example/` dir it creates). Remove web-only template bits not needed (`web.output: server` stays harmless; leave it).
-- [ ] **Step 2:** Convert to `app.config.ts` with: name "My Receipt Book", slug `my-receipt-book`, scheme `myreceiptbook`, `ios.bundleIdentifier` / `android.package` = `com.terhubung.myreceiptbook`, `ios.supportsTablet: true`, `orientation: "default"`, `android.allowBackup: false`, plugin `expo-build-properties` with `android.minSdkVersion: 26` and `ios.deploymentTarget` per Global Constraints.
+- [ ] **Step 2:** Convert to `app.config.ts` with: name "My Expenses Book", slug `my-expenses-book`, scheme `myexpensesbook`, `ios.bundleIdentifier` / `android.package` = `com.terhubung.myexpensesbook`, `ios.supportsTablet: true`, `orientation: "default"`, `android.allowBackup: false`, plugin `expo-build-properties` with `android.minSdkVersion: 26` and `ios.deploymentTarget` per Global Constraints.
 - [ ] **Step 3:** Add scripts `typecheck`, `test`. Configure Jest with two projects (node + jest-expo).
 - [ ] **Step 4:** Write `src/smoke.test.ts` asserting `1 + 1 === 2`; run `npm test` → PASS; `npm run typecheck` → no errors.
 - [ ] **Step 5:** `npx expo prebuild --clean` then `npx expo run:ios` and `npx expo run:android` → blank home screen renders on iOS simulator and Android emulator. Confirm `android/app/src/main/AndroidManifest.xml` has `android:allowBackup="false"` and `resizeableActivity` not false.
@@ -110,16 +110,16 @@ Throwaway code under `src/app/(dev)/` (only reachable when `__DEV__`). Needs **2
 - Produces:
   - `type KeyPurpose = 'db' | 'images' | 'prefs'`
   - `interface SecretStore { get(k: string): Promise<string | null>; set(k: string, v: string): Promise<void> }`
-  - `getOrCreateMasterKey(store: SecretStore): Promise<Uint8Array>` — 32 random bytes, stored hex under `mrb.masterKey.v1`.
-  - `deriveKey(master: Uint8Array, purpose: KeyPurpose): Uint8Array` — HKDF-SHA256, salt empty, info `mrb-<purpose>-v1`, length 32 (`prefs`: 16, MMKV key limit).
+  - `getOrCreateMasterKey(store: SecretStore): Promise<Uint8Array>` — 32 random bytes, stored hex under `meb.masterKey.v1`.
+  - `deriveKey(master: Uint8Array, purpose: KeyPurpose): Uint8Array` — HKDF-SHA256, salt empty, info `meb-<purpose>-v1`, length 32 (`prefs`: 16, MMKV key limit).
   - `toHex(b: Uint8Array): string`
   - `expoSecretStore: SecretStore` (wraps `expo-secure-store`, `keychainAccessible: WHEN_UNLOCKED_THIS_DEVICE_ONLY`).
 - Design note *(builder's call implementing spec's "wrapped by a single master key")*: subkeys are HKDF-derived from the master, so escrowing the master later restores all keys.
 
 - [ ] **Step 1: Write failing tests** in `keys.test.ts` with an in-memory `SecretStore`:
-  - `getOrCreateMasterKey` returns 32 bytes; second call returns identical bytes; store holds 64 hex chars under `mrb.masterKey.v1`.
+  - `getOrCreateMasterKey` returns 32 bytes; second call returns identical bytes; store holds 64 hex chars under `meb.masterKey.v1`.
   - `deriveKey(m,'db')` deterministic, 32 bytes; `deriveKey(m,'db') ≠ deriveKey(m,'images')`; `deriveKey(m,'prefs').length === 16`.
-  - Known-answer: master = 32 bytes of `0x01` → `toHex(deriveKey(m,'db'))` equals value computed once with Node `crypto.hkdfSync('sha256', m, Buffer.alloc(0), 'mrb-db-v1', 32)` (assert against `hkdfSync` directly).
+  - Known-answer: master = 32 bytes of `0x01` → `toHex(deriveKey(m,'db'))` equals value computed once with Node `crypto.hkdfSync('sha256', m, Buffer.alloc(0), 'meb-db-v1', 32)` (assert against `hkdfSync` directly).
 - [ ] **Step 2:** `npm test -- src/crypto` → FAIL (module not found).
 - [ ] **Step 3:** Implement with `react-native-quick-crypto` (`randomBytes`, `hkdfSync`); install `react-native-quick-crypto`, `expo-secure-store`; call quick-crypto `install()` in `src/app/_layout.tsx` top so `crypto.getRandomValues` exists for `uuidv7`.
 - [ ] **Step 4:** `npm test -- src/crypto` → PASS.
@@ -184,7 +184,7 @@ Throwaway code under `src/app/(dev)/` (only reachable when `__DEV__`). Needs **2
 - Consumes: `getOrCreateMasterKey`, `deriveKey`, `toHex`, `expoSecretStore` (Task 5); schema + migrations (Task 7).
 - Produces:
   - `class DbKeyMismatchError extends Error`
-  - `openDatabase(opts: { name?: string /* default 'mrb.db' */; keyHex: string; open?: (name: string) => SQLiteDatabase }): AppDb` — runs `PRAGMA key = "x'<keyHex>'"` first statement, then `SELECT count(*) FROM sqlite_master`; on the wrong-key error string recorded in `docs/spikes/2026-11-sqlcipher.md` throws `DbKeyMismatchError`. Never deletes or recreates the file.
+  - `openDatabase(opts: { name?: string /* default 'meb.db' */; keyHex: string; open?: (name: string) => SQLiteDatabase }): AppDb` — runs `PRAGMA key = "x'<keyHex>'"` first statement, then `SELECT count(*) FROM sqlite_master`; on the wrong-key error string recorded in `docs/spikes/2026-11-sqlcipher.md` throws `DbKeyMismatchError`. Never deletes or recreates the file.
   - `<DatabaseProvider>` — derives key, opens, runs `useMigrations`; renders children when ready; on `DbKeyMismatchError` routes to `src/app/db-error.tsx` ("Your data can't be unlocked on this device. Restore from a backup or reset."; reset requires typing `RESET`); `useDb(): AppDb`.
 
 - [ ] **Step 1: Write failing test** `client.test.ts` with an injected fake `open` whose `execSync`/`getFirstSync` throws the recorded wrong-key error after `PRAGMA key` → `openDatabase` throws `DbKeyMismatchError`; with a fake that succeeds → returns a DB and the first executed statement is exactly `PRAGMA key = "x'<keyHex>'"`.
@@ -288,6 +288,6 @@ Throwaway code under `src/app/(dev)/` (only reachable when `__DEV__`). Needs **2
 
 - [ ] **Step 1:** `npm test` all PASS; `npm run typecheck` clean.
 - [ ] **Step 2:** Fresh install on iOS simulator, Android emulator, Pixel Fold emulator (folded + unfolded), iPad simulator: onboarding → tabs/rail → lock works → (dev) create receipt, search finds it.
-- [ ] **Step 3:** Pull `mrb.db` from simulator; `sqlite3 mrb.db .tables` fails (encrypted). Check MMKV file not plaintext-readable (`strings` shows no `homeCurrency` value).
+- [ ] **Step 3:** Pull `meb.db` from simulator; `sqlite3 meb.db .tables` fails (encrypted). Check MMKV file not plaintext-readable (`strings` shows no `homeCurrency` value).
 - [ ] **Step 4:** Confirm no network requests during the session (Proxyman/Charles) — M1 has zero allowed hosts.
 - [ ] **Step 5:** Remove or `__DEV__`-guard `src/app/(dev)/*`. **Commit** — `git commit -am "chore: M1 acceptance"`; tag `m1`.

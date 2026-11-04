@@ -2,20 +2,20 @@ import type { ExpoConfig } from "expo/config";
 
 // iOS deployment target = max(16.0, Expo SDK 58 minimum 16.4) = 16.4
 const config: ExpoConfig = {
-  name: "My Receipt Book",
-  slug: "my-receipt-book",
+  name: "My Expenses Book",
+  slug: "my-expenses-book",
   version: "1.0.0",
   orientation: "default",
   icon: "./assets/images/icon.png",
-  scheme: "myreceiptbook",
+  scheme: "myexpensesbook",
   userInterfaceStyle: "automatic",
   ios: {
     icon: "./assets/expo.icon",
-    bundleIdentifier: "com.terhubung.myreceiptbook",
+    bundleIdentifier: "com.terhubung.myexpensesbook",
     supportsTablet: true,
   },
   android: {
-    package: "com.terhubung.myreceiptbook",
+    package: "com.terhubung.myexpensesbook",
     allowBackup: false,
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",

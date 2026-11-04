@@ -2,7 +2,7 @@ Pod::Spec.new do |s|
   s.name           = 'ReceiptAI'
   s.version        = '1.0.0'
   s.summary        = 'On-device LLM receipt parsing'
-  s.description    = 'Apple Foundation Models (iOS 26+) receipt parsing for My Receipt Book'
+  s.description    = 'Apple Foundation Models (iOS 26+) receipt parsing for My Expenses Book'
   s.author         = ''
   s.homepage       = 'https://docs.expo.dev/modules/'
   s.platforms      = {

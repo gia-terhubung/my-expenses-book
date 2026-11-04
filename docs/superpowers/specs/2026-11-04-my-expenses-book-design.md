@@ -1,12 +1,12 @@
-# My Receipt Book — Design & Master Plan v2
+# My Expenses Book — Design & Master Plan v2
 
 ## Context
 
-The original `My Receipt Book Master Plan.md` (project root) has a solid stack but gaps: no backup story for a local-only app, no export, "smart parsing" hand-waved on top of raw OCR, scan-time conflated with purchase-time, FX at today's rate, RevenueCat contradicting "zero telemetry". This document replaces it as the source of truth after a co-founder/CTO review.
+The original `My Expenses Book Master Plan.md` (project root) has a solid stack but gaps: no backup story for a local-only app, no export, "smart parsing" hand-waved on top of raw OCR, scan-time conflated with purchase-time, FX at today's rate, RevenueCat contradicting "zero telemetry". This document replaces it as the source of truth after a co-founder/CTO review.
 
 **Intent (owner's words, condensed):** portfolio/passion project now; may become indie side income later as users grow — keep the door open for a one-time **Pro unlock backed by Supabase**. Serve three users: travellers/expense claimers (multi-currency), freelancers doing taxes, households tracking spending/warranties (single default currency).
 
-**Why it can win:** free scanners (Notes, Drive, Adobe Scan, Genius Scan) give you an image. My Receipt Book gives you a *structured, searchable, exportable receipt* — parsed by an on-device AI, never leaving the phone.
+**Why it can win:** free scanners (Notes, Drive, Adobe Scan, Genius Scan) give you an image. My Expenses Book gives you a *structured, searchable, exportable receipt* — parsed by an on-device AI, never leaving the phone.
 
 ## Goals / Non-goals / Anti-goals
 
@@ -39,7 +39,7 @@ The original `My Receipt Book Master Plan.md` (project root) has a solid stack b
 | Foldables & large screens | **Supported in v1** (owner request): Samsung Galaxy Z Fold, Pixel Fold, Apple's foldable iPhone (when available), plus tablets/iPad. Adaptive layout, seamless fold/unfold, two-pane on wide screens. See "Adaptive layout". |
 | Min OS | **iOS 16+, Android 8 (API 26)+.** On-device AI path only on iOS 26+ w/ Apple Intelligence and Gemini Nano Android devices; runtime capability check. |
 | Time | Two separate fields: `purchased_at` (parsed from receipt, local wall-clock + IANA zone) and `scanned_at` (UTC ms + IANA zone of device). Sorting/grouping uses `purchased_at`. |
-| Backup v1 | One-tap `.mrb` archive (zip: DB export + images + manifest). **Passphrase on by default, user may skip** with clear warning (no passphrase = plaintext in their cloud; forgotten passphrase = unrecoverable). Key derived via scrypt/Argon2 → AES-256-GCM. Delivered via share sheet → Files/iCloud Drive/Google Drive. Import restores (replace or merge by UUID). Gentle reminder after N new receipts since last backup. |
+| Backup v1 | One-tap `.meb` archive (zip: DB export + images + manifest). **Passphrase on by default, user may skip** with clear warning (no passphrase = plaintext in their cloud; forgotten passphrase = unrecoverable). Key derived via scrypt/Argon2 → AES-256-GCM. Delivered via share sheet → Files/iCloud Drive/Google Drive. Import restores (replace or merge by UUID). Gentle reminder after N new receipts since last backup. |
 | Privacy | Biometric/passcode app lock; SQLCipher-encrypted DB; encrypted image files; no third-party telemetry SDKs. |
 | Languages | EN, ID, ES, PT-BR — the usual startup v1 set (largest mobile app markets after EN; ID = home market). UI language ≠ receipt language: parser must handle any receipt language. |
 | Categories | Fixed default set (Food & Drink, Transport, Lodging, Groceries, Shopping, Utilities, Health, Office, Entertainment, Other) + user-editable. |
@@ -79,7 +79,7 @@ The original `My Receipt Book Master Plan.md` (project root) has a solid stack b
 
 **FX source:** *my call:* single free no-key source covering 200+ currencies with historical-by-date files (e.g. fawazahmed0 `currency-api` on jsDelivr; Frankfurter/ECB only covers ~30 and misses VND, AED, TWD…). Single allowed host keeps privacy policy simple. Weekly fetch of latest; on-demand fetch of a specific historical date when online and user saves an old foreign receipt. Only currency codes + date go over the wire.
 
-**Repo layout:** monorepo `My Receipt Book/` → `apps/mobile/` (Expo SDK 58), `apps/web/` (Next.js, later), `docs/`.
+**Repo layout:** monorepo `My Expenses Book/` → `apps/mobile/` (Expo SDK 58), `apps/web/` (Next.js, later), `docs/`.
 
 **Folder structure** (inside `apps/mobile/`; routes live in `src/app/` per Expo template)
 ```
@@ -118,7 +118,7 @@ src/fx/  src/backup/  src/export/  src/crypto/  src/i18n/  src/components/  src/
 - **M1 — Foundation (wk 2–3):** project structure, theme, i18n (4 locales, EN complete, others machine-translated + reviewed later), onboarding, lock gate, DB schema + migrations + repositories, crypto key mgmt.
 - **M2 — Capture & parse (wk 4–6):** scan → encrypt/store pages → OCR → hybrid parser → review screen; heuristic parser with fixture tests; FX fetch + frozen conversion.
 - **M3 — Organize (wk 7–8):** feed with totals, detail/edit, folders, categories, tax-year views, FTS5 search + filters; `useWindowClass` + two-pane list–detail + side rail on medium/expanded. (Build screens adaptive from M1 onward — layout primitives in M1, two-pane wired here.)
-- **M4 — Export & backup (wk 9):** CSV, PDF report, `.mrb` archive export/import (+ passphrase), backup reminder.
+- **M4 — Export & backup (wk 9):** CSV, PDF report, `.meb` archive export/import (+ passphrase), backup reminder.
 - **M5 — Polish & ship (wk 10–12):** tip jar via expo-iap, empty states, accessibility, store assets, privacy policy page, App Privacy "Data Not Collected" labels / Play Data Safety, EAS Build + Submit, TestFlight + Play internal testing.
 
 **Slip policy (owner-chosen cut order):** 1) drop ES + PT-BR (ship EN + ID), 2) drop PDF export (CSV only), 3) defer on-device AI module to v1.1. Never cut: scan → heuristic parse → review, organize/search, encrypted storage, lock, backup/restore.
@@ -137,7 +137,7 @@ Apple Developer ($99/yr), Play Console ($25). Consumable IAPs as above. Privacy 
 - **Pre-release:** EAS preview builds on TestFlight + Play internal track.
 
 ## Next steps after approval
-1. `git init` the project root; save this doc as `docs/superpowers/specs/2026-11-04-my-receipt-book-design.md`; keep original master plan file for history.
+1. `git init` the project root; save this doc as `docs/superpowers/specs/2026-11-04-my-expenses-book-design.md`; keep original master plan file for history.
 2. Run superpowers:writing-plans to produce a task-level implementation plan for **M0 spikes + M1**, then execute milestone by milestone.
 
 ## Left to the builder

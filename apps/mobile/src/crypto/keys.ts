@@ -7,7 +7,7 @@ export interface SecretStore {
   set(k: string, v: string): Promise<void>;
 }
 
-const MASTER_KEY_NAME = "mrb.masterKey.v1";
+const MASTER_KEY_NAME = "meb.masterKey.v1";
 
 // prefs key is 16 bytes: MMKV encryption key limit.
 const KEY_LENGTH: Record<KeyPurpose, number> = { db: 32, images: 32, prefs: 16 };
@@ -60,6 +60,6 @@ export function getOrCreateMasterKey(store: SecretStore): Promise<Uint8Array> {
 export function deriveKey(master: Uint8Array, purpose: KeyPurpose): Uint8Array {
   // Node returns ArrayBuffer, quick-crypto a Buffer; Uint8Array copy handles both.
   return new Uint8Array(
-    hkdfSync("sha256", master, new Uint8Array(0), `mrb-${purpose}-v1`, KEY_LENGTH[purpose]),
+    hkdfSync("sha256", master, new Uint8Array(0), `meb-${purpose}-v1`, KEY_LENGTH[purpose]),
   );
 }
