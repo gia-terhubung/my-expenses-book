@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["ReceiptAIModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.receiptai.ReceiptAIModule"]
+  }
+}

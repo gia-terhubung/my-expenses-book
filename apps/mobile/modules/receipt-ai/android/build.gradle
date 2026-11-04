@@ -1,0 +1,24 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.receiptai'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.receiptai"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  // ML Kit GenAI Prompt API (Gemini Nano via AICore). Requires minSdk 26.
+  // Version as documented at developers.google.com/ml-kit/genai/prompt/android/get-started (Maven also has 1.0.0-beta5).
+  implementation "com.google.mlkit:genai-prompt:1.0.0-beta4"
+}
