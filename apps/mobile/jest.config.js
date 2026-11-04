@@ -6,7 +6,10 @@ module.exports = {
       testEnvironment: "node",
       testMatch: ["<rootDir>/src/**/*.test.ts"],
       transform: { "^.+\\.tsx?$": ["babel-jest", { presets: ["babel-preset-expo"] }] },
-      moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },
+      moduleNameMapper: {
+        "^@/(.*)$": "<rootDir>/src/$1",
+        "^react-native-quick-crypto$": "<rootDir>/test/nodeCrypto.js",
+      },
     },
     {
       displayName: "jest-expo",

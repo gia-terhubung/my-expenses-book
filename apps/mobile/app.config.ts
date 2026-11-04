@@ -31,6 +31,8 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    "expo-secure-store",
+    "react-native-quick-crypto",
     ["expo-sqlite", { useSQLCipher: true }],
     [
       "expo-splash-screen",
