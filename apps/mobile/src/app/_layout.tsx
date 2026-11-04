@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { initI18n } from "@/i18n";
 import { resolveLanguage } from "@/i18n/resolve";
+import { LockGate } from "@/lock/LockGate";
 import { PrefsProvider } from "@/prefs/PrefsProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
@@ -20,9 +21,11 @@ export default function RootLayout() {
     <ThemeProvider>
       <DatabaseProvider>
         <PrefsProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
-          </Stack>
+          <LockGate>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
+            </Stack>
+          </LockGate>
         </PrefsProvider>
       </DatabaseProvider>
     </ThemeProvider>

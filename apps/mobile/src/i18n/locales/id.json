@@ -35,7 +35,8 @@
     "unlock": "Buka kunci",
     "reason": "Buka kunci untuk melihat struk Anda",
     "failed": "Autentikasi gagal. Coba lagi.",
-    "unavailable": "Biometrik tidak tersedia di perangkat ini. Kode sandi perangkat akan digunakan."
+    "unavailable": "Biometrik tidak tersedia di perangkat ini. Kode sandi perangkat akan digunakan.",
+    "retry": "Coba lagi"
   },
   "settings": {
     "title": "Pengaturan",

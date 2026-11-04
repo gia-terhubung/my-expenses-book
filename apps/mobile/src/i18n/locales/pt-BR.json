@@ -35,7 +35,8 @@
     "unlock": "Desbloquear",
     "reason": "Desbloqueie para ver seus recibos",
     "failed": "Falha na autenticação. Tente novamente.",
-    "unavailable": "A biometria não está disponível neste aparelho. A senha do aparelho será usada."
+    "unavailable": "A biometria não está disponível neste aparelho. A senha do aparelho será usada.",
+    "retry": "Tentar novamente"
   },
   "settings": {
     "title": "Ajustes",

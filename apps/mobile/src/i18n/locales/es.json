@@ -35,7 +35,8 @@
     "unlock": "Desbloquear",
     "reason": "Desbloquea para ver tus recibos",
     "failed": "Falló la autenticación. Inténtalo de nuevo.",
-    "unavailable": "La biometría no está disponible en este dispositivo. Se usará el código del dispositivo."
+    "unavailable": "La biometría no está disponible en este dispositivo. Se usará el código del dispositivo.",
+    "retry": "Reintentar"
   },
   "settings": {
     "title": "Ajustes",

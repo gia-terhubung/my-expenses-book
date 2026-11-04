@@ -34,6 +34,7 @@ const config: ExpoConfig = {
     "expo-secure-store",
     "react-native-quick-crypto",
     "expo-localization",
+    ["expo-local-authentication", { faceIDPermission: "Allow $(PRODUCT_NAME) to unlock your receipts with Face ID." }],
     ["expo-sqlite", { useSQLCipher: true }],
     [
       "expo-splash-screen",

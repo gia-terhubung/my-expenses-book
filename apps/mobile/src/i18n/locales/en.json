@@ -35,7 +35,8 @@
     "unlock": "Unlock",
     "reason": "Unlock to view your receipts",
     "failed": "Authentication failed. Try again.",
-    "unavailable": "Biometrics are not available on this device. Your device passcode will be used."
+    "unavailable": "Biometrics are not available on this device. Your device passcode will be used.",
+    "retry": "Try again"
   },
   "settings": {
     "title": "Settings",
