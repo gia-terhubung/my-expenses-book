@@ -50,7 +50,11 @@
     "taxYearStart": "Tahun pajak dimulai pada",
     "backup": "Cadangan",
     "about": "Tentang",
-    "devTools": "Alat pengembang"
+    "devTools": "Alat pengembang",
+    "lockReason": {
+      "no_hardware": "Perangkat ini tidak mendukung biometrik atau kode sandi, jadi kunci aplikasi tidak tersedia.",
+      "not_enrolled": "Atur kode sandi perangkat, Face ID, atau sidik jari di pengaturan sistem untuk mengaktifkan kunci aplikasi."
+    }
   },
   "dbError": {
     "title": "Data Anda tidak dapat dibuka di perangkat ini. Pulihkan dari cadangan atau setel ulang.",

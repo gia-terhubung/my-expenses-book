@@ -50,7 +50,11 @@
     "taxYearStart": "El año fiscal comienza en",
     "backup": "Copia de seguridad",
     "about": "Acerca de",
-    "devTools": "Herramientas de desarrollo"
+    "devTools": "Herramientas de desarrollo",
+    "lockReason": {
+      "no_hardware": "Este dispositivo no admite biometría ni código, así que el bloqueo de la app no está disponible.",
+      "not_enrolled": "Configura un código del dispositivo, Face ID o huella en los ajustes del sistema para activar el bloqueo de la app."
+    }
   },
   "dbError": {
     "title": "No se pueden desbloquear tus datos en este dispositivo. Restaura una copia de seguridad o restablece.",

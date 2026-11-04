@@ -50,7 +50,11 @@
     "taxYearStart": "Tax year starts in",
     "backup": "Backup",
     "about": "About",
-    "devTools": "Developer tools"
+    "devTools": "Developer tools",
+    "lockReason": {
+      "no_hardware": "This device has no biometrics or passcode support, so app lock is unavailable.",
+      "not_enrolled": "Set up a device passcode, Face ID or fingerprint in system settings to turn on app lock."
+    }
   },
   "dbError": {
     "title": "Your data can't be unlocked on this device. Restore from a backup or reset.",

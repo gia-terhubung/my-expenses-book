@@ -11,6 +11,16 @@ import Index from "@/app/(tabs)/index";
 import Search from "@/app/(tabs)/search";
 import Settings from "@/app/(tabs)/settings";
 
+// Settings reads prefs; the real provider needs native crypto/MMKV.
+jest.mock("@/prefs/PrefsProvider", () => ({
+  usePref: (k: string) => ({ language: "en", homeCurrency: "USD", taxYearStartMonth: 1, lockEnabled: false, lockTimeout: 60 })[k],
+  usePrefs: () => ({ set: jest.fn() }),
+}));
+jest.mock("expo-local-authentication", () => ({
+  getEnrolledLevelAsync: jest.fn().mockResolvedValue(1),
+  SecurityLevel: { NONE: 0, SECRET: 1 },
+}));
+
 // Mutable window class that re-renders subscribers, like a real resize would.
 type WC = "compact" | "medium" | "expanded";
 let current: WC = "compact";

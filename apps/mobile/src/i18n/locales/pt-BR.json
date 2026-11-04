@@ -50,7 +50,11 @@
     "taxYearStart": "O ano fiscal começa em",
     "backup": "Backup",
     "about": "Sobre",
-    "devTools": "Ferramentas de desenvolvedor"
+    "devTools": "Ferramentas de desenvolvedor",
+    "lockReason": {
+      "no_hardware": "Este dispositivo não tem biometria nem senha, então o bloqueio do app não está disponível.",
+      "not_enrolled": "Configure uma senha do dispositivo, Face ID ou impressão digital nas configurações do sistema para ativar o bloqueio do app."
+    }
   },
   "dbError": {
     "title": "Não foi possível desbloquear seus dados neste aparelho. Restaure um backup ou redefina.",
