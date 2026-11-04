@@ -114,15 +114,9 @@ Accuracy against this table: **not yet measured, 0/5 runs produced output.**
 
 ## Decision
 
-**Defer the AI path to v1.1** (slip policy item 3), unless a physical-device check before M2 says otherwise:
+**Decision: INCONCLUSIVE** — no real inference possible on simulator/host. Keep `modules/receipt-ai` and its JS interface. Verify on a physical Apple-Intelligence iPhone and a Gemini Nano Android via EAS development build before M2 parsing work; owner decides go / defer-to-v1.1 (slip policy item 3) from that result.
 
-- No platform produced a single parse here. iOS generation is blocked in the simulator, the host Mac's model is `modelNotReady`, and Android has not been compiled or run.
-- Accuracy and latency, the inputs to the go decision, are still unknown.
+Suggested criteria for that run:
 
-What is kept: the module, its JS interface, and the availability and fallback plumbing. The interface is stable and the code compiles on iOS, so M2 can ship heuristics-only with `getAvailability()` wired in.
-
-**To flip to go:**
-
-- Run the spike screen on an iPhone 15 Pro or later with Apple Intelligence on, and on a Gemini Nano device via EAS.
-- Accuracy target: at least 4/5 samples with total and currency correct.
-- Latency target: p50 under 3 s.
+- Accuracy: at least 4/5 samples with total and currency correct.
+- Latency: p50 under 3 s.
