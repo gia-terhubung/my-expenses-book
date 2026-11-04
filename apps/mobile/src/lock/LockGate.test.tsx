@@ -12,8 +12,9 @@ jest.mock("expo-local-authentication", () => ({
   getEnrolledLevelAsync: jest.fn(),
   SecurityLevel: { NONE: 0, SECRET: 1, BIOMETRIC_WEAK: 2, BIOMETRIC_STRONG: 3 },
 }));
+let mockTimeout = 60;
 jest.mock("@/prefs/PrefsProvider", () => ({
-  usePref: (k: string) => ({ lockEnabled: true, lockTimeout: 60 })[k],
+  usePref: (k: string) => ({ lockEnabled: true, lockTimeout: mockTimeout })[k],
 }));
 jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
   __esModule: true,
@@ -35,14 +36,22 @@ function Counter() {
   );
 }
 
+const listener = { current: null as ((s: string) => void) | null };
+
 beforeAll(() => initI18n("en"));
 
 beforeEach(() => {
+  mockTimeout = 60;
   auth.mockReset();
   setWidth(400);
-  jest
-    .spyOn(AppState, "addEventListener")
-    .mockImplementation((() => ({ remove: jest.fn() })) as never);
+  listener.current = null;
+  jest.spyOn(AppState, "addEventListener").mockImplementation(((
+    _: string,
+    cb: (s: string) => void,
+  ) => {
+    listener.current = cb;
+    return { remove: jest.fn() };
+  }) as never);
 });
 afterEach(() => jest.restoreAllMocks());
 
@@ -95,5 +104,44 @@ describe("LockGate", () => {
     expect(screen.getByText("count 1 w 900")).toBeTruthy();
     expect(screen.queryByTestId("lock-screen")).toBeNull();
     expect(auth).toHaveBeenCalledTimes(2);
+  });
+
+  it("timeout 0: no prompt while backgrounded; exactly one on active", async () => {
+    mockTimeout = 0;
+    auth.mockResolvedValueOnce({ success: true });
+    await render(
+      <LockGate>
+        <Counter />
+      </LockGate>,
+    );
+    await act(async () => {});
+    expect(auth).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("lock-screen")).toBeNull();
+
+    await act(async () => listener.current?.("background"));
+    expect(screen.getByTestId("lock-screen")).toBeTruthy();
+    expect(auth).toHaveBeenCalledTimes(1);
+
+    auth.mockResolvedValueOnce({ success: false, error: "user_cancel" });
+    await act(async () => listener.current?.("active"));
+    expect(auth).toHaveBeenCalledTimes(2);
+  });
+
+  it("failure while active, then rerender, makes no second call", async () => {
+    auth.mockResolvedValue({ success: false, error: "user_cancel" });
+    const r = await render(
+      <LockGate>
+        <Counter />
+      </LockGate>,
+    );
+    await act(async () => {});
+    await act(async () => listener.current?.("inactive"));
+    await act(async () => listener.current?.("active"));
+    await r.rerender(
+      <LockGate>
+        <Counter />
+      </LockGate>,
+    );
+    expect(auth).toHaveBeenCalledTimes(1);
   });
 });

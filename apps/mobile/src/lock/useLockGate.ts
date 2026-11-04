@@ -17,6 +17,7 @@ const NO_CREDENTIAL = new Set(["not_enrolled", "passcode_not_set"]);
 export function useLockGate(): {
   locked: boolean;
   covered: boolean;
+  foreground: boolean;
   unlock(): Promise<boolean>;
 } {
   const lockEnabled = usePref("lockEnabled");
@@ -31,19 +32,26 @@ export function useLockGate(): {
     }),
   );
   const [covered, setCovered] = useState(false);
+  // false only between `background` and the next `active` (inactive hops are ignored).
+  const [foreground, setForeground] = useState(
+    () => AppState.currentState !== "background",
+  );
   const lastBackgroundAt = useRef<number | null>(null);
   const busy = useRef(false);
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "background") {
+        setForeground(false);
         // An in-flight unlock (Android <=10 PIN fallback backgrounds the app) must not re-lock.
         if (busy.current || !lockEnabled) return;
         lastBackgroundAt.current ??= Date.now();
         // Hide content in the app switcher / on resume: lock now (timeout 0) or cover.
         if (timeoutSec === 0) setLocked(true);
         else setCovered(true);
-      } else if (state === "active" && lastBackgroundAt.current !== null) {
+      } else if (state === "active") {
+        setForeground(true);
+        if (lastBackgroundAt.current === null) return;
         const at = lastBackgroundAt.current;
         lastBackgroundAt.current = null;
         setCovered(false);
@@ -99,6 +107,7 @@ export function useLockGate(): {
   return {
     locked: locked && lockEnabled,
     covered: covered && lockEnabled,
+    foreground,
     unlock,
   };
 }

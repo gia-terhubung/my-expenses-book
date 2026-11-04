@@ -11,18 +11,20 @@ import { useLockGate } from "./useLockGate";
  * loss) but are hidden from accessibility. Prompts once per lock; failure leaves the Retry button.
  */
 export function LockGate({ children }: { children: ReactNode }) {
-  const { locked, covered, unlock } = useLockGate();
+  const { locked, covered, foreground, unlock } = useLockGate();
   const { colors } = useTheme();
   const prompted = useRef(false);
 
   useEffect(() => {
-    if (!locked) {
+    // Re-arm whenever unlocked or backgrounded, so a cancelled background attempt can't use up
+    // the single auto-prompt. While active, a failure is never retried automatically.
+    if (!locked || !foreground) {
       prompted.current = false;
     } else if (!prompted.current) {
       prompted.current = true;
       void unlock();
     }
-  }, [locked, unlock]);
+  }, [locked, foreground, unlock]);
 
   return (
     <View style={{ flex: 1 }}>
