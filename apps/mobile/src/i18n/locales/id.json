@@ -57,9 +57,13 @@
     }
   },
   "dbError": {
-    "title": "Data Anda tidak dapat dibuka di perangkat ini. Pulihkan dari cadangan atau setel ulang.",
+    "title": "Data Anda tidak dapat dibuka",
+    "body": "Data Anda tidak dapat dibuka di perangkat ini. Ini bisa terjadi setelah menginstal ulang, memulihkan atau memindahkan ke ponsel baru, atau jika berkas rusak. Pulihkan dari cadangan atau setel ulang.",
     "resetWarning": "Menyetel ulang akan menghapus semua data di perangkat ini secara permanen. Ketik {{word}} untuk mengonfirmasi.",
-    "resetButton": "Setel ulang data"
+    "resetButton": "Setel ulang data",
+    "openFailed": "Tidak dapat membuka data Anda.",
+    "migrationFailed": "Gagal memperbarui data Anda.",
+    "resetFailed": "Penyetelan ulang gagal."
   },
   "categories": {
     "food_drink": "Makanan & Minuman",
@@ -81,5 +85,10 @@
   },
   "document": {
     "title": "Struk"
+  },
+  "errors": {
+    "retry": "Coba lagi",
+    "showDetails": "Tampilkan detail",
+    "hideDetails": "Sembunyikan detail"
   }
 }

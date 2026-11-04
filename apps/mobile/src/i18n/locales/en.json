@@ -57,9 +57,13 @@
     }
   },
   "dbError": {
-    "title": "Your data can't be unlocked on this device. Restore from a backup or reset.",
+    "title": "Your data can't be unlocked",
+    "body": "Your data can't be unlocked on this device. This can happen after reinstalling, restoring or transferring to a new phone, or if the file is damaged. Restore from a backup or reset.",
     "resetWarning": "Resetting permanently deletes all data on this device. Type {{word}} to confirm.",
-    "resetButton": "Reset data"
+    "resetButton": "Reset data",
+    "openFailed": "Could not open your data.",
+    "migrationFailed": "Updating your data failed.",
+    "resetFailed": "Reset failed."
   },
   "categories": {
     "food_drink": "Food & Drink",
@@ -81,5 +85,10 @@
   },
   "document": {
     "title": "Receipt"
+  },
+  "errors": {
+    "retry": "Retry",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details"
   }
 }

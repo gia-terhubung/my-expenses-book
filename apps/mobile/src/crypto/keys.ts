@@ -32,6 +32,13 @@ export class MasterKeyCorruptError extends Error {
   }
 }
 
+export class MasterKeyPersistError extends Error {
+  constructor() {
+    super("Master key could not be saved to secure storage.");
+    this.name = "MasterKeyPersistError";
+  }
+}
+
 const inFlight = new WeakMap<SecretStore, Promise<Uint8Array>>();
 
 async function loadOrCreate(store: SecretStore): Promise<Uint8Array> {
@@ -41,7 +48,10 @@ async function loadOrCreate(store: SecretStore): Promise<Uint8Array> {
     return fromHex(existing);
   }
   const key = new Uint8Array(randomBytes(32));
-  await store.set(MASTER_KEY_NAME, toHex(key));
+  const hex = toHex(key);
+  await store.set(MASTER_KEY_NAME, hex);
+  // Never hand out a key that was not persisted: data encrypted with it would be unrecoverable.
+  if ((await store.get(MASTER_KEY_NAME)) !== hex) throw new MasterKeyPersistError();
   return key;
 }
 

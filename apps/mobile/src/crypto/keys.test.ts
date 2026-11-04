@@ -2,6 +2,7 @@ import {
   deriveKey,
   getOrCreateMasterKey,
   MasterKeyCorruptError,
+  MasterKeyPersistError,
   resetMasterKey,
   toHex,
   type SecretStore,
@@ -129,5 +130,20 @@ describe("resetMasterKey", () => {
     await expect(getOrCreateMasterKey(store)).rejects.toBeInstanceOf(MasterKeyCorruptError);
     await resetMasterKey(store);
     expect((await getOrCreateMasterKey(store)).length).toBe(32);
+  });
+});
+
+describe("getOrCreateMasterKey persistence check", () => {
+  it("throws MasterKeyPersistError when set silently drops the value", async () => {
+    const store = memoryStore();
+    store.set = async () => {};
+    await expect(getOrCreateMasterKey(store)).rejects.toBeInstanceOf(MasterKeyPersistError);
+  });
+  it("throws when the read-back differs", async () => {
+    const store = memoryStore();
+    store.set = async (k, v) => {
+      store.data.set(k, v.replace(/^./, (c) => (c === "0" ? "1" : "0")));
+    };
+    await expect(getOrCreateMasterKey(store)).rejects.toBeInstanceOf(MasterKeyPersistError);
   });
 });

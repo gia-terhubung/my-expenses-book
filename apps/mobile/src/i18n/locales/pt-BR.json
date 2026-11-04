@@ -57,9 +57,13 @@
     }
   },
   "dbError": {
-    "title": "Não foi possível desbloquear seus dados neste aparelho. Restaure um backup ou redefina.",
+    "title": "Não foi possível desbloquear seus dados",
+    "body": "Não foi possível desbloquear seus dados neste aparelho. Isso pode acontecer após reinstalar, restaurar ou transferir para um novo celular, ou se o arquivo estiver danificado. Restaure um backup ou redefina.",
     "resetWarning": "Redefinir exclui permanentemente todos os dados deste aparelho. Digite {{word}} para confirmar.",
-    "resetButton": "Redefinir dados"
+    "resetButton": "Redefinir dados",
+    "openFailed": "Não foi possível abrir seus dados.",
+    "migrationFailed": "Falha ao atualizar seus dados.",
+    "resetFailed": "Falha ao redefinir."
   },
   "categories": {
     "food_drink": "Alimentação e bebidas",
@@ -81,5 +85,10 @@
   },
   "document": {
     "title": "Recibo"
+  },
+  "errors": {
+    "retry": "Tentar novamente",
+    "showDetails": "Mostrar detalhes",
+    "hideDetails": "Ocultar detalhes"
   }
 }

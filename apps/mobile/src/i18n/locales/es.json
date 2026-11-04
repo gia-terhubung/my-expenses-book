@@ -57,9 +57,13 @@
     }
   },
   "dbError": {
-    "title": "No se pueden desbloquear tus datos en este dispositivo. Restaura una copia de seguridad o restablece.",
+    "title": "No se pueden desbloquear tus datos",
+    "body": "No se pueden desbloquear tus datos en este dispositivo. Puede ocurrir tras reinstalar, restaurar o pasar a un teléfono nuevo, o si el archivo está dañado. Restaura una copia de seguridad o restablece.",
     "resetWarning": "Al restablecer se eliminan de forma permanente todos los datos de este dispositivo. Escribe {{word}} para confirmar.",
-    "resetButton": "Restablecer datos"
+    "resetButton": "Restablecer datos",
+    "openFailed": "No se pudieron abrir tus datos.",
+    "migrationFailed": "Falló la actualización de tus datos.",
+    "resetFailed": "Falló el restablecimiento."
   },
   "categories": {
     "food_drink": "Comida y bebida",
@@ -81,5 +85,10 @@
   },
   "document": {
     "title": "Recibo"
+  },
+  "errors": {
+    "retry": "Reintentar",
+    "showDetails": "Mostrar detalles",
+    "hideDetails": "Ocultar detalles"
   }
 }

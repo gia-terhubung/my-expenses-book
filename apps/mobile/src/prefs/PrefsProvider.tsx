@@ -8,6 +8,8 @@ import { expoSecretStore } from "@/crypto/secureStore";
 import { setLanguage } from "@/i18n";
 import { resolveLanguage } from "@/i18n/resolve";
 
+import { useTheme } from "@/theme/ThemeProvider";
+
 import { prefsEncryptionKey } from "./mmkvKey";
 import { usePrefFrom, type Prefs, type PrefsStore } from "./prefs";
 import { openPrefs } from "./storage";
@@ -32,6 +34,8 @@ export function usePref<K extends keyof Prefs>(k: K): Prefs[K] {
 export function PrefsProvider({ children }: { children: ReactNode }) {
   const [store, setStore] = useState<PrefsStore | null>(null);
   const [error, setError] = useState<unknown>(null);
+  const theme = useTheme();
+  // Re-throw into render so the root ErrorBoundary (with Retry) shows it; never a blank app.
   if (error) throw error;
 
   useEffect(() => {
@@ -59,7 +63,14 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
 
   if (!store) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: theme.colors.background,
+        }}
+      >
         <ActivityIndicator />
       </View>
     );
