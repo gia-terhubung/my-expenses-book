@@ -4,6 +4,21 @@ export type { FxCache };
 
 const STALE_MS = 7 * 86_400_000;
 const MAX_DATES = 120;
+const FETCH_TIMEOUT_MS = 10_000;
+
+/** HTTP answer other than 2xx (the server is reachable, the resource is not). */
+export class FxHttpError extends Error {
+  constructor(readonly status: number) {
+    super(`FX fetch failed: ${status}`);
+    this.name = "FxHttpError";
+  }
+}
+
+/** Per-sync-pass state: `latest` is tried at most once and a network failure stops the pass. */
+export interface FxPass {
+  offline?: boolean;
+  latestTried?: boolean;
+}
 
 export function rateUrl(base: string, date: string | "latest"): string {
   return `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${date}/v1/currencies/${base.toLowerCase()}.json`;
@@ -15,9 +30,16 @@ export async function fetchRates(
   date: string | "latest",
   fetchFn: typeof fetch = fetch,
 ): Promise<{ date: string; rates: Record<string, string> }> {
-  const res = await fetchFn(rateUrl(base, date));
-  if (!res.ok) throw new Error(`FX fetch failed: ${res.status}`);
-  const body = (await res.json()) as Record<string, unknown>;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+  let body: Record<string, unknown>;
+  try {
+    const res = await fetchFn(rateUrl(base, date), { signal: ctrl.signal });
+    if (!res.ok) throw new FxHttpError(res.status);
+    body = (await res.json()) as Record<string, unknown>;
+  } finally {
+    clearTimeout(timer);
+  }
   const table = body[base.toLowerCase()];
   if (typeof body.date !== "string" || typeof table !== "object" || table === null) {
     throw new Error("FX response malformed");
@@ -39,8 +61,10 @@ function prune(byDate: FxCache["byDate"]): FxCache["byDate"] {
 
 /**
  * Makes sure `latest` is fresh (< 7 days) and `date` is cached, fetching as needed. Network
- * errors are swallowed (offline is normal): a failed step leaves the cache as it was. A base
- * change starts a new table. Returns the same object when nothing changed.
+ * errors are swallowed (offline is normal). With a shared `pass`, `latest` is attempted once
+ * and the first network failure stops all further fetches in that pass. Dates answered 404
+ * are remembered for 7 days. A base change starts a new table. Returns the same object when
+ * nothing changed.
  */
 export async function ensureRates(
   cache: FxCache,
@@ -48,28 +72,38 @@ export async function ensureRates(
   date: string | "latest",
   now: number,
   fetchFn: typeof fetch = fetch,
+  pass: FxPass = {},
 ): Promise<FxCache> {
   const b = base.toLowerCase();
   let work: FxCache = cache.base === b ? cache : { base: b, latestDate: null, fetchedAt: null, byDate: {} };
   let changed = false;
 
   const stale = work.fetchedAt === null || now - work.fetchedAt > STALE_MS;
-  if (stale) {
+  if (stale && !pass.latestTried && !pass.offline) {
+    pass.latestTried = true;
     try {
       const r = await fetchRates(b, "latest", fetchFn);
       work = { ...work, latestDate: r.date, fetchedAt: now, byDate: { ...work.byDate, [r.date]: r.rates } };
       changed = true;
-    } catch {
-      /* offline */
+    } catch (e) {
+      if (!(e instanceof FxHttpError)) pass.offline = true;
     }
   }
-  if (date !== "latest" && !work.byDate[date]) {
-    try {
-      const r = await fetchRates(b, date, fetchFn);
-      work = { ...work, byDate: { ...work.byDate, [date]: r.rates } };
-      changed = true;
-    } catch {
-      /* offline, or date not published */
+  if (date !== "latest" && !work.byDate[date] && !pass.offline) {
+    const missedAt = work.missingDates?.[date];
+    if (missedAt === undefined || now - missedAt > STALE_MS) {
+      try {
+        const r = await fetchRates(b, date, fetchFn);
+        work = { ...work, byDate: { ...work.byDate, [date]: r.rates } };
+        changed = true;
+      } catch (e) {
+        if (e instanceof FxHttpError && e.status === 404) {
+          work = { ...work, missingDates: { ...work.missingDates, [date]: now } };
+          changed = true;
+        } else {
+          pass.offline = true;
+        }
+      }
     }
   }
   if (!changed) return cache;

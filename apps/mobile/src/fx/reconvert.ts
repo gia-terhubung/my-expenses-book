@@ -10,10 +10,14 @@ import { convertToHome } from "./convert";
 /** YYYY-MM-DD from a local ISO timestamp. */
 const dateOf = (local: string) => local.slice(0, 10);
 
-/** Recomputes the home-currency amount of every non-deleted receipt. Returns rows updated. */
+/**
+ * Recomputes the home-currency amount of every non-deleted receipt. Writes (and bumps
+ * version/updatedAt) only rows whose FX columns actually change. Returns rows changed.
+ */
 export function reconvertAll(db: AppDb, home: string, cache: FxCache): number {
   const rows = db.select().from(receipts).where(isNull(receipts.deletedAt)).all();
   const t = now();
+  let changed = 0;
   db.transaction((tx) => {
     for (const r of rows) {
       let c = null;
@@ -22,21 +26,30 @@ export function reconvertAll(db: AppDb, home: string, cache: FxCache): number {
       } catch {
         // currency/home outside the ISO table: leave unconverted
       }
+      const next = {
+        fxRate: c?.fxRate ?? null,
+        fxRateDate: c?.fxRateDate ?? null,
+        amountHomeMinor: c?.amountHomeMinor ?? null,
+        fxApproximate: c?.approximate ?? false,
+        homeCurrencyAtSave: home,
+      };
+      if (
+        r.fxRate === next.fxRate &&
+        r.fxRateDate === next.fxRateDate &&
+        r.amountHomeMinor === next.amountHomeMinor &&
+        r.fxApproximate === next.fxApproximate &&
+        r.homeCurrencyAtSave === next.homeCurrencyAtSave
+      ) {
+        continue;
+      }
       tx.update(receipts)
-        .set({
-          fxRate: c?.fxRate ?? null,
-          fxRateDate: c?.fxRateDate ?? null,
-          amountHomeMinor: c?.amountHomeMinor ?? null,
-          fxApproximate: c?.approximate ?? false,
-          homeCurrencyAtSave: home,
-          updatedAt: t,
-          version: sql`${receipts.version} + 1`,
-        })
+        .set({ ...next, updatedAt: t, version: sql`${receipts.version} + 1` })
         .where(eq(receipts.id, r.id))
         .run();
+      changed++;
     }
   });
-  return rows.length;
+  return changed;
 }
 
 /** True when some non-deleted receipt is not yet converted to `home`. */

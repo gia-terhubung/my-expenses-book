@@ -74,3 +74,17 @@ describe("reconvertAll", () => {
     expect(a.id).toBeDefined();
   });
 });
+
+describe("reconvertAll no-op", () => {
+  it("second run changes nothing and keeps versions", () => {
+    const db = testDb();
+    const a = createReceipt(db, input());
+    const b = createReceipt(db, input({ currency: "XAF", totalMinor: 5 })); // no rate: stays null
+    expect(reconvertAll(db, "IDR", cache)).toBe(2);
+    const va = getReceipt(db, a.id)!;
+    const vb = getReceipt(db, b.id)!;
+    expect(reconvertAll(db, "IDR", cache)).toBe(0);
+    expect(getReceipt(db, a.id)).toEqual(va);
+    expect(getReceipt(db, b.id)).toEqual(vb);
+  });
+});

@@ -121,3 +121,45 @@ describe("ensureRates", () => {
     expect(keys[119]).toBe("2026-11-05");
   });
 });
+
+describe("ensureRates pass behavior", () => {
+  const now = Date.UTC(2026, 10, 5);
+  const throwing = () => {
+    const calls: string[] = [];
+    const fn = (async (url: string) => {
+      calls.push(url);
+      throw new Error("offline");
+    }) as unknown as typeof fetch;
+    return { fn, calls };
+  };
+
+  it("offline pass makes exactly one fetch", async () => {
+    const { fn, calls } = throwing();
+    const pass = {};
+    let c = empty;
+    c = await ensureRates(c, "IDR", "latest", now, fn, pass);
+    for (const d of ["2026-10-01", "2026-10-02", "2026-10-03"]) c = await ensureRates(c, "IDR", d, now, fn, pass);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("remembers 404 dates for 7 days", async () => {
+    const base = { base: "idr", latestDate: null, fetchedAt: now + 30 * DAY, byDate: {} } as FxCache;
+    const { fn, calls } = fakeFetch({});
+    const c1 = await ensureRates(base, "IDR", "2026-11-05", now, fn);
+    expect(c1.missingDates).toEqual({ "2026-11-05": now });
+    await ensureRates(c1, "IDR", "2026-11-05", now + 6 * DAY, fn);
+    expect(calls).toHaveLength(1);
+    await ensureRates(c1, "IDR", "2026-11-05", now + 8 * DAY, fn);
+    expect(calls).toHaveLength(2);
+  });
+
+  it("passes an abort signal to fetch", async () => {
+    let signal: AbortSignal | undefined;
+    const fn = (async (_u: string, init?: RequestInit) => {
+      signal = init?.signal ?? undefined;
+      return { ok: true, status: 200, json: async () => ({ date: "2026-11-05", idr: { usd: 1 } }) };
+    }) as unknown as typeof fetch;
+    await fetchRates("IDR", "latest", fn);
+    expect(signal).toBeDefined();
+  });
+});

@@ -13,6 +13,8 @@ export interface FxCache {
   fetchedAt: number | null;
   /** YYYY-MM-DD -> lowercase code -> rate. */
   byDate: Record<string, Record<string, string>>;
+  /** Dates the API answered 404 for -> when we asked; not re-requested for 7 days. */
+  missingDates?: Record<string, number>;
 }
 
 export interface Prefs {
