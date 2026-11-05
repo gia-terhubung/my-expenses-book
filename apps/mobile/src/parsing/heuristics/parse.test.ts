@@ -127,4 +127,10 @@ describe("parseHeuristic", () => {
     const r = parseHeuristic(["Catatan rapat 04 Nov 2026", "Hubungi Andi 0812.3456.7890", "bawa proyektor"], hints);
     expect(r.totalMinor).toBeNull();
   });
+
+  it("uses the absolute value of a debit-only record", () => {
+    const r = parseHeuristic(["Transaksi QRIS-PT TOKO", "-Rp461.000", "27 Sep 2026, 13.41"], hints);
+    expect(r.totalMinor).toBe(idr("461000"));
+    expect(r.confidence.total).toBe(0.6);
+  });
 });

@@ -10,6 +10,7 @@ import {
   LANGUAGE_CURRENCY,
   MERCHANT_LABEL,
   MERCHANT_SKIP,
+  NEGATIVE_NOT_SPEND,
   NON_MONEY_LINE,
   REF_LABELS,
   RETAIL_BRANDS,
@@ -64,7 +65,6 @@ function analyseLine(text: string, order: DateOrder, today: Date): Line {
     const currency = /[^\d.,\s()\-−–]/.test(a.raw) || SUFFIX_CURRENCY.test(after);
     const separated = /\d[.,]\s?\d/.test(a.raw);
     const money =
-      !a.negative &&
       digits.length <= 13 &&
       !phoneLike(a.raw) &&
       (currency || (!nonMoneyLine && (separated || (digits.length >= 3 && digits.length <= 7))));
@@ -92,12 +92,12 @@ function pickTotal(lines: Line[]): TotalPick | null {
     if (tier < 0 || (best && best.rank <= tier * 2)) continue;
     const m = TOTAL_TIERS[tier]!.re.exec(line.text)!;
     const kwEnd = m.index + m[0].length;
-    let amount = [...line.amounts].reverse().find((a) => a.money && a.start >= kwEnd);
+    let amount = [...line.amounts].reverse().find((a) => isPositiveMoney(a) && a.start >= kwEnd);
     let rank = tier * 2;
     for (let j = i + 1; !amount && j <= i + 2 && j < lines.length; j++) {
       const next = lines[j]!;
       if (skipsTotal(next.text)) break;
-      amount = next.amounts.find((a) => a.money);
+      amount = next.amounts.find(isPositiveMoney);
       rank = tier * 2 + 1;
     }
     if (amount && (!best || rank < best.rank)) {
@@ -106,12 +106,27 @@ function pickTotal(lines: Line[]): TotalPick | null {
   }
   if (best) return { value: best.value, confidence: best.confidence };
   // Fallback: largest currency-marked (else separator-formatted) amount on a non-skip line.
-  const pool = lines.filter((l) => !skipsTotal(l.text)).flatMap((l) => l.amounts.filter((a) => a.money));
+  const pool = lines.filter((l) => !skipsTotal(l.text)).flatMap((l) => l.amounts.filter(isPositiveMoney));
   const marked = pool.filter((a) => a.currency);
   const candidates = marked.length ? marked : pool.filter((a) => /[.,]/.test(a.raw));
-  if (!candidates.length) return null;
-  const largest = candidates.reduce((x, y) => (Number(y.value) > Number(x.value) ? y : x));
-  return { value: largest.value, confidence: 0.3 };
+  if (candidates.length) return { value: largest(candidates).value, confidence: 0.3 };
+  return debitOnlyTotal(lines);
+}
+
+const isPositiveMoney = (a: Amount) => a.money && !a.negative;
+
+const largest = (xs: Amount[]) => xs.reduce((x, y) => (Number(y.value) > Number(x.value) ? y : x));
+
+/**
+ * A bank-mutation style record prints the spend as a negative amount ("-Rp461.000").
+ * Only when every money amount is negative, and the line is not a refund/discount/change
+ * line, is the absolute value used as the total.
+ */
+function debitOnlyTotal(lines: Line[]): TotalPick | null {
+  const all = lines.flatMap((l) => l.amounts.filter((a) => a.money).map((a) => ({ a, line: l.text })));
+  if (!all.length || all.some(({ a }) => !a.negative)) return null;
+  const spend = all.filter(({ line }) => !NEGATIVE_NOT_SPEND.test(line)).map(({ a }) => a);
+  return spend.length ? { value: largest(spend).value, confidence: 0.6 } : null;
 }
 
 function pickTax(lines: Line[], currency: string, totalMinor: number | null): number | null {
@@ -121,7 +136,7 @@ function pickTax(lines: Line[], currency: string, totalMinor: number | null): nu
     if (!kws.length || TAX_REGISTRATION.test(line.text)) continue;
     const last = kws[kws.length - 1]!;
     const after = last.index! + last[0].length;
-    const amount = [...line.amounts].reverse().find((a) => a.money && a.start >= after);
+    const amount = [...line.amounts].reverse().find((a) => isPositiveMoney(a) && a.start >= after);
     if (!amount) continue;
     sum = (sum ?? 0) + toMinor(amount.value, currency);
   }

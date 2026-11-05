@@ -196,6 +196,9 @@ export const CATEGORY_RULES: { re: RegExp; id: string }[] = [
   { re: word("express|ekspedisi|courier|kurir|waybill|resi"), id: "default:other" },
 ];
 
+/** Lines whose negative amount is money coming back, never the spend. */
+export const NEGATIVE_NOT_SPEND = word("refund|retur|void|diskon|discount|cashback|kembali(?:an)?|change|potongan");
+
 /** Lines whose numbers are phone/account numbers, not money (unless a currency is printed). */
 export const NON_MONEY_LINE = word("telp|tel|telepon|phone|hp|wa|whatsapp|rekening|no\\.?\\s*rek|account|acct|no\\.");
 
