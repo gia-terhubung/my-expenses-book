@@ -3,10 +3,12 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
-import { BackHandler, StyleSheet, View } from "react-native";
+import { BackHandler, Platform, StyleSheet, View } from "react-native";
 
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -15,22 +17,36 @@ import { applySnapshotProtection } from "./snapshotProtection";
 import { useLockGate } from "./useLockGate";
 import { usePref } from "@/prefs/PrefsProvider";
 
-const UnlockContext = createContext<(() => Promise<boolean>) | null>(null);
+type LockCtx = { unlock(): Promise<boolean>; setMounted(v: boolean): void };
+const UnlockContext = createContext<LockCtx | null>(null);
 
-/** Body of the `/lock` route (a native fullScreenModal, so it stacks above any open modal). */
+/**
+ * Body of the `/lock` route (a native fullScreenModal, so on iOS it stacks above any open modal).
+ * On Android the modal is a fragment inside the Stack, so the gate draws the lock UI itself,
+ * outside the accessibility-hidden content, and the route stays blank.
+ */
 export function LockRoute() {
-  const unlock = useContext(UnlockContext);
+  const ctx = useContext(UnlockContext);
+  const setMounted = ctx?.setMounted;
+  useEffect(() => {
+    setMounted?.(true);
+    return () => setMounted?.(false);
+  }, [setMounted]);
   // Android back must not dismiss the lock.
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => true);
     return () => sub.remove();
   }, []);
-  return unlock ? <LockScreen onUnlock={unlock} /> : null;
+  return ctx && Platform.OS !== "android" ? (
+    <LockScreen onUnlock={ctx.unlock} />
+  ) : null;
 }
 
 /**
  * While locked, pushes the `/lock` route once (above any modal) and dismisses it on unlock;
- * an opaque cover hides children until then (cold start: no flash). Children stay mounted. (No a11y-hiding wrapper: the /lock route lives inside children, and the native modal already hides content beneath it.)
+ * a separate cold-start cover hides content only until /lock has mounted (no flash). The
+ * backgrounded privacy cover is independent of lock state. Children stay mounted; on Android they
+ * are hidden from accessibility while locked (iOS native modal already does that).
  * Prompts once per lock; failure leaves the Retry button.
  */
 export function LockGate({ children }: { children: ReactNode }) {
@@ -40,6 +56,12 @@ export function LockGate({ children }: { children: ReactNode }) {
   const lockEnabled = usePref("lockEnabled");
   const navReady = !!useRootNavigationState()?.key;
   const lockPushed = useRef(false);
+  const [lockMounted, setLockMounted] = useState(false);
+  const android = Platform.OS === "android";
+  const ctx = useMemo<LockCtx>(
+    () => ({ unlock, setMounted: setLockMounted }),
+    [unlock],
+  );
 
   useEffect(() => {
     void applySnapshotProtection(lockEnabled).catch(() => {});
@@ -68,19 +90,29 @@ export function LockGate({ children }: { children: ReactNode }) {
     }
   }, [locked, foreground, unlock]);
 
+  const fill = [
+    StyleSheet.absoluteFill,
+    { backgroundColor: colors.background },
+  ];
   return (
-    <UnlockContext.Provider value={unlock}>
+    <UnlockContext.Provider value={ctx}>
       <View style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>{children}</View>
-        {covered || locked ? (
-          <View
-            testID="privacy-cover"
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: colors.background },
-            ]}
-          />
+        <View
+          style={{ flex: 1 }}
+          accessibilityElementsHidden={android && locked}
+          importantForAccessibility={
+            android && locked ? "no-hide-descendants" : "auto"
+          }
+        >
+          {children}
+        </View>
+        {covered && !locked ? (
+          <View testID="privacy-cover" style={fill} />
         ) : null}
+        {locked && !lockMounted && !android ? (
+          <View testID="lock-pending-cover" style={fill} />
+        ) : null}
+        {locked && android ? <LockScreen onUnlock={unlock} /> : null}
       </View>
     </UnlockContext.Provider>
   );

@@ -1,7 +1,13 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import * as LocalAuthentication from "expo-local-authentication";
 import { useLayoutEffect, useState } from "react";
-import { AppState, Pressable, Text, useWindowDimensions } from "react-native";
+import {
+  AppState,
+  Platform,
+  Pressable,
+  Text,
+  useWindowDimensions,
+} from "react-native";
 
 import { initI18n } from "@/i18n";
 
@@ -9,14 +15,17 @@ import { LockGate, LockRoute } from "./LockGate";
 
 // Route-based lock: the mocked router "presents" /lock by mounting <LockRoute/> beside the gate,
 // as the root Stack would. dismiss removes it.
-const mockRoute = { setShown: null as ((v: boolean) => void) | null };
+const mockRoute = {
+  setShown: null as ((v: boolean) => void) | null,
+  hold: false,
+};
 const mockRouter = { push: jest.fn(), dismiss: jest.fn() };
 jest.mock("expo-router", () => ({
   useRootNavigationState: () => ({ key: "root" }),
   router: {
     push: (...a: unknown[]) => {
       mockRouter.push(...a);
-      mockRoute.setShown?.(true);
+      if (!mockRoute.hold) mockRoute.setShown?.(true);
     },
     dismiss: (...a: unknown[]) => {
       mockRouter.dismiss(...a);
@@ -92,6 +101,53 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 describe("LockGate", () => {
+  it("privacy cover is separate from lock: covered only when not locked; lock cover clears once /lock mounts", async () => {
+    mockTimeout = 600;
+    auth.mockResolvedValueOnce({ success: false, error: "user_cancel" });
+    await render(
+      <Host>
+        <Counter />
+      </Host>,
+    );
+    await act(async () => {});
+    // /lock mounted (mock router) -> cold-start cover gone, lock UI reachable, no privacy cover.
+    expect(screen.queryByTestId("lock-pending-cover")).toBeNull();
+    expect(screen.queryByTestId("privacy-cover")).toBeNull();
+    expect(screen.getByTestId("lock-screen")).toBeTruthy();
+  });
+
+  it("cold start covers content until /lock mounts", async () => {
+    auth.mockResolvedValue({ success: false, error: "user_cancel" });
+    mockRoute.hold = true;
+    await render(
+      <Host>
+        <Counter />
+      </Host>,
+    );
+    expect(screen.getByTestId("lock-pending-cover")).toBeTruthy();
+    mockRoute.hold = false;
+  });
+
+  it("android: lock UI drawn outside the a11y-hidden content", async () => {
+    const orig = Platform.OS;
+    Platform.OS = "android";
+    try {
+      auth.mockResolvedValue({ success: false, error: "user_cancel" });
+      await render(
+        <Host>
+          <Counter />
+        </Host>,
+      );
+      await act(async () => {});
+      expect(screen.getByTestId("lock-screen")).toBeTruthy();
+      expect(screen.queryByTestId("lock-pending-cover")).toBeNull();
+      // content hidden from a11y: default queries cannot see it
+      expect(screen.queryByText("count 0 w 400")).toBeNull();
+    } finally {
+      Platform.OS = orig;
+    }
+  });
+
   it("pushes /lock above an open modal when locked, once; unlock dismisses only /lock", async () => {
     auth.mockResolvedValueOnce({ success: false, error: "user_cancel" });
     const r = await render(
