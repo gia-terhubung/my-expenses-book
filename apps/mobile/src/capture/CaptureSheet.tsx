@@ -7,6 +7,8 @@ import { AppModal } from "@/components/AppModal";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export type CaptureMode = "scan" | "photos";
+/** Sheet choices: a capture mode, or "manual" (empty draft, no photo). */
+export type CaptureChoice = CaptureMode | "manual";
 
 /** Max photos per import: processed one at a time (low-RAM devices). */
 export const IMPORT_LIMIT = 10;
@@ -48,26 +50,26 @@ export function CaptureSheet({
 }: {
   visible: boolean;
   onClose: () => void;
-  onChoose: (mode: CaptureMode) => void;
+  onChoose: (choice: CaptureChoice) => void;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const pending = useRef<CaptureMode | null>(null);
+  const pending = useRef<CaptureChoice | null>(null);
 
   const flush = () => {
     const mode = pending.current;
     pending.current = null;
     if (mode) onChoose(mode);
   };
-  const choose = (mode: CaptureMode) => {
+  const choose = (mode: CaptureChoice) => {
     pending.current = mode;
     onClose();
     // Android has no reliable onDismiss; its pickers are separate activities anyway.
     if (Platform.OS !== "ios") flush();
   };
 
-  const option = (mode: CaptureMode, label: string) => (
+  const option = (mode: CaptureChoice, label: string) => (
     <Pressable
       accessibilityRole="button"
       onPress={() => choose(mode)}
@@ -110,6 +112,7 @@ export function CaptureSheet({
         </Text>
         {option("scan", t("capture.scan"))}
         {option("photos", t("capture.import"))}
+        {option("manual", t("capture.manual"))}
         <Pressable accessibilityRole="button" onPress={onClose} style={[styles.option, { paddingHorizontal: theme.spacing.lg }]}>
           <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("common.cancel")}</Text>
         </Pressable>

@@ -88,3 +88,15 @@ describe("reconvertAll no-op", () => {
     expect(getReceipt(db, b.id)).toEqual(vb);
   });
 });
+
+describe("reconvertAll with a manual rate", () => {
+  it("keeps a manual rate while home is unchanged, replaces it when home changes", () => {
+    const db = testDb();
+    const r = createReceipt(db, input({ fxRate: "16000", fxRateDate: null, amountHomeMinor: 19744000, homeCurrencyAtSave: "IDR" }));
+    createReceipt(db, input()); // unconverted row triggers a pass
+    reconvertAll(db, "IDR", cache);
+    expect(getReceipt(db, r.id)).toMatchObject({ fxRate: "16000", fxRateDate: null, amountHomeMinor: 19744000 });
+    reconvertAll(db, "EUR", { ...cache, base: "eur" });
+    expect(getReceipt(db, r.id)).toMatchObject({ fxRate: "20000", fxRateDate: "2026-11-01", homeCurrencyAtSave: "EUR" });
+  });
+});

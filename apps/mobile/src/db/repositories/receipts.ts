@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNull, lte, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lte, ne, sql } from "drizzle-orm";
 
 import { newId, now } from "../ids";
 import { receipts } from "../schema";
@@ -108,4 +108,15 @@ export function findReceiptsByAmount(
     )
     .orderBy(desc(receipts.purchasedAtUtc), desc(receipts.id))
     .all();
+}
+
+/** Ids of live drafts, oldest first (review queue for drafts left unreviewed). */
+export function listDraftIds(db: AppDb): string[] {
+  return db
+    .select({ id: receipts.id })
+    .from(receipts)
+    .where(and(isNull(receipts.deletedAt), eq(receipts.status, "draft")))
+    .orderBy(asc(receipts.createdAt), asc(receipts.id))
+    .all()
+    .map((r) => r.id);
 }

@@ -82,3 +82,17 @@ export function convertToHome(
     approximate: date !== purchaseDate,
   };
 }
+
+/**
+ * Home minor amount at a user-entered rate (home units per 1 receipt-currency unit, plain
+ * positive decimal). Exact BigInt math, one rounding. Null for a malformed or non-positive rate.
+ */
+export function convertWithRate(totalMinor: number, currency: string, home: string, rate: string): number | null {
+  const r = parseDecimal(rate);
+  if (!r) return null;
+  const eR = currencyExponent(currency);
+  const eH = currencyExponent(home);
+  // home minor = total / 10^eR * (n / 10^k) * 10^eH
+  const amount = divRound(BigInt(totalMinor) * r.n * 10n ** BigInt(eH), 10n ** BigInt(r.k) * 10n ** BigInt(eR));
+  return Number(amount);
+}

@@ -1,6 +1,6 @@
 import { testDb } from "../testing/testDb";
 import { createReceipt } from "./receipts";
-import { createPage, listAllPagePaths, listPageHashes, listPages } from "./pages";
+import { countPagesByImagePath, createPage, listAllPagePaths, listPageHashes, listPages, softDeletePages } from "./pages";
 import { receiptPages } from "../schema";
 import { eq } from "drizzle-orm";
 
@@ -62,5 +62,20 @@ describe("pages repository", () => {
     createPage(db, page(r.id, 0, { dhash: "ff00" }));
     createPage(db, page(r.id, 1));
     expect(listPageHashes(db)).toEqual([{ receiptId: r.id, dhash: "ff00", imagePath: expect.any(String) }]);
+  });
+});
+
+describe("page file sharing (discard)", () => {
+  it("countPagesByImagePath counts live pages of other receipts only", () => {
+    const db = testDb();
+    const a = mkReceipt(db);
+    const b = mkReceipt(db);
+    createPage(db, page(a.id, 0, { imagePath: "pages/shared.enc" }));
+    createPage(db, page(b.id, 0, { imagePath: "pages/shared.enc" }));
+    expect(countPagesByImagePath(db, "pages/shared.enc", a.id)).toBe(1);
+    softDeletePages(db, b.id);
+    expect(countPagesByImagePath(db, "pages/shared.enc", a.id)).toBe(0);
+    expect(listPages(db, b.id)).toEqual([]);
+    expect(listPages(db, a.id)).toHaveLength(1);
   });
 });

@@ -1,6 +1,6 @@
 import type { FxCache } from "@/prefs/prefs";
 
-import { convertToHome } from "./convert";
+import { convertToHome, convertWithRate } from "./convert";
 
 function cache(byDate: FxCache["byDate"], base = "idr"): FxCache {
   return { base, latestDate: null, fetchedAt: null, byDate };
@@ -76,5 +76,19 @@ describe("convertToHome", () => {
   it("skips earlier dates that lack the currency", () => {
     const c = cache({ "2026-10-20": { usd: "0.00004" }, "2026-10-28": { eur: "1" } });
     expect(convertToHome(100, "USD", "IDR", "2026-11-01", c)?.fxRateDate).toBe("2026-10-20");
+  });
+});
+
+describe("convertWithRate", () => {
+  it("applies a manual home-per-unit rate with one rounding", () => {
+    expect(convertWithRate(1234, "USD", "IDR", "16250.5")).toBe(20053117); // 12.34 * 16250.5 = 200531.17
+    expect(convertWithRate(500, "JPY", "USD", "0.0067")).toBe(335); // 500 * 0.0067 = 3.35
+    expect(convertWithRate(100, "USD", "USD", "1")).toBe(100);
+  });
+
+  it("rejects non-positive or malformed rates", () => {
+    expect(convertWithRate(100, "USD", "IDR", "0")).toBeNull();
+    expect(convertWithRate(100, "USD", "IDR", "-2")).toBeNull();
+    expect(convertWithRate(100, "USD", "IDR", "abc")).toBeNull();
   });
 });

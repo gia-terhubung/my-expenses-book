@@ -11,8 +11,17 @@ import { convertToHome } from "./convert";
 const dateOf = (local: string) => local.slice(0, 10);
 
 /**
- * Recomputes the home-currency amount of every non-deleted receipt. Writes (and bumps
- * version/updatedAt) only rows whose FX columns actually change. Returns rows changed.
+ * A rate the user typed on the review screen: `fxRate` set with no table date. It stays while the
+ * home currency is unchanged (a home change makes it meaningless, so the row is reconverted).
+ */
+export function isManualRate(r: { fxRate: string | null; fxRateDate: string | null }): boolean {
+  return r.fxRate !== null && r.fxRateDate === null;
+}
+
+/**
+ * Recomputes the home-currency amount of every non-deleted receipt, except manual rates for the
+ * current home. Writes (and bumps version/updatedAt) only rows whose FX columns actually change.
+ * Returns rows changed.
  */
 export function reconvertAll(db: AppDb, home: string, cache: FxCache): number {
   const rows = db.select().from(receipts).where(isNull(receipts.deletedAt)).all();
@@ -20,6 +29,7 @@ export function reconvertAll(db: AppDb, home: string, cache: FxCache): number {
   let changed = 0;
   db.transaction((tx) => {
     for (const r of rows) {
+      if (isManualRate(r) && r.homeCurrencyAtSave === home && r.amountHomeMinor !== null) continue;
       let c = null;
       try {
         c = convertToHome(r.totalMinor, r.currency, home, dateOf(r.purchasedAtLocal), cache);

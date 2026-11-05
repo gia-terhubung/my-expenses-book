@@ -16,6 +16,10 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePref: (k: string) => ({ language: "en", homeCurrency: "USD", taxYearStartMonth: 1, lockEnabled: false, lockTimeout: 60 })[k],
   usePrefs: () => ({ set: jest.fn() }),
 }));
+// Receipts reads drafts ("Continue reviewing"); the real DB provider needs native SQLCipher.
+jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => null }));
+let mockDrafts: string[] = [];
+jest.mock("@/db/repositories/receipts", () => ({ listDraftIds: () => mockDrafts }));
 jest.mock("expo-local-authentication", () => ({
   getEnrolledLevelAsync: jest.fn().mockResolvedValue(1),
   SecurityLevel: { NONE: 0, SECRET: 1 },
@@ -36,14 +40,26 @@ jest.mock("@/layout/useWindowClass");
 
 const LABELS = ["Receipts", "Search", "Folders", "Settings"];
 
+const ReviewStub = () => null;
+
 function renderApp() {
   return renderRouter(
-    { "(tabs)/_layout": TabsLayout, "(tabs)/index": Index, "(tabs)/search": Search, "(tabs)/folders": Folders, "(tabs)/settings": Settings },
+    {
+      "(tabs)/_layout": TabsLayout,
+      "(tabs)/index": Index,
+      "(tabs)/search": Search,
+      "(tabs)/folders": Folders,
+      "(tabs)/settings": Settings,
+      "review/[id]": ReviewStub,
+    },
     { initialUrl: "/" },
   );
 }
 
 beforeAll(() => initI18n("en"));
+beforeEach(() => {
+  mockDrafts = [];
+});
 
 describe("tabs layout", () => {
   it("compact: bottom tab bar, no side rail, 4 labels", async () => {
@@ -75,5 +91,15 @@ describe("tabs layout", () => {
     await act(async () => setClass("compact"));
     expect(screen.getByTestId("tab-bar")).toBeTruthy();
     expect(screen).toHavePathname("/settings");
+  });
+
+  it("Receipts: 'Continue reviewing (N)' opens the oldest draft with the rest queued", async () => {
+    setClass("compact");
+    mockDrafts = ["d1", "d2", "d3"];
+    await renderApp();
+    const banner = await screen.findByText("Continue reviewing (3)");
+    await act(async () => fireEvent.press(banner));
+    expect(screen).toHavePathname("/review/d1");
+    expect(screen).toHaveSearchParams({ id: "d1", queue: "d2,d3" });
   });
 });

@@ -5,6 +5,7 @@ import {
   findReceiptsByAmount,
   findReceiptsByRefNo,
   getReceipt,
+  listDraftIds,
   searchReceipts,
   softDeleteReceipt,
   updateReceipt,
@@ -140,5 +141,18 @@ describe("receipts repository", () => {
     const q = { currency: "IDR", totalMinor: 500, fromUtc: 500, toUtc: 2000 };
     expect(findReceiptsByAmount(db, q).map((r) => r.id)).toEqual([hit.id]);
     expect(findReceiptsByAmount(db, { ...q, excludeId: hit.id })).toEqual([]);
+  });
+});
+
+describe("listDraftIds", () => {
+  it("returns live drafts oldest first", () => {
+    const db = testDb();
+    const a = createReceipt(db, input());
+    const b = createReceipt(db, input());
+    const done = createReceipt(db, input({ status: "confirmed" }));
+    const gone = createReceipt(db, input());
+    softDeleteReceipt(db, gone.id);
+    expect(listDraftIds(db)).toEqual([a.id, b.id]);
+    expect(listDraftIds(db)).not.toContain(done.id);
   });
 });

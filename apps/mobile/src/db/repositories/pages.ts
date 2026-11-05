@@ -1,4 +1,4 @@
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, ne, sql } from "drizzle-orm";
 
 import { newId, now } from "../ids";
 import { receiptPages } from "../schema";
@@ -50,4 +50,29 @@ export function listPageHashes(db: AppDb): { receiptId: string; dhash: string; i
     .where(and(isNull(receiptPages.deletedAt), isNotNull(receiptPages.dhash)))
     .all();
   return rows.map((r) => ({ receiptId: r.receiptId, dhash: r.dhash as string, imagePath: r.imagePath }));
+}
+
+/** Live pages of receipts other than `excludeReceiptId` that use `imagePath` (split siblings share files). */
+export function countPagesByImagePath(db: AppDb, imagePath: string, excludeReceiptId: string): number {
+  const row = db
+    .select({ n: sql<number>`count(*)` })
+    .from(receiptPages)
+    .where(
+      and(
+        isNull(receiptPages.deletedAt),
+        eq(receiptPages.imagePath, imagePath),
+        ne(receiptPages.receiptId, excludeReceiptId),
+      ),
+    )
+    .get();
+  return row?.n ?? 0;
+}
+
+/** Soft-deletes every page row of a receipt (discarded draft). */
+export function softDeletePages(db: AppDb, receiptId: string): void {
+  const t = now();
+  db.update(receiptPages)
+    .set({ deletedAt: t, updatedAt: t, version: sql`${receiptPages.version} + 1` })
+    .where(and(eq(receiptPages.receiptId, receiptId), isNull(receiptPages.deletedAt)))
+    .run();
 }
