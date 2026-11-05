@@ -67,7 +67,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "check:pii": "node scripts/check-fixture-pii.mjs"
   },
   "private": true
 }

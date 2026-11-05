@@ -1,0 +1,13 @@
+NATIONAL RAIL
+TICKET RECEIPT
+Ticket Office: Harrogate
+Date of Issue: 05/10/2026 08:41
+Ticket type: OFF-PEAK RETURN
+Route: ANY PERMITTED
+From: HARROGATE
+To: LONDON KINGS CROSS
+Adults: 1  Railcard: 16-25
+Ticket No. 47210 58833 09
+Amount: £34.60
+Paid by: Contactless
+VAT: Zero rated

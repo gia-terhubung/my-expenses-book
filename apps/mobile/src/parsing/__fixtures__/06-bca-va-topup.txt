@@ -1,0 +1,20 @@
+• BCA
+Transfer Successful
+17 Oct 2026 12:48:25
+IDR 800,000.00
+BCA Virtual Account No.  70001085739204418
+Name  Rxxxxxxxxx Pxxxxxxxx
+Product Name  GOPAY TOPUP
+Source of Fund  381 - 0** - **71
+Pay Amount  IDR 800,000.00
+Admin Fee  IDR 1,000.00
+Total Payment  IDR 801,000.00
+Transaction Type  Transfer to BCA
+Virtual Account
+Reference No.  618402026101712487305
+1TVA5820173600
+Note(s)
+Fees are VAT inclusive (If any)
+PT BANK CENTRAL ASIA TBK.
+WISMA ARTHA - SOUTH JAKARTA
+NPWP: 0019327465082000

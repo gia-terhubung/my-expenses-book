@@ -1,0 +1,19 @@
+BAR LA ALAMEDA
+C/ Mayor, 23
+41001 SEVILLA
+NIF: B-4172830-E
+FACTURA SIMPLIFICADA  Nº T-004182
+Fecha: 18/09/2026   Hora: 14:05
+Mesa: 4
+
+2  CAÑA                2,20     4,40
+1  PATATAS BRAVAS      5,50     5,50
+1  CROQUETAS JAMON     7,00     7,00
+1  PULPO A LA GALLEGA 16,50    16,50
+
+BASE IMPONIBLE                 30,36
+IVA 10%                         3,04
+TOTAL A PAGAR                  33,40 €
+
+TARJETA                        33,40
+Gracias por su visita

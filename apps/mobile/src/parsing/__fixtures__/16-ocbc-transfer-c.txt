@@ -1,0 +1,21 @@
+•OCBC
+Transaction Successful
+Transfer
+From  RIZKY ANANDA PUTRA
+****_****-4417 (IDR)
+BANK BRI
+6120-0102-7735-508 (IDR)
+01 Oct 2026 • 13:57:08 WIB
+IDR  1,900,000
+Message
+Pelunasan katering acara RT 05
+Transfer Method
+BIFAST
+Admin Fee
+DR 2,500 IDR 0
+Transfer Time
+01 Oct 2026
+Transfer Purpose
+Purchase
+Reference Number
+202610011357245017
