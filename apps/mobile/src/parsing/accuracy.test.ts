@@ -45,7 +45,7 @@ const rows: Row[] = readdirSync(DIR)
     const exp = expected[file];
     if (!exp) throw new Error(`missing expected entry for ${file}`);
     const lines = readFileSync(join(DIR, file), "utf8").split("\n");
-    const { segments } = splitReceipts(lines);
+    const { segments } = splitReceipts(lines, hints);
     const parsed = segments.map((s) => parseHeuristic(s, hints));
     const wantSegs: Segment[] = exp.segments ?? [exp];
     const splitOk = segments.length === (exp.split ?? 1);

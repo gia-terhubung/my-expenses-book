@@ -1,5 +1,7 @@
 import { splitReceipts } from "./split";
 
+const today = new Date(2026, 10, 5);
+
 describe("splitReceipts", () => {
   it("splits two labels with repeated header and different totals", () => {
     const lines = [
@@ -12,7 +14,7 @@ describe("splitReceipts", () => {
       "TOTAL ONGKIR  IDR 25,000",
       "Ship: 04-11-2026",
     ];
-    const r = splitReceipts(lines);
+    const r = splitReceipts(lines, { today });
     expect(r.reason).toBe("repeated-header");
     expect(r.segments).toEqual([lines.slice(0, 4), lines.slice(4)]);
   });
@@ -27,12 +29,12 @@ describe("splitReceipts", () => {
       "Es Teh  40.000",
       "Grand Total : 85.000",
     ];
-    const r = splitReceipts(lines);
+    const r = splitReceipts(lines, { today });
     expect(r.reason).toBe("single");
     expect(r.segments).toEqual([lines]);
   });
 
   it("single when no header recurs", () => {
-    expect(splitReceipts(["A SHOP", "TOTAL 5.000"]).reason).toBe("single");
+    expect(splitReceipts(["A SHOP", "TOTAL 5.000"], { today }).reason).toBe("single");
   });
 });

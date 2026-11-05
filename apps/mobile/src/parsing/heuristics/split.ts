@@ -15,7 +15,10 @@ const isNoise = (line: string) => (line.match(/\p{L}/gu)?.length ?? 0) < 3;
  * segment, but only when the segments have different totals: an EDC slip photographed
  * with its POS receipt repeats the header with the same total and stays one receipt.
  */
-export function splitReceipts(lines: string[]): {
+export function splitReceipts(
+  lines: string[],
+  hints: { today: Date },
+): {
   segments: string[][];
   reason: "single" | "repeated-header";
 } {
@@ -32,7 +35,7 @@ export function splitReceipts(lines: string[]): {
     if (!starts.length) continue;
     const bounds = [0, ...starts, lines.length];
     const segments = bounds.slice(0, -1).map((b, i) => lines.slice(b, bounds[i + 1]));
-    const totals = segments.map((s) => extractTotalValue(s));
+    const totals = segments.map((s) => extractTotalValue(s, hints.today));
     if (totals.every((t) => t !== null) && new Set(totals).size > 1) {
       return { segments, reason: "repeated-header" };
     }

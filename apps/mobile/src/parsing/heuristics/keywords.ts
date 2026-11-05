@@ -35,7 +35,10 @@ export const TOTAL_TIERS: TotalTier[] = [
   { re: word("amount|nominal|montant|importe|betrag|valor"), confidence: 0.65 },
 ];
 
-/** Lines that never carry the grand total (sub-totals, discounts, change, fees, tax). */
+/**
+ * Words that label a line as not the grand total (sub-totals, discounts, change, fees, tax).
+ * A match preceded by a qualifier (TOTAL_SKIP_QUALIFIER) is ignored: "TOTAL incl. VAT".
+ */
 export const TOTAL_SKIP = word(
   [
     "sub\\s*-?\\s*total",
@@ -73,6 +76,9 @@ export const TOTAL_SKIP = word(
     "credits?",
   ].join("|"),
 );
+/** Qualifiers that turn a skip word into a description of the total ("incl. VAT", "with tip"). */
+export const TOTAL_SKIP_QUALIFIER =
+  /(?<![\p{L}])(?:incl\.?|including|includes|inclusive|inkl\.?|inklusive|with|w\/|termasuk|sudah\s+termasuk|plus|con|avec|com|mit|di\s+cui)\s*(?:\d+(?:[.,]\d+)?\s*%\s*)?$/iu;
 export const TOTAL_SKIP_CJK = /小計|小计|お釣り|お預り|消費税/u;
 
 /** Tax keywords. The amount after the last keyword on a line is the tax. */
@@ -96,7 +102,6 @@ export const REF_LABELS: RegExp[] = [
   /n[º°]/iu,
   /rechnung\s*nr\.?/iu,
   /invoice\s*no\.?/iu,
-  /mã\s*chuyến/iu,
 ];
 export const WAYBILL = /^[A-Z]{2}\d{10,}$/;
 
@@ -117,7 +122,6 @@ export const MERCHANT_SKIP = word(
     "tax\\s+invoice",
     "struk",
     "kassabon",
-    "token\\s*&\\s*pembayaran",
     "cash\\s+withdrawal",
     "status",
   ].join("|"),
@@ -127,7 +131,7 @@ export type Brand = { re: RegExp; name: string };
 
 /** Banks and e-wallets: the merchant of a transfer receipt. */
 export const BANK_BRANDS: Brand[] = [
-  { re: word("bca|ВСА|BCА"), name: "BCA" },
+  { re: word("bca"), name: "BCA" },
   { re: word("mandiri"), name: "Bank Mandiri" },
   { re: word("bri|brimo"), name: "BRI" },
   { re: word("bni"), name: "BNI" },
@@ -178,7 +182,7 @@ export const CATEGORY_RULES: { re: RegExp; id: string }[] = [
   },
   { re: word("museum|cinema|bioskop|theater|theatre|concert|tiket\\s+masuk"), id: "default:entertainment" },
   {
-    re: word("shopee|tokopedia|lazada|eletr\\p{L}*|electronics?|elektronik|smartwatch"),
+    re: word("shopee|tokopedia|lazada|eletr\\p{L}*|electronics?|elektronik"),
     id: "default:shopping",
   },
   {
@@ -191,6 +195,9 @@ export const CATEGORY_RULES: { re: RegExp; id: string }[] = [
   { re: /market|marché|markt|mart(?![\p{L}])|grocer|minimarket/iu, id: "default:groceries" },
   { re: word("express|ekspedisi|courier|kurir|waybill|resi"), id: "default:other" },
 ];
+
+/** Lines whose numbers are phone/account numbers, not money (unless a currency is printed). */
+export const NON_MONEY_LINE = word("telp|tel|telepon|phone|hp|wa|whatsapp|rekening|no\\.?\\s*rek|account|acct|no\\.");
 
 /** Script/language hints used only when no currency symbol or code was printed. */
 export const LANGUAGE_CURRENCY: { re: RegExp; code: string }[] = [

@@ -96,4 +96,35 @@ describe("parseHeuristic", () => {
     const r = parseHeuristic(["Date: 11/10/2026", "TOTAL $14.80"], hints);
     expect(r.purchasedDate).toBe("2026-10-11");
   });
+
+  it("never picks a negative keyword amount as total", () => {
+    const r = parseHeuristic(["TOKO MAJU", "04 Nov 2026", "TOTAL REFUND -Rp 50.000"], hints);
+    expect(r.totalMinor).toBeNull();
+  });
+
+  it("never picks a negative amount in the fallback", () => {
+    const r = parseHeuristic(["TOKO MAJU", "04 Nov 2026", "Refund (Rp 50.000)", "Kopi Rp 20.000"], hints);
+    expect(r.totalMinor).toBe(idr("20000"));
+    expect(r.confidence.total).toBe(0.3);
+  });
+
+  it("keeps a total line that mentions included VAT", () => {
+    const r = parseHeuristic(["CAFE ROMA", "04/11/2026", "Espresso 4,50", "TOTAL incl. VAT €7,50"], {
+      ...hints,
+      homeCurrency: "EUR",
+    });
+    expect(r.totalMinor).toBe(toMinor("7.50", "EUR"));
+    expect(r.currency).toBe("EUR");
+  });
+
+  it("keeps a total line that mentions the tip", () => {
+    const r = parseHeuristic(["JOE'S GRILL", "11/04/2026", "Subtotal $20.00", "Total with tip $24.00"], hints);
+    expect(r.totalMinor).toBe(toMinor("24.00", "USD"));
+    expect(r.currency).toBe("USD");
+  });
+
+  it("does not read phone numbers as money", () => {
+    const r = parseHeuristic(["Catatan rapat 04 Nov 2026", "Hubungi Andi 0812.3456.7890", "bawa proyektor"], hints);
+    expect(r.totalMinor).toBeNull();
+  });
 });

@@ -10,12 +10,14 @@ import {
   LANGUAGE_CURRENCY,
   MERCHANT_LABEL,
   MERCHANT_SKIP,
+  NON_MONEY_LINE,
   REF_LABELS,
   RETAIL_BRANDS,
   TAX_KEYWORD,
   TAX_REGISTRATION,
   TOTAL_SKIP,
   TOTAL_SKIP_CJK,
+  TOTAL_SKIP_QUALIFIER,
   TOTAL_TIERS,
   WAYBILL,
 } from "./keywords";
@@ -28,6 +30,18 @@ const TIME_RE = /(?<!\d)\d{1,2}:\d{2}(?::\d{2})?(?!\d)/g;
 const LABELED_TIME_RE =
   /(?:jam|pukul|waktu|time|hora|heure|uhrzeit|giờ)\s*:?\s*(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?(?!\d)/giu;
 
+/**
+ * Phone and account numbers formatted with separators ("0812.3456.7890"): a leading 0 with
+ * 9+ digits, or digit groups that are not thousands groups (a 4-digit group after the first).
+ */
+function phoneLike(raw: string): boolean {
+  const digits = raw.replace(/\D/g, "");
+  if (/^0/.test(digits) && digits.length >= 9) return true;
+  const groups = raw.replace(/[^\d.,\s]/g, "").trim().split(/[.,]\s?|\s+/).filter(Boolean);
+  if (groups.length < 3) return false;
+  return groups.slice(1, -1).some((g) => g.length !== 3) || groups[0]!.length > 3;
+}
+
 const mask = (s: string, from: number, to: number) => s.slice(0, from) + " ".repeat(to - from) + s.slice(to);
 
 /** Amounts on a line, ignoring digits that belong to dates, times and percentages. */
@@ -39,6 +53,7 @@ function analyseLine(text: string, order: DateOrder, today: Date): Line {
     for (const m of [...masked.matchAll(re)]) masked = mask(masked, m.index!, m.index! + m[0].length);
   }
   const amounts: Amount[] = [];
+  const nonMoneyLine = NON_MONEY_LINE.test(text);
   for (const a of findAmounts(masked)) {
     const offset = masked.indexOf(a.raw, a.start);
     const end = (offset < 0 ? a.start : offset) + a.raw.length;
@@ -49,13 +64,21 @@ function analyseLine(text: string, order: DateOrder, today: Date): Line {
     const currency = /[^\d.,\s()\-−–]/.test(a.raw) || SUFFIX_CURRENCY.test(after);
     const separated = /\d[.,]\s?\d/.test(a.raw);
     const money =
-      digits.length <= 13 && (currency || separated || (digits.length >= 3 && digits.length <= 7));
+      !a.negative &&
+      digits.length <= 13 &&
+      !phoneLike(a.raw) &&
+      (currency || (!nonMoneyLine && (separated || (digits.length >= 3 && digits.length <= 7))));
     amounts.push({ ...a, end, money, currency });
   }
   return { text, dates, amounts };
 }
 
-const skipsTotal = (text: string) => TOTAL_SKIP.test(text) || TOTAL_SKIP_CJK.test(text);
+/** True when a skip word labels the line; "TOTAL incl. VAT" / "Total with tip" do not count. */
+function skipsTotal(text: string): boolean {
+  if (TOTAL_SKIP_CJK.test(text)) return true;
+  const re = new RegExp(TOTAL_SKIP.source, TOTAL_SKIP.flags.replace("g", "") + "g");
+  return [...text.matchAll(re)].some((m) => !TOTAL_SKIP_QUALIFIER.test(text.slice(0, m.index)));
+}
 
 type TotalPick = { value: string; confidence: number };
 
@@ -283,7 +306,7 @@ export function parseHeuristic(
 }
 
 /** Total of a block of lines as a major-unit decimal string (currency-agnostic); used by split detection. */
-export function extractTotalValue(rawLines: string[], today: Date = new Date()): string | null {
+export function extractTotalValue(rawLines: string[], today: Date): string | null {
   const lines = rawLines
     .map((l) => l.trim())
     .filter((l) => l.length > 0)
