@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, lte, ne, sql } from "drizzle-orm";
 
 import { newId, now } from "../ids";
 import { receipts } from "../schema";
@@ -66,6 +66,44 @@ export function searchReceipts(db: AppDb, query: string): Receipt[] {
       and(
         isNull(receipts.deletedAt),
         sql`receipts.rowid IN (SELECT rowid FROM receipts_fts WHERE receipts_fts MATCH ${match})`,
+      ),
+    )
+    .orderBy(desc(receipts.purchasedAtUtc), desc(receipts.id))
+    .all();
+}
+
+/** Non-deleted receipts sharing a reference number (duplicate detection). */
+export function findReceiptsByRefNo(db: AppDb, refNo: string, excludeId?: string): Receipt[] {
+  return db
+    .select()
+    .from(receipts)
+    .where(
+      and(
+        isNull(receipts.deletedAt),
+        eq(receipts.refNo, refNo),
+        excludeId ? ne(receipts.id, excludeId) : undefined,
+      ),
+    )
+    .orderBy(desc(receipts.purchasedAtUtc), desc(receipts.id))
+    .all();
+}
+
+/** Non-deleted receipts with same currency + total purchased within [fromUtc, toUtc]. */
+export function findReceiptsByAmount(
+  db: AppDb,
+  q: { currency: string; totalMinor: number; fromUtc: number; toUtc: number; excludeId?: string },
+): Receipt[] {
+  return db
+    .select()
+    .from(receipts)
+    .where(
+      and(
+        isNull(receipts.deletedAt),
+        eq(receipts.currency, q.currency),
+        eq(receipts.totalMinor, q.totalMinor),
+        gte(receipts.purchasedAtUtc, q.fromUtc),
+        lte(receipts.purchasedAtUtc, q.toUtc),
+        q.excludeId ? ne(receipts.id, q.excludeId) : undefined,
       ),
     )
     .orderBy(desc(receipts.purchasedAtUtc), desc(receipts.id))

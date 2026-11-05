@@ -75,6 +75,7 @@
     "health": "Salud",
     "office": "Oficina",
     "entertainment": "Ocio",
+    "transfer": "Transferencia",
     "other": "Otros"
   },
   "empty": {

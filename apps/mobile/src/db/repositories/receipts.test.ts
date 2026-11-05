@@ -2,6 +2,8 @@ import type { NewReceiptInput } from "../types";
 import { testDb } from "../testing/testDb";
 import {
   createReceipt,
+  findReceiptsByAmount,
+  findReceiptsByRefNo,
   getReceipt,
   searchReceipts,
   softDeleteReceipt,
@@ -114,5 +116,29 @@ describe("receipts repository", () => {
       const r = createReceipt(db, input({ notes: "salt and pepper" }));
       expect(searchReceipts(db, "AND").map((x) => x.id)).toEqual([r.id]);
     });
+  });
+
+  it("findReceiptsByRefNo excludes self and soft-deleted", () => {
+    const db = testDb();
+    const a = createReceipt(db, input({ refNo: "INV-1" }));
+    const b = createReceipt(db, input({ refNo: "INV-1" }));
+    const c = createReceipt(db, input({ refNo: "INV-1" }));
+    createReceipt(db, input({ refNo: "INV-2" }));
+    softDeleteReceipt(db, c.id);
+    expect(findReceiptsByRefNo(db, "INV-1").map((r) => r.id).sort()).toEqual([a.id, b.id].sort());
+    expect(findReceiptsByRefNo(db, "INV-1", a.id).map((r) => r.id)).toEqual([b.id]);
+  });
+
+  it("findReceiptsByAmount matches currency+total within window only", () => {
+    const db = testDb();
+    const hit = createReceipt(db, input({ purchasedAtUtc: 1000, totalMinor: 500 }));
+    createReceipt(db, input({ purchasedAtUtc: 1000, totalMinor: 501 }));
+    createReceipt(db, input({ purchasedAtUtc: 1000, totalMinor: 500, currency: "USD" }));
+    createReceipt(db, input({ purchasedAtUtc: 9000, totalMinor: 500 }));
+    const gone = createReceipt(db, input({ purchasedAtUtc: 1000, totalMinor: 500 }));
+    softDeleteReceipt(db, gone.id);
+    const q = { currency: "IDR", totalMinor: 500, fromUtc: 500, toUtc: 2000 };
+    expect(findReceiptsByAmount(db, q).map((r) => r.id)).toEqual([hit.id]);
+    expect(findReceiptsByAmount(db, { ...q, excludeId: hit.id })).toEqual([]);
   });
 });

@@ -75,6 +75,7 @@
     "health": "Health",
     "office": "Office",
     "entertainment": "Entertainment",
+    "transfer": "Transfer",
     "other": "Other"
   },
   "empty": {

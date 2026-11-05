@@ -60,6 +60,7 @@ export const receipts = sqliteTable(
     categoryId: text("category_id"),
     folderId: text("folder_id"),
     notes: text("notes"),
+    refNo: text("ref_no"),
     rawOcrText: text("raw_ocr_text"),
     parseSource: text("parse_source").$type<ParseSource>().notNull(),
     parseConfidence: text("parse_confidence"), // JSON
@@ -69,6 +70,7 @@ export const receipts = sqliteTable(
     index("receipts_purchased_at_utc_idx").on(t.purchasedAtUtc),
     index("receipts_folder_id_idx").on(t.folderId),
     index("receipts_category_id_idx").on(t.categoryId),
+    index("receipts_ref_no_idx").on(t.refNo),
   ],
 );
 
@@ -82,8 +84,12 @@ export const receiptPages = sqliteTable(
     thumbPath: text("thumb_path"),
     width: integer("width"),
     height: integer("height"),
+    dhash: text("dhash"),
   },
-  (t) => [index("receipt_pages_receipt_id_idx").on(t.receiptId)],
+  (t) => [
+    index("receipt_pages_receipt_id_idx").on(t.receiptId),
+    index("receipt_pages_dhash_idx").on(t.dhash),
+  ],
 );
 
 export const lineItems = sqliteTable(

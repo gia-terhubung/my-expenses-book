@@ -6,8 +6,9 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 
 import * as schema from "./schema";
-import { migrationsFolder } from "./testing/testDb";
+import { migrationsFolder, testDb } from "./testing/testDb";
 import type { AppDb } from "./types";
+import { listCategories } from "./repositories/categories";
 import { createReceipt, searchReceipts, updateReceipt } from "./repositories/receipts";
 
 const RECEIPT_SQL = `INSERT INTO receipts (id, created_at, updated_at, version, merchant, purchased_at_local,
@@ -75,7 +76,31 @@ describe("migrations", () => {
     raw.exec(RECEIPT_SQL);
     migrate(db, { migrationsFolder });
     expect(raw.prepare("SELECT count(*) c FROM receipts").get()).toEqual({ c: 1 });
-    expect(raw.prepare("SELECT count(*) c FROM categories").get()).toEqual({ c: 10 });
+    expect(raw.prepare("SELECT count(*) c FROM categories").get()).toEqual({ c: 11 });
     expect(searchReceipts(db as unknown as AppDb, "indom")).toHaveLength(1);
+  });
+
+  it("0002 adds ref_no and dhash columns and keeps FTS triggers", () => {
+    const raw = new Database(":memory:");
+    const db = drizzle(raw, { schema });
+    migrate(db, { migrationsFolder });
+    const cols = (t: string) =>
+      (raw.prepare(`PRAGMA table_info(${t})`).all() as { name: string }[]).map((c) => c.name);
+    expect(cols("receipts")).toContain("ref_no");
+    expect(cols("receipt_pages")).toContain("dhash");
+    const triggers = raw
+      .prepare("SELECT name FROM sqlite_master WHERE type='trigger' ORDER BY name")
+      .all();
+    expect(triggers).toEqual([
+      { name: "receipts_fts_ad" },
+      { name: "receipts_fts_ai" },
+      { name: "receipts_fts_au" },
+    ]);
+  });
+
+  it("seeds transfer category between office and other", () => {
+    const ids = listCategories(testDb()).map((c) => c.id);
+    expect(ids.indexOf("default:transfer")).toBeGreaterThan(ids.indexOf("default:office"));
+    expect(ids.indexOf("default:transfer")).toBe(ids.indexOf("default:other") - 1);
   });
 });
