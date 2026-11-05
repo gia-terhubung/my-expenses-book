@@ -56,14 +56,16 @@ describe("image store", () => {
     for (const k of pageFiles) {
       const b = files.get(k)!;
       expect(String.fromCharCode(...b.slice(0, 4))).toBe("MEB1");
-      expect(Buffer.from(b).includes(Buffer.from([0xff, 0xd8]))).toBe(false);
+      expect(Array.from(b.slice(4, 4 + PLAIN_THUMB.length))).not.toEqual(Array.from(PLAIN_THUMB));
+      expect(Array.from(b.slice(4, 4 + PLAIN_PAGE.length))).not.toEqual(Array.from(PLAIN_PAGE));
     }
     expect(Array.from(decryptBytes(key, files.get(DOC + r.imagePath)!))).toEqual(Array.from(PLAIN_PAGE));
     expect(Array.from(decryptBytes(key, files.get(DOC + r.thumbPath)!))).toEqual(Array.from(PLAIN_THUMB));
-    // normalizedUri is the plaintext page JPEG in cache (caller deletes it); thumb plaintext is gone.
-    expect(r.normalizedUri.startsWith(CACHE)).toBe(true);
-    expect(files.has(r.normalizedUri)).toBe(true);
-    expect([...files.keys()].filter((k) => k.startsWith(CACHE) && k !== r.normalizedUri && !k.endsWith("picked.jpg"))).toEqual([]);
+    // Only the work-dir plaintext remains (handed to OCR; caller deletes it).
+    expect(r.normalizedUri.startsWith(CACHE + "work/")).toBe(true);
+    expect(Array.from(files.get(r.normalizedUri)!)).toEqual(Array.from(PLAIN_PAGE));
+    const plainLeft = [...files.keys()].filter((k) => k.startsWith(CACHE) && !k.endsWith("picked.jpg"));
+    expect(plainLeft).toEqual([r.normalizedUri]);
   });
 
   it("openForView returns cache file with original bytes", async () => {
@@ -86,8 +88,10 @@ describe("image store", () => {
     await store.openForView(r.imagePath);
     await store.openForView(r.thumbPath);
     expect([...files.keys()].filter((k) => k.startsWith(CACHE + "view/"))).toHaveLength(2);
+    files.set(CACHE + "ImageManipulator/stray.jpg", PLAIN_PAGE);
     await store.purgeDecryptedCache();
     expect([...files.keys()].filter((k) => k.startsWith(CACHE + "view/"))).toHaveLength(0);
+    expect([...files.keys()].filter((k) => k.startsWith(CACHE) && !k.endsWith("picked.jpg"))).toEqual([]);
   });
 
   it("cleanupOrphanPages deletes files with no page row", async () => {
@@ -107,6 +111,35 @@ describe("image store", () => {
     await expect(store.deleteFiles([r.imagePath, "pages/nope.enc"])).resolves.toBeUndefined();
     expect(files.has(DOC + r.imagePath)).toBe(false);
     expect(files.has(DOC + r.thumbPath)).toBe(true);
+  });
+
+  it("deleteFiles validates all paths before deleting any", async () => {
+    const { store, files } = setup();
+    const r = await store.savePage(CACHE + "picked.jpg");
+    await expect(store.deleteFiles([r.imagePath, "../bad"])).rejects.toThrow();
+    expect(files.has(DOC + r.imagePath)).toBe(true);
+  });
+
+  it("savePage cleans encrypted and plaintext files when the second encrypted write fails", async () => {
+    const { fs, files } = memFs();
+    files.set(CACHE + "picked.jpg", new Uint8Array([1]));
+    let n = 0;
+    const manipulate: Manipulate = async () => {
+      const uri = `${CACHE}ImageManipulator/m${n++}.jpg`;
+      files.set(uri, PLAIN_PAGE);
+      return { uri, width: 1, height: 1 };
+    };
+    let writes = 0;
+    const failing: FileOps = {
+      ...fs,
+      write: async (u, b) => {
+        if (u.startsWith(DOC) && ++writes === 2) throw new Error("disk full");
+        return fs.write(u, b);
+      },
+    };
+    const store = createImageStore({ key: new Uint8Array(randomBytes(32)), fs: failing, manipulate });
+    await expect(store.savePage(CACHE + "picked.jpg")).rejects.toThrow("disk full");
+    expect([...files.keys()].filter((k) => k !== CACHE + "picked.jpg")).toEqual([]);
   });
 
   it("savePage removes partial files when a step fails", async () => {

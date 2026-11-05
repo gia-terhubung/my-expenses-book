@@ -45,6 +45,10 @@ const THUMB_QUALITY = 0.7;
 
 const PAGES = "pages/";
 const VIEW = "view/";
+// Store-owned plaintext staging (normalized page JPEG handed to OCR); purged with the view dir.
+const WORK = "work/";
+// expo-image-manipulator writes its outputs here; swept so a kill never leaves plaintext behind.
+const MANIPULATOR_DIR = "ImageManipulator/";
 // Paths stored in the DB are relative to the document dir (the iOS container path changes).
 const PAGE_PATH = /^pages\/[A-Za-z0-9-]+\.enc$/;
 
@@ -60,6 +64,7 @@ export function createImageStore(deps: {
   const { key, fs, manipulate } = deps;
   const docUri = (rel: string) => fs.documentDir + rel;
   const viewDir = fs.cacheDir + VIEW;
+  const workDir = fs.cacheDir + WORK;
 
   const writeEncrypted = async (rel: string, plain: Uint8Array) =>
     fs.write(docUri(rel), encryptBytes(key, plain));
@@ -68,23 +73,29 @@ export function createImageStore(deps: {
   return {
     async savePage(srcUri) {
       const written: string[] = [];
-      let page: { uri: string; width: number; height: number } | null = null;
-      let thumb: { uri: string } | null = null;
+      const plaintext: string[] = [];
       try {
-        page = await manipulate(srcUri, { maxEdge: PAGE_MAX_EDGE, quality: PAGE_QUALITY });
-        thumb = await manipulate(page.uri, { maxEdge: THUMB_MAX_EDGE, quality: THUMB_QUALITY });
+        const page = await manipulate(srcUri, { maxEdge: PAGE_MAX_EDGE, quality: PAGE_QUALITY });
+        plaintext.push(page.uri);
+        // Move the output out of the manipulator's own cache dir into the store-owned work dir.
+        const normalizedUri = `${workDir}${newId()}.jpg`;
+        plaintext.push(normalizedUri);
+        const pageBytes = await fs.read(page.uri);
+        await fs.write(normalizedUri, pageBytes);
+        await removeQuietly(page.uri);
+        const thumb = await manipulate(normalizedUri, { maxEdge: THUMB_MAX_EDGE, quality: THUMB_QUALITY });
+        plaintext.push(thumb.uri);
         const imagePath = `${PAGES}${newId()}.enc`;
         const thumbPath = `${PAGES}${newId()}.enc`;
         written.push(docUri(imagePath), docUri(thumbPath));
-        await writeEncrypted(imagePath, await fs.read(page.uri));
+        await writeEncrypted(imagePath, pageBytes);
         await writeEncrypted(thumbPath, await fs.read(thumb.uri));
         await removeQuietly(thumb.uri);
-        return { imagePath, thumbPath, width: page.width, height: page.height, normalizedUri: page.uri };
+        return { imagePath, thumbPath, width: page.width, height: page.height, normalizedUri };
       } catch (e) {
         // No half-saved page, and no plaintext left behind on failure.
         await Promise.all(written.map(removeQuietly));
-        if (page) await removeQuietly(page.uri);
-        if (thumb) await removeQuietly(thumb.uri);
+        await Promise.all(plaintext.map(removeQuietly));
         throw e;
       }
     },
@@ -98,14 +109,16 @@ export function createImageStore(deps: {
     },
 
     async deleteFiles(paths) {
-      for (const p of paths) {
-        assertPagePath(p);
-        await fs.remove(docUri(p));
-      }
+      paths.forEach(assertPagePath); // validate all before deleting any
+      for (const p of paths) await fs.remove(docUri(p));
     },
 
     async purgeDecryptedCache() {
-      await fs.removeDir(viewDir);
+      await Promise.all([
+        fs.removeDir(viewDir),
+        fs.removeDir(workDir),
+        fs.removeDir(fs.cacheDir + MANIPULATOR_DIR),
+      ]);
     },
 
     async cleanupOrphanPages(knownPaths) {
@@ -113,7 +126,7 @@ export function createImageStore(deps: {
       let removed = 0;
       for (const name of await fs.list(docUri(PAGES))) {
         const rel = PAGES + name;
-        if (known.has(rel)) continue;
+        if (known.has(rel) || !PAGE_PATH.test(rel)) continue;
         await fs.remove(docUri(rel));
         removed++;
       }

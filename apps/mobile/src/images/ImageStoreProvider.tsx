@@ -7,6 +7,7 @@ import { expoSecretStore } from "@/crypto/secureStore";
 import { useDb } from "@/db/DatabaseProvider";
 import { listAllPagePaths } from "@/db/repositories/pages";
 
+import { shouldPurgeOnAppState } from "./purgePolicy";
 import { expoFs } from "./expoFs";
 import { expoManipulate } from "./expoManipulate";
 import { createImageStore, type ImageStore } from "./store";
@@ -21,7 +22,8 @@ export function useImageStore(): ImageStore {
 
 /**
  * Derives the images key once, sweeps orphaned encrypted pages after the DB is open, and keeps
- * decrypted view files out of cache (purged on mount and whenever the app leaves `active`).
+ * decrypted view files out of cache (purged on mount and whenever the app goes to `background`, not `inactive`).
+ * savePage waits for the orphan sweep so a page saved mid-sweep is never deleted.
  * Mount inside DatabaseProvider: a RESET unmounts it and the remount uses the new master key.
  */
 export function ImageStoreProvider({ children }: { children: ReactNode }) {
@@ -36,13 +38,19 @@ export function ImageStoreProvider({ children }: { children: ReactNode }) {
     getOrCreateMasterKey(expoSecretStore).then(
       (master) => {
         if (cancelled) return;
-        setStore(
-          createImageStore({
-            key: deriveKey(master, "images"),
-            fs: expoFs,
-            manipulate: expoManipulate,
-          }),
+        const base = createImageStore({
+          key: deriveKey(master, "images"),
+          fs: expoFs,
+          manipulate: expoManipulate,
+        });
+        // Cleanup failure must not block the app; orphans are retried on the next launch.
+        const sweep = base.cleanupOrphanPages(listAllPagePaths(db)).then(
+          () => undefined,
+          (e) => {
+            if (__DEV__) console.warn("cleanupOrphanPages failed", e);
+          },
         );
+        setStore({ ...base, savePage: async (uri) => (await sweep, base.savePage(uri)) });
       },
       (e) => {
         if (!cancelled) setError(e);
@@ -51,7 +59,7 @@ export function ImageStoreProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [db]);
 
   useEffect(() => {
     if (!store) return;
@@ -61,15 +69,11 @@ export function ImageStoreProvider({ children }: { children: ReactNode }) {
       });
     };
     purge();
-    // Cleanup failure must not block the app; orphans are retried on the next launch.
-    store.cleanupOrphanPages(listAllPagePaths(db)).catch((e) => {
-      if (__DEV__) console.warn("cleanupOrphanPages failed", e);
-    });
     const sub = AppState.addEventListener("change", (s) => {
-      if (s !== "active") purge();
+      if (shouldPurgeOnAppState(s)) purge();
     });
     return () => sub.remove();
-  }, [store, db]);
+  }, [store]);
 
   if (!store) return null;
   return <ImageStoreContext.Provider value={store}>{children}</ImageStoreContext.Provider>;
