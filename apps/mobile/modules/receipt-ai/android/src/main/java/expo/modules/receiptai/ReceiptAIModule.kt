@@ -9,6 +9,7 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
+import kotlin.coroutines.cancellation.CancellationException
 
 class ParseHints : Record {
   @Field val locale: String = "en"
@@ -17,17 +18,20 @@ class ParseHints : Record {
 
 class ReceiptAIModule : Module() {
   // One client for the module lifetime; created on first use, closed in OnDestroy.
-  private val client: GenerativeModel by lazy { Generation.getClient() }
+  private var clientRef: GenerativeModel? = null
+  private val client: GenerativeModel
+    get() = clientRef ?: Generation.getClient().also { clientRef = it }
 
   override fun definition() = ModuleDefinition {
     Name("ReceiptAI")
 
     OnDestroy {
       try {
-        client.close()
+        clientRef?.close()
       } catch (e: Exception) {
         // best effort
       }
+      clientRef = null
     }
 
     AsyncFunction("getAvailability") Coroutine { ->
@@ -37,6 +41,8 @@ class ReceiptAIModule : Module() {
     AsyncFunction("parseReceipt") Coroutine { ocrText: String, hints: ParseHints ->
       val status = try {
         client.checkStatus()
+      } catch (e: CancellationException) {
+        throw e
       } catch (e: Exception) {
         throw CodedException("ERR_UNAVAILABLE", "On-device model unavailable", e)
       }

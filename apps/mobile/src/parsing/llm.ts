@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { ParseSource } from "@/db/schema";
+import { currencyExponent } from "@/money/currencies";
 import { toMinor } from "@/money/money";
 
 import { findAmounts } from "./heuristics/amount";
@@ -27,10 +28,35 @@ function extractJson(raw: string): unknown {
   }
 }
 
+const MAX_MAJOR = 1e12;
+const MERCHANT_MAX = 80;
+
+function cleanMerchant(raw: string | undefined): string | null {
+  if (!raw) return null;
+  // eslint-disable-next-line no-control-regex
+  const t = raw.replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, MERCHANT_MAX).trim();
+  return t || null;
+}
+
+function knownCurrency(code: string | undefined): string | null {
+  const c = code?.trim().toUpperCase();
+  if (!c || !/^[A-Z]{3}$/.test(c)) return null;
+  try {
+    currencyExponent(c);
+    return c;
+  } catch {
+    return null;
+  }
+}
+
 /** Positive amount in minor units, null when absent, undefined when invalid (negative/garbage). */
 function amountMinor(value: string | number | undefined, currency: string): number | null | undefined {
   if (value === undefined) return null;
-  const text = String(value).trim();
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value < 0 || (value > 0 && value < 0.001) || value > MAX_MAJOR) return undefined;
+    value = value.toFixed(6);
+  }
+  const text = value.trim();
   if (text === "") return null;
   const found = findAmounts(text)[0];
   if (!found || found.negative) return undefined;
@@ -57,16 +83,16 @@ export function parseLlmOutput(
   if (!parsed.success) return null;
   const v = parsed.data;
 
-  const code = v.currency?.trim().toUpperCase();
-  const currency = code && /^[A-Z]{3}$/.test(code) ? code : null;
+  const currency = knownCurrency(v.currency);
   const amountCurrency = currency ?? homeCurrency;
 
   const total = amountMinor(v.total, amountCurrency);
   const tax = amountMinor(v.tax, amountCurrency);
   if (total === undefined || tax === undefined) return null;
+  if (total !== null && tax !== null && tax > total) return null;
 
   const out: Partial<ParsedReceipt> = {};
-  const merchant = v.merchant?.trim();
+  const merchant = cleanMerchant(v.merchant);
   if (merchant) out.merchant = merchant;
   if (currency) out.currency = currency;
   if (total !== null) out.totalMinor = total;

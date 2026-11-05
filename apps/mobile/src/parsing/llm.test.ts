@@ -46,6 +46,28 @@ describe("parseLlmOutput", () => {
     const r = parseLlmOutput('{"merchant":"A","purchasedAt":"2027-05-01"}', "IDR", today);
     expect(r).toEqual({ merchant: "A" });
   });
+  it("cleans merchant: collapse whitespace, strip control chars, cap 80", () => {
+    const r = parseLlmOutput(JSON.stringify({ merchant: "  Kopi\u0000\n  Kenangan\t" + "x".repeat(200) }), "IDR", today);
+    expect(r?.merchant?.length).toBeLessThanOrEqual(80);
+    expect(r?.merchant?.startsWith("Kopi Kenangan")).toBe(true);
+    expect(r?.merchant).not.toMatch(/[\u0000-\u001f]/);
+    expect(parseLlmOutput('{"merchant":" \\u0000 \\n "}', "IDR", today)).toBeNull();
+  });
+  it("unknown currency is dropped, merchant and total kept", () => {
+    const r = parseLlmOutput('{"merchant":"A","total":"10","currency":"ZZZ"}', "USD", today);
+    expect(r).toEqual({ merchant: "A", totalMinor: 1000 });
+  });
+  it("handles number-typed amounts without exponent strings", () => {
+    expect(parseLlmOutput('{"total":96000,"currency":"IDR"}', "IDR", today)?.totalMinor).toBe(toMinor("96000", "IDR"));
+    expect(parseLlmOutput('{"total":12.5,"currency":"USD"}', "USD", today)?.totalMinor).toBe(1250);
+    expect(parseLlmOutput('{"total":1e21,"currency":"USD"}', "USD", today)).toBeNull();
+    expect(parseLlmOutput('{"total":1e-7,"currency":"USD"}', "USD", today)).toBeNull();
+    expect(parseLlmOutput('{"total":"5","tax":1e300}', "USD", today)).toBeNull();
+  });
+  it("rejects tax greater than total", () => {
+    expect(parseLlmOutput('{"total":"10","tax":"11","currency":"USD"}', "USD", today)).toBeNull();
+    expect(parseLlmOutput('{"total":"10","tax":"1","currency":"USD"}', "USD", today)?.taxMinor).toBe(100);
+  });
   it("returns null when nothing valid", () => {
     expect(parseLlmOutput("{}", "IDR", today)).toBeNull();
   });
