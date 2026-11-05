@@ -4,6 +4,8 @@ export type FoundDate = {
   time: string | null;
   confidence: number;
   start: number;
+  /** End offset (exclusive) of the date text, extended over a trailing time when one was read. */
+  end: number;
 };
 
 export function dateOrderFor(currency: string): DateOrder {
@@ -39,6 +41,7 @@ const TEXT_MDY = new RegExp(
   "giu",
 );
 const ISO = /(?<![\d.,/-])(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?![\d])/g;
+const CJK = /(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日(?:\s*[(（][^)）]{1,3}[)）])?/g;
 const NUMERIC = /(?<![\d.,/-])(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})(?![\d])/g;
 
 const TIME_AFTER =
@@ -94,8 +97,12 @@ export function findDates(
     else if (days < -730) conf = Math.min(conf, 0.4);
     // time lookup on original line
     let time: string | null = null;
+    let spanEnd = end;
     const after = TIME_AFTER.exec(line.slice(end));
-    if (after) time = parseTime(after[1]!, after[2]!, after[4]);
+    if (after) {
+      time = parseTime(after[1]!, after[2]!, after[4]);
+      if (time) spanEnd = end + after[0].trimEnd().length;
+    }
     if (!time) {
       const head = line.slice(0, start);
       const b = TIME_BEFORE.exec(head) ?? TIME_LABEL_BEFORE.exec(head);
@@ -106,6 +113,7 @@ export function findDates(
       time,
       confidence: Math.round(conf * 100) / 100,
       start,
+      end: spanEnd,
     });
     work = work.slice(0, start) + " ".repeat(end - start) + work.slice(end);
     return true;
@@ -123,6 +131,9 @@ export function findDates(
     const mon = MONTH_LOOKUP.get(m[1]!.toLowerCase());
     if (!mon) continue;
     emit(m.index!, m.index! + m[0].length, Number(m[3]), mon, Number(m[2]), 0.95);
+  }
+  for (const m of [...work.matchAll(CJK)]) {
+    emit(m.index!, m.index! + m[0].length, Number(m[1]), Number(m[2]), Number(m[3]), 0.95);
   }
   for (const m of [...work.matchAll(ISO)]) {
     if (work.slice(m.index!, m.index! + m[0].length) !== m[0]) continue;

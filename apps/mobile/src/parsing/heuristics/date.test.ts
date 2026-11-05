@@ -30,6 +30,7 @@ const cases: [string, string, string | null][] = [
   ["16 février 2026", "2026-02-16", null],
   ["16. März 2026", "2026-03-16", null],
   ["10/14/2026  3:42 PM", "2026-10-14", "15:42"],
+  ["2026年10月08日(木) 12:04", "2026-10-08", "12:04"],
 ];
 
 describe("findDates", () => {
@@ -67,6 +68,12 @@ describe("findDates", () => {
 
   it("does not turn an amount after a date into a time", () => {
     expect(findDates("16/10/2026 24.000", dmy)[0]!.time).toBeNull();
+  });
+
+  it("reports the end of the date span including a trailing time", () => {
+    const line = "27 Sep 2026, 13.41 Rp 5.000";
+    const r = findDates(line, dmy)[0]!;
+    expect(line.slice(r.start, r.end)).toBe("27 Sep 2026, 13.41");
   });
 
   it("rejects impossible dates and bare amounts", () => {
