@@ -102,14 +102,17 @@ export function deleteDatabaseFiles(
  * Confirmed "erase all local app data": DB files, then prefs, then the master key. If a
  * delete fails the key is kept, so the data is not left unreadable-but-present.
  * wipePrefs is injected so this module stays free of the native MMKV import.
- * TODO: images join this reset in a later task.
+ * wipeImages (encrypted page files) runs after the DB files and before the key, so a failure
+ * keeps the key and the pages stay readable.
  */
 export async function resetLocalData(opts: {
   store: SecretStore;
   wipePrefs: () => void;
   deleteFiles?: () => void;
+  wipeImages?: () => void;
 }): Promise<void> {
   (opts.deleteFiles ?? (() => deleteDatabaseFiles()))();
+  opts.wipeImages?.();
   opts.wipePrefs();
   await resetMasterKey(opts.store);
 }

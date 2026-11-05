@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { ErrorPanel } from "@/components/ErrorPanel";
 import { assertSecureRandom } from "@/crypto/secureRandom";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
+import { ImageStoreProvider } from "@/images/ImageStoreProvider";
 import { initI18n } from "@/i18n";
 import { resolveLanguage } from "@/i18n/resolve";
 import { LockGate } from "@/lock/LockGate";
@@ -47,18 +48,20 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <DatabaseProvider>
-        <PrefsProvider>
-          <LockGate>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
-              <Stack.Screen
-                name="lock"
-                options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }}
-              />
-            </Stack>
-            <OnboardingRedirect />
-          </LockGate>
-        </PrefsProvider>
+        <ImageStoreProvider>
+          <PrefsProvider>
+            <LockGate>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
+                <Stack.Screen
+                  name="lock"
+                  options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }}
+                />
+              </Stack>
+              <OnboardingRedirect />
+            </LockGate>
+          </PrefsProvider>
+        </ImageStoreProvider>
       </DatabaseProvider>
     </ThemeProvider>
   );

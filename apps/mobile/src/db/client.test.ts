@@ -148,6 +148,21 @@ describe("reset flow", () => {
     });
     expect(order).toEqual(["files", "prefs", "key"]);
 
+    const s3 = store("ef".repeat(32));
+    const order3: string[] = [];
+    const sd3 = s3.delete;
+    s3.delete = async (k) => {
+      order3.push("key");
+      await sd3(k);
+    };
+    await resetLocalData({
+      store: s3,
+      deleteFiles: () => void order3.push("files"),
+      wipeImages: () => void order3.push("images"),
+      wipePrefs: () => void order3.push("prefs"),
+    });
+    expect(order3).toEqual(["files", "images", "prefs", "key"]);
+
     const s2 = store("cd".repeat(32));
     await expect(
       resetLocalData({

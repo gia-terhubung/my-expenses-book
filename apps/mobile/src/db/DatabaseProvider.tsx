@@ -8,6 +8,7 @@ import { DbErrorScreen } from "@/components/DbErrorScreen";
 import { ErrorPanel } from "@/components/ErrorPanel";
 import { MasterKeyCorruptError } from "@/crypto/keys";
 import { expoSecretStore } from "@/crypto/secureStore";
+import { deletePagesDir } from "@/images/expoFs";
 import { deletePrefsStorage } from "@/prefs/storage";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -119,7 +120,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   // A failure shows an error state (no retry loop); the locked handle was already closed.
   const reset = useCallback(async () => {
     try {
-      await resetLocalData({ store: expoSecretStore, wipePrefs: deletePrefsStorage });
+      await resetLocalData({ store: expoSecretStore, wipePrefs: deletePrefsStorage, wipeImages: deletePagesDir });
     } catch (e) {
       setState({
         status: "failed",
