@@ -91,5 +91,25 @@
     "retry": "Tentar novamente",
     "showDetails": "Mostrar detalhes",
     "hideDetails": "Ocultar detalhes"
+  },
+  "capture": {
+    "add": "Adicionar recibo",
+    "title": "Adicionar um recibo",
+    "scan": "Escanear recibo",
+    "import": "Importar das Fotos",
+    "processing": "Lendo o recibo…",
+    "processingMany": "Lendo foto {{current}} de {{total}}…",
+    "multiTitle": "Esta foto tem {{n}} recibos",
+    "multiHint": "Salve cada um como uma despesa separada ou mantenha-os juntos em um só total.",
+    "split": "Dividir em {{n}}",
+    "keepOne": "Manter como um",
+    "failed": "Não foi possível salvar estas fotos. Tente novamente.",
+    "scanUnavailable": "O scanner de documentos não está disponível neste dispositivo.",
+    "importUnavailable": "Não foi possível abrir sua biblioteca de fotos."
+  },
+  "review": {
+    "title": "Revisar recibo",
+    "placeholder": "Rascunho {{id}}",
+    "queued": "Mais {{n}} para revisar"
   }
 }

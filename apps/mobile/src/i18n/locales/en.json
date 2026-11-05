@@ -91,5 +91,25 @@
     "retry": "Retry",
     "showDetails": "Show details",
     "hideDetails": "Hide details"
+  },
+  "capture": {
+    "add": "Add receipt",
+    "title": "Add a receipt",
+    "scan": "Scan receipt",
+    "import": "Import from Photos",
+    "processing": "Reading receipt…",
+    "processingMany": "Reading photo {{current}} of {{total}}…",
+    "multiTitle": "This photo has {{n}} receipts",
+    "multiHint": "Save each one as its own expense, or keep them together as one total.",
+    "split": "Split into {{n}}",
+    "keepOne": "Keep as one",
+    "failed": "Couldn't save these photos. Please try again.",
+    "scanUnavailable": "The document scanner isn't available on this device.",
+    "importUnavailable": "Couldn't open your photo library."
+  },
+  "review": {
+    "title": "Review receipt",
+    "placeholder": "Draft {{id}}",
+    "queued": "{{n}} more to review"
   }
 }

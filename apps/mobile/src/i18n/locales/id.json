@@ -91,5 +91,25 @@
     "retry": "Coba lagi",
     "showDetails": "Tampilkan detail",
     "hideDetails": "Sembunyikan detail"
+  },
+  "capture": {
+    "add": "Tambah struk",
+    "title": "Tambah struk",
+    "scan": "Pindai struk",
+    "import": "Impor dari Foto",
+    "processing": "Membaca struk…",
+    "processingMany": "Membaca foto {{current}} dari {{total}}…",
+    "multiTitle": "Foto ini berisi {{n}} struk",
+    "multiHint": "Simpan masing-masing sebagai pengeluaran terpisah, atau gabungkan menjadi satu total.",
+    "split": "Pisahkan jadi {{n}}",
+    "keepOne": "Gabungkan jadi satu",
+    "failed": "Foto ini tidak dapat disimpan. Silakan coba lagi.",
+    "scanUnavailable": "Pemindai dokumen tidak tersedia di perangkat ini.",
+    "importUnavailable": "Tidak dapat membuka galeri foto."
+  },
+  "review": {
+    "title": "Periksa struk",
+    "placeholder": "Draf {{id}}",
+    "queued": "{{n}} lagi untuk diperiksa"
   }
 }

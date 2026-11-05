@@ -34,8 +34,16 @@ export interface ImageStore {
   savePage(srcUri: string): Promise<SavedPage>;
   openForView(path: string): Promise<string>;
   deleteFiles(paths: string[]): Promise<void>;
-  purgeDecryptedCache(): Promise<void>;
+  /** `keepCaptureWork`: a capture is running (capture lease held), so only the view dir goes. */
+  purgeDecryptedCache(opts?: { keepCaptureWork?: boolean }): Promise<void>;
   cleanupOrphanPages(knownPaths: string[]): Promise<number>;
+  /**
+   * Deletes one plaintext capture file: anything under the cache dir (normalized work files,
+   * picker/scanner outputs) or an iOS scanner output in the document dir. Other URIs are ignored.
+   */
+  discardPlaintext(uri: string): Promise<void>;
+  /** Launch sweep of picker/scanner outputs a killed capture left behind. */
+  purgeCaptureSources(): Promise<void>;
 }
 
 export const PAGE_MAX_EDGE = 1600;
@@ -49,6 +57,10 @@ const VIEW = "view/";
 const WORK = "work/";
 // expo-image-manipulator writes its outputs here; swept so a kill never leaves plaintext behind.
 const MANIPULATOR_DIR = "ImageManipulator/";
+// expo-image-picker copies picked assets here.
+const PICKER_DIR = "ImagePicker/";
+// react-native-document-scanner-plugin (iOS) writes plaintext scans straight into the document dir.
+const SCANNER_FILE = /^DOCUMENT_SCAN_[0-9]+_[0-9_]+\.jpg$/;
 // Paths stored in the DB are relative to the document dir (the iOS container path changes).
 const PAGE_PATH = /^pages\/[A-Za-z0-9-]+\.enc$/;
 
@@ -113,12 +125,31 @@ export function createImageStore(deps: {
       for (const p of paths) await fs.remove(docUri(p));
     },
 
-    async purgeDecryptedCache() {
+    async purgeDecryptedCache(opts) {
+      if (opts?.keepCaptureWork) {
+        await fs.removeDir(viewDir);
+        return;
+      }
       await Promise.all([
         fs.removeDir(viewDir),
         fs.removeDir(workDir),
         fs.removeDir(fs.cacheDir + MANIPULATOR_DIR),
       ]);
+    },
+
+    async discardPlaintext(uri) {
+      if (uri.includes("/../") || uri.includes("/./")) return;
+      const inCache = uri.startsWith(fs.cacheDir) && uri.length > fs.cacheDir.length;
+      const rest = uri.startsWith(fs.documentDir) ? uri.slice(fs.documentDir.length) : null;
+      const scannerFile = rest !== null && SCANNER_FILE.test(rest);
+      if (inCache || scannerFile) await fs.remove(uri);
+    },
+
+    async purgeCaptureSources() {
+      await fs.removeDir(fs.cacheDir + PICKER_DIR);
+      for (const name of await fs.list(fs.documentDir)) {
+        if (SCANNER_FILE.test(name)) await fs.remove(fs.documentDir + name);
+      }
     },
 
     async cleanupOrphanPages(knownPaths) {

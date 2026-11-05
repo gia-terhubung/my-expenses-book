@@ -7,7 +7,8 @@ import { expoSecretStore } from "@/crypto/secureStore";
 import { useDb } from "@/db/DatabaseProvider";
 import { listAllPagePaths } from "@/db/repositories/pages";
 
-import { shouldPurgeOnAppState } from "./purgePolicy";
+import { captureLease } from "./captureLease";
+import { purgeScopeOnAppState } from "./purgePolicy";
 import { expoFs } from "./expoFs";
 import { expoManipulate } from "./expoManipulate";
 import { createImageStore, type ImageStore } from "./store";
@@ -24,6 +25,8 @@ export function useImageStore(): ImageStore {
  * Derives the images key once, sweeps orphaned encrypted pages after the DB is open, and keeps
  * decrypted view files out of cache (purged on mount and whenever the app goes to `background`, not `inactive`).
  * savePage waits for the orphan sweep so a page saved mid-sweep is never deleted.
+ * While a capture holds `captureLease`, the background purge spares the capture's work files;
+ * if the app is still in the background when the lease frees, the full purge runs then.
  * Mount inside DatabaseProvider: a RESET unmounts it and the remount uses the new master key.
  */
 export function ImageStoreProvider({ children }: { children: ReactNode }) {
@@ -63,16 +66,29 @@ export function ImageStoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!store) return;
-    const purge = () => {
-      store.purgeDecryptedCache().catch((e) => {
+    const purge = (opts?: { keepCaptureWork: boolean }) => {
+      store.purgeDecryptedCache(opts).catch((e) => {
         if (__DEV__) console.warn("purgeDecryptedCache failed", e);
       });
     };
-    purge();
+    purge({ keepCaptureWork: captureLease.held() });
+    if (!captureLease.held()) {
+      store.purgeCaptureSources().catch((e) => {
+        if (__DEV__) console.warn("purgeCaptureSources failed", e);
+      });
+    }
     const sub = AppState.addEventListener("change", (s) => {
-      if (shouldPurgeOnAppState(s)) purge();
+      const scope = purgeScopeOnAppState(s, captureLease.held());
+      if (scope) purge(scope);
     });
-    return () => sub.remove();
+    const offFree = captureLease.onFree(() => {
+      const scope = purgeScopeOnAppState(AppState.currentState ?? "active", false);
+      if (scope) purge(scope);
+    });
+    return () => {
+      sub.remove();
+      offFree();
+    };
   }, [store]);
 
   if (!store) return null;

@@ -94,6 +94,53 @@ describe("image store", () => {
     expect([...files.keys()].filter((k) => k.startsWith(CACHE) && !k.endsWith("picked.jpg"))).toEqual([]);
   });
 
+  it("purgeDecryptedCache keeps capture work files while a capture holds the lease", async () => {
+    const { store, files } = setup();
+    const r = await store.savePage(CACHE + "picked.jpg");
+    await store.openForView(r.imagePath);
+    files.set(CACHE + "ImageManipulator/inflight.jpg", PLAIN_PAGE);
+    await store.purgeDecryptedCache({ keepCaptureWork: true });
+    expect([...files.keys()].filter((k) => k.startsWith(CACHE + "view/"))).toEqual([]);
+    expect(files.has(r.normalizedUri)).toBe(true);
+    expect(files.has(CACHE + "ImageManipulator/inflight.jpg")).toBe(true);
+  });
+
+  it("discardPlaintext removes cache and scanner files only", async () => {
+    const { store, files } = setup();
+    const r = await store.savePage(CACHE + "picked.jpg");
+    files.set(DOC + "DOCUMENT_SCAN_1_20261105_101010.jpg", PLAIN_PAGE);
+    files.set(DOC + "notes.jpg", PLAIN_PAGE);
+    files.set("file:///elsewhere/photo.jpg", PLAIN_PAGE);
+    for (const u of [
+      r.normalizedUri,
+      CACHE + "picked.jpg",
+      DOC + "DOCUMENT_SCAN_1_20261105_101010.jpg",
+      DOC + "notes.jpg",
+      DOC + r.imagePath,
+      "file:///elsewhere/photo.jpg",
+      CACHE + "../doc/notes.jpg",
+    ]) {
+      await store.discardPlaintext(u);
+    }
+    expect(files.has(r.normalizedUri)).toBe(false);
+    expect(files.has(CACHE + "picked.jpg")).toBe(false);
+    expect(files.has(DOC + "DOCUMENT_SCAN_1_20261105_101010.jpg")).toBe(false);
+    expect(files.has(DOC + "notes.jpg")).toBe(true);
+    expect(files.has(DOC + r.imagePath)).toBe(true);
+    expect(files.has("file:///elsewhere/photo.jpg")).toBe(true);
+  });
+
+  it("purgeCaptureSources removes leftover picker and scanner files", async () => {
+    const { store, files } = setup();
+    files.set(CACHE + "ImagePicker/a.jpg", PLAIN_PAGE);
+    files.set(DOC + "DOCUMENT_SCAN_2_20261105_101010.jpg", PLAIN_PAGE);
+    files.set(DOC + "pages/x.enc", PLAIN_PAGE);
+    await store.purgeCaptureSources();
+    expect(files.has(CACHE + "ImagePicker/a.jpg")).toBe(false);
+    expect(files.has(DOC + "DOCUMENT_SCAN_2_20261105_101010.jpg")).toBe(false);
+    expect(files.has(DOC + "pages/x.enc")).toBe(true);
+  });
+
   it("cleanupOrphanPages deletes files with no page row", async () => {
     const { store, files } = setup();
     const a = await store.savePage(CACHE + "picked.jpg");
