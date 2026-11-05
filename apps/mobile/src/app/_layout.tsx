@@ -14,9 +14,6 @@ import { ThemeProvider } from "@/theme/ThemeProvider";
 
 // Provides global crypto.getRandomValues (needed by uuidv7).
 install();
-// Fail loudly (ErrorBoundary) rather than let ids fall back to Math.random.
-assertSecureRandom();
-
 // Device-locale language first (also used by the db-error screen, which renders before prefs
 // can open); PrefsProvider switches to the saved language once prefs are available.
 initI18n(resolveLanguage(getLocales()));
@@ -44,6 +41,9 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
 }
 
 export default function RootLayout() {
+  // In render (not module scope) so a failure reaches the exported ErrorBoundary rather than
+  // letting ids fall back to Math.random.
+  assertSecureRandom();
   return (
     <ThemeProvider>
       <DatabaseProvider>
@@ -51,6 +51,10 @@ export default function RootLayout() {
           <LockGate>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
+              <Stack.Screen
+                name="lock"
+                options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }}
+              />
             </Stack>
             <OnboardingRedirect />
           </LockGate>
