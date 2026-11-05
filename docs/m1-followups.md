@@ -80,3 +80,5 @@ Carry these into M2+ planning. Generated from the subagent-driven build ledger o
 - M2: add default category `default:transfer` (sort_order between office and other, e.g. 95; icon `arrow.left.arrow.right`) via new migration `0002` — never edit `0001`. Add `transfer` label to en/id/es/pt-BR locales. Owner ruling: transfers/top-ups/ATM withdrawals are expenses.
 - M2: OCR module `recognizeText` must pin languages and auto-correct 90°/270° rotation (see `docs/spikes/2026-11-ocr-bakeoff.md`).
 - M2: "Import from Photos / Share to app" is a first-class capture path (screenshots are most real inputs).
+- M2: multi-receipt photo detection + "Split into 2 / Keep as one" (spec row "Multiple receipts in one photo"); fixture = spike photo 24 (must split) vs photo 14 (must not).
+- M2: duplicate warning (spec row "Duplicate warning"): migration adds `receipts.ref_no` + `receipt_pages.dhash` (indexed); parser extracts ref numbers; check on save and on backup merge import.

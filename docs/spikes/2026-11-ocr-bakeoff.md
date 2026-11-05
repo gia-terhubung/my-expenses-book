@@ -4,7 +4,7 @@ Date: 2026-11-04 · Branch: `spike/ocr-bakeoff`
 
 ## Inputs
 
-23 owner-supplied images (20 on 2026-11-04, 3 paper on 2026-11-05) in `apps/mobile/spikes/receipts/` (gitignored — contain real names,
+24 owner-supplied images (20 on 2026-11-04, 4 paper on 2026-11-05) in `apps/mobile/spikes/receipts/` (gitignored — contain real names,
 account numbers, phone numbers). Raw OCR dumps in `apps/mobile/spikes/ocr-dumps/` (also
 gitignored for the same reason). **Neither may ever be committed**; M2 parser fixtures must be
 re-typed with synthetic names/numbers.
@@ -14,10 +14,10 @@ Composition (this matters more than the OCR numbers):
 | Kind | Count | Examples |
 |---|---|---|
 | App screenshots (bank transfer / e-wallet / QRIS / marketplace order) | 15 | BCA, OCBC, Livin' Mandiri, BRI, Flip, GoPay, Shopee, PLN token |
-| Printed paper receipts | 6 | Indomaret, BCA EDC + restaurant slip (two receipts in one photo), BCA ATM slip, 2× J&T shipping label (one rotated 90°), café POS receipt |
+| Printed paper receipts | 7 | Indomaret, BCA EDC + restaurant slip (two receipts in one photo), BCA ATM slip, 2× J&T shipping label (one rotated 90°), both labels again in one photo, café POS receipt |
 | Handwritten notas | 2 | shop nota, party-rental faktur |
 
-All 23 are IDR, Indonesian or English UI. No foreign-currency receipts.
+All 24 are IDR, Indonesian or English UI. No foreign-currency receipts.
 
 ## Wrappers evaluated (desk check, 2026-11-04)
 
@@ -46,9 +46,9 @@ Accuracy — is the correct value present in the OCR text (parser not involved):
 | Subset | Total present | Date present |
 |---|---|---|
 | Screenshots (15) | 15/15 | 15/15 |
-| Printed paper (6) | 6/6 | 5/6 (EDC slip: `27 SEP. 20` — year misread `26`→`20`) |
+| Printed paper (7) | 7/7 | 6/7 (EDC slip: `27 SEP. 20` — year misread `26`→`20`) |
 | Handwritten (2) | 1/2 | 0/2 |
-| **All (23)** | **22/23** | **20/23** |
+| **All (24)** | **23/24** | **21/24** |
 
 Geometry: yes (bounding boxes per observation). Indonesian quality: good on print/screens.
 
@@ -60,15 +60,22 @@ rotation — if most observation boxes are taller than wide, re-run at 90° and 
 pass with higher mean confidence. Scanner captures are already deskewed; this is for imported
 photos.
 
-**Two receipts in one photo (photo 14, EDC slip over POS receipt):** both read, both totals
-agree (103.500). v1 rule: one photo = one expense; parser picks the total-keyword amount. Splitting
-a photo into multiple expenses is out of scope.
+**Two receipts in one photo.** Photo 14 (EDC slip over its own POS receipt): both totals agree
+(103.500) — same expense. Photo 24 (two different J&T labels side by side, 843 ms): OCR reads both
+fully as separate contiguous blocks — two `TOTAL BIAYA`, two waybill IDs, IDR 12,000 and 27,000.
+A naive "largest total" parser would record 27,000 and lose 12,000. **Decision (spec updated):**
+detect repeated total keyword / reference IDs → offer "Split into 2" (default) / "Keep as one".
+Photo 14 must not trigger a split prompt: same amount on both blocks → treat as one expense.
+
+**Duplicates.** Photo 24 is the same two receipts as photos 21 + 22, shot at a different time —
+waybill IDs `JD06…` match exactly. Confirms reference-number matching as the strongest duplicate
+signal (spec: "Duplicate warning").
 
 ## Engine test: Google ML Kit Text Recognition v2 (Android)
 
 **Not run** — host has no Android SDK/emulator. Deferred to the owner's EAS device build
-(same session as the receipt-ai physical-device test). Acceptance: same 23 images,
-total ≥ 22/23, date ≥ 20/23.
+(same session as the receipt-ai physical-device test). Acceptance: same 24 images,
+total ≥ 23/24, date ≥ 21/24.
 
 ## Scanner plugin
 
@@ -86,7 +93,7 @@ Deferred to device build.
 
 ## Findings that change M2 scope (owner review)
 
-1. **Screenshots are the main input (15/23), not camera scans.** "Import from Photos / Share to
+1. **Screenshots are the main input (15/24), not camera scans.** "Import from Photos / Share to
    app" must be a first-class v1 capture path alongside the scanner. Screenshots OCR perfectly.
 2. **Many items are transfers, top-ups, ATM withdrawals.** Owner ruling 2026-11-05: they count as
    expenses under a new default **Transfer** category (spec updated; seed via migration `0002` in M2).

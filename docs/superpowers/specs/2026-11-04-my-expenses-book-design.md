@@ -44,6 +44,8 @@ The original `My Expenses Book Master Plan.md` (project root) has a solid stack 
 | Languages | EN, ID, ES, PT-BR — the usual startup v1 set (largest mobile app markets after EN; ID = home market). UI language ≠ receipt language: parser must handle any receipt language. |
 | Categories | Fixed default set (Food & Drink, Transport, Lodging, Groceries, Shopping, Utilities, Health, Office, Entertainment, Transfer, Other) + user-editable. **Transfer** (owner, 2026-11-05): bank/e-wallet transfers, top-ups and ATM withdrawals count as expenses under this category. |
 | Folders | User folders (projects, trips) + automatic tax-year smart view. A receipt belongs to 0..1 folder; categories are separate. |
+| Multiple receipts in one photo | *Added 2026-11-05 (owner photo).* Parser detects a repeated total keyword / repeated header block (e.g. two `TOTAL BIAYA`, two waybill IDs) and shows "This photo has 2 receipts": **Split into 2** (default — OCR boxes clustered into blocks by vertical gap, each becomes its own draft sharing the same page image) / **Keep as one** (sum totals). Never silently picks one total. |
+| Duplicate warning | *Added 2026-11-05 (owner request).* On review/save, warn "Possible duplicate of <merchant, date, amount>" with **View** / **Save anyway** — never block (two identical coffees on one day are legit). Signals, strongest first: (1) same extracted reference number (`ref_no`: waybill, `Reference No.`, `ID transaksi`, receipt number) → "Already saved"; (2) same page-image perceptual hash (dHash, Hamming ≤ 6) → re-imported photo; (3) same currency + `total_minor` + purchase date ±1 day + merchant similarity → "Possible duplicate". Checked locally against non-deleted receipts; also runs on backup **merge** import. |
 
 ## Technical architecture
 
@@ -69,8 +71,8 @@ The original `My Expenses Book Master Plan.md` (project root) has a solid stack 
 
 **Data model (Drizzle, SQLite)** — sync-ready conventions on every table: `id` UUIDv7 text PK, `created_at`, `updated_at` (UTC ms), `deleted_at` (soft delete), `version` int.
 
-- `receipts`: id, merchant, purchased_at_local (ISO wall-clock), purchased_tz (IANA, nullable), purchased_at_utc (ms, derived), scanned_at_utc, scanned_tz, currency, total_minor, tax_minor, fx_rate (text decimal), fx_rate_date, home_currency_at_save, amount_home_minor, fx_approximate bool, category_id, folder_id, notes, raw_ocr_text, parse_source (`apple_fm`|`gemini_nano`|`heuristic`|`manual`), parse_confidence json, status (`draft`|`confirmed`).
-- `receipt_pages`: id, receipt_id, page_index, image_path, thumb_path, width, height.
+- `receipts`: id, merchant, purchased_at_local (ISO wall-clock), purchased_tz (IANA, nullable), purchased_at_utc (ms, derived), scanned_at_utc, scanned_tz, currency, total_minor, tax_minor, fx_rate (text decimal), fx_rate_date, home_currency_at_save, amount_home_minor, fx_approximate bool, category_id, folder_id, notes, raw_ocr_text, parse_source (`apple_fm`|`gemini_nano`|`heuristic`|`manual`), parse_confidence json, status (`draft`|`confirmed`), ref_no (nullable, indexed — duplicate detection; added by M2 migration).
+- `receipt_pages`: id, receipt_id, page_index, image_path, thumb_path, width, height, dhash (text, indexed — duplicate detection; added by M2 migration).
 - `line_items` (optional, LLM path only): id, receipt_id, description, qty, amount_minor.
 - `categories`: id, name_key (i18n) or custom_name, icon, color, is_default.
 - `folders`: id, name, kind (`project`|`trip`), default_currency nullable.
