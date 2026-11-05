@@ -12,6 +12,7 @@ import { BackHandler, Platform, StyleSheet, View } from "react-native";
 
 import { useTheme } from "@/theme/ThemeProvider";
 
+import { AppObscuredContext } from "./appObscured";
 import { LockScreen } from "./LockScreen";
 import { applySnapshotProtection } from "./snapshotProtection";
 import { useLockGate } from "./useLockGate";
@@ -96,24 +97,26 @@ export function LockGate({ children }: { children: ReactNode }) {
   ];
   return (
     <UnlockContext.Provider value={ctx}>
-      <View style={{ flex: 1 }}>
-        <View
-          style={{ flex: 1 }}
-          accessibilityElementsHidden={android && locked}
-          importantForAccessibility={
-            android && locked ? "no-hide-descendants" : "auto"
-          }
-        >
-          {children}
+      <AppObscuredContext.Provider value={locked || covered}>
+        <View style={{ flex: 1 }}>
+          <View
+            style={{ flex: 1 }}
+            accessibilityElementsHidden={android && locked}
+            importantForAccessibility={
+              android && locked ? "no-hide-descendants" : "auto"
+            }
+          >
+            {children}
+          </View>
+          {covered && !locked ? (
+            <View testID="privacy-cover" style={fill} />
+          ) : null}
+          {locked && !lockMounted && !android ? (
+            <View testID="lock-pending-cover" style={fill} />
+          ) : null}
+          {locked && android ? <LockScreen onUnlock={unlock} /> : null}
         </View>
-        {covered && !locked ? (
-          <View testID="privacy-cover" style={fill} />
-        ) : null}
-        {locked && !lockMounted && !android ? (
-          <View testID="lock-pending-cover" style={fill} />
-        ) : null}
-        {locked && android ? <LockScreen onUnlock={unlock} /> : null}
-      </View>
+      </AppObscuredContext.Provider>
     </UnlockContext.Provider>
   );
 }

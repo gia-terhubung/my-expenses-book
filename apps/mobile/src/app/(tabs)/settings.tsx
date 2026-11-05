@@ -1,10 +1,11 @@
 import { getLocales } from "expo-localization";
 import { Link } from "expo-router";
 import { useState, type ReactNode } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AppModal } from "@/components/AppModal";
 import { CurrencyPicker, currencyName } from "@/components/CurrencyPicker";
 import { LANGUAGE_NAMES, LanguagePicker } from "@/components/LanguagePicker";
 import { LockToggle } from "@/components/LockToggle";
@@ -50,7 +51,7 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingBottom: insets.bottom + theme.spacing.xl, gap: theme.spacing.lg }}>
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", flex: 1, gap: theme.spacing.lg }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -64,7 +65,7 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
           {children}
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
