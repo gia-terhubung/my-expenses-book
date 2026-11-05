@@ -61,8 +61,9 @@ export async function analyzeCapture(uris: string[], deps: CaptureDeps): Promise
   const lines: string[] = [];
   let dhash: string | null = null;
   let ocrFailed = false;
-  const languages = OCR_LANGUAGES(deps.uiLanguage);
   try {
+    // Inside the try: anything that throws here still releases the lease and drops sources.
+    const languages = OCR_LANGUAGES(deps.uiLanguage);
     for (const [i, uri] of uris.entries()) {
       const saved = await deps.images.savePage(uri);
       pages.push({ imagePath: saved.imagePath, thumbPath: saved.thumbPath, width: saved.width, height: saved.height });
@@ -282,8 +283,10 @@ export type CaptureRunHooks = {
 
 /**
  * Runs captures one after another (never in parallel: low-RAM devices). Each group is one
- * receipt's pages (scanner) or one imported photo. A failed group is counted and skipped. On
- * cancel, the current analysis' encrypted files and every remaining source file are deleted.
+ * receipt's pages (scanner) or one imported photo. A failed group is counted and skipped. A group
+ * with any URI outside the capture allow-list (`images.isCaptureSource`) counts as failed and is
+ * never read or deleted. On cancel, the current analysis' encrypted files and every remaining
+ * source file are deleted.
  */
 export async function runCaptures(
   groups: string[][],
@@ -293,7 +296,9 @@ export async function runCaptures(
   const ids: string[] = [];
   let failed = 0;
   const dropRemaining = async (from: number) => {
-    for (const uri of groups.slice(from).flat()) await deps.images.discardPlaintext(uri).catch(() => undefined);
+    for (const uri of groups.slice(from).flat()) {
+      if (deps.images.isCaptureSource(uri)) await deps.images.discardPlaintext(uri).catch(() => undefined);
+    }
   };
   for (const [i, group] of groups.entries()) {
     if (hooks.isCancelled?.()) {
@@ -301,6 +306,10 @@ export async function runCaptures(
       return { ids, failed, cancelled: true };
     }
     hooks.onProgress?.(i, groups.length);
+    if (group.length === 0 || !group.every((uri) => deps.images.isCaptureSource(uri))) {
+      failed++;
+      continue;
+    }
     let analysis: Analysis;
     try {
       analysis = await analyzeCapture(group, deps);

@@ -1,13 +1,15 @@
-import { router, Stack, useLocalSearchParams, type Href } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Redirect, router, Stack, useLocalSearchParams, type Href } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Button, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import type { OcrResult } from "../../../modules/receipt-ocr/src/ReceiptOcr.types";
+import { pendingCaptures, resolveCaptureRequest } from "@/capture/pendingCapture";
 import { runCaptures, type CaptureDeps } from "@/capture/pipeline";
 import { useDb } from "@/db/DatabaseProvider";
 import { captureLease } from "@/images/captureLease";
 import { useImageStore } from "@/images/ImageStoreProvider";
+import { useAppObscured } from "@/lock/appObscured";
 import { parseReceipt } from "@/parsing";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -25,24 +27,17 @@ function nativeOcr(): Ocr {
   };
 }
 
-function parseUris(raw: string | undefined): string[] {
-  try {
-    const v: unknown = JSON.parse(raw ?? "[]");
-    return Array.isArray(v) ? v.filter((u): u is string => typeof u === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
 type Phase =
   | { kind: "working"; index: number; total: number }
   | { kind: "split"; count: number }
   | { kind: "failed" };
 
 /**
- * Runs the capture pipeline for picked photos (`mode=photos`: one receipt per photo) or
- * scanner pages (`mode=scan`: one receipt), asks before splitting a multi-receipt photo,
- * then replaces itself with the review route for the first draft (`queue` = the rest).
+ * Runs the capture pipeline for the picker/scanner result handed over under `?token=` (see
+ * pendingCapture: photos = one receipt per photo, scan = one receipt), asks before splitting a
+ * multi-receipt photo, then replaces itself with the review route for the first draft (`queue` =
+ * the rest, `failed` = photos that couldn't be saved). Never starts while the app is locked or
+ * covered. File URIs in route params are honoured only in dev builds.
  */
 export default function CaptureScreen() {
   const { t } = useTranslation();
@@ -52,19 +47,30 @@ export default function CaptureScreen() {
   const prefs = usePrefs();
   const home = usePref("homeCurrency") ?? "USD";
   const language = usePref("language") ?? "en";
-  const params = useLocalSearchParams<{ mode?: string; uris?: string }>();
+  const params = useLocalSearchParams<{ token?: string; mode?: string; uris?: string }>();
+  const obscured = useAppObscured();
   const [phase, setPhase] = useState<Phase>({ kind: "working", index: 0, total: 1 });
   const answer = useRef<((c: "split" | "single" | null) => void) | null>(null);
   const cancelled = useRef(false);
+  const left = useRef(false);
+  const started = useRef(false);
+  // Claimed once per screen instance (the token is single-use).
+  const [groups] = useState(() => resolveCaptureRequest(params, { dev: __DEV__, pending: pendingCaptures }));
 
-  // Read once: params are fixed for this screen instance.
-  const groups = useMemo(() => {
-    const uris = parseUris(params.uris);
-    return params.mode === "scan" ? (uris.length ? [uris] : []) : uris.map((u) => [u]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(
+    () => () => {
+      // Leaving mid-run (swipe down / back): stop after the current step and clean up.
+      left.current = true;
+      cancelled.current = true;
+      answer.current?.(null);
+    },
+    [],
+  );
 
   useEffect(() => {
+    // Wait for unlock: nothing is read or written behind the lock screen / privacy cover.
+    if (!groups || obscured || started.current) return;
+    started.current = true;
     const deps: CaptureDeps = {
       db,
       images,
@@ -76,6 +82,7 @@ export default function CaptureScreen() {
       clock: () => new Date(),
       lease: () => captureLease.acquire(),
     };
+    const total = groups.length;
     void runCaptures(groups, deps, {
       chooseSplit: (count) =>
         new Promise((resolve) => {
@@ -83,34 +90,42 @@ export default function CaptureScreen() {
           answer.current = resolve;
           setPhase({ kind: "split", count });
         }),
-      onProgress: (index, total) => setPhase({ kind: "working", index, total }),
+      onProgress: (index) => setPhase({ kind: "working", index, total }),
       isCancelled: () => cancelled.current,
-    }).then(({ ids, cancelled: wasCancelled }) => {
-      if (wasCancelled || cancelled.current) return;
-      if (!ids.length) {
-        setPhase({ kind: "failed" });
-        return;
-      }
-      const [first, ...rest] = ids;
-      router.replace({ pathname: "/review/[id]", params: { id: first, queue: rest.join(",") } } as unknown as Href);
-    }, () => {
-      if (!cancelled.current) setPhase({ kind: "failed" });
-    });
-    return () => {
-      // Leaving mid-run (swipe down / back): stop after the current step and clean up.
-      cancelled.current = true;
-      answer.current?.(null);
-    };
-    // Runs once per screen instance; deps are captured at start.
+    }).then(
+      ({ ids, failed, cancelled: wasCancelled }) => {
+        // Screen already gone: drafts made so far stay as drafts (listed by the drafts UI).
+        if (left.current) return;
+        if (ids.length) {
+          const [first, ...rest] = ids;
+          router.replace({
+            pathname: "/review/[id]",
+            params: { id: first, queue: rest.join(","), failed: String(failed), total: String(total) },
+          } as unknown as Href);
+        } else if (wasCancelled) {
+          router.back();
+        } else {
+          setPhase({ kind: "failed" });
+        }
+      },
+      () => {
+        if (!left.current) setPhase({ kind: "failed" });
+      },
+    );
+    // Starts once per screen instance (when first unobscured); deps are captured at start.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [obscured]);
 
-  const reply = (c: "split" | "single") => {
+  const reply = (c: "split" | "single" | null) => {
+    if (c === null) cancelled.current = true;
     const resolve = answer.current;
     answer.current = null;
     setPhase((p) => (p.kind === "split" ? { kind: "working", index: 0, total: 0 } : p));
     resolve?.(c);
   };
+
+  // Unknown / used token (or a release-build deep link with file URIs): nothing to capture.
+  if (!groups) return <Redirect href="/" />;
 
   const body = () => {
     if (phase.kind === "failed") {
@@ -157,8 +172,8 @@ export default function CaptureScreen() {
           >
             <Text style={[theme.type.body, { color: theme.colors.text }]}>{t("capture.keepOne")}</Text>
           </Pressable>
-          {/* Leaving resolves the prompt with null: the run deletes this photo's files. */}
-          <Button title={t("common.cancel")} onPress={() => router.back()} />
+          {/* Cancel deletes this photo's files; drafts made from earlier photos still open for review. */}
+          <Button title={t("common.cancel")} onPress={() => reply(null)} />
         </>
       );
     }

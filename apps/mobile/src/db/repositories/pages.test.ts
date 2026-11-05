@@ -61,6 +61,6 @@ describe("pages repository", () => {
     const r = mkReceipt(db);
     createPage(db, page(r.id, 0, { dhash: "ff00" }));
     createPage(db, page(r.id, 1));
-    expect(listPageHashes(db)).toEqual([{ receiptId: r.id, dhash: "ff00" }]);
+    expect(listPageHashes(db)).toEqual([{ receiptId: r.id, dhash: "ff00", imagePath: expect.any(String) }]);
   });
 });

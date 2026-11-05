@@ -1,5 +1,5 @@
 import { createPage } from "@/db/repositories/pages";
-import { createReceipt, softDeleteReceipt } from "@/db/repositories/receipts";
+import { createReceipt, softDeleteReceipt, updateReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb, NewReceiptInput, Receipt } from "@/db/types";
 
@@ -29,8 +29,8 @@ function onDate(date: string): Partial<NewReceiptInput> {
   return { purchasedAtLocal: `${date}T10:00:00`, purchasedAtUtc: Date.UTC(y, m - 1, d, 3, 0, 0) };
 }
 
-function withPage(db: AppDb, r: Receipt, dhash: string): Receipt {
-  createPage(db, { receiptId: r.id, pageIndex: 0, imagePath: "pages/x.enc", thumbPath: null, width: 1, height: 1, dhash });
+function withPage(db: AppDb, r: Receipt, dhash: string, imagePath = `pages/${r.id}.enc`): Receipt {
+  createPage(db, { receiptId: r.id, pageIndex: 0, imagePath, thumbPath: null, width: 1, height: 1, dhash });
   return r;
 }
 
@@ -99,5 +99,26 @@ describe("findDuplicates", () => {
     const me2 = draft(db, { merchant: "TOKO MAJU" });
     // "toko maju" vs "toko maju jaya": Jaccard 2/3 >= 0.5; null merchant skips the test.
     expect(findDuplicates(db, me2, []).map((m) => m.receiptId)).toEqual([noName.id]);
+  });
+
+  it("does not flag split siblings that share the same page file as same-image", () => {
+    const db = testDb();
+    const shared = "pages/shared.enc";
+    const sib1 = withPage(db, draft(db, { totalMinor: 1, merchant: "A" }), "0000000000000000", shared);
+    const sib2 = withPage(db, draft(db, { totalMinor: 2, merchant: "B" }), "0000000000000000", shared);
+    updateReceipt(db, sib1.id, { status: "confirmed" });
+    const other = withPage(db, createReceipt(db, input({ totalMinor: 3, merchant: "C" })), "0000000000000001");
+    expect(findDuplicates(db, sib2, ["0000000000000000"])).toEqual([{ receiptId: other.id, strength: "same-image" }]);
+  });
+
+  it("skips the similar pass for a zero or unknown total", () => {
+    const db = testDb();
+    createReceipt(db, input({ totalMinor: 0, merchant: null }));
+    const free = createReceipt(db, input({ merchant: null }));
+    expect(findDuplicates(db, draft(db, { totalMinor: 0, merchant: null, parseSource: "manual" }), [])).toEqual([]);
+    const unsure = draft(db, { merchant: null, parseConfidence: JSON.stringify({ total: 0 }) });
+    expect(findDuplicates(db, unsure, [])).toEqual([]);
+    const sure = draft(db, { merchant: null, parseConfidence: JSON.stringify({ total: 0.9 }) });
+    expect(findDuplicates(db, sure, []).map((m) => m.receiptId)).toEqual([free.id]);
   });
 });

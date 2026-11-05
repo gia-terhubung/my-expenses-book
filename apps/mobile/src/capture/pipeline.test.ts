@@ -69,6 +69,7 @@ function fakeImages() {
       plaintext.delete(uri);
     },
     async purgeCaptureSources() {},
+    isCaptureSource: (uri: string) => uri.startsWith("file:///cache/"),
   };
   const lease = () => {
     leaseCount++;
@@ -321,5 +322,20 @@ describe("capture pipeline", () => {
     expect(res).toEqual({ ids: [], failed: 0, cancelled: true });
     expect(c.img.encrypted.size).toBe(0);
     expect(c.img.discarded).toEqual(expect.arrayContaining(c.sources));
+  });
+
+  it("never reads or deletes URIs outside the capture allow-list", async () => {
+    const { db, deps, img } = setup({ pages: { "file:///cache/ImagePicker/a.jpg": USD_RECEIPT } });
+    const out = await runCaptures(
+      [["content://com.other.app/doc/1"], ["file:///cache/ImagePicker/a.jpg"], ["file:///doc/pages/x.enc"]],
+      deps,
+      { chooseSplit: async () => "split" },
+    );
+    expect(out.failed).toBe(2);
+    expect(out.ids).toHaveLength(1);
+    expect(img.seenLease).toHaveLength(1); // only the allowed photo reached savePage
+    expect(img.discarded).not.toContain("content://com.other.app/doc/1");
+    expect(img.discarded).not.toContain("file:///doc/pages/x.enc");
+    expect(getReceipt(db, out.ids[0])?.currency).toBe("USD");
   });
 });

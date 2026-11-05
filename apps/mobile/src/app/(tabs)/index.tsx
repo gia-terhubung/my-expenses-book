@@ -4,6 +4,7 @@ import { Alert, Pressable, StyleSheet, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { CaptureSheet, pickPhotos, scanPages, type CaptureMode } from "@/capture/CaptureSheet";
+import { pendingCaptures } from "@/capture/pendingCapture";
 import { EmptyState } from "@/layout/EmptyState";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -21,7 +22,9 @@ export default function ReceiptsScreen() {
       return;
     }
     if (!uris.length) return;
-    router.push({ pathname: "/capture", params: { mode, uris: JSON.stringify(uris) } } as unknown as Href);
+    // URIs stay in memory; the route only gets a one-time token (no file paths in deep links).
+    const token = pendingCaptures.put(mode, uris);
+    router.push({ pathname: "/capture", params: { token } } as unknown as Href);
   };
 
   return (

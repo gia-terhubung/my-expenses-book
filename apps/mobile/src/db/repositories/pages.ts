@@ -43,11 +43,11 @@ export function listAllPagePaths(db: AppDb): string[] {
 }
 
 /** All non-deleted pages with a dhash; Hamming filtering happens in JS. */
-export function listPageHashes(db: AppDb): { receiptId: string; dhash: string }[] {
+export function listPageHashes(db: AppDb): { receiptId: string; dhash: string; imagePath: string }[] {
   const rows = db
-    .select({ receiptId: receiptPages.receiptId, dhash: receiptPages.dhash })
+    .select({ receiptId: receiptPages.receiptId, dhash: receiptPages.dhash, imagePath: receiptPages.imagePath })
     .from(receiptPages)
     .where(and(isNull(receiptPages.deletedAt), isNotNull(receiptPages.dhash)))
     .all();
-  return rows.map((r) => ({ receiptId: r.receiptId, dhash: r.dhash as string }));
+  return rows.map((r) => ({ receiptId: r.receiptId, dhash: r.dhash as string, imagePath: r.imagePath }));
 }

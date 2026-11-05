@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 
 import { decryptBytes } from "./crypto";
-import { createImageStore, type FileOps, type Manipulate } from "./store";
+import { createImageStore, isCaptureSource, type FileOps, type Manipulate } from "./store";
 
 const DOC = "file:///doc/";
 const CACHE = "file:///cache/";
@@ -105,29 +105,54 @@ describe("image store", () => {
     expect(files.has(CACHE + "ImageManipulator/inflight.jpg")).toBe(true);
   });
 
-  it("discardPlaintext removes cache and scanner files only", async () => {
+  it("discardPlaintext removes allow-listed capture files only", async () => {
     const { store, files } = setup();
     const r = await store.savePage(CACHE + "picked.jpg");
-    files.set(DOC + "DOCUMENT_SCAN_1_20261105_101010.jpg", PLAIN_PAGE);
-    files.set(DOC + "notes.jpg", PLAIN_PAGE);
-    files.set("file:///elsewhere/photo.jpg", PLAIN_PAGE);
-    for (const u of [
-      r.normalizedUri,
-      CACHE + "picked.jpg",
-      DOC + "DOCUMENT_SCAN_1_20261105_101010.jpg",
+    const keep = [
+      CACHE + "picked.jpg", // cache root: not a capture dir
+      CACHE + "view/x.jpg",
       DOC + "notes.jpg",
       DOC + r.imagePath,
       "file:///elsewhere/photo.jpg",
-      CACHE + "../doc/notes.jpg",
-    ]) {
-      await store.discardPlaintext(u);
-    }
-    expect(files.has(r.normalizedUri)).toBe(false);
-    expect(files.has(CACHE + "picked.jpg")).toBe(false);
-    expect(files.has(DOC + "DOCUMENT_SCAN_1_20261105_101010.jpg")).toBe(false);
-    expect(files.has(DOC + "notes.jpg")).toBe(true);
-    expect(files.has(DOC + r.imagePath)).toBe(true);
-    expect(files.has("file:///elsewhere/photo.jpg")).toBe(true);
+      CACHE + "ImagePicker/../view/x.jpg",
+      CACHE + "ImagePicker/%2E%2E/view/x.jpg",
+    ];
+    const drop = [
+      r.normalizedUri,
+      CACHE + "ImagePicker/a.jpg",
+      CACHE + "mlkit_docscan_ui_client/s.jpg",
+      DOC + "DOCUMENT_SCAN_1_20261105_101010.jpg",
+    ];
+    for (const u of [...keep, ...drop]) files.set(u, PLAIN_PAGE);
+    for (const u of [...keep, ...drop]) await store.discardPlaintext(u);
+    for (const u of drop) expect(files.has(u)).toBe(false);
+    for (const u of keep) expect(files.has(u)).toBe(true);
+  });
+
+  it("isCaptureSource allow-lists picker, scanner and work files, after normalizing", () => {
+    const fs = { documentDir: "file:///var/mobile/App/Documents/", cacheDir: "file:///var/mobile/App/Library/Caches/" };
+    const ok = [
+      "file:///var/mobile/App/Library/Caches/ImagePicker/A1.jpg",
+      "file:///private/var/mobile/App/Library/Caches/ImagePicker/A1.jpg",
+      "/var/mobile/App/Library/Caches/ImagePicker/A1.jpg",
+      "file:///var/mobile/App/Library/Caches/work/w.jpg",
+      "file:///var/mobile/App/Library/Caches/mlkit_docscan_ui_client/p.jpg",
+      "file:///private/var/mobile/App/Documents/DOCUMENT_SCAN_0_20261105_101010.jpg",
+    ];
+    const bad = [
+      "file:///var/mobile/App/Library/Caches/ImagePicker/../view/v.jpg",
+      "file:///var/mobile/App/Library/Caches/ImagePicker/%2E%2E/view/v.jpg",
+      "file:///var/mobile/App/Library/Caches/ImagePicker/a%20b.jpg",
+      "file:///var/mobile/App/Library/Caches/view/v.jpg",
+      "file:///var/mobile/App/Library/Caches/ImagePicker/",
+      "file:///var/mobile/App/Documents/pages/x.enc",
+      "file:///var/mobile/App/Documents/notes.jpg",
+      "content://com.other.app/secret/1",
+      "file:///etc/passwd",
+      "https://example.com/a.jpg",
+    ];
+    for (const u of ok) expect([u, isCaptureSource(u, fs)]).toEqual([u, true]);
+    for (const u of bad) expect([u, isCaptureSource(u, fs)]).toEqual([u, false]);
   });
 
   it("purgeCaptureSources removes leftover picker and scanner files", async () => {

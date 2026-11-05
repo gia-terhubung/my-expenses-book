@@ -105,7 +105,8 @@
     "keepOne": "Gabungkan jadi satu",
     "failed": "Foto ini tidak dapat disimpan. Silakan coba lagi.",
     "scanUnavailable": "Pemindai dokumen tidak tersedia di perangkat ini.",
-    "importUnavailable": "Tidak dapat membuka galeri foto."
+    "importUnavailable": "Tidak dapat membuka galeri foto.",
+    "failedSome": "{{failed}} dari {{total}} foto tidak dapat disimpan."
   },
   "review": {
     "title": "Periksa struk",

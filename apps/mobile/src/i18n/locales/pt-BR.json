@@ -105,7 +105,8 @@
     "keepOne": "Manter como um",
     "failed": "Não foi possível salvar estas fotos. Tente novamente.",
     "scanUnavailable": "O scanner de documentos não está disponível neste dispositivo.",
-    "importUnavailable": "Não foi possível abrir sua biblioteca de fotos."
+    "importUnavailable": "Não foi possível abrir sua biblioteca de fotos.",
+    "failedSome": "Não foi possível salvar {{failed}} de {{total}} fotos."
   },
   "review": {
     "title": "Revisar recibo",

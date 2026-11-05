@@ -1,4 +1,4 @@
-import { listPageHashes } from "@/db/repositories/pages";
+import { listPageHashes, listPages } from "@/db/repositories/pages";
 import { findReceiptsByAmount, findReceiptsByRefNo, getReceipt } from "@/db/repositories/receipts";
 import type { AppDb, Receipt } from "@/db/types";
 import { hamming } from "@/ocr/dhash";
@@ -40,6 +40,17 @@ function dayDistance(a: string, b: string): number {
   return Math.abs(d(a) - d(b)) / DAY_MS;
 }
 
+/** Parsed total confidence; null when not recorded. */
+function totalConfidence(r: Receipt): number | null {
+  if (!r.parseConfidence) return null;
+  try {
+    const v = (JSON.parse(r.parseConfidence) as { total?: unknown }).total;
+    return typeof v === "number" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 function within(hash: string, pageHashes: string[]): boolean {
   return pageHashes.some((h) => {
     try {
@@ -54,7 +65,9 @@ function within(hash: string, pageHashes: string[]): boolean {
  * Confirmed receipts that may duplicate `r`, strongest first: same reference number, a page
  * image within dHash distance 6, then same currency + total + purchase date ±1 day + similar
  * merchant (token Jaccard >= 0.5; skipped when either merchant is null). Each receipt appears
- * once, at its strongest match. Excludes `r` itself, soft-deleted receipts and drafts.
+ * once, at its strongest match. Excludes `r` itself, soft-deleted receipts and drafts. Pages that
+ * share a file with `r`'s own pages (split siblings) are not image matches; the similar pass is
+ * skipped when `r`'s total is 0 or was parsed with confidence 0.
  */
 export function findDuplicates(db: AppDb, r: Receipt, pageHashes: string[]): DuplicateMatch[] {
   const out: DuplicateMatch[] = [];
@@ -70,13 +83,18 @@ export function findDuplicates(db: AppDb, r: Receipt, pageHashes: string[]): Dup
   }
 
   if (pageHashes.length) {
+    // Split siblings share page files (same photo, different receipts): not duplicates.
+    const ownFiles = new Set(listPages(db, r.id).map((p) => p.imagePath));
     const ids = new Set<string>();
     for (const p of listPageHashes(db)) {
-      if (!seen.has(p.receiptId) && within(p.dhash, pageHashes)) ids.add(p.receiptId);
+      if (seen.has(p.receiptId) || ownFiles.has(p.imagePath)) continue;
+      if (within(p.dhash, pageHashes)) ids.add(p.receiptId);
     }
     for (const id of ids) add(getReceipt(db, id), "same-image");
   }
 
+  // A zero or unknown total (manual / OCR-failed draft) would match any zero-total receipt.
+  if (r.totalMinor === 0 || totalConfidence(r) === 0) return out;
   const candidates = findReceiptsByAmount(db, {
     currency: r.currency,
     totalMinor: r.totalMinor,

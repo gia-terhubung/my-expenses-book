@@ -105,7 +105,8 @@
     "keepOne": "Keep as one",
     "failed": "Couldn't save these photos. Please try again.",
     "scanUnavailable": "The document scanner isn't available on this device.",
-    "importUnavailable": "Couldn't open your photo library."
+    "importUnavailable": "Couldn't open your photo library.",
+    "failedSome": "{{failed}} of {{total}} photos couldn't be saved."
   },
   "review": {
     "title": "Review receipt",

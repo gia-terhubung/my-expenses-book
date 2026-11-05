@@ -37,11 +37,10 @@ export interface ImageStore {
   /** `keepCaptureWork`: a capture is running (capture lease held), so only the view dir goes. */
   purgeDecryptedCache(opts?: { keepCaptureWork?: boolean }): Promise<void>;
   cleanupOrphanPages(knownPaths: string[]): Promise<number>;
-  /**
-   * Deletes one plaintext capture file: anything under the cache dir (normalized work files,
-   * picker/scanner outputs) or an iOS scanner output in the document dir. Other URIs are ignored.
-   */
+  /** Deletes one plaintext capture file when `isCaptureSource` allows it; other URIs are ignored. */
   discardPlaintext(uri: string): Promise<void>;
+  /** See the exported `isCaptureSource`, bound to this store's directories. */
+  isCaptureSource(uri: string): boolean;
   /** Launch sweep of picker/scanner outputs a killed capture left behind. */
   purgeCaptureSources(): Promise<void>;
 }
@@ -61,6 +60,36 @@ const MANIPULATOR_DIR = "ImageManipulator/";
 const PICKER_DIR = "ImagePicker/";
 // react-native-document-scanner-plugin (iOS) writes plaintext scans straight into the document dir.
 const SCANNER_FILE = /^DOCUMENT_SCAN_[0-9]+_[0-9_]+\.jpg$/;
+// Android ML Kit document scanner output dir under the app cache (unverified on device: Task 12).
+const MLKIT_SCANNER_DIR = "mlkit_docscan_ui_client/";
+// Cache subdirs whose files capture may read and delete.
+const CAPTURE_CACHE_DIRS = [PICKER_DIR, WORK, MLKIT_SCANNER_DIR];
+
+/** `file://` form with iOS `/private/var` folded to `/var` (both name the same container). */
+function normalizeFileUri(uri: string): string {
+  const u = uri.startsWith("/") ? `file://${uri}` : uri;
+  return u.replace(/^file:\/\/\/private\/var\//, "file:///var/");
+}
+
+/**
+ * True only for a capture source the app itself produced: a file directly or deeper inside
+ * cache/ImagePicker/, cache/work/ or the Android scanner cache dir, or an iOS scanner output
+ * (`Documents/DOCUMENT_SCAN_*.jpg`). Anything with `%` (encoded tricks) or `.`/`..` segments is
+ * rejected, as are other schemes (content://, https://) and every other path.
+ */
+export function isCaptureSource(uri: string, dirs: { cacheDir: string; documentDir: string }): boolean {
+  if (uri.includes("%") || uri.includes("\\")) return false;
+  const u = normalizeFileUri(uri);
+  if (!u.startsWith("file:///")) return false;
+  if (u.slice("file://".length).split("/").some((seg) => seg === "." || seg === "..")) return false;
+  const cache = normalizeFileUri(dirs.cacheDir);
+  const doc = normalizeFileUri(dirs.documentDir);
+  for (const sub of CAPTURE_CACHE_DIRS) {
+    const prefix = cache + sub;
+    if (u.startsWith(prefix) && u.length > prefix.length && !u.endsWith("/")) return true;
+  }
+  return u.startsWith(doc) && SCANNER_FILE.test(u.slice(doc.length));
+}
 // Paths stored in the DB are relative to the document dir (the iOS container path changes).
 const PAGE_PATH = /^pages\/[A-Za-z0-9-]+\.enc$/;
 
@@ -138,12 +167,10 @@ export function createImageStore(deps: {
     },
 
     async discardPlaintext(uri) {
-      if (uri.includes("/../") || uri.includes("/./")) return;
-      const inCache = uri.startsWith(fs.cacheDir) && uri.length > fs.cacheDir.length;
-      const rest = uri.startsWith(fs.documentDir) ? uri.slice(fs.documentDir.length) : null;
-      const scannerFile = rest !== null && SCANNER_FILE.test(rest);
-      if (inCache || scannerFile) await fs.remove(uri);
+      if (isCaptureSource(uri, fs)) await fs.remove(normalizeFileUri(uri));
     },
+
+    isCaptureSource: (uri) => isCaptureSource(uri, fs),
 
     async purgeCaptureSources() {
       await fs.removeDir(fs.cacheDir + PICKER_DIR);
