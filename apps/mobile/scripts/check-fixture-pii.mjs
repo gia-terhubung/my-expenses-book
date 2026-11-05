@@ -4,7 +4,9 @@
 // owner's machine; when they are absent (CI, other clones) the check is skipped.
 //
 // Collected from every dump file:
-//   - every digit run of 6+ digits (account, card, phone, NPWP, reference numbers)
+//   - every digit run of 6+ digits (account, card, phone, NPWP, reference numbers),
+//     after joining digits split by single separators ("0812-3456", "1320 0234",
+//     "001.337.994") so dashed/spaced/dotted numbers are caught too
 //   - every ALL-CAPS word sequence that follows a name/account label
 //     (same line, or the next line when the label ends the line)
 // Exits 1 listing each token found in any file under src/parsing/__fixtures__/.
@@ -50,9 +52,30 @@ function walk(dir) {
   return out;
 }
 
+// Dates, years and grouped amounts are not PII and recur by design (fixtures
+// keep the true totals/dates), so they are masked before digits are joined;
+// otherwise "16 Oct 2026 08:36" or "Rp 1.000.000" would join into false hits.
+const MASKS = [
+  /\b\d{1,2}[-./]\d{1,2}[-./]\d{2,4}\b/g, // 29.09.26, 05-11-2026, 04/11/26
+  /\b\d{4}-\d{2}-\d{2}\b/g, // 2026-11-05 (expected.json)
+  /\b20[2-3]\d\b/g, // standalone year
+  /(?<!\d|\d[.,])[1-9]\d{0,2}(?:[.,]\d{3})+(?!\d|[.,]\d)/g, // Rp1.000.000, 27,665 (no leading 0: NPWP/phones stay)
+];
+
+// Mask the above, then join digits split by one space or a dash/dot with
+// optional spaces ("0812-3456", "777 - 126 - 2116", "001.337.994"). Applied to
+// dumps and fixtures alike, so a number re-formatted with other separators
+// still matches.
+function joinDigits(text) {
+  let t = text;
+  for (const re of MASKS) t = t.replace(re, '#');
+  return t.replace(/(\d)(?: ?[.-] ?| )(?=\d)/g, '$1');
+}
+
 function collectTokens(text) {
   const tokens = new Set();
   for (const m of text.matchAll(/\d{6,}/g)) tokens.add(m[0]);
+  for (const m of joinDigits(text).matchAll(/\d{6,}/g)) tokens.add(m[0]);
   const lines = text.split(/\r?\n/);
   lines.forEach((line, i) => {
     const m = LABEL_RE.exec(line);
@@ -78,8 +101,9 @@ for (const file of walk(dumpsDir)) {
 const leaks = [];
 for (const file of walk(fixturesDir)) {
   const text = readFileSync(file, 'utf8');
+  const joined = joinDigits(text);
   for (const t of tokens) {
-    if (text.includes(t)) leaks.push(`${relative(root, file)}: ${t}`);
+    if (text.includes(t) || joined.includes(t)) leaks.push(`${relative(root, file)}: ${t}`);
   }
 }
 
