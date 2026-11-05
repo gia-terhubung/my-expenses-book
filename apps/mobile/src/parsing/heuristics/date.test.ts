@@ -26,6 +26,9 @@ const cases: [string, string, string | null][] = [
   ["16/10/2026", "2026-10-16", null],
   ["16 de octubre de 2026", "2026-10-16", null],
   ["16 Agu 2026 Jam 09.05", "2026-08-16", "09:05"],
+  ["16 de março de 2026", "2026-03-16", null],
+  ["16 février 2026", "2026-02-16", null],
+  ["16. März 2026", "2026-03-16", null],
   ["10/14/2026  3:42 PM", "2026-10-14", "15:42"],
 ];
 
@@ -43,6 +46,11 @@ describe("findDates", () => {
 
   it("month-first for USD", () => {
     expect(findDates("04/11/26", mdy)[0]!.date).toBe("2026-04-11");
+  });
+
+  it("YMD honors 2-digit year-first", () => {
+    const r = findDates("26/10/16", { order: "YMD", today });
+    expect(r[0]!.date).toBe("2026-10-16");
   });
 
   it("future date low confidence", () => {

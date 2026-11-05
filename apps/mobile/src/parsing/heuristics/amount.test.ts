@@ -31,6 +31,24 @@ describe("findAmounts", () => {
     expect(r[0]!.start).toBe(9);
   });
 
+  it("hyphen separator is not a minus", () => {
+    const r = findAmounts("Nasi - 24.000");
+    expect(r).toHaveLength(1);
+    expect(r[0]!.value).toBe("24000");
+    expect(r[0]!.negative).toBe(false);
+    expect(findAmounts("Nasi-24.000")[0]!.negative).toBe(false);
+  });
+
+  it.each(["-24.000", "Rp-5.000", "-Rp461.000"])("%s is negative", (l) => {
+    expect(findAmounts(l)[0]!.negative).toBe(true);
+  });
+
+  it("does not join neighbouring amounts", () => {
+    expect(findAmounts("Rp 10.000, 20.000").map((a) => a.value)).toEqual(["10000", "20000"]);
+    expect(findAmounts("Qty 2, 3 items").map((a) => a.value)).toEqual(["2", "3"]);
+    expect(findAmounts("1, 2, 3").map((a) => a.value)).toEqual(["1", "2", "3"]);
+  });
+
   it("returns nothing for text without digits", () => {
     expect(findAmounts("TOTAL BELANJA")).toEqual([]);
   });

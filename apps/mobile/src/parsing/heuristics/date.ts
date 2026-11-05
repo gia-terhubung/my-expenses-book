@@ -134,6 +134,12 @@ export function findDates(
     const b = Number(m[2]);
     const { y, short } = year2(m[3]!);
     const penalty = short ? 0.1 : 0;
+    if (opts.order === "YMD" && m[3]!.length === 2) {
+      const yy = 2000 + a;
+      const s0 = m.index!;
+      emit(s0, s0 + m[0].length, yy, b, Number(m[3]), 0.75);
+      continue;
+    }
     const dmyFirst = opts.order !== "MDY";
     const [d1, m1] = dmyFirst ? [a, b] : [b, a];
     const s = m.index!;

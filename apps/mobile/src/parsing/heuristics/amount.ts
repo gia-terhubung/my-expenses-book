@@ -8,9 +8,10 @@ export type FoundAmount = {
 
 const CUR =
   "(?:Rp\\.?|IDR|USD|EUR|GBP|JPY|SGD|MYR|THB|VND|AUD|BRL|CNY|(?:US|S|A|AU|C|CA|HK|NT|R)\\$|\\$|€|£|¥|RM|฿|₫|₩|₹)";
-// open-paren? sign? currency? sign? number (separators may be followed by one space) close-paren?
+// open-paren? sign? currency? sign? number close-paren?. Sign must touch the currency/digit.
+// A separator followed by a space continues the token only before a 3-digit group or a final 2-digit decimal.
 const AMOUNT_RE = new RegExp(
-  `(\\()?(?<![\\w.])([-−–])?\\s*(?:${CUR}\\s*)?([-−–])?(\\d+(?:[.,] ?\\d+)*)(\\s*\\))?`,
+  `(\\()?(?<![\\w.])([-−–])?(?:${CUR}\\s*)?([-−–])?(\\d+(?:[.,]\\d+|[.,] \\d{3}(?!\\d)|[.,] \\d{2}(?![.,]?\\d))*)(\\s*\\))?`,
   "giu",
 );
 
