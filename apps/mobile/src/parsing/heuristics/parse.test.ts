@@ -133,4 +133,42 @@ describe("parseHeuristic", () => {
     expect(r.totalMinor).toBe(idr("461000"));
     expect(r.confidence.total).toBe(0.6);
   });
+
+  it.each([
+    [["Refund", "-Rp 50.000"]],
+    [["Total Refund", "(Rp 50.000)"]],
+    [["Pengembalian dana -Rp 50.000"]],
+    [["Reembolso -€50,00"]],
+    [["Erstattung -€50,00"]],
+    [["返金 -¥500"]],
+  ])("never reads a refund record as spend: %j", (lines) => {
+    const r = parseHeuristic(["TOKO MAJU", "04 Nov 2026", ...lines], hints);
+    expect(r.totalMinor).toBeNull();
+  });
+
+  it("treats a parenthesised tax note after TOTAL as a qualifier", () => {
+    const r = parseHeuristic(["CAFE ROMA", "04/11/2026", "Latte €4,50", "Cake €3,00", "TOTAL (TAX INCLUDED) €7,50"], hints);
+    expect(r.totalMinor).toBe(toMinor("7.50", "EUR"));
+    expect(r.confidence.total).toBeGreaterThan(0.3);
+  });
+
+  it("treats a payment method after Total Bayar as a qualifier", () => {
+    const r = parseHeuristic(["WARUNG BU SRI", "04 Nov 2026", "Nasi Rames Rp 15.000", "Total Bayar Cash Rp 20.000"], hints);
+    expect(r.totalMinor).toBe(idr("20000"));
+  });
+
+  it("still skips a TOTAL TAX line", () => {
+    const r = parseHeuristic(["SHOP", "11/04/2026", "TOTAL TAX $0.70", "Total Sales Tax $0.70", "TOTAL $10.70"], hints);
+    expect(r.totalMinor).toBe(toMinor("10.70", "USD"));
+  });
+
+  it("keeps amounts on lines that only mention HP or No.", () => {
+    expect(parseHeuristic(["TOKO SELULER", "04 Nov 2026", "Charger HP 150.000"], hints).totalMinor).toBe(idr("150000"));
+    expect(parseHeuristic(["WARUNG", "04 Nov 2026", "No. 3 Nasi 25.000"], hints).totalMinor).toBe(idr("25000"));
+  });
+
+  it("ignores numbers on a phone-labelled line", () => {
+    const r = parseHeuristic(["TOKO", "04 Nov 2026", "Telp 7086.315", "WA: 813.204"], hints);
+    expect(r.totalMinor).toBeNull();
+  });
 });

@@ -10,15 +10,19 @@ import {
   LANGUAGE_CURRENCY,
   MERCHANT_LABEL,
   MERCHANT_SKIP,
+  INCLUDED_AFTER,
   NEGATIVE_NOT_SPEND,
   NON_MONEY_LINE,
   REF_LABELS,
+  REFUND_WORDS,
   RETAIL_BRANDS,
   TAX_KEYWORD,
   TAX_REGISTRATION,
   TOTAL_SKIP,
   TOTAL_SKIP_CJK,
   TOTAL_SKIP_QUALIFIER,
+  TOTAL_SOFT_PAYMENT,
+  TOTAL_SOFT_TAX,
   TOTAL_TIERS,
   WAYBILL,
 } from "./keywords";
@@ -73,11 +77,40 @@ function analyseLine(text: string, order: DateOrder, today: Date): Line {
   return { text, dates, amounts };
 }
 
-/** True when a skip word labels the line; "TOTAL incl. VAT" / "Total with tip" do not count. */
+/** End of a total keyword that leads the line (nothing but punctuation before it), else -1. */
+function leadingTotalEnd(text: string): number {
+  for (const t of TOTAL_TIERS) {
+    const m = t.re.exec(text);
+    if (m && !/[\p{L}\p{N}]/u.test(text.slice(0, m.index))) return m.index + m[0].length;
+  }
+  return -1;
+}
+
+const whole = (re: RegExp, s: string) => {
+  const m = re.exec(s);
+  return m !== null && m.index === 0 && m[0].length === s.length;
+};
+
+/**
+ * True when a skip word labels the line. Not when it qualifies the total:
+ * "TOTAL incl. VAT", "Total with tip", "TOTAL (TAX INCLUDED)", "Total Bayar Cash".
+ * "TOTAL TAX" and "TOTAL HT" still skip.
+ */
 function skipsTotal(text: string): boolean {
   if (TOTAL_SKIP_CJK.test(text)) return true;
+  const kwEnd = leadingTotalEnd(text);
   const re = new RegExp(TOTAL_SKIP.source, TOTAL_SKIP.flags.replace("g", "") + "g");
-  return [...text.matchAll(re)].some((m) => !TOTAL_SKIP_QUALIFIER.test(text.slice(0, m.index)));
+  return [...text.matchAll(re)].some((m) => {
+    const at = m.index!;
+    if (TOTAL_SKIP_QUALIFIER.test(text.slice(0, at))) return false;
+    if (kwEnd < 0 || at < kwEnd) return true;
+    if (whole(TOTAL_SOFT_PAYMENT, m[0])) return false;
+    if (!whole(TOTAL_SOFT_TAX, m[0])) return true;
+    const between = text.slice(kwEnd, at);
+    const inParens = between.lastIndexOf("(") > between.lastIndexOf(")");
+    // "TOTAL TAX", "Total Sales Tax": a tax total, not the grand total.
+    return !(inParens || INCLUDED_AFTER.test(text.slice(at + m[0].length)));
+  });
 }
 
 type TotalPick = { value: string; confidence: number };
@@ -125,6 +158,7 @@ const largest = (xs: Amount[]) => xs.reduce((x, y) => (Number(y.value) > Number(
 function debitOnlyTotal(lines: Line[]): TotalPick | null {
   const all = lines.flatMap((l) => l.amounts.filter((a) => a.money).map((a) => ({ a, line: l.text })));
   if (!all.length || all.some(({ a }) => !a.negative)) return null;
+  if (lines.some((l) => REFUND_WORDS.test(l.text))) return null;
   const spend = all.filter(({ line }) => !NEGATIVE_NOT_SPEND.test(line)).map(({ a }) => a);
   return spend.length ? { value: largest(spend).value, confidence: 0.6 } : null;
 }

@@ -76,6 +76,13 @@ export const TOTAL_SKIP = word(
     "credits?",
   ].join("|"),
 );
+/** Skip words that may describe a total ("TOTAL (TAX INCLUDED)") rather than label another line. */
+export const TOTAL_SOFT_TAX = word("ppn|tax|vat|iva|tva|mwst|gst|sst|btw|tip");
+/** Payment-method skip words: after a leading total keyword they are always qualifiers. */
+export const TOTAL_SOFT_PAYMENT = word("cash|tunai|tend");
+/** "… included" right after a tax word makes it a qualifier. */
+export const INCLUDED_AFTER = /^\s*\)?\s*(?:incl(?:uded|usive|\.)?|inkl(?:usive|\.)?|termasuk|inclus[oa]?|incluid[oa])(?![\p{L}])/iu;
+
 /** Qualifiers that turn a skip word into a description of the total ("incl. VAT", "with tip"). */
 export const TOTAL_SKIP_QUALIFIER =
   /(?<![\p{L}])(?:incl\.?|including|includes|inclusive|inkl\.?|inklusive|with|w\/|termasuk|sudah\s+termasuk|plus|con|avec|com|mit|di\s+cui)\s*(?:\d+(?:[.,]\d+)?\s*%\s*)?$/iu;
@@ -197,10 +204,17 @@ export const CATEGORY_RULES: { re: RegExp; id: string }[] = [
 ];
 
 /** Lines whose negative amount is money coming back, never the spend. */
-export const NEGATIVE_NOT_SPEND = word("refund|retur|void|diskon|discount|cashback|kembali(?:an)?|change|potongan");
+export const NEGATIVE_NOT_SPEND = word("diskon|discount|cashback|kembali(?:an)?|change|potongan");
+
+/** Refund/return/void vocabulary: anywhere in a segment, it disables the debit-only total. */
+export const REFUND_WORDS = new RegExp(
+  `${B}(?:refund(?:ed)?|retur|return(?:ed)?|pengembalian|void(?:ed)?|batal|cancel(?:led|ed)?|reembolso|devoluci[oó]n|remboursement|avoir|erstattung|r[üu]ckerstattung|rimborso|estorno|terugbetaling)${E}|返金|返品`,
+  "iu",
+);
 
 /** Lines whose numbers are phone/account numbers, not money (unless a currency is printed). */
-export const NON_MONEY_LINE = word("telp|tel|telepon|phone|hp|wa|whatsapp|rekening|no\\.?\\s*rek|account|acct|no\\.");
+export const NON_MONEY_LINE =
+  /^[^\p{L}\p{N}]*(?:t[ée]l(?:p|epon|efon|ephone)?\.?|phone|hp\s*[:.]|wa\s*[:.]|whatsapp|nomor\s+rekening|no\.?\s*rek(?:ening)?\.?|rekening|account|acct)(?![\p{L}])/iu;
 
 /** Script/language hints used only when no currency symbol or code was printed. */
 export const LANGUAGE_CURRENCY: { re: RegExp; code: string }[] = [
