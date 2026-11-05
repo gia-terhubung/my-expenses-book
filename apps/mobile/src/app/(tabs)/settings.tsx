@@ -129,6 +129,7 @@ export default function SettingsScreen() {
             <Link href="/db-spike">DB spike</Link>
             <Link href="/ai-spike">AI spike</Link>
             <Link href="/db-check">DB check</Link>
+            <Link href="/ocr-check">OCR check</Link>
           </View>
         )}
       </View>

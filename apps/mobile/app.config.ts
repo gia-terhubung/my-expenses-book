@@ -4,6 +4,7 @@ import type { ExpoConfig } from "expo/config";
 const config: ExpoConfig = {
   name: "My Expenses Book",
   slug: "my-expenses-book",
+  owner: "gia-terhubung",
   version: "1.0.0",
   orientation: "default",
   icon: "./assets/images/icon.png",
@@ -52,6 +53,9 @@ const config: ExpoConfig = {
       },
     ],
   ],
+  extra: {
+    eas: { projectId: "fd3b7771-9050-40f6-ad9f-3bf7a410d176" },
+  },
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
