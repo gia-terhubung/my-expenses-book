@@ -42,7 +42,7 @@ The original `My Expenses Book Master Plan.md` (project root) has a solid stack 
 | Backup v1 | One-tap `.meb` archive (zip: DB export + images + manifest). **Passphrase on by default, user may skip** with clear warning (no passphrase = plaintext in their cloud; forgotten passphrase = unrecoverable). Key derived via scrypt/Argon2 → AES-256-GCM. Delivered via share sheet → Files/iCloud Drive/Google Drive. Import restores (replace or merge by UUID). Gentle reminder after N new receipts since last backup. |
 | Privacy | Biometric/passcode app lock; SQLCipher-encrypted DB; encrypted image files; no third-party telemetry SDKs. |
 | Languages | EN, ID, ES, PT-BR — the usual startup v1 set (largest mobile app markets after EN; ID = home market). UI language ≠ receipt language: parser must handle any receipt language. |
-| Categories | Fixed default set (Food & Drink, Transport, Lodging, Groceries, Shopping, Utilities, Health, Office, Entertainment, Other) + user-editable. |
+| Categories | Fixed default set (Food & Drink, Transport, Lodging, Groceries, Shopping, Utilities, Health, Office, Entertainment, Transfer, Other) + user-editable. **Transfer** (owner, 2026-11-05): bank/e-wallet transfers, top-ups and ATM withdrawals count as expenses under this category. |
 | Folders | User folders (projects, trips) + automatic tax-year smart view. A receipt belongs to 0..1 folder; categories are separate. |
 
 ## Technical architecture
