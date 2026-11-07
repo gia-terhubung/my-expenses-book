@@ -1,12 +1,14 @@
-import { router, type Href } from "expo-router";
+import { router, usePreventRemove, type Href } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState } from "react-native";
+import { Alert, AppState } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { findDuplicates, type DuplicateMatch } from "@/capture/duplicates";
 import { useDb } from "@/db/DatabaseProvider";
 import { countPagesByImagePath, listPages, softDeletePages } from "@/db/repositories/pages";
 import { getReceipt, softDeleteReceipt, updateReceipt } from "@/db/repositories/receipts";
 import type { AppDb, Receipt, ReceiptPage } from "@/db/types";
+import { mergeFxCache } from "@/fx/mergeCache";
 import { ensureRates } from "@/fx/rates";
 import { useImageStore } from "@/images/ImageStoreProvider";
 import type { ImageStore } from "@/images/store";
@@ -39,8 +41,15 @@ export class ReviewValidationError extends Error {
   }
 }
 
+/** `review`: confirm a draft (write-through as you type). `edit`: change a confirmed receipt (writes on Save only). */
+export type ReviewFormMode = "review" | "edit";
+
 export type ReviewForm = {
-  /** The draft as loaded; "missing" when it is gone (discarded / saved elsewhere). */
+  mode: ReviewFormMode;
+  /**
+   * The receipt as loaded; "missing" when it is gone (discarded / saved elsewhere) or not in the
+   * state the mode expects (review: a draft; edit: a confirmed receipt).
+   */
   receipt: Receipt | "missing";
   pages: ReceiptPage[];
   values: ReviewValues;
@@ -52,7 +61,10 @@ export type ReviewForm = {
   fx: FxPreview;
   busy: boolean;
   save(): Promise<void>;
+  /** Review mode: deletes the draft and unshared photos. No-op in edit mode. */
   discard(): Promise<void>;
+  /** Edit mode: leaves without saving, straight back when nothing changed, else after "Discard changes?". Review mode: goes back. */
+  cancel(): void;
 };
 
 const EMPTY: ReviewValues = {
@@ -65,19 +77,27 @@ const EMPTY: ReviewValues = {
   categoryId: null,
   notes: "",
   fxRate: "",
+  folderId: null,
 };
 
 const NO_PAGES: ReceiptPage[] = [];
 
-/** The draft and its pages; "missing" when it was deleted or is no longer a draft. */
-function loadDraft(db: AppDb, id: string): { receipt: Receipt; pages: ReceiptPage[] } | "missing" {
+/** Form fields the home amount is computed from. */
+const FX_DRIVERS: readonly ReviewField[] = ["currency", "total", "date", "fxRate"];
+
+/** The receipt and its pages; "missing" when it was deleted or is not in the mode's status. */
+function loadReceipt(db: AppDb, id: string, mode: ReviewFormMode): { receipt: Receipt; pages: ReceiptPage[] } | "missing" {
   const receipt = getReceipt(db, id);
-  if (!receipt || receipt.status !== "draft") return "missing";
+  if (!receipt || receipt.status !== (mode === "edit" ? "confirmed" : "draft")) return "missing";
   return { receipt, pages: listPages(db, id) };
 }
 
 function pageHashes(pages: ReceiptPage[]): string[] {
   return pages.flatMap((p) => (p.dhash ? [p.dhash] : []));
+}
+
+function hasChanges(v: ReviewValues, initial: ReviewValues): boolean {
+  return (Object.keys(initial) as ReviewField[]).some((k) => v[k] !== initial[k]);
 }
 
 /** Opens the next queued draft, or closes the review flow. */
@@ -132,28 +152,44 @@ export async function discardReceipt(
  * screen unmounts (fold/unfold, close), so nothing typed is lost. `save` validates, refreshes FX
  * rates for the purchase date (best effort), recomputes the home amount, confirms the receipt
  * and opens the next queued draft (or closes); `discard` deletes the draft and unshared photos.
+ *
+ * Edit mode (a confirmed receipt): no write-through and no duplicate check; `save` validates and
+ * writes the same patch in one update, status stays confirmed, then goes back. FX is recomputed
+ * only when currency, total, date or the manual rate changed, or the row is not converted for
+ * the current home. Leaving with unsaved changes (Cancel, Android back, iOS swipe-dismiss) asks
+ * "Discard changes?" first.
  */
-export function useReviewForm(id: string, opts: { queue?: string[] } = {}): ReviewForm {
+export function useReviewForm(
+  id: string,
+  opts: { queue?: string[]; mode?: ReviewFormMode } = {},
+): ReviewForm {
+  const { t } = useTranslation();
   const db = useDb();
   const images = useImageStore();
   const prefs = usePrefs();
   const home = usePref("homeCurrency") ?? "USD";
   const queueRef = useRef(opts.queue ?? []);
+  // Fixed for the screen's lifetime, like the id.
+  const [mode] = useState<ReviewFormMode>(opts.mode ?? "review");
+  const editing = mode === "edit";
 
-  // The DB is synchronous, so the draft is read once while the screen mounts. A new id comes
+  // The DB is synchronous, so the receipt is read once while the screen mounts. A new id comes
   // with a new screen (router.replace), never with new props on this one.
-  const [loaded] = useState(() => loadDraft(db, id));
+  const [loaded] = useState(() => loadReceipt(db, id, mode));
   const receipt = loaded === "missing" ? "missing" : loaded.receipt;
   const pages = loaded === "missing" ? NO_PAGES : loaded.pages;
   const [confidence] = useState(() => (loaded === "missing" ? null : parseConfidence(loaded.receipt.parseConfidence)));
-  const [values, setValues] = useState<ReviewValues>(() => (loaded === "missing" ? EMPTY : valuesFromReceipt(loaded.receipt)));
+  const [initialValues] = useState<ReviewValues>(() => (loaded === "missing" ? EMPTY : valuesFromReceipt(loaded.receipt)));
+  const [values, setValues] = useState<ReviewValues>(initialValues);
   const [edited, setEdited] = useState<Set<keyof FieldConfidence>>(() => new Set());
   const [duplicates, setDuplicates] = useState<DuplicateMatch[]>(() =>
-    loaded === "missing" ? [] : findDuplicates(db, loaded.receipt, pageHashes(loaded.pages)),
+    loaded === "missing" || editing ? [] : findDuplicates(db, loaded.receipt, pageHashes(loaded.pages)),
   );
   const [errors, setErrors] = useState<ReviewErrors>({});
   const [fxCache, setFxCache] = useState<FxCache>(() => prefs.get("fxTables"));
   const [busy, setBusy] = useState(false);
+  // Set once leaving is decided (saved, or changes discarded): lifts the back / swipe guard.
+  const [leaving, setLeaving] = useState(false);
 
   // Latest state for timers / AppState / unmount callbacks.
   const valuesRef = useRef(values);
@@ -204,6 +240,7 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
       const c = CONFIDENCE_OF[name];
       if (c) setEdited((prev) => (prev.has(c) ? prev : new Set(prev).add(c)));
       setErrors((prev) => (prev[name] ? { ...prev, [name]: undefined } : prev));
+      if (editing) return; // nothing is written before Save
       dirty.current = true;
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => {
@@ -211,7 +248,7 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
         if (receiptRef.current) refreshDuplicates(receiptRef.current);
       }, WRITE_DEBOUNCE_MS);
     },
-    [flush, refreshDuplicates],
+    [editing, flush, refreshDuplicates],
   );
 
   // Foreign currency: fetch the purchase-date table in the background for the ≈ preview.
@@ -226,8 +263,9 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
     ensureRates(before, home, foreignDate, Date.now()).then(
       (next) => {
         if (next === before) return;
-        prefs.set("fxTables", next);
-        if (!cancelled) setFxCache(next);
+        const merged = mergeFxCache(prefs.get("fxTables"), next);
+        prefs.set("fxTables", merged);
+        if (!cancelled) setFxCache(merged);
       },
       () => undefined, // best effort: offline keeps the preview empty
     );
@@ -247,6 +285,28 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
 
   const fx = useMemo(() => previewFx(values, home, fxCache), [values, home, fxCache]);
 
+  /** Edit mode: asks "Discard changes?" and calls `leave` on Discard. */
+  const confirmDiscard = useCallback(
+    (leave: () => void) => {
+      Alert.alert(t("review.discardChangesTitle"), undefined, [
+        { text: t("review.keepEditing"), style: "cancel" },
+        {
+          text: t("review.discard"),
+          style: "destructive",
+          onPress: () => {
+            setLeaving(true);
+            leave();
+          },
+        },
+      ]);
+    },
+    [t],
+  );
+
+  // Edit mode: Android back and iOS swipe-dismiss ask before dropping unsaved changes, like Cancel.
+  const changed = editing && hasChanges(values, initialValues);
+  const disablePrevention = usePreventRemove(changed && !leaving, ({ repeat }) => confirmDiscard(repeat));
+
   const save = useCallback(async () => {
     const r = receiptRef.current;
     if (!r || inFlight.current) return;
@@ -258,30 +318,50 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
     inFlight.current = true;
     setBusy(true);
     try {
+      // Edit: nothing that drives the conversion changed and the row is already converted for
+      // this home, so keep the stored conversion (an offline cache must not downgrade it).
+      const keepFx =
+        editing &&
+        FX_DRIVERS.every((k) => v[k] === initialValues[k]) &&
+        r.homeCurrencyAtSave === home &&
+        r.amountHomeMinor !== null;
       let cache = prefs.get("fxTables");
-      if (v.currency.toUpperCase() !== home.toUpperCase() && !v.fxRate.trim()) {
+      if (!keepFx && v.currency.toUpperCase() !== home.toUpperCase() && !v.fxRate.trim()) {
         try {
           const next = await ensureRates(cache, home, v.date, Date.now());
           if (next !== cache) {
-            prefs.set("fxTables", next);
-            cache = next;
+            cache = mergeFxCache(prefs.get("fxTables"), next);
+            prefs.set("fxTables", cache);
           }
         } catch {
           // best effort: offline saves with amountHomeMinor null (filled in by a later FX sync)
         }
       }
-      updateReceipt(db, r.id, { ...draftPatch(r, v, home, cache), status: "confirmed" });
-      receiptRef.current = null; // confirmed: no draft write-through after this point
+      const patch = draftPatch(r, v, home, cache);
+      if (keepFx) {
+        delete patch.fxRate;
+        delete patch.fxRateDate;
+        delete patch.amountHomeMinor;
+        delete patch.fxApproximate;
+        delete patch.homeCurrencyAtSave;
+      }
+      // Edit: same columns, status untouched (stays confirmed).
+      updateReceipt(db, r.id, editing ? patch : { ...patch, status: "confirmed" });
+      receiptRef.current = null; // saved: no write-through (and no second save) after this point
     } finally {
       inFlight.current = false;
       setBusy(false);
     }
-    goNext(queueRef.current);
-  }, [db, flush, home, prefs]);
+    if (editing) {
+      setLeaving(true);
+      disablePrevention(); // Save's own navigation must not hit the unsaved-changes guard
+      router.back();
+    } else goNext(queueRef.current);
+  }, [db, disablePrevention, editing, flush, home, initialValues, prefs]);
 
   const discard = useCallback(async () => {
     const r = receiptRef.current;
-    if (!r || inFlight.current) return;
+    if (editing || !r || inFlight.current) return;
     inFlight.current = true;
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
@@ -295,7 +375,20 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
       setBusy(false);
     }
     goNext(queueRef.current);
-  }, [db, images]);
+  }, [db, editing, images]);
 
-  return { receipt, pages, values, setField, lowConfidence, duplicates, errors, home, fx, busy, save, discard };
+  const cancel = useCallback(() => {
+    if (inFlight.current) return;
+    // Review mode writes through as you type, so leaving never loses anything there.
+    if (!editing || !hasChanges(valuesRef.current, initialValues)) {
+      router.back();
+      return;
+    }
+    confirmDiscard(() => {
+      disablePrevention();
+      router.back();
+    });
+  }, [confirmDiscard, disablePrevention, editing, initialValues]);
+
+  return { mode, receipt, pages, values, setField, lowConfidence, duplicates, errors, home, fx, busy, save, discard, cancel };
 }

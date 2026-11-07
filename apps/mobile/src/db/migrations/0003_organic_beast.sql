@@ -1,0 +1,1 @@
+CREATE INDEX `receipts_status_local_idx` ON `receipts` (`status`,`purchased_at_local`);

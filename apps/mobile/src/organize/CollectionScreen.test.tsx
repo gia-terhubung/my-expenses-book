@@ -1,0 +1,121 @@
+import { fireEvent, render, screen } from "@testing-library/react-native";
+import { Alert, type AlertButton } from "react-native";
+
+import { createFolder, listFolders } from "@/db/repositories/folders";
+import { listReceipts } from "@/db/repositories/receiptQueries";
+import { createReceipt } from "@/db/repositories/receipts";
+import { testDb } from "@/db/testing/testDb";
+import type { AppDb } from "@/db/types";
+import { initI18n } from "@/i18n";
+
+import { CollectionScreen } from "./CollectionScreen";
+
+let mockDb: AppDb;
+const mockRouter = { push: jest.fn(), back: jest.fn(), setParams: jest.fn() };
+jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
+jest.mock("@/images/ImageStoreProvider", () => ({ useImageStore: () => ({}) }));
+jest.mock("@/prefs/PrefsProvider", () => ({
+  usePref: (k: string) => (k === "taxYearStartMonth" ? 4 : "IDR"),
+}));
+jest.mock("@/layout/useWindowClass", () => ({
+  useWindowClass: () => "compact",
+}));
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
+jest.mock("expo-router", () => ({
+  get router() {
+    return mockRouter;
+  },
+  useLocalSearchParams: () => ({}),
+  useFocusEffect: () => undefined,
+}));
+
+function seed(
+  merchant: string,
+  local: string,
+  totalMinor = 50000,
+  folderId: string | null = null,
+) {
+  return createReceipt(mockDb, {
+    status: "confirmed",
+    merchant,
+    purchasedAtLocal: local,
+    purchasedTz: "Asia/Jakarta",
+    purchasedAtUtc: Date.UTC(2026, 4, 1),
+    scannedAtUtc: Date.UTC(2026, 4, 1),
+    scannedTz: "Asia/Jakarta",
+    currency: "IDR",
+    totalMinor,
+    taxMinor: null,
+    homeCurrencyAtSave: "IDR",
+    amountHomeMinor: totalMinor,
+    parseSource: "manual",
+    folderId,
+  });
+}
+
+beforeAll(() => initI18n("en"));
+beforeEach(() => {
+  mockDb = testDb();
+  jest.clearAllMocks();
+});
+
+describe("CollectionScreen", () => {
+  it("folder view shows only that folder's receipts with a total", async () => {
+    const f = createFolder(mockDb, { name: "Bali", kind: "trip" });
+    seed("InFolder", "2026-05-10T10:00:00", 70000, f.id);
+    seed("Elsewhere", "2026-05-11T10:00:00", 10000);
+    await render(<CollectionScreen kind="folder" folderId={f.id} />);
+    expect(screen.getByText("Bali")).toBeTruthy();
+    expect(screen.getByText("InFolder")).toBeTruthy();
+    expect(screen.queryByText("Elsewhere")).toBeNull();
+    expect(screen.getByTestId("collection-total").props.children).toMatch(
+      /700/,
+    );
+  });
+
+  it("rename updates the title", async () => {
+    const f = createFolder(mockDb, { name: "Bali", kind: "trip" });
+    await render(<CollectionScreen kind="folder" folderId={f.id} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Rename" }));
+    await fireEvent.changeText(screen.getByLabelText("Folder name"), "Lombok");
+    await fireEvent.press(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("Lombok")).toBeTruthy();
+    expect(screen.queryByText("Bali")).toBeNull();
+    expect(listFolders(mockDb)[0].name).toBe("Lombok");
+  });
+
+  it("delete confirms, detaches receipts and navigates back", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const f = createFolder(mockDb, { name: "Bali", kind: "trip" });
+    const r = seed("InFolder", "2026-05-10T10:00:00", 70000, f.id);
+    await render(<CollectionScreen kind="folder" folderId={f.id} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Delete" }));
+    expect(alert).toHaveBeenCalledTimes(1);
+    expect(listFolders(mockDb)).toHaveLength(1);
+    const buttons = alert.mock.calls[0][2] as AlertButton[];
+    buttons.find((b) => b.style === "destructive")!.onPress!();
+    expect(listFolders(mockDb)).toHaveLength(0);
+    const row = listReceipts(mockDb, {}, { limit: 50 }).find(
+      (x) => x.id === r.id,
+    );
+    expect(row?.folderId).toBeNull();
+    expect(mockRouter.back).toHaveBeenCalled();
+    alert.mockRestore();
+  });
+
+  it("tax-year view lists exactly the receipts in the range", async () => {
+    seed("Before", "2026-03-31T23:00:00");
+    seed("First", "2026-04-01T00:30:00");
+    seed("Last", "2027-03-31T23:59:00");
+    seed("After", "2027-04-01T00:00:00");
+    await render(<CollectionScreen kind="taxYear" year={2026} />);
+    expect(screen.getByText("Tax year 2026/27")).toBeTruthy();
+    expect(screen.getByText("First")).toBeTruthy();
+    expect(screen.getByText("Last")).toBeTruthy();
+    expect(screen.queryByText("Before")).toBeNull();
+    expect(screen.queryByText("After")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Rename" })).toBeNull();
+  });
+});

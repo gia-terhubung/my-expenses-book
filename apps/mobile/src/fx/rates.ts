@@ -68,7 +68,7 @@ export async function fetchRates(
 }
 
 /** Keeps the newest MAX_DATES tables, plus every `keep` date (fetched in the current pass). */
-function prune(byDate: FxCache["byDate"], keep: ReadonlySet<string> = new Set()): FxCache["byDate"] {
+export function prune(byDate: FxCache["byDate"], keep: ReadonlySet<string> = new Set()): FxCache["byDate"] {
   const keys = Object.keys(byDate).sort();
   if (keys.length <= MAX_DATES) return byDate;
   const out: FxCache["byDate"] = {};

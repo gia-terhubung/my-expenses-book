@@ -1,8 +1,3 @@
-import { useTranslation } from "react-i18next";
+import { FoldersScreen } from "@/organize/FoldersScreen";
 
-import { EmptyState } from "@/layout/EmptyState";
-
-export default function FoldersScreen() {
-  const { t } = useTranslation();
-  return <EmptyState title={t("tabs.folders")} message={t("empty.folders")} />;
-}
+export default FoldersScreen;

@@ -21,6 +21,7 @@ export type ReviewValues = {
   notes: string;
   /** Manual rate override (home units per 1 receipt unit); empty = automatic */
   fxRate: string;
+  folderId: string | null;
 };
 
 export type ReviewField = keyof ReviewValues;
@@ -112,6 +113,7 @@ export function valuesFromReceipt(r: Receipt): ReviewValues {
     categoryId: r.categoryId,
     notes: r.notes ?? "",
     fxRate: r.fxRate !== null && r.fxRateDate === null ? r.fxRate : "",
+    folderId: r.folderId,
   };
 }
 
@@ -172,6 +174,7 @@ export function draftPatch(r: Receipt, v: ReviewValues, home: string, cache: FxC
     merchant: v.merchant.trim() || null,
     notes: v.notes.trim() || null,
     categoryId: v.categoryId,
+    folderId: v.folderId,
   };
   if (isKnownCurrency(v.currency)) {
     patch.currency = v.currency.toUpperCase();

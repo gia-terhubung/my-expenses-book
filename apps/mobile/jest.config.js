@@ -1,5 +1,6 @@
 /** @type {import('jest').Config} */
 module.exports = {
+  globalSetup: "<rootDir>/test/globalTz.js",
   projects: [
     {
       displayName: "node",

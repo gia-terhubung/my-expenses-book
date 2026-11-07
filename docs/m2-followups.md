@@ -10,10 +10,10 @@ Final review: merge with fixes → one fix wave (8fa4939, 92e9334, 7600f40, c7ba
 
 ## Carry into M3
 
-- Constraint: aggregates must sum only rows with `homeCurrencyAtSave == current home` AND `amountHomeMinor` non-null.
-- Native date/time picker (Ruling AB; M2 uses validated text fields).
-- FX cache read-then-rewrite may clobber a concurrent `syncFx` update (cost: refetch).
-- New (final re-review): `capture.tsx` `cancelWork` doesn't set `left.current` before `router.back()`; abort resolving during dismiss can fire a second back. Fix: set `left.current = true` first.
+- DONE (6146d5a): Constraint: aggregates must sum only rows with `homeCurrencyAtSave == current home` AND `amountHomeMinor` non-null.
+- DONE (1d87ae7, 6891d7e): Native date/time picker (Ruling AB; M2 uses validated text fields).
+- DONE (bbf6f87): FX cache read-then-rewrite may clobber a concurrent `syncFx` update (cost: refetch).
+- DONE (bbf6f87): New (final re-review): `capture.tsx` `cancelWork` doesn't set `left.current` before `router.back()`; abort resolving during dismiss can fire a second back. Fix: set `left.current = true` first.
 
 ## Deferred minor findings
 - Task 1: minor (deferred): snapshot protection `.catch(() => {})` swallows failure; toggles not serialized

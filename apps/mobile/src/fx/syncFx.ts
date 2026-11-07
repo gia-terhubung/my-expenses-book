@@ -1,6 +1,7 @@
 import type { AppDb } from "@/db/types";
 import type { PrefsStore } from "@/prefs/prefs";
 
+import { mergeFxCache } from "./mergeCache";
 import { ensureRates, isDateKnown, type FxPass } from "./rates";
 import { needsReconvert, receiptDatesNeedingRates, reconvertAll } from "./reconvert";
 
@@ -32,7 +33,11 @@ export async function syncFx({ db, prefs, home, now, fetchFn, isCancelled }: Syn
   }
   if (isCancelled?.()) return;
   const changed = cache !== initial;
-  if (changed) prefs.set("fxTables", cache);
+  if (changed) {
+    // Merge into the freshly read cache: a capture/review write may have landed during our awaits.
+    cache = mergeFxCache(prefs.get("fxTables"), cache);
+    prefs.set("fxTables", cache);
+  }
   if (cache.base !== home.toLowerCase()) return;
   if (changed || needsReconvert(db, home)) reconvertAll(db, home, cache);
 }

@@ -54,7 +54,8 @@
     "lockReason": {
       "no_hardware": "Perangkat ini tidak mendukung biometrik atau kode sandi, jadi kunci aplikasi tidak tersedia.",
       "not_enrolled": "Atur kode sandi perangkat, Face ID, atau sidik jari di pengaturan sistem untuk mengaktifkan kunci aplikasi."
-    }
+    },
+    "categories": "Kategori"
   },
   "dbError": {
     "title": "Data Anda tidak dapat dibuka",
@@ -111,6 +112,7 @@
   },
   "review": {
     "title": "Periksa struk",
+    "editTitle": "Ubah struk",
     "queued": "{{n}} lagi untuk diperiksa",
     "later": "Periksa nanti",
     "merchant": "Toko",
@@ -120,6 +122,7 @@
     "currency": "Mata uang",
     "tax": "Pajak",
     "category": "Kategori",
+    "folder": "Folder",
     "notes": "Catatan",
     "datePlaceholder": "TTTT-BB-HH",
     "timePlaceholder": "JJ:MM",
@@ -132,6 +135,8 @@
     "rateLabel": "Kurs: 1 {{from}} = ? {{to}}",
     "ratePlaceholder": "Otomatis",
     "discard": "Buang",
+    "discardChangesTitle": "Buang perubahan?",
+    "keepEditing": "Lanjut mengubah",
     "saveReceipt": "Simpan struk",
     "saving": "Menyimpan struk",
     "discardTitle": "Buang struk ini?",
@@ -159,6 +164,88 @@
       "dateInvalid": "Gunakan tanggal yang benar, format TTTT-BB-HH.",
       "timeInvalid": "Gunakan jam dengan format JJ:MM (24 jam).",
       "rateInvalid": "Isi angka positif."
+    }
+  },
+  "receipts": {
+    "unknownMerchant": "Pedagang tidak diketahui",
+    "detail": {
+      "edit": "Ubah",
+      "move": "Pindahkan ke folder",
+      "missing": "Struk ini sudah tidak tersedia.",
+      "fx": "1 {{from}} = {{rate}} {{to}}",
+      "rateOn": "kurs tanggal {{date}}",
+      "manualRate": "kurs manual",
+      "approximate": "perkiraan (kurs terdekat sebelumnya)",
+      "category": "Kategori",
+      "folder": "Folder",
+      "notes": "Catatan",
+      "deleteTitle": "Hapus struk ini?",
+      "deleteMessage": "Struk dan fotonya akan dihapus dari perangkat ini.",
+      "deleteFailed": "Struk tidak dapat dihapus."
+    }
+  },
+  "totals": {
+    "thisMonth": "Bulan ini",
+    "taxYear": "Tahun pajak {{label}}",
+    "notConverted": "{{count}} belum dikonversi"
+  },
+  "folders": {
+    "pickerTitle": "Pindahkan ke folder",
+    "none": "Tanpa folder",
+    "new": "Folder baru…",
+    "name": "Nama folder",
+    "kindProject": "Proyek",
+    "kindTrip": "Perjalanan",
+    "create": "Buat",
+    "taxYears": "Tahun pajak",
+    "sectionFolders": "Folder",
+    "newTitle": "Folder baru",
+    "renameTitle": "Ganti nama folder",
+    "rename": "Ganti nama",
+    "deleteTitle": "Hapus folder?",
+    "deleteMessage": "Struk di dalamnya tetap ada di daftar tanpa folder.",
+    "receiptCount_one": "{{count}} struk",
+    "receiptCount_other": "{{count}} struk",
+    "taxYearTitle": "Tahun pajak {{label}}",
+    "noReceipts": "Belum ada struk di sini.",
+    "save": "Simpan"
+  },
+  "categoryManage": {
+    "title": "Kategori",
+    "new": "Kategori baru…",
+    "newTitle": "Kategori baru",
+    "renameTitle": "Ubah nama kategori",
+    "name": "Nama kategori",
+    "color": "Warna",
+    "add": "Tambah",
+    "rename": "Ubah nama",
+    "reset": "Atur ulang nama",
+    "deleteTitle": "Hapus kategori?",
+    "deleteMessage_one": "{{count}} struk dipindahkan ke {{other}}.",
+    "deleteMessage_other": "{{count}} struk dipindahkan ke {{other}}.",
+    "receiptCount_one": "{{count}} struk",
+    "receiptCount_other": "{{count}} struk"
+  },
+  "search": {
+    "label": "Cari struk",
+    "placeholder": "Pedagang, catatan atau teks",
+    "filters": "Filter",
+    "apply": "Terapkan",
+    "clearAll": "Hapus semua",
+    "removeFilter": "Hapus filter {{label}}",
+    "noResults": "Tidak ada struk yang cocok.",
+    "date": "Tanggal",
+    "from": "Dari",
+    "to": "Sampai",
+    "anyFolder": "Folder apa pun",
+    "anyCurrency": "Mata uang apa pun",
+    "preset": {
+      "all": "Tanggal apa pun",
+      "thisMonth": "Bulan ini",
+      "lastMonth": "Bulan lalu",
+      "thisTaxYear": "Tahun pajak ini",
+      "lastTaxYear": "Tahun pajak lalu",
+      "custom": "Rentang kustom"
     }
   }
 }

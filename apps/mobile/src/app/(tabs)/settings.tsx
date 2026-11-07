@@ -1,5 +1,5 @@
 import { getLocales } from "expo-localization";
-import { Link } from "expo-router";
+import { Link, router, type Href } from "expo-router";
 import { useState, type ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -25,7 +25,7 @@ function Row({ label, value, onPress }: { label: string; value: string; onPress:
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${label}, ${value}`}
+      accessibilityLabel={value ? `${label}, ${value}` : label}
       onPress={onPress}
       style={{
         minHeight: 56,
@@ -40,7 +40,7 @@ function Row({ label, value, onPress }: { label: string; value: string; onPress:
     >
       <Text style={[theme.type.body, { color: theme.colors.text }]}>{label}</Text>
       <Text numberOfLines={1} style={[theme.type.body, { color: theme.colors.textMuted, flexShrink: 1 }]}>
-        {value}
+        {value || "›"}
       </Text>
     </Pressable>
   );
@@ -110,6 +110,7 @@ export default function SettingsScreen() {
           onPress={() => setSheet("currency")}
         />
         <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} />
+        <Row label={t("settings.categories")} value="" onPress={() => router.push("/categories" as unknown as Href)} />
 
         <View style={{ backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm }}>
           <LockToggle label={t("settings.appLock")} value={lockEnabled} onChange={(v) => prefs.set("lockEnabled", v)} />

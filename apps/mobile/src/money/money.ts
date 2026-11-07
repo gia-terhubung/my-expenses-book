@@ -49,9 +49,16 @@ export function fromMinor(minor: number, code: string): string {
   return negative ? `-${body}` : body;
 }
 
+// Building an Intl formatter is slow on Hermes; lists format several amounts per row.
+const moneyFormats = new Map<string, Intl.NumberFormat>();
+
 /** Locale-formatted currency string. Display only; never parse the result. */
 export function formatMoney(minor: number, code: string, locale: string): string {
-  return new Intl.NumberFormat(locale, { style: 'currency', currency: code }).format(
-    Number(fromMinor(minor, code)),
-  );
+  const key = `${locale}|${code}`;
+  let fmt = moneyFormats.get(key);
+  if (!fmt) {
+    fmt = new Intl.NumberFormat(locale, { style: 'currency', currency: code });
+    moneyFormats.set(key, fmt);
+  }
+  return fmt.format(Number(fromMinor(minor, code)));
 }

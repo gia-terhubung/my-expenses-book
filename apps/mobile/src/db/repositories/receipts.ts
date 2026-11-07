@@ -1,16 +1,20 @@
 import { and, asc, desc, eq, gte, isNull, lte, ne, sql } from "drizzle-orm";
 
+import { notifyDataChanged } from "../changes";
 import { newId, now } from "../ids";
 import { receipts } from "../schema";
 import type { AppDb, NewReceiptInput, Receipt } from "../types";
 
 export function createReceipt(db: AppDb, input: NewReceiptInput): Receipt {
   const t = now();
-  return db
+  const row = db
     .insert(receipts)
     .values({ ...input, status: input.status ?? "draft", id: newId(), createdAt: t, updatedAt: t })
     .returning()
     .get();
+  // Drafts never show in lists or totals, so creating one changes nothing there.
+  if (row.status !== "draft") notifyDataChanged();
+  return row;
 }
 
 export function getReceipt(db: AppDb, id: string): Receipt | null {
@@ -31,6 +35,9 @@ export function updateReceipt(db: AppDb, id: string, patch: Partial<NewReceiptIn
     .returning()
     .get();
   if (!row) throw new Error(`Receipt not found: ${id}`);
+  // Review write-through edits a draft on every typing pause: no list can change, so no notify.
+  // A status change (confirm) or any edit of a confirmed receipt does notify.
+  if (row.status !== "draft" || patch.status !== undefined) notifyDataChanged();
   return row;
 }
 
@@ -40,6 +47,7 @@ export function softDeleteReceipt(db: AppDb, id: string): void {
     .set({ deletedAt: t, updatedAt: t, version: sql`${receipts.version} + 1` })
     .where(and(eq(receipts.id, id), isNull(receipts.deletedAt)))
     .run();
+  notifyDataChanged();
 }
 
 /**
@@ -47,7 +55,7 @@ export function softDeleteReceipt(db: AppDb, id: string): void {
  * double-quoted (so operators/punctuation are literals) and gets a `*` suffix
  * for prefix matching. Returns null when nothing searchable remains.
  */
-function toFtsQuery(query: string): string | null {
+export function toFtsQuery(query: string): string | null {
   const tokens = query
     .split(/\s+/)
     .map((t) => t.replace(/"/g, ""))

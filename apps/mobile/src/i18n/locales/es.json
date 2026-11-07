@@ -54,7 +54,8 @@
     "lockReason": {
       "no_hardware": "Este dispositivo no admite biometría ni código, así que el bloqueo de la app no está disponible.",
       "not_enrolled": "Configura un código del dispositivo, Face ID o huella en los ajustes del sistema para activar el bloqueo de la app."
-    }
+    },
+    "categories": "Categorías"
   },
   "dbError": {
     "title": "No se pueden desbloquear tus datos",
@@ -111,6 +112,7 @@
   },
   "review": {
     "title": "Revisar recibo",
+    "editTitle": "Editar recibo",
     "queued": "{{n}} más por revisar",
     "later": "Revisar luego",
     "merchant": "Comercio",
@@ -120,6 +122,7 @@
     "currency": "Moneda",
     "tax": "Impuesto",
     "category": "Categoría",
+    "folder": "Carpeta",
     "notes": "Notas",
     "datePlaceholder": "AAAA-MM-DD",
     "timePlaceholder": "HH:MM",
@@ -132,6 +135,8 @@
     "rateLabel": "Tipo de cambio: 1 {{from}} = ? {{to}}",
     "ratePlaceholder": "Automático",
     "discard": "Descartar",
+    "discardChangesTitle": "¿Descartar los cambios?",
+    "keepEditing": "Seguir editando",
     "saveReceipt": "Guardar recibo",
     "saving": "Guardando recibo",
     "discardTitle": "¿Descartar este recibo?",
@@ -159,6 +164,88 @@
       "dateInvalid": "Usa una fecha real con el formato AAAA-MM-DD.",
       "timeInvalid": "Usa una hora con el formato HH:MM (24 horas).",
       "rateInvalid": "Introduce un número positivo."
+    }
+  },
+  "receipts": {
+    "unknownMerchant": "Comercio desconocido",
+    "detail": {
+      "edit": "Editar",
+      "move": "Mover a carpeta",
+      "missing": "Este recibo ya no está disponible.",
+      "fx": "1 {{from}} = {{rate}} {{to}}",
+      "rateOn": "tipo del {{date}}",
+      "manualRate": "tipo manual",
+      "approximate": "aproximado (tipo anterior más cercano)",
+      "category": "Categoría",
+      "folder": "Carpeta",
+      "notes": "Notas",
+      "deleteTitle": "¿Eliminar este recibo?",
+      "deleteMessage": "El recibo y sus fotos se eliminarán de este dispositivo.",
+      "deleteFailed": "No se pudo eliminar el recibo."
+    }
+  },
+  "totals": {
+    "thisMonth": "Este mes",
+    "taxYear": "Año fiscal {{label}}",
+    "notConverted": "{{count}} sin convertir"
+  },
+  "folders": {
+    "pickerTitle": "Mover a carpeta",
+    "none": "Sin carpeta",
+    "new": "Nueva carpeta…",
+    "name": "Nombre de la carpeta",
+    "kindProject": "Proyecto",
+    "kindTrip": "Viaje",
+    "create": "Crear",
+    "taxYears": "Años fiscales",
+    "sectionFolders": "Carpetas",
+    "newTitle": "Nueva carpeta",
+    "renameTitle": "Renombrar carpeta",
+    "rename": "Renombrar",
+    "deleteTitle": "¿Eliminar carpeta?",
+    "deleteMessage": "Los recibos que contiene siguen en tu lista sin carpeta.",
+    "receiptCount_one": "{{count}} recibo",
+    "receiptCount_other": "{{count}} recibos",
+    "taxYearTitle": "Año fiscal {{label}}",
+    "noReceipts": "Aún no hay recibos aquí.",
+    "save": "Guardar"
+  },
+  "categoryManage": {
+    "title": "Categorías",
+    "new": "Nueva categoría…",
+    "newTitle": "Nueva categoría",
+    "renameTitle": "Renombrar categoría",
+    "name": "Nombre de la categoría",
+    "color": "Color",
+    "add": "Añadir",
+    "rename": "Renombrar",
+    "reset": "Restablecer nombre",
+    "deleteTitle": "¿Eliminar categoría?",
+    "deleteMessage_one": "{{count}} recibo pasa a {{other}}.",
+    "deleteMessage_other": "{{count}} recibos pasan a {{other}}.",
+    "receiptCount_one": "{{count}} recibo",
+    "receiptCount_other": "{{count}} recibos"
+  },
+  "search": {
+    "label": "Buscar recibos",
+    "placeholder": "Comercio, nota o texto",
+    "filters": "Filtros",
+    "apply": "Aplicar",
+    "clearAll": "Borrar todo",
+    "removeFilter": "Quitar filtro {{label}}",
+    "noResults": "Ningún recibo coincide con la búsqueda.",
+    "date": "Fecha",
+    "from": "Desde",
+    "to": "Hasta",
+    "anyFolder": "Cualquier carpeta",
+    "anyCurrency": "Cualquier moneda",
+    "preset": {
+      "all": "Cualquier fecha",
+      "thisMonth": "Este mes",
+      "lastMonth": "Mes pasado",
+      "thisTaxYear": "Este año fiscal",
+      "lastTaxYear": "Año fiscal pasado",
+      "custom": "Rango personalizado"
     }
   }
 }

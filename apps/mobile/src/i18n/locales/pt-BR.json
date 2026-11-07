@@ -54,7 +54,8 @@
     "lockReason": {
       "no_hardware": "Este dispositivo não tem biometria nem senha, então o bloqueio do app não está disponível.",
       "not_enrolled": "Configure uma senha do dispositivo, Face ID ou impressão digital nas configurações do sistema para ativar o bloqueio do app."
-    }
+    },
+    "categories": "Categorias"
   },
   "dbError": {
     "title": "Não foi possível desbloquear seus dados",
@@ -111,6 +112,7 @@
   },
   "review": {
     "title": "Revisar recibo",
+    "editTitle": "Editar recibo",
     "queued": "Mais {{n}} para revisar",
     "later": "Revisar depois",
     "merchant": "Estabelecimento",
@@ -120,6 +122,7 @@
     "currency": "Moeda",
     "tax": "Imposto",
     "category": "Categoria",
+    "folder": "Pasta",
     "notes": "Notas",
     "datePlaceholder": "AAAA-MM-DD",
     "timePlaceholder": "HH:MM",
@@ -132,6 +135,8 @@
     "rateLabel": "Câmbio: 1 {{from}} = ? {{to}}",
     "ratePlaceholder": "Automático",
     "discard": "Descartar",
+    "discardChangesTitle": "Descartar alterações?",
+    "keepEditing": "Continuar editando",
     "saveReceipt": "Salvar recibo",
     "saving": "Salvando recibo",
     "discardTitle": "Descartar este recibo?",
@@ -159,6 +164,88 @@
       "dateInvalid": "Use uma data real no formato AAAA-MM-DD.",
       "timeInvalid": "Use uma hora no formato HH:MM (24 horas).",
       "rateInvalid": "Informe um número positivo."
+    }
+  },
+  "receipts": {
+    "unknownMerchant": "Estabelecimento desconhecido",
+    "detail": {
+      "edit": "Editar",
+      "move": "Mover para pasta",
+      "missing": "Este recibo não está mais disponível.",
+      "fx": "1 {{from}} = {{rate}} {{to}}",
+      "rateOn": "cotação de {{date}}",
+      "manualRate": "cotação manual",
+      "approximate": "aproximado (cotação anterior mais próxima)",
+      "category": "Categoria",
+      "folder": "Pasta",
+      "notes": "Observações",
+      "deleteTitle": "Excluir este recibo?",
+      "deleteMessage": "O recibo e suas fotos serão removidos deste dispositivo.",
+      "deleteFailed": "Não foi possível excluir o recibo."
+    }
+  },
+  "totals": {
+    "thisMonth": "Este mês",
+    "taxYear": "Ano fiscal {{label}}",
+    "notConverted": "{{count}} sem conversão"
+  },
+  "folders": {
+    "pickerTitle": "Mover para pasta",
+    "none": "Sem pasta",
+    "new": "Nova pasta…",
+    "name": "Nome da pasta",
+    "kindProject": "Projeto",
+    "kindTrip": "Viagem",
+    "create": "Criar",
+    "taxYears": "Anos fiscais",
+    "sectionFolders": "Pastas",
+    "newTitle": "Nova pasta",
+    "renameTitle": "Renomear pasta",
+    "rename": "Renomear",
+    "deleteTitle": "Excluir pasta?",
+    "deleteMessage": "Os recibos nela continuam na lista, sem pasta.",
+    "receiptCount_one": "{{count}} recibo",
+    "receiptCount_other": "{{count}} recibos",
+    "taxYearTitle": "Ano fiscal {{label}}",
+    "noReceipts": "Ainda não há recibos aqui.",
+    "save": "Salvar"
+  },
+  "categoryManage": {
+    "title": "Categorias",
+    "new": "Nova categoria…",
+    "newTitle": "Nova categoria",
+    "renameTitle": "Renomear categoria",
+    "name": "Nome da categoria",
+    "color": "Cor",
+    "add": "Adicionar",
+    "rename": "Renomear",
+    "reset": "Redefinir nome",
+    "deleteTitle": "Excluir categoria?",
+    "deleteMessage_one": "{{count}} recibo vai para {{other}}.",
+    "deleteMessage_other": "{{count}} recibos vão para {{other}}.",
+    "receiptCount_one": "{{count}} recibo",
+    "receiptCount_other": "{{count}} recibos"
+  },
+  "search": {
+    "label": "Buscar recibos",
+    "placeholder": "Estabelecimento, nota ou texto",
+    "filters": "Filtros",
+    "apply": "Aplicar",
+    "clearAll": "Limpar tudo",
+    "removeFilter": "Remover filtro {{label}}",
+    "noResults": "Nenhum recibo corresponde à busca.",
+    "date": "Data",
+    "from": "De",
+    "to": "Até",
+    "anyFolder": "Qualquer pasta",
+    "anyCurrency": "Qualquer moeda",
+    "preset": {
+      "all": "Qualquer data",
+      "thisMonth": "Este mês",
+      "lastMonth": "Mês passado",
+      "thisTaxYear": "Este ano fiscal",
+      "lastTaxYear": "Ano fiscal passado",
+      "custom": "Período personalizado"
     }
   }
 }

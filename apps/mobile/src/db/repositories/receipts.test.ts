@@ -1,4 +1,5 @@
 import type { NewReceiptInput } from "../types";
+import { subscribeDataChanged } from "../changes";
 import { testDb } from "../testing/testDb";
 import {
   createReceipt,
@@ -154,5 +155,37 @@ describe("listDraftIds", () => {
     softDeleteReceipt(db, gone.id);
     expect(listDraftIds(db)).toEqual([a.id, b.id]);
     expect(listDraftIds(db)).not.toContain(done.id);
+  });
+});
+
+describe("data-change notifications", () => {
+  function counting() {
+    let n = 0;
+    const off = subscribeDataChanged(() => void n++);
+    return { count: () => n, off };
+  }
+
+  it("draft creates and draft edits do not notify", () => {
+    const db = testDb();
+    const c = counting();
+    const d = createReceipt(db, input());
+    updateReceipt(db, d.id, { merchant: "Typing" });
+    expect(c.count()).toBe(0);
+    c.off();
+  });
+
+  it("confirming a draft, editing or creating a confirmed receipt and deleting notify", () => {
+    const db = testDb();
+    const d = createReceipt(db, input());
+    const c = counting();
+    updateReceipt(db, d.id, { status: "confirmed" });
+    expect(c.count()).toBe(1);
+    updateReceipt(db, d.id, { notes: "x" });
+    expect(c.count()).toBe(2);
+    createReceipt(db, input({ status: "confirmed" }));
+    expect(c.count()).toBe(3);
+    softDeleteReceipt(db, d.id);
+    expect(c.count()).toBe(4);
+    c.off();
   });
 });

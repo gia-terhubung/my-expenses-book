@@ -1,12 +1,17 @@
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Pressable, Text, TextInput, View, type TextInputProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import { DateField } from "@/components/DateField";
 import { CurrencyPicker, currencyName } from "@/components/CurrencyPicker";
+import { useDb } from "@/db/DatabaseProvider";
+import { useDataVersion } from "@/db/changes";
+import { listFolders } from "@/db/repositories/folders";
 import type { Category } from "@/db/types";
 import { formatMoney } from "@/money/money";
+import { FolderPicker } from "@/organize/FolderPicker";
 import type { FieldConfidence } from "@/parsing/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -50,7 +55,7 @@ function FieldShell({
 
 /**
  * Review form body: merchant, date, time, total, currency, tax, category (incl. Transfer),
- * notes, plus the home-currency preview and manual rate for foreign receipts. Low-confidence
+ * folder, notes, plus the home-currency preview and manual rate for foreign receipts. Low-confidence
  * fields get a highlighted border and a "Check this" hint (not for empty optional tax/category).
  */
 export function ReviewFields({ form, categories }: { form: ReviewForm; categories: Category[] }) {
@@ -58,7 +63,16 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [folderOpen, setFolderOpen] = useState(false);
   const { values, setField, errors, lowConfidence, fx, home } = form;
+  const db = useDb();
+  const version = useDataVersion();
+  // version: a folder created or renamed elsewhere (or in the picker) shows its current name.
+  const folderName = useMemo(
+    () => (values.folderId ? listFolders(db).find((f) => f.id === values.folderId)?.name : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [db, values.folderId, version],
+  );
 
   const isLow = (name: ReviewField) => {
     const c = CONFIDENCE_OF[name] as keyof FieldConfidence | undefined;
@@ -113,7 +127,16 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
       {input("merchant", t("review.merchant"), { autoCapitalize: "words", autoCorrect: false })}
       <View style={{ flexDirection: "row", gap: theme.spacing.md, flexWrap: "wrap" }}>
         <View style={{ flexGrow: 2, flexBasis: 160 }}>
-          {input("date", t("review.date"), { placeholder: t("review.datePlaceholder"), keyboardType: "numbers-and-punctuation", maxLength: 10 })}
+          <DateField
+            label={t("review.date")}
+            value={values.date}
+            onChange={(v) => setField("date", v)}
+            error={errors.date ? t(errors.date) : undefined}
+            hint={isLow("date") ? t("review.checkThis") : undefined}
+            placeholder={t("review.datePlaceholder")}
+            disabled={form.busy}
+            testID="review-date"
+          />
         </View>
         <View style={{ flexGrow: 1, flexBasis: 110 }}>
           {input("time", t("review.time"), { placeholder: t("review.timePlaceholder"), keyboardType: "numbers-and-punctuation", maxLength: 5 })}
@@ -194,6 +217,37 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
           })}
         </View>
       </FieldShell>
+
+      <FieldShell label={t("review.folder")} hint={false}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${t("review.folder")} ${folderName ?? t("folders.none")}`}
+          disabled={form.busy}
+          onPress={() => setFolderOpen(true)}
+          style={{
+            minHeight: 48,
+            justifyContent: "center",
+            paddingHorizontal: theme.spacing.md,
+            borderRadius: theme.radius.md,
+            borderWidth: 1,
+            borderColor: theme.colors.border,
+            backgroundColor: theme.colors.surface,
+          }}
+        >
+          <Text style={[theme.type.body, { color: folderName ? theme.colors.text : theme.colors.textMuted }]}>
+            {folderName ?? t("folders.none")}
+          </Text>
+        </Pressable>
+      </FieldShell>
+      <FolderPicker
+        visible={folderOpen}
+        value={values.folderId}
+        onChange={(folderId) => {
+          setField("folderId", folderId);
+          setFolderOpen(false);
+        }}
+        onClose={() => setFolderOpen(false)}
+      />
 
       {input("notes", t("review.notes"), { multiline: true, placeholder: t("review.optional") })}
 

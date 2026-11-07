@@ -54,7 +54,8 @@
     "lockReason": {
       "no_hardware": "This device has no biometrics or passcode support, so app lock is unavailable.",
       "not_enrolled": "Set up a device passcode, Face ID or fingerprint in system settings to turn on app lock."
-    }
+    },
+    "categories": "Categories"
   },
   "dbError": {
     "title": "Your data can't be unlocked",
@@ -111,6 +112,7 @@
   },
   "review": {
     "title": "Review receipt",
+    "editTitle": "Edit receipt",
     "queued": "{{n}} more to review",
     "later": "Review later",
     "merchant": "Merchant",
@@ -120,6 +122,7 @@
     "currency": "Currency",
     "tax": "Tax",
     "category": "Category",
+    "folder": "Folder",
     "notes": "Notes",
     "datePlaceholder": "YYYY-MM-DD",
     "timePlaceholder": "HH:MM",
@@ -132,6 +135,8 @@
     "rateLabel": "Exchange rate: 1 {{from}} = ? {{to}}",
     "ratePlaceholder": "Automatic",
     "discard": "Discard",
+    "discardChangesTitle": "Discard changes?",
+    "keepEditing": "Keep editing",
     "saveReceipt": "Save receipt",
     "saving": "Saving receipt",
     "discardTitle": "Discard this receipt?",
@@ -159,6 +164,88 @@
       "dateInvalid": "Use a real date as YYYY-MM-DD.",
       "timeInvalid": "Use a time as HH:MM (24-hour).",
       "rateInvalid": "Enter a positive number."
+    }
+  },
+  "receipts": {
+    "unknownMerchant": "Unknown merchant",
+    "detail": {
+      "edit": "Edit",
+      "move": "Move to folder",
+      "missing": "This receipt is no longer available.",
+      "fx": "1 {{from}} = {{rate}} {{to}}",
+      "rateOn": "rate of {{date}}",
+      "manualRate": "manual rate",
+      "approximate": "approximate (nearest earlier rate)",
+      "category": "Category",
+      "folder": "Folder",
+      "notes": "Notes",
+      "deleteTitle": "Delete this receipt?",
+      "deleteMessage": "The receipt and its photos will be removed from this device.",
+      "deleteFailed": "Couldn't delete the receipt."
+    }
+  },
+  "totals": {
+    "thisMonth": "This month",
+    "taxYear": "Tax year {{label}}",
+    "notConverted": "{{count}} not converted"
+  },
+  "folders": {
+    "pickerTitle": "Move to folder",
+    "none": "No folder",
+    "new": "New folder…",
+    "name": "Folder name",
+    "kindProject": "Project",
+    "kindTrip": "Trip",
+    "create": "Create",
+    "taxYears": "Tax years",
+    "sectionFolders": "Folders",
+    "newTitle": "New folder",
+    "renameTitle": "Rename folder",
+    "rename": "Rename",
+    "deleteTitle": "Delete folder?",
+    "deleteMessage": "Receipts in it stay in your list without a folder.",
+    "receiptCount_one": "{{count}} receipt",
+    "receiptCount_other": "{{count}} receipts",
+    "taxYearTitle": "Tax year {{label}}",
+    "noReceipts": "No receipts here yet.",
+    "save": "Save"
+  },
+  "categoryManage": {
+    "title": "Categories",
+    "new": "New category…",
+    "newTitle": "New category",
+    "renameTitle": "Rename category",
+    "name": "Category name",
+    "color": "Color",
+    "add": "Add",
+    "rename": "Rename",
+    "reset": "Reset name",
+    "deleteTitle": "Delete category?",
+    "deleteMessage_one": "{{count}} receipt moves to {{other}}.",
+    "deleteMessage_other": "{{count}} receipts move to {{other}}.",
+    "receiptCount_one": "{{count}} receipt",
+    "receiptCount_other": "{{count}} receipts"
+  },
+  "search": {
+    "label": "Search receipts",
+    "placeholder": "Merchant, note or text",
+    "filters": "Filters",
+    "apply": "Apply",
+    "clearAll": "Clear all",
+    "removeFilter": "Remove filter {{label}}",
+    "noResults": "No receipts match your search.",
+    "date": "Date",
+    "from": "From",
+    "to": "To",
+    "anyFolder": "Any folder",
+    "anyCurrency": "Any currency",
+    "preset": {
+      "all": "Any date",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "thisTaxYear": "This tax year",
+      "lastTaxYear": "Last tax year",
+      "custom": "Custom range"
     }
   }
 }

@@ -1,13 +1,16 @@
 import { act, renderHook } from "@testing-library/react-native";
-import { AppState } from "react-native";
+import { Alert, AppState, type AlertButton } from "react-native";
+
+import { createFolder } from "@/db/repositories/folders";
 
 import { createPage, listPages } from "@/db/repositories/pages";
 import { createReceipt, getReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb, NewReceiptInput } from "@/db/types";
+import { initI18n } from "@/i18n";
 import { createPrefs, type FxCache, type PrefsStore } from "@/prefs/prefs";
 
-import { ReviewValidationError, useReviewForm } from "./useReviewForm";
+import { ReviewValidationError, useReviewForm, WRITE_DEBOUNCE_MS } from "./useReviewForm";
 
 let mockDb: AppDb;
 let mockPrefs: PrefsStore;
@@ -26,9 +29,17 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePrefs: () => mockPrefs,
   usePref: (k: "homeCurrency") => mockPrefs.get(k),
 }));
+// Latest usePreventRemove call: whether removal is blocked, and the blocked-removal callback.
+type PreventCallback = (o: { data: { action: unknown }; repeat: () => void }) => void;
+let mockPrevent: { prevent: boolean; cb?: PreventCallback } = { prevent: false };
+const mockDisablePrevention = jest.fn();
 jest.mock("expo-router", () => ({
   get router() {
     return mockRouter;
+  },
+  usePreventRemove: (prevent: boolean, cb?: PreventCallback) => {
+    mockPrevent = { prevent, cb };
+    return mockDisablePrevention;
   },
 }));
 
@@ -64,12 +75,15 @@ async function mount(id: string, queue: string[] = []) {
   return hook;
 }
 
+beforeAll(() => initI18n("en"));
+
 beforeEach(() => {
   mockDb = testDb();
   mockPrefs = memoryPrefs();
   mockPrefs.set("homeCurrency", "IDR");
   mockDeleted.length = 0;
   mockClosed.length = 0;
+  mockPrevent = { prevent: false };
   jest.clearAllMocks();
   appStateListener = null;
   jest.spyOn(AppState, "addEventListener").mockImplementation(((_: string, cb: AppStateListener) => {
@@ -84,6 +98,13 @@ afterEach(() => {
 });
 
 describe("useReviewForm", () => {
+  it("never blocks back (edits are already written through)", async () => {
+    const r = draft();
+    const { result } = await mount(r.id);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    expect(mockPrevent.prevent).toBe(false);
+  });
+
   it("writes edits through to the draft", async () => {
     jest.useFakeTimers();
     const r = draft();
@@ -262,5 +283,224 @@ describe("useReviewForm", () => {
     expect(getReceipt(mockDb, r.id)).toMatchObject({ status: "confirmed", version: 2 });
     expect(mockRouter.back).toHaveBeenCalledTimes(1);
     expect(mockRouter.replace).not.toHaveBeenCalled();
+  });
+
+  it("saves the folder chosen on review with the draft", async () => {
+    const folder = createFolder(mockDb, { name: "Office", kind: "project" });
+    const r = draft();
+    const { result } = await mount(r.id);
+    expect(result.current.values.folderId).toBeNull();
+    await act(async () => result.current.setField("folderId", folder.id));
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)).toMatchObject({ status: "confirmed", folderId: folder.id });
+  });
+});
+
+describe("useReviewForm edit mode", () => {
+  const cache: FxCache = {
+    base: "idr",
+    latestDate: "2026-11-03",
+    fetchedAt: Date.now(),
+    byDate: { "2026-11-03": { usd: "0.00005" } },
+  };
+
+  function confirmed(over: Partial<NewReceiptInput> = {}) {
+    return draft({ status: "confirmed", amountHomeMinor: 2500000, ...over });
+  }
+
+  async function mountEdit(id: string) {
+    return renderHook(() => useReviewForm(id, { mode: "edit" }));
+  }
+
+  it("writes nothing before save, then saves once and stays confirmed", async () => {
+    jest.useFakeTimers();
+    const r = confirmed();
+    const before = getReceipt(mockDb, r.id)!;
+    const { result, unmount } = await mountEdit(r.id);
+    expect(result.current.receipt).not.toBe("missing");
+    expect(result.current.duplicates).toEqual([]);
+
+    await act(async () => result.current.setField("merchant", "X"));
+    await act(async () => void jest.advanceTimersByTime(WRITE_DEBOUNCE_MS * 3));
+    await act(async () => appStateListener?.("background"));
+    expect(getReceipt(mockDb, r.id)).toEqual(before);
+
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)).toMatchObject({ merchant: "X", status: "confirmed", version: before.version + 1 });
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+
+    // Unmount after save writes nothing more.
+    await unmount();
+    expect(getReceipt(mockDb, r.id)?.version).toBe(before.version + 1);
+  });
+
+  it("recomputes the home amount from the cached rate when the total changes", async () => {
+    mockPrefs.set("fxTables", cache);
+    const fetchFn = jest.fn(async () => {
+      throw new TypeError("offline");
+    });
+    global.fetch = fetchFn as unknown as typeof fetch;
+    const r = confirmed({ currency: "USD", totalMinor: 1234, amountHomeMinor: 24680000, fxRate: "20000", fxRateDate: "2026-11-03" });
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("total", "20"));
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)).toMatchObject({
+      status: "confirmed",
+      totalMinor: 2000,
+      amountHomeMinor: 40000000,
+      fxRate: "20000",
+      fxRateDate: "2026-11-03",
+    });
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("keeps the stored conversion when only notes change, offline with an empty cache", async () => {
+    const fetchFn = jest.fn(async () => {
+      throw new TypeError("offline");
+    });
+    global.fetch = fetchFn as unknown as typeof fetch;
+    const r = confirmed({
+      currency: "EUR",
+      totalMinor: 1250,
+      amountHomeMinor: 21250000,
+      fxRate: "17000",
+      fxRateDate: "2026-11-03",
+      fxApproximate: false,
+    });
+    const before = getReceipt(mockDb, r.id)!;
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("notes", "fixed a typo"));
+    // The background ≈ preview may try the network on mount; Save itself must not.
+    const previewCalls = fetchFn.mock.calls.length;
+    await act(async () => {
+      await result.current.save();
+    });
+    const after = getReceipt(mockDb, r.id)!;
+    expect(after.notes).toBe("fixed a typo");
+    expect(after).toMatchObject({
+      amountHomeMinor: before.amountHomeMinor,
+      fxRate: before.fxRate,
+      fxRateDate: before.fxRateDate,
+      fxApproximate: before.fxApproximate,
+      homeCurrencyAtSave: "IDR",
+    });
+    expect(fetchFn).toHaveBeenCalledTimes(previewCalls);
+  });
+
+  it("recomputes the conversion when the date changes", async () => {
+    mockPrefs.set("fxTables", cache);
+    global.fetch = jest.fn(async () => {
+      throw new TypeError("offline");
+    }) as unknown as typeof fetch;
+    const r = confirmed({
+      currency: "USD",
+      totalMinor: 1000,
+      purchasedAtLocal: "2026-11-02T10:15:00",
+      amountHomeMinor: 19000000,
+      fxRate: "19000",
+      fxRateDate: "2026-11-02",
+    });
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("date", "2026-11-03"));
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)).toMatchObject({ amountHomeMinor: 20000000, fxRate: "20000", fxRateDate: "2026-11-03" });
+  });
+
+  it("cancel with no changes goes straight back", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    const r = confirmed();
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.cancel());
+    expect(alert).not.toHaveBeenCalled();
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancel after changes asks, then goes back without writing", async () => {
+    let buttons: AlertButton[] = [];
+    const alert = jest.spyOn(Alert, "alert").mockImplementation((_t, _m, b) => void (buttons = b ?? []));
+    const r = confirmed();
+    const before = getReceipt(mockDb, r.id)!;
+    const { result, unmount } = await mountEdit(r.id);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    await act(async () => result.current.cancel());
+    expect(alert).toHaveBeenCalledWith("Discard changes?", undefined, expect.any(Array));
+    expect(mockRouter.back).not.toHaveBeenCalled();
+    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    await unmount();
+    expect(getReceipt(mockDb, r.id)).toEqual(before);
+  });
+
+  it("blocks back / swipe-dismiss only while there are unsaved changes", async () => {
+    let buttons: AlertButton[] = [];
+    const alert = jest.spyOn(Alert, "alert").mockImplementation((_t, _m, b) => void (buttons = b ?? []));
+    const r = confirmed();
+    const { result } = await mountEdit(r.id);
+    expect(mockPrevent.prevent).toBe(false);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    expect(mockPrevent.prevent).toBe(true);
+
+    // A blocked back asks first; "Keep editing" stays, "Discard" continues the removal.
+    const repeat = jest.fn();
+    await act(async () => mockPrevent.cb?.({ data: { action: { type: "POP" } }, repeat }));
+    expect(alert).toHaveBeenCalledWith("Discard changes?", undefined, expect.any(Array));
+    expect(repeat).not.toHaveBeenCalled();
+    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
+    expect(repeat).toHaveBeenCalledTimes(1);
+    expect(mockPrevent.prevent).toBe(false);
+
+    // Typing the original value back means nothing to lose.
+    await act(async () => result.current.setField("merchant", "Toko Maju"));
+    expect(mockPrevent.prevent).toBe(false);
+  });
+
+  it("Save lifts the guard before it navigates back", async () => {
+    const r = confirmed();
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    expect(mockPrevent.prevent).toBe(true);
+    let disabledBeforeBack = false;
+    mockRouter.back.mockImplementationOnce(() => {
+      disabledBeforeBack = mockDisablePrevention.mock.calls.length > 0;
+    });
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    expect(disabledBeforeBack).toBe(true);
+    expect(mockPrevent.prevent).toBe(false);
+  });
+
+  it("cancel's Discard lifts the guard before it navigates back", async () => {
+    let buttons: AlertButton[] = [];
+    jest.spyOn(Alert, "alert").mockImplementation((_t, _m, b) => void (buttons = b ?? []));
+    const r = confirmed();
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    await act(async () => result.current.cancel());
+    let disabledBeforeBack = false;
+    mockRouter.back.mockImplementationOnce(() => {
+      disabledBeforeBack = mockDisablePrevention.mock.calls.length > 0;
+    });
+    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    expect(disabledBeforeBack).toBe(true);
+  });
+
+  it("treats a draft or unknown id as missing", async () => {
+    const d = draft();
+    const { result } = await mountEdit(d.id);
+    expect(result.current.receipt).toBe("missing");
+    const { result: none } = await mountEdit("nope");
+    expect(none.current.receipt).toBe("missing");
   });
 });

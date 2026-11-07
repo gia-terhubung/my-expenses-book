@@ -1,5 +1,6 @@
 import { and, desc, eq, isNull, ne, or, sql } from "drizzle-orm";
 
+import { notifyDataChanged } from "@/db/changes";
 import { now } from "@/db/ids";
 import { receipts } from "@/db/schema";
 import type { AppDb } from "@/db/types";
@@ -64,6 +65,7 @@ export function reconvertAll(db: AppDb, home: string, cache: FxCache): number {
       changed++;
     }
   });
+  if (changed > 0) notifyDataChanged();
   return changed;
 }
 
