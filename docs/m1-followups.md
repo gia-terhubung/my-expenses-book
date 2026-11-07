@@ -37,8 +37,8 @@ Carry these into M2+ planning. Generated from the subagent-driven build ledger o
 - Task 1: minor (deferred): template splash/icon branding placeholders
 - Task 4: minor (deferred): (dev) spike routes bundled in release (runtime guard only) — T14 step 5 removes/guards them
 - Task 4: minor (deferred): 560KB spike screenshot PNG in git
-- Task 3: minor (deferred): Kotlin Generation.getClient() per call, never closed — M2 hold one client [DONE 91bf8a5 lazy client]
-- Task 3: minor (deferred): Kotlin parseReceipt checkStatus() throw not mapped to ERR_UNAVAILABLE [DONE Task 9 ReceiptAIModule.kt maps to ERR_UNAVAILABLE]
+- Task 3: minor (deferred): Kotlin Generation.getClient() per call, never closed — M2 hold one client [DONE 6b0cc0a (single client, close on destroy), 91bf8a5 (lazy nullable)]
+- Task 3: minor (deferred): Kotlin parseReceipt checkStatus() throw not mapped to ERR_UNAVAILABLE [DONE 6b0cc0a (checkStatus mapped to ERR_UNAVAILABLE), 91bf8a5 (CancellationException rethrow)]
 - Task 3: minor (deferred): web module name 'ReceiptAIModule' vs native 'ReceiptAI'
 - Task 3: minor (deferred): ocr-samples/index.ts says GENERATED but no generator committed
 - Task 3: minor (deferred): ai-spike auto-runs parses with no timeout
