@@ -54,7 +54,8 @@
     "lockReason": {
       "no_hardware": "Este dispositivo no admite biometría ni código, así que el bloqueo de la app no está disponible.",
       "not_enrolled": "Configura un código del dispositivo, Face ID o huella en los ajustes del sistema para activar el bloqueo de la app."
-    }
+    },
+    "categories": "Categorías"
   },
   "dbError": {
     "title": "No se pueden desbloquear tus datos",
@@ -208,5 +209,21 @@
     "taxYearTitle": "Año fiscal {{label}}",
     "noReceipts": "Aún no hay recibos aquí.",
     "save": "Guardar"
+  },
+  "categoryManage": {
+    "title": "Categorías",
+    "new": "Nueva categoría…",
+    "newTitle": "Nueva categoría",
+    "renameTitle": "Renombrar categoría",
+    "name": "Nombre de la categoría",
+    "color": "Color",
+    "add": "Añadir",
+    "rename": "Renombrar",
+    "reset": "Restablecer nombre",
+    "deleteTitle": "¿Eliminar categoría?",
+    "deleteMessage_one": "{{count}} recibo pasa a {{other}}.",
+    "deleteMessage_other": "{{count}} recibos pasan a {{other}}.",
+    "receiptCount_one": "{{count}} recibo",
+    "receiptCount_other": "{{count}} recibos"
   }
 }

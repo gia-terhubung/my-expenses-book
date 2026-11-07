@@ -54,7 +54,8 @@
     "lockReason": {
       "no_hardware": "Este dispositivo não tem biometria nem senha, então o bloqueio do app não está disponível.",
       "not_enrolled": "Configure uma senha do dispositivo, Face ID ou impressão digital nas configurações do sistema para ativar o bloqueio do app."
-    }
+    },
+    "categories": "Categorias"
   },
   "dbError": {
     "title": "Não foi possível desbloquear seus dados",
@@ -208,5 +209,21 @@
     "taxYearTitle": "Ano fiscal {{label}}",
     "noReceipts": "Ainda não há recibos aqui.",
     "save": "Salvar"
+  },
+  "categoryManage": {
+    "title": "Categorias",
+    "new": "Nova categoria…",
+    "newTitle": "Nova categoria",
+    "renameTitle": "Renomear categoria",
+    "name": "Nome da categoria",
+    "color": "Cor",
+    "add": "Adicionar",
+    "rename": "Renomear",
+    "reset": "Redefinir nome",
+    "deleteTitle": "Excluir categoria?",
+    "deleteMessage_one": "{{count}} recibo vai para {{other}}.",
+    "deleteMessage_other": "{{count}} recibos vão para {{other}}.",
+    "receiptCount_one": "{{count}} recibo",
+    "receiptCount_other": "{{count}} recibos"
   }
 }

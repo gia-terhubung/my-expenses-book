@@ -54,7 +54,8 @@
     "lockReason": {
       "no_hardware": "This device has no biometrics or passcode support, so app lock is unavailable.",
       "not_enrolled": "Set up a device passcode, Face ID or fingerprint in system settings to turn on app lock."
-    }
+    },
+    "categories": "Categories"
   },
   "dbError": {
     "title": "Your data can't be unlocked",
@@ -208,5 +209,21 @@
     "taxYearTitle": "Tax year {{label}}",
     "noReceipts": "No receipts here yet.",
     "save": "Save"
+  },
+  "categoryManage": {
+    "title": "Categories",
+    "new": "New category…",
+    "newTitle": "New category",
+    "renameTitle": "Rename category",
+    "name": "Category name",
+    "color": "Color",
+    "add": "Add",
+    "rename": "Rename",
+    "reset": "Reset name",
+    "deleteTitle": "Delete category?",
+    "deleteMessage_one": "{{count}} receipt moves to {{other}}.",
+    "deleteMessage_other": "{{count}} receipts move to {{other}}.",
+    "receiptCount_one": "{{count}} receipt",
+    "receiptCount_other": "{{count}} receipts"
   }
 }

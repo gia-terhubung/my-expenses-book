@@ -54,7 +54,8 @@
     "lockReason": {
       "no_hardware": "Perangkat ini tidak mendukung biometrik atau kode sandi, jadi kunci aplikasi tidak tersedia.",
       "not_enrolled": "Atur kode sandi perangkat, Face ID, atau sidik jari di pengaturan sistem untuk mengaktifkan kunci aplikasi."
-    }
+    },
+    "categories": "Kategori"
   },
   "dbError": {
     "title": "Data Anda tidak dapat dibuka",
@@ -208,5 +209,21 @@
     "taxYearTitle": "Tahun pajak {{label}}",
     "noReceipts": "Belum ada struk di sini.",
     "save": "Simpan"
+  },
+  "categoryManage": {
+    "title": "Kategori",
+    "new": "Kategori baru…",
+    "newTitle": "Kategori baru",
+    "renameTitle": "Ubah nama kategori",
+    "name": "Nama kategori",
+    "color": "Warna",
+    "add": "Tambah",
+    "rename": "Ubah nama",
+    "reset": "Atur ulang nama",
+    "deleteTitle": "Hapus kategori?",
+    "deleteMessage_one": "{{count}} struk dipindahkan ke {{other}}.",
+    "deleteMessage_other": "{{count}} struk dipindahkan ke {{other}}.",
+    "receiptCount_one": "{{count}} struk",
+    "receiptCount_other": "{{count}} struk"
   }
 }
