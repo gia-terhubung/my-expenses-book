@@ -57,4 +57,22 @@ describe("useReceiptQuery", () => {
     );
     await waitFor(() => expect(result.current.rows[0].merchant).toBe("New"));
   });
+
+  it("keeps the loaded window when data changes", async () => {
+    for (let i = 0; i < 120; i++) seed(i);
+    const { result } = await renderHook(() => useReceiptQuery(filter));
+    await act(async () => result.current.loadMore());
+    await act(async () => result.current.loadMore());
+    expect(result.current.rows).toHaveLength(120);
+    const target = result.current.rows[109];
+    await act(
+      async () => void updateReceipt(mockDb, target.id, { merchant: "Edited" }),
+    );
+    await waitFor(() =>
+      expect(
+        result.current.rows.find((r) => r.id === target.id)?.merchant,
+      ).toBe("Edited"),
+    );
+    expect(result.current.rows).toHaveLength(120);
+  });
 });
