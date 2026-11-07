@@ -24,6 +24,7 @@ jest.mock("expo-router", () => ({
     return mockRouter;
   },
   useLocalSearchParams: () => ({}),
+  useFocusEffect: () => undefined,
 }));
 jest.mock("@expo/ui/swift-ui", () => ({ DatePicker: () => null }));
 jest.mock("@expo/ui", () => {

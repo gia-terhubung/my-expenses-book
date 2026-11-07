@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams, type Href } from "expo-router";
-import { useCallback, useEffect } from "react";
+import { router, useFocusEffect, useLocalSearchParams, type Href } from "expo-router";
+import { useCallback } from "react";
 import { BackHandler, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -33,14 +33,17 @@ export function ReceiptListDetail({ filter, ListHeaderComponent, empty }: Props)
   const { selected } = useLocalSearchParams<{ selected?: string }>();
   const clear = useCallback(() => router.setParams({ selected: undefined }), []);
 
-  useEffect(() => {
-    if (!compact || !selected) return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      clear();
-      return true;
-    });
-    return () => sub.remove();
-  }, [compact, selected, clear]);
+  // Focus-scoped: a background tab or a screen under a pushed one must not swallow back.
+  useFocusEffect(
+    useCallback(() => {
+      if (!compact || !selected) return;
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        clear();
+        return true;
+      });
+      return () => sub.remove();
+    }, [compact, selected, clear]),
+  );
 
   const onSelect = useCallback(
     (id: string) => {

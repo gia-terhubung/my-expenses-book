@@ -28,6 +28,7 @@ jest.mock("expo-router", () => ({
     return mockRouter;
   },
   useLocalSearchParams: () => ({}),
+  useFocusEffect: () => undefined,
 }));
 
 function seed(

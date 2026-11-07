@@ -30,7 +30,13 @@ jest.mock("expo-router", () => ({
     return mockRouter;
   },
   useLocalSearchParams: () => mockParams,
+  // Runs the callback like a focused screen does, unless the test marks the screen unfocused.
+  useFocusEffect: (cb: () => void | (() => void)) => {
+    const { useEffect } = jest.requireActual("react");
+    useEffect(() => (mockFocused ? cb() : undefined), [cb]);
+  },
 }));
+let mockFocused = true;
 
 // Mount counters around the real list and detail: a remount would reset scroll offset, loaded
 // window and in-progress detail state.
@@ -86,6 +92,7 @@ beforeEach(() => {
   mockDb = testDb();
   mockParams = {};
   mockClass = "compact";
+  mockFocused = true;
   mockMounts.list = 0;
   mockMounts.detail = 0;
   jest.clearAllMocks();
@@ -158,6 +165,16 @@ describe("ReceiptListDetail", () => {
     await view.rerender(ui());
     expect(remove).toHaveBeenCalled();
     expect(handler).toBeUndefined();
+    spy.mockRestore();
+  });
+
+  it("compact with `selected` but unfocused: Android back is not intercepted", async () => {
+    const a = seed("Alpha", "2026-11-03T10:00:00");
+    const spy = jest.spyOn(BackHandler, "addEventListener");
+    mockFocused = false;
+    mockParams = { selected: a.id };
+    await render(ui());
+    expect(spy).not.toHaveBeenCalledWith("hardwareBackPress", expect.anything());
     spy.mockRestore();
   });
 
