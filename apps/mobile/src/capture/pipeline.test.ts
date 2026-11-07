@@ -57,6 +57,9 @@ function fakeImages() {
     async openForView(p: string) {
       return p;
     },
+    async exists() {
+      return true;
+    },
     async closeViews() {},
     async readPlain() {
       return new Uint8Array();

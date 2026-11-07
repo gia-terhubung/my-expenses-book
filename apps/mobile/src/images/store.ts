@@ -6,6 +6,7 @@ export interface FileOps {
   documentDir: string;
   cacheDir: string;
   read(uri: string): Promise<Uint8Array>;
+  exists(uri: string): Promise<boolean>;
   /** Creates parent directories as needed; overwrites. */
   write(uri: string, bytes: Uint8Array): Promise<void>;
   /** No-op when the file is missing. */
@@ -36,6 +37,8 @@ export interface ImageStore {
   deleteFiles(paths: string[]): Promise<void>;
   /** Decrypts a page file in memory; writes nothing to disk. */
   readPlain(path: string): Promise<Uint8Array>;
+  /** True when the encrypted page file is present (path validated; reads nothing). */
+  exists(path: string): Promise<boolean>;
   /** Deletes the decrypted view copies (cache/view/) of these pages now; missing copies are fine. */
   closeViews(paths: string[]): Promise<void>;
   /** `keepCaptureWork`: a capture is running (capture lease held), so only the view dir goes. */
@@ -157,6 +160,11 @@ export function createImageStore(deps: {
     async readPlain(path) {
       assertPagePath(path);
       return decryptBytes(key, await fs.read(docUri(path)));
+    },
+
+    async exists(path) {
+      assertPagePath(path);
+      return fs.exists(docUri(path));
     },
 
     async closeViews(paths) {

@@ -13,6 +13,7 @@ export const expoFs: FileOps = {
   documentDir: withSlash(Paths.document.uri),
   cacheDir: withSlash(Paths.cache.uri),
   read: (uri) => new File(uri).bytes(),
+  exists: async (uri) => new File(uri).exists,
   async write(uri, bytes) {
     const f = new File(uri);
     ensureParent(f);

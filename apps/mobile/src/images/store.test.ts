@@ -16,6 +16,7 @@ function memFs() {
       if (!b) throw new Error("ENOENT " + u);
       return b;
     },
+    exists: async (u) => files.has(u),
     write: async (u, b) => void files.set(u, b),
     remove: async (u) => void files.delete(u),
     list: async (dir) =>
@@ -280,5 +281,15 @@ describe("export files vs background purge", () => {
     expect(files.has(CACHE + "export/MyExpensesBook-2026-11-07.csv")).toBe(true);
     expect(files.has(CACHE + "DocumentPicker/x.meb")).toBe(true);
     expect(files.has(CACHE + "view/a.jpg")).toBe(false);
+  });
+});
+
+describe("image store exists", () => {
+  it("reports presence and validates the path", async () => {
+    const { store } = setup();
+    const r = await store.savePage(CACHE + "picked.jpg");
+    await expect(store.exists(r.imagePath)).resolves.toBe(true);
+    await expect(store.exists("pages/nope.enc")).resolves.toBe(false);
+    await expect(store.exists("../x")).rejects.toThrow(/Invalid page path/);
   });
 });
