@@ -9,7 +9,7 @@ Date: 2026-11-07. Branch feat/m3-organize. Status key: PASS / FAIL / OWNER-PENDI
 | `npx jest --maxWorkers=2` | Test Suites: 82 passed, 82 total. Tests: 570 passed, 570 total (includes `src/dev/seed.test.ts`: 500 seeded, 12+ months, unconverted rows, paging 500 rows at limit 50 under 2 s) | PASS |
 | `npx tsc --noEmit` | no output, exit 0 | PASS |
 | `npm run check:pii` | ok: 68 dump tokens checked against fixtures, none found | PASS |
-| Android EAS development build | Build fd79f317-fa1f-47c4-8fa7-5deac7111dfd, account gia-terhubung. Status was "in progress" when this doc was written; poll `npx eas-cli build:view fd79f317-fa1f-47c4-8fa7-5deac7111dfd` (apps/mobile) for the final status and APK link. Build page: https://expo.dev/accounts/gia-terhubung/projects/my-expenses-book/builds/fd79f317-fa1f-47c4-8fa7-5deac7111dfd | PENDING (in progress, one build only) |
+| Android EAS development build | Build fd79f317-fa1f-47c4-8fa7-5deac7111dfd, account gia-terhubung. Re-checked 2026-11-07 in the final fix wave with `npx eas-cli build:view fd79f317-fa1f-47c4-8fa7-5deac7111dfd` (apps/mobile): status "in progress", started 11/7/2026 8:34:50 PM, Application Archive URL not yet available. Poll the same command for the final status and APK link. The build is from commit bbf6f87; it is a development client, so the later JS fixes load from Metro and do not need a new build. Build page: https://expo.dev/accounts/gia-terhubung/projects/my-expenses-book/builds/fd79f317-fa1f-47c4-8fa7-5deac7111dfd | PENDING (still in progress at the final fix wave, one build only) |
 
 M2 carry-overs closed in M3 (see `docs/m2-followups.md`): FX cache clobber race (bbf6f87), capture cancelWork double back (bbf6f87), native date picker (1d87ae7, 6891d7e), aggregates constraint (6146d5a).
 
@@ -42,7 +42,7 @@ Install: open the APK link from section 1 on the phone, allow install from brows
 | R2 | Search "indom" (type in the search field) | results appear within about 300 ms after the debounce | OWNER-PENDING |
 | R3 | Open a receipt, Edit, tap the date field | native date picker opens; picking a date updates the field | OWNER-PENDING |
 | R4 | Folders tab: delete a folder that has receipts | folder gone; its receipts stay in the feed (no folder) | OWNER-PENDING |
-| R5 | Android back while editing a receipt | leaves edit mode without a "Discard changes?" prompt (accepted for M3; note what you saw) | OWNER-PENDING |
+| R5 | Android back while editing a receipt | with no changes: leaves straight away. After typing a change: "Discard changes?" appears; Keep editing stays, Discard leaves without saving | OWNER-PENDING |
 | R6 | TalkBack on, operate the native date field | field is announced, picker can be opened and a date chosen | OWNER-PENDING |
 | R7 | Open FilterSheet, change fields without applying, rotate the phone | draft edits are kept after rotation | OWNER-PENDING |
 | R8 | Open the feed with zero receipts (fresh install or after reset) | top spacing looks single, no doubled safe-area gap | OWNER-PENDING |
@@ -57,7 +57,7 @@ Needs a registered device build (`eas device:create`, interactive: owner step) o
 | P2 | Select a receipt in two-pane, rotate back to portrait | detail shows with a back control | OWNER-PENDING |
 | P3 | Edit a receipt, type in notes, rotate | typed text stays | OWNER-PENDING |
 | P4 | Tap the date field while editing | native date picker works; field shows the chosen date | OWNER-PENDING |
-| P5 | Swipe down (sheet/modal edit) or swipe back while editing | leaves without "Discard changes?" prompt (accepted for M3; note what you saw) | OWNER-PENDING |
+| P5 | Swipe down (sheet/modal edit) or swipe back while editing | with no changes: leaves. After a change: "Discard changes?" appears and the sheet/screen stays until Discard | OWNER-PENDING |
 | P6 | VoiceOver on, operate the native date field | field announced, date can be changed | OWNER-PENDING |
 | P7 | Open FilterSheet, change fields, rotate | draft edits kept | OWNER-PENDING |
 | P8 | Empty feed | top spacing single, no doubled safe-area gap | OWNER-PENDING |
@@ -73,7 +73,7 @@ Needs a registered device build (`eas device:create`, interactive: owner step) o
 | F5 | FilterSheet open with edits, fold/unfold | draft edits kept | OWNER-PENDING |
 | F6 | Empty feed | top spacing single | OWNER-PENDING |
 | F7 | TalkBack on the native date field | operable | OWNER-PENDING |
-| F8 | Back while editing | leaves without discard prompt (accepted; note behavior) | OWNER-PENDING |
+| F8 | Back while editing | after a change: "Discard changes?" prompt; with no changes: leaves | OWNER-PENDING |
 
 ## 7. Carried forward from M2 (still open, not duplicated here)
 
@@ -81,4 +81,4 @@ All OWNER-PENDING rows of `docs/m2-acceptance.md` remain open and block M2 sign-
 
 ## 8. Summary
 
-Host checks PASS. Seed added and tested. Simulator evidence BLOCKED (boot stall, no tap tooling). Android build: PENDING (in progress, one build only). All device rows OWNER-PENDING.
+Host checks PASS. Seed added and tested. Simulator evidence BLOCKED (boot stall, no tap tooling). Android build: PENDING (still in progress when re-checked in the final fix wave; no APK link yet, one build only). All device rows OWNER-PENDING.
