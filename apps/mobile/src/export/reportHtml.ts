@@ -8,6 +8,7 @@ import {
 import type { AppDb } from "../db/types";
 import type { ImageStore } from "../images/store";
 import { formatMoney } from "../money/money";
+import { categoryLabel } from "../organize/categoryLabel";
 import { homeLine, monthLabel, totalLine } from "../receipts/format";
 import { loadExportRows, type ExportRow } from "./rows";
 
@@ -116,9 +117,8 @@ export async function buildReportInput(deps: {
   now: Date;
 }): Promise<ReportInput> {
   const { db, store, filter, home, locale, t } = deps;
-  const rows = loadExportRows(db, filter, (c) =>
-    c.customName ?? (c.nameKey ? t(`categories.${c.nameKey}`) : ""),
-  );
+  // Same label function as the CSV (ExportScreen) so both files name categories identically.
+  const rows = loadExportRows(db, filter, (c) => categoryLabel(c, (k) => t(k)));
   const totals = monthTotals(db, filter, home);
 
   const months: ReportInput["months"] = [];

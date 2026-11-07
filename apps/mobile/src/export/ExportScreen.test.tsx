@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 
 import { createFolder } from "@/db/repositories/folders";
 import { createReceipt } from "@/db/repositories/receipts";
@@ -100,20 +100,55 @@ describe("ExportScreen", () => {
     expect(mockShare).toHaveBeenCalledWith(uri, { mimeType: "text/csv", UTI: "public.comma-separated-values-text" });
     expect(fs.removeDir).toHaveBeenCalled();
     const text = Buffer.from(files.get(uri)!).toString("utf8");
-    expect(text.startsWith("﻿")).toBe(true);
+    expect(text.startsWith("\uFEFF")).toBe(true);
     expect(text).toContain("Warung");
     expect(text).toContain("Merchant");
   });
 
-  it("folderId param preselects the folder", async () => {
+  it("folderId param alone preselects the folder over all time", async () => {
     const f = createFolder(mockDb, { name: "Bali", kind: "trip" });
-    seed("In", "2026-05-10T10:00:00", 70000, f.id);
+    seed("In", "2024-05-10T10:00:00", 70000, f.id); // outside this tax year
     seed("Out", "2026-05-11T10:00:00", 10000);
-    mockParams = { folderId: f.id, from: "2026-01-01", to: "2026-12-31" };
+    mockParams = { folderId: f.id };
     const { fs } = fakeFs();
     await render(<ExportScreen fs={fs} now={today} />);
     expect(await screen.findByText(/1 receipt · .*700/)).toBeTruthy();
     expect(screen.getByText("Bali")).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "All time" }).props.accessibilityState?.checked).toBe(true);
+  });
+
+  it("folderId with from/to uses that custom range", async () => {
+    const f = createFolder(mockDb, { name: "Bali", kind: "trip" });
+    seed("Old", "2024-05-10T10:00:00", 30000, f.id);
+    seed("In", "2026-05-10T10:00:00", 70000, f.id);
+    mockParams = { folderId: f.id, from: "2026-01-01", to: "2026-12-31" };
+    const { fs } = fakeFs();
+    await render(<ExportScreen fs={fs} now={today} />);
+    expect(await screen.findByText(/1 receipt · .*700/)).toBeTruthy();
+  });
+
+  it("double tap starts one export", async () => {
+    seed("A", "2026-05-10T10:00:00", 50000);
+    const { fs } = fakeFs();
+    await render(<ExportScreen fs={fs} now={today} />);
+    await fireEvent.press(screen.getByRole("radio", { name: "All time" }));
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Export" }));
+      fireEvent.press(screen.getByRole("button", { name: "Export" }));
+    });
+    await waitFor(() => expect(mockShare).toHaveBeenCalled());
+    expect(mockShare).toHaveBeenCalledTimes(1);
+    expect(fs.removeDir).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears only cache/export before writing", async () => {
+    seed("A", "2026-05-10T10:00:00", 50000);
+    const { fs } = fakeFs();
+    await render(<ExportScreen fs={fs} now={today} />);
+    await fireEvent.press(screen.getByRole("radio", { name: "All time" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Export" }));
+    await waitFor(() => expect(mockShare).toHaveBeenCalled());
+    expect((fs.removeDir as jest.Mock).mock.calls).toEqual([["file:///cache/export/"]]);
   });
 
   it("write failure shows the error panel and does not share", async () => {

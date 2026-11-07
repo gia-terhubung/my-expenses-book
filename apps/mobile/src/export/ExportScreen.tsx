@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -17,12 +17,12 @@ import { useImageStore } from "@/images/ImageStoreProvider";
 import type { FileOps } from "@/images/store";
 import { usePref } from "@/prefs/PrefsProvider";
 import { totalLine } from "@/receipts/format";
-import { categoryLabel } from "@/review/ReviewFields";
+import { categoryLabel } from "@/organize/categoryLabel";
 import { FolderPicker } from "@/organize/FolderPicker";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { toCsv } from "./csv";
-import { EXPORT_DIR, exportFileName, purgeExportFiles, shareFile } from "./files";
+import { EXPORT_DIR, exportFileName, purgeExportDir, shareFile } from "./files";
 import { presetRange, type RangePreset } from "./presets";
 import { renderPdf } from "./pdf";
 import { buildReportHtml, buildReportInput } from "./reportHtml";
@@ -54,7 +54,10 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   const today = useMemo(() => dateToLocalString(now()), [now]);
 
   const hasRange = Boolean(params.from || params.to);
-  const [preset, setPreset] = useState<RangePreset>(hasRange ? "custom" : "thisTaxYear");
+  // A folder export (Collection passes only folderId) covers the whole folder, not just this tax year.
+  const [preset, setPreset] = useState<RangePreset>(
+    hasRange ? "custom" : params.folderId ? "all" : "thisTaxYear",
+  );
   const [custom, setCustom] = useState({ from: params.from ?? "", to: params.to ?? "" });
   const [folder, setFolder] = useState<FolderSel>(params.folderId || undefined);
   const [pickingFolder, setPickingFolder] = useState(false);
@@ -63,6 +66,7 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thumbFailures, setThumbFailures] = useState(0);
+  const inflight = useRef(false);
 
   const range = preset === "custom"
     ? { from: isDate(custom.from) ? custom.from : undefined, to: isDate(custom.to) ? custom.to : undefined }
@@ -84,12 +88,14 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   };
 
   const run = async () => {
-    if (busy || empty) return;
+    // A ref, not `busy`: two taps in one frame both see busy === false.
+    if (inflight.current || empty) return;
+    inflight.current = true;
     setBusy(true);
     setError(null);
     setThumbFailures(0);
     try {
-      await purgeExportFiles(fs);
+      await purgeExportDir(fs);
       const uri = fs.cacheDir + EXPORT_DIR + exportFileName(format, today);
       const label = (c: Parameters<typeof categoryLabel>[0]) => categoryLabel(c, t);
       if (format === "csv") {
@@ -117,6 +123,7 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
+      inflight.current = false;
     }
   };
 

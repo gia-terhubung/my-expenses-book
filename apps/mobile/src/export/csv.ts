@@ -26,5 +26,5 @@ function cell(row: ExportRow, col: keyof ExportRow): string {
 export function toCsv(rows: ExportRow[], header: (col: keyof ExportRow) => string): string {
   const lines = [CSV_COLUMNS.map((c) => quote(header(c))).join(",")];
   for (const r of rows) lines.push(CSV_COLUMNS.map((c) => cell(r, c)).join(","));
-  return `﻿${lines.join("\r\n")}\r\n`;
+  return `\uFEFF${lines.join("\r\n")}\r\n`;
 }

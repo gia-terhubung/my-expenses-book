@@ -11,6 +11,7 @@ import { useDataVersion } from "@/db/changes";
 import { listFolders } from "@/db/repositories/folders";
 import type { Category } from "@/db/types";
 import { formatMoney } from "@/money/money";
+import { categoryLabel } from "@/organize/categoryLabel";
 import { FolderPicker } from "@/organize/FolderPicker";
 import type { FieldConfidence } from "@/parsing/types";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -18,9 +19,8 @@ import { useTheme } from "@/theme/ThemeProvider";
 import { CONFIDENCE_OF, type ReviewField } from "./form";
 import type { ReviewForm } from "./useReviewForm";
 
-export function categoryLabel(c: Category, t: (k: string) => string): string {
-  return c.customName ?? (c.nameKey ? t(`categories.${c.nameKey}`) : "—");
-}
+// Re-exported for existing callers; the pure function lives in organize/categoryLabel.
+export { categoryLabel };
 
 function FieldShell({
   label,

@@ -30,7 +30,7 @@ const lines = (s: string) => s.slice(1).split("\r\n");
 describe("toCsv", () => {
   it("starts with BOM, uses CRLF, header in column order", () => {
     const out = toCsv([row()], header);
-    expect(out.startsWith("﻿")).toBe(true);
+    expect(out.startsWith("\uFEFF")).toBe(true);
     expect(out.endsWith("\r\n")).toBe(true);
     const l = lines(out);
     expect(l[0]).toBe(CSV_COLUMNS.map(header).join(","));

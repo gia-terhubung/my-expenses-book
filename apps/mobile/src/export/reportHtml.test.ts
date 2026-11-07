@@ -3,6 +3,8 @@ import { createReceipt } from "../db/repositories/receipts";
 import { testDb } from "../db/testing/testDb";
 import type { NewReceiptInput } from "../db/types";
 import { formatMoney } from "../money/money";
+import { categoryLabel } from "../organize/categoryLabel";
+import { categories } from "../db/schema";
 import { buildReportHtml, buildReportInput, type ReportInput } from "./reportHtml";
 import { loadExportRows, type ExportRow } from "./rows";
 
@@ -130,6 +132,28 @@ describe("buildReportInput", () => {
     expect(uris.filter(Boolean)).toEqual(["data:image/jpeg;base64,AQID"]);
     expect(r.byCategory).toEqual([{ label: "categories.other", homeMinor: 140 }]);
     expect(r.thumbFailures).toBe(0);
+  });
+
+  it("labels categories exactly like the CSV (one label function)", async () => {
+    const db = testDb();
+    db.insert(categories)
+      .values([
+        { id: "c-custom", createdAt: 1, updatedAt: 1, nameKey: null, customName: "Snacks", icon: null, color: null, isDefault: false, sortOrder: 1 },
+        { id: "c-nameless", createdAt: 1, updatedAt: 1, nameKey: null, customName: null, icon: null, color: null, isDefault: false, sortOrder: 2 },
+      ])
+      .run();
+    seed(db, { merchant: "A", categoryId: "c-custom" });
+    seed(db, { merchant: "B", categoryId: "c-nameless" });
+    seed(db, { merchant: "C", categoryId: "default:other" });
+    const r = await buildReportInput({
+      db, store: {} as never, filter: {}, home: "IDR", locale: "en", t, title: "T", rangeLabel: "R",
+      now: new Date("2026-11-07T00:00:00Z"), includeThumbs: false,
+    });
+    const csv = loadExportRows(db, {}, (c) => categoryLabel(c, t));
+    const pdf = r.months.flatMap((m) => m.rows.map((x) => x.row));
+    const byMerchant = (rows: ExportRow[]) => Object.fromEntries(rows.map((x) => [x.merchant, x.category]));
+    expect(byMerchant(pdf)).toEqual(byMerchant(csv));
+    expect(byMerchant(pdf)).toEqual({ A: "Snacks", B: "—", C: "categories.other" });
   });
 
   it("counts thumbnail failures and still renders rows", async () => {

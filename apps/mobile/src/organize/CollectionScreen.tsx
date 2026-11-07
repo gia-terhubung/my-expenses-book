@@ -137,7 +137,8 @@ export function CollectionScreen(props: Props) {
                 t("totals.notConverted", { count: n }),
               )}
             </Text>
-            <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+            {/* Wraps on narrow phones / long translations instead of clipping the last action. */}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.md }}>
               {action(t("export.title"), openExport)}
               {folder ? (
                 <>
