@@ -1,0 +1,12 @@
+SaigonRide
+Biên nhận chuyến đi
+26/10/2026 17:20
+Điểm đón: Chợ Bến Thành
+Điểm đến: Sân bay Tân Sơn Nhất
+Quãng đường: 7,8 km
+Cước phí               109.000đ
+Phí sân bay             10.000đ
+Phí nền tảng             5.000đ
+Tổng tiền              124.000đ
+Thanh toán: Tiền mặt
+Mã chuyến: SR-26A73KQ

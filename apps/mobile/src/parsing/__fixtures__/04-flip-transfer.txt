@@ -1,0 +1,12 @@
+flip  ID #ST2611011406785190KQWD
+Transaksi berhasil diproses
+01 November 2026 14:07:18 WIB
+Rp300.000
+Penerima  WIDYA KUSUMANINGRUM
+Bank Penerima  BRI
+Nomor Rekening  052701049183607
+Catatan Transfer  Utk kos adek bln nov 2026
+Pengirim  Lestari Ayu PRAMESWARI
+Transfer melalui  PT Fliptech Lentera
+Kegiatan transfer uang di Flip terlisensi oleh Bank
+Indonesia.

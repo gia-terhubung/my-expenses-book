@@ -23,12 +23,12 @@ Carry these into M2+ planning. Generated from the subagent-driven build ledger o
 - Ruling: pull Minor 1 (fail-open on not_available only if enrolled level NONE) + Minor 3/4 (real LockGate tests) into fix — security-relevant.
 - Ruling: T14 step 5 — keep (dev) spike routes with existing __DEV__ runtime guards (ai-spike needed for owner's physical-device AI test via EAS dev build); hard exclusion from release bundle deferred to M5 — cost: dead dev screens in release bundle, unreachable.
 - Ruling: T14 network check — no proxy tool on host; verify by static audit (grep for fetch/XMLHttpRequest/WebSocket/axios in src + deps that phone home) + note; full proxy session deferred to owner device — cost: runtime-only network calls from native libs unverified.
-- Ruling: Important #4 (lock below modals) deferred to M2 task 1 (reviewer allowed; no modal routes hold receipt data in M1) — cost: M1 pref sheets visible over lock.
-- Ruling (accept reviewer challenge): native snapshot protection (FLAG_SECURE + iOS cover) moves from M5 to M2 task 1.
-- Ruling (accept reviewer challenge): M2 capture/OCR/parse blocked until T2 OCR bake-off (owner photos) and T3 physical-device AI test are done.
+- Ruling: Important #4 (lock below modals) deferred to M2 task 1 (reviewer allowed; no modal routes hold receipt data in M1) — cost: M1 pref sheets visible over lock. [DONE b4842bb, a637114 AppModal; device check in m2-acceptance.md]
+- Ruling (accept reviewer challenge): native snapshot protection (FLAG_SECURE + iOS cover) moves from M5 to M2 task 1. [DONE b4842bb; device check in m2-acceptance.md]
+- Ruling (accept reviewer challenge): M2 capture/OCR/parse blocked until T2 OCR bake-off (owner photos) and T3 physical-device AI test are done. [DONE 8aa1e04 bake-off; T3 AI check = OWNER-PENDING on Z Flip 6, see m2-acceptance.md]
 - Ruling: locked-screen copy must not assert "wrong key" (NOTADB also = corruption/transfer).
 - Ruling: final fix wave also includes T5 read-back-after-set (MasterKeyPersistError) and secure-random assertion — cheap, prevent key loss / weak IDs.
-- Final: parked — assertSecureRandom at module scope bypasses ErrorBoundary (hard crash instead of themed error) — Ruling: stands for merge; it fails loudly and never falls back to Math.random (security goal met), condition only occurs if quick-crypto install breaks; move call into RootLayout render as M2 task-1 cleanup — cost if wrong: red screen instead of themed error in a should-never-happen case.
+- Final: parked — assertSecureRandom at module scope bypasses ErrorBoundary (hard crash instead of themed error) — Ruling: stands for merge; it fails loudly and never falls back to Math.random (security goal met), condition only occurs if quick-crypto install breaks; move call into RootLayout render as M2 task-1 cleanup — cost if wrong: red screen instead of themed error in a should-never-happen case. [DONE b4842bb call moved into RootLayout render]
 
 ## Deferred minor findings
 - Task 1: minor (deferred): jest-expo project has no .tsx test yet (first comes in T10)
@@ -37,12 +37,12 @@ Carry these into M2+ planning. Generated from the subagent-driven build ledger o
 - Task 1: minor (deferred): template splash/icon branding placeholders
 - Task 4: minor (deferred): (dev) spike routes bundled in release (runtime guard only) — T14 step 5 removes/guards them
 - Task 4: minor (deferred): 560KB spike screenshot PNG in git
-- Task 3: minor (deferred): Kotlin Generation.getClient() per call, never closed — M2 hold one client
-- Task 3: minor (deferred): Kotlin parseReceipt checkStatus() throw not mapped to ERR_UNAVAILABLE
+- Task 3: minor (deferred): Kotlin Generation.getClient() per call, never closed — M2 hold one client [DONE 6b0cc0a (single client, close on destroy), 91bf8a5 (lazy nullable)]
+- Task 3: minor (deferred): Kotlin parseReceipt checkStatus() throw not mapped to ERR_UNAVAILABLE [DONE 6b0cc0a (checkStatus mapped to ERR_UNAVAILABLE), 91bf8a5 (CancellationException rethrow)]
 - Task 3: minor (deferred): web module name 'ReceiptAIModule' vs native 'ReceiptAI'
 - Task 3: minor (deferred): ocr-samples/index.ts says GENERATED but no generator committed
 - Task 3: minor (deferred): ai-spike auto-runs parses with no timeout
-- Task 3: minor (deferred): Android free-text output may include code fences — M2 extract/validate; evaluate typed output API
+- Task 3: minor (deferred): Android free-text output may include code fences — M2 extract/validate; evaluate typed output API [DONE 6b0cc0a LLM output validation/merge; fence case in llm.test.ts]
 - Task 5: minor (deferred): no read-back verification after store.set
 - Task 5: minor (deferred): fromHex/toHex round-trip only tested at 32 bytes; uppercase hex rejected (unstated)
 - Task 5: minor (deferred): uncleared Buffer copy of key in memory (JS limitation)
@@ -77,8 +77,8 @@ Carry these into M2+ planning. Generated from the subagent-driven build ledger o
 - Task 13: minor (deferred): stale local .expo/types can fail typecheck until typegen (local dev only)
 
 ## From OCR bake-off (2026-11-05) — carry into M2
-- M2: add default category `default:transfer` (sort_order between office and other, e.g. 95; icon `arrow.left.arrow.right`) via new migration `0002` — never edit `0001`. Add `transfer` label to en/id/es/pt-BR locales. Owner ruling: transfers/top-ups/ATM withdrawals are expenses.
-- M2: OCR module `recognizeText` must pin languages and auto-correct 90°/270° rotation (see `docs/spikes/2026-11-ocr-bakeoff.md`).
-- M2: "Import from Photos / Share to app" is a first-class capture path (screenshots are most real inputs).
-- M2: multi-receipt photo detection + "Split into 2 / Keep as one" (spec row "Multiple receipts in one photo"); fixture = spike photo 24 (must split) vs photo 14 (must not).
-- M2: duplicate warning (spec row "Duplicate warning"): migration adds `receipts.ref_no` + `receipt_pages.dhash` (indexed); parser extracts ref numbers; check on save and on backup merge import.
+- M2: add default category `default:transfer` (sort_order between office and other, e.g. 95; icon `arrow.left.arrow.right`) via new migration `0002` — never edit `0001`. Add `transfer` label to en/id/es/pt-BR locales. Owner ruling: transfers/top-ups/ATM withdrawals are expenses. [DONE 7121f41]
+- M2: OCR module `recognizeText` must pin languages and auto-correct 90°/270° rotation (see `docs/spikes/2026-11-ocr-bakeoff.md`). [DONE 502f8bf]
+- M2: "Import from Photos / Share to app" is a first-class capture path (screenshots are most real inputs). [DONE 01a09f6, 31fd47e]
+- M2: multi-receipt photo detection + "Split into 2 / Keep as one" (spec row "Multiple receipts in one photo"); fixture = spike photo 24 (must split) vs photo 14 (must not). [DONE 443faca, 01a09f6; device check in m2-acceptance.md]
+- M2: duplicate warning (spec row "Duplicate warning"): migration adds `receipts.ref_no` + `receipt_pages.dhash` (indexed); parser extracts ref numbers; check on save and on backup merge import. [DONE 7121f41, 01a09f6, 54e473b; backup-merge check still open until backup milestone]

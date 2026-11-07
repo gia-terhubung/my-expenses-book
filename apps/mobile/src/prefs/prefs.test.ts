@@ -78,3 +78,13 @@ describe("reset", () => {
     expect(cb).toHaveBeenCalled();
   });
 });
+
+describe("fxTables", () => {
+  it("defaults to an empty cache and round-trips an object", () => {
+    const p = createPrefs(memoryKv());
+    expect(p.get("fxTables")).toEqual({ base: "", latestDate: null, fetchedAt: null, byDate: {} });
+    const t = { base: "idr", latestDate: "2026-11-04", fetchedAt: 5, byDate: { "2026-11-04": { usd: "0.00005" } } };
+    p.set("fxTables", t);
+    expect(p.get("fxTables")).toEqual(t);
+  });
+});

@@ -6,17 +6,16 @@ import { useTranslation } from "react-i18next";
 import { ErrorPanel } from "@/components/ErrorPanel";
 import { assertSecureRandom } from "@/crypto/secureRandom";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
+import { ImageStoreProvider } from "@/images/ImageStoreProvider";
 import { initI18n } from "@/i18n";
 import { resolveLanguage } from "@/i18n/resolve";
+import { useFx } from "@/fx/useFx";
 import { LockGate } from "@/lock/LockGate";
 import { PrefsProvider, usePref } from "@/prefs/PrefsProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
 // Provides global crypto.getRandomValues (needed by uuidv7).
 install();
-// Fail loudly (ErrorBoundary) rather than let ids fall back to Math.random.
-assertSecureRandom();
-
 // Device-locale language first (also used by the db-error screen, which renders before prefs
 // can open); PrefsProvider switches to the saved language once prefs are available.
 initI18n(resolveLanguage(getLocales()));
@@ -27,6 +26,12 @@ function OnboardingRedirect() {
   const segments = useSegments() as string[];
   if (step === "done" || segments[0] === "onboarding") return null;
   return <Redirect href="/onboarding" />;
+}
+
+/** Renders nothing; runs FX refresh + re-convert under PrefsProvider and DatabaseProvider. */
+function FxSync() {
+  useFx();
+  return null;
 }
 
 function ErrorFallback({ error, retry }: ErrorBoundaryProps) {
@@ -44,17 +49,29 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
 }
 
 export default function RootLayout() {
+  // In render (not module scope) so a failure reaches the exported ErrorBoundary rather than
+  // letting ids fall back to Math.random.
+  assertSecureRandom();
   return (
     <ThemeProvider>
       <DatabaseProvider>
-        <PrefsProvider>
-          <LockGate>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
-            </Stack>
-            <OnboardingRedirect />
-          </LockGate>
-        </PrefsProvider>
+        <ImageStoreProvider>
+          <PrefsProvider>
+            <FxSync />
+            <LockGate>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
+                {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
+                <Stack.Screen name="(modals)" options={{ presentation: "modal" }} />
+                <Stack.Screen
+                  name="lock"
+                  options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }}
+                />
+              </Stack>
+              <OnboardingRedirect />
+            </LockGate>
+          </PrefsProvider>
+        </ImageStoreProvider>
       </DatabaseProvider>
     </ThemeProvider>
   );

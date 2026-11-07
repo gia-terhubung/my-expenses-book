@@ -16,6 +16,9 @@ module.exports = {
       preset: "jest-expo",
       testMatch: ["<rootDir>/src/**/*.test.tsx"],
       moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },
+      // Ruling T: UI suites exceed the 5 s default under full parallel load. `testTimeout` is a
+      // global-only option (ignored inside `projects`), so the project sets it in a setup file.
+      setupFilesAfterEnv: ["<rootDir>/test/jestExpoTimeout.js"],
     },
   ],
 };

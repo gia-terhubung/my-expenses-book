@@ -4,6 +4,7 @@ import type { ExpoConfig } from "expo/config";
 const config: ExpoConfig = {
   name: "My Expenses Book",
   slug: "my-expenses-book",
+  owner: "gia-terhubung",
   version: "1.0.0",
   orientation: "default",
   icon: "./assets/images/icon.png",
@@ -24,6 +25,7 @@ const config: ExpoConfig = {
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
+    blockedPermissions: ["android.permission.RECORD_AUDIO"],
   },
   web: {
     output: "server",
@@ -36,6 +38,21 @@ const config: ExpoConfig = {
     "expo-localization",
     ["expo-local-authentication", { faceIDPermission: "Allow $(PRODUCT_NAME) to unlock your receipts with Face ID." }],
     ["expo-sqlite", { useSQLCipher: true }],
+    // Ruling V: the picker only reads the library; capture uses the document scanner, which needs
+    // the iOS camera string. Listed first: the picker's `cameraPermission: false` would otherwise
+    // strip NSCameraUsageDescription (the first plugin's Info.plist mod has the final say).
+    [
+      "react-native-document-scanner-plugin",
+      { cameraPermission: "Allow $(PRODUCT_NAME) to use the camera to scan your receipts." },
+    ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission: "Allow $(PRODUCT_NAME) to import receipt photos and screenshots from your library.",
+        cameraPermission: false,
+        microphonePermission: false,
+      },
+    ],
     [
       "expo-splash-screen",
       {
@@ -52,6 +69,9 @@ const config: ExpoConfig = {
       },
     ],
   ],
+  extra: {
+    eas: { projectId: "fd3b7771-9050-40f6-ad9f-3bf7a410d176" },
+  },
   experiments: {
     typedRoutes: true,
     reactCompiler: true,

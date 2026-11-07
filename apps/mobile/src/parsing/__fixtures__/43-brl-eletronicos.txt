@@ -1,0 +1,14 @@
+ELETRO PRADO LTDA
+CNPJ: 12.345.678/0001-90
+Rua das Acácias, 410 - Centro
+Campinas - SP
+CUPOM FISCAL ELETRÔNICO - SAT
+Nº 4521   20/10/2026 15:33:07
+#  DESCRIÇÃO             QTD  VL UNIT   VL TOTAL
+1  FONE BLUETOOTH X2      1   389,90     389,90
+2  CARREGADOR USB-C 30W   1   129,90     129,90
+3  SMARTWATCH FIT 5       1   714,76     714,76
+TOTAL A PAGAR R$                       1.234,56
+Cartão de Crédito                       1.234,56
+Tributos aprox. R$ 289,15 (Fonte: IBPT)
+CPF do consumidor: não informado

@@ -1,0 +1,21 @@
+HARBORVIEW INN & SUITES
+200 Pier Avenue, San Diego, CA 92101
+Tel (619) 555-0177
+
+GUEST FOLIO
+Guest: Ms. A. Lindqvist     Room: 1412
+Arrival: 10/27/2026         Departure: 10/30/2026
+Folio No: 88217    Date: 10/30/2026
+
+DATE        DESCRIPTION           CHARGES   CREDITS
+10/27/2026  Room Charge            159.00
+10/27/2026  Occupancy Tax           23.45
+10/28/2026  Room Charge            159.00
+10/28/2026  Occupancy Tax           23.45
+10/29/2026  Room Charge            159.00
+10/29/2026  Occupancy Tax           23.46
+10/30/2026  VISA ****3305                    547.36
+
+Total Charges                      547.36
+Total Credits                      547.36
+Balance Due                          0.00

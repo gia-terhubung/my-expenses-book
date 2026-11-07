@@ -6,6 +6,7 @@ import type * as schema from "./schema";
 export type AppDb = BaseSQLiteDatabase<"sync", any, typeof schema>;
 
 export type Receipt = typeof schema.receipts.$inferSelect;
+export type ReceiptPage = typeof schema.receiptPages.$inferSelect;
 export type Category = typeof schema.categories.$inferSelect;
 export type Folder = typeof schema.folders.$inferSelect;
 

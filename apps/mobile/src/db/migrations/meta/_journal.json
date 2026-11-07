@@ -15,6 +15,13 @@
       "when": 1793781999005,
       "tag": "0001_fts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793847011731,
+      "tag": "0002_transfer_refno_dhash",
+      "breakpoints": true
     }
   ]
 }

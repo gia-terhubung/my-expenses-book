@@ -1,0 +1,12 @@
+LION CITY TAXI
+TAXI RECEIPT
+Vehicle: SHA 4821 K
+Driver ID: 0447
+Date: 12 Oct 2026
+Start: 22:46  End: 23:10
+Distance: 18.4 km
+Metered Fare           S$19.85
+Late Night Surcharge    S$2.10
+Card Admin Fee          S$1.50
+Total Fare: S$23.45
+Paid by: Mastercard **** 6610

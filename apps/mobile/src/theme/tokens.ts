@@ -19,6 +19,7 @@ export const lightColors = {
   primary: "#2F6F5E",
   onPrimary: "#FFFFFF",
   danger: "#B3261E",
+  warning: "#9A6700",
 } as const;
 
 export type ColorTokens = { [K in keyof typeof lightColors]: string };
@@ -32,6 +33,7 @@ export const darkColors: ColorTokens = {
   primary: "#6CC4A8",
   onPrimary: "#08261D",
   danger: "#F2B8B5",
+  warning: "#E3B341",
 };
 
 export type Theme = {

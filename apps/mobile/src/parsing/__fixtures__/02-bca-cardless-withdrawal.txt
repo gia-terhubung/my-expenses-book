@@ -1,0 +1,18 @@
+8:06 :  434
+Cash Withdrawal
+Enter the phone number and transaction code below
+on a BCA ATM
+Phone Number
+0857 ******28
+Transaction Code
+604273
+Source of Fund
+381 - 052 - 4471
+Amount
+IDR 100,000.00
+Time Limit
+16 Oct 2026 08:36:46 WIB
+Reference No.
+3C9B71E2-5A04-4F8D-
+A61E-9D27B0F4C815
+How to Withdraw Cash at a BCA ATM

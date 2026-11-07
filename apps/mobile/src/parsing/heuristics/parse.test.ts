@@ -1,0 +1,174 @@
+import { toMinor } from "@/money/money";
+
+import { parseHeuristic } from "./index";
+
+const hints = { homeCurrency: "IDR", today: new Date(2026, 10, 5) };
+const idr = (v: string) => toMinor(v, "IDR");
+
+describe("parseHeuristic", () => {
+  it("prefers Total Transaksi over Nominal and Biaya Admin", () => {
+    const r = parseHeuristic(
+      [
+        "Transfer Berhasil!",
+        "02 Nov 2026 • 10:15:02 WIB",
+        "Nominal Transfer  Rp 750.000",
+        "Metode Transfer  BI Fast",
+        "Biaya Admin  Rp 2.500",
+        "Total Transaksi  Rp 752.500",
+      ],
+      hints,
+    );
+    expect(r.totalMinor).toBe(idr("752500"));
+    expect(r.currency).toBe("IDR");
+    expect(r.purchasedDate).toBe("2026-11-02");
+    expect(r.purchasedTime).toBe("10:15");
+    expect(r.source).toBe("heuristic");
+  });
+
+  it("skips subtotal and discount", () => {
+    const r = parseHeuristic(
+      [
+        "INDOMARET CABANG MERDEKA",
+        "JL. MERDEKA NO. 7",
+        "03.10.26-18:05/4.5.0/T101-22222/KASIR/01",
+        "ROTI TAWAR  2  8000  16,000",
+        "SUSU UHT  2  8000  16,000",
+        "SUBTOTAL : 32.000",
+        "DISKON :  (8,000)",
+        "TOTAL BELANJA : 24.000",
+        "KEMBALI : 26.000",
+        "PPN  : DPP= 27,665 PPN= 3,320",
+      ],
+      hints,
+    );
+    expect(r.totalMinor).toBe(idr("24000"));
+    expect(r.taxMinor).toBe(idr("3320"));
+    expect(r.purchasedDate).toBe("2026-10-03");
+    expect(r.categoryId).toBe("default:groceries");
+  });
+
+  it("returns nulls for non-receipt text", () => {
+    const r = parseHeuristic(
+      ["Daftar belanja minggu ini", "- beli 3 kursi lipat", "- telepon tukang listrik", "Jangan lupa!"],
+      hints,
+    );
+    expect(r).toEqual({
+      merchant: null,
+      purchasedDate: null,
+      purchasedTime: null,
+      currency: "IDR",
+      totalMinor: null,
+      taxMinor: null,
+      categoryId: null,
+      refNo: null,
+      confidence: { merchant: 0, date: 0, total: 0, tax: 0, currency: 0, category: 0 },
+      source: "heuristic",
+    });
+  });
+
+  it("extracts waybill ref", () => {
+    const r = parseHeuristic(
+      ["SICEPAT EXPRESS", "KX4401928374", "Penerima: BUDI", "TOTAL ONGKIR", "IDR 18,000", "Tgl: 04-11-2026"],
+      hints,
+    );
+    expect(r.refNo).toBe("KX4401928374");
+    expect(r.totalMinor).toBe(idr("18000"));
+    expect(r.purchasedDate).toBe("2026-11-04");
+  });
+
+  it("classifies BI Fast as transfer", () => {
+    const r = parseHeuristic(
+      ["Transaksi Sukses", "3 Nov 2026, 09:12 WIB", "BI Fast", "Nominal  Rp150.000", "No. Referensi  ABC1234567"],
+      hints,
+    );
+    expect(r.categoryId).toBe("default:transfer");
+    expect(r.totalMinor).toBe(idr("150000"));
+    expect(r.refNo).toBe("ABC1234567");
+  });
+
+  it("ignores digits inside dates and times when falling back", () => {
+    const r = parseHeuristic(["Jam 13.41", "27 Sep 2026", "Rp 5.000"], hints);
+    expect(r.totalMinor).toBe(idr("5000"));
+    expect(r.confidence.total).toBe(0.3);
+  });
+
+  it("swaps an ambiguous numeric date that would land in the future", () => {
+    const r = parseHeuristic(["Date: 11/10/2026", "TOTAL $14.80"], hints);
+    expect(r.purchasedDate).toBe("2026-10-11");
+  });
+
+  it("never picks a negative keyword amount as total", () => {
+    const r = parseHeuristic(["TOKO MAJU", "04 Nov 2026", "TOTAL REFUND -Rp 50.000"], hints);
+    expect(r.totalMinor).toBeNull();
+  });
+
+  it("never picks a negative amount in the fallback", () => {
+    const r = parseHeuristic(["TOKO MAJU", "04 Nov 2026", "Refund (Rp 50.000)", "Kopi Rp 20.000"], hints);
+    expect(r.totalMinor).toBe(idr("20000"));
+    expect(r.confidence.total).toBe(0.3);
+  });
+
+  it("keeps a total line that mentions included VAT", () => {
+    const r = parseHeuristic(["CAFE ROMA", "04/11/2026", "Espresso 4,50", "TOTAL incl. VAT €7,50"], {
+      ...hints,
+      homeCurrency: "EUR",
+    });
+    expect(r.totalMinor).toBe(toMinor("7.50", "EUR"));
+    expect(r.currency).toBe("EUR");
+  });
+
+  it("keeps a total line that mentions the tip", () => {
+    const r = parseHeuristic(["JOE'S GRILL", "11/04/2026", "Subtotal $20.00", "Total with tip $24.00"], hints);
+    expect(r.totalMinor).toBe(toMinor("24.00", "USD"));
+    expect(r.currency).toBe("USD");
+  });
+
+  it("does not read phone numbers as money", () => {
+    const r = parseHeuristic(["Catatan rapat 04 Nov 2026", "Hubungi Andi 0812.3456.7890", "bawa proyektor"], hints);
+    expect(r.totalMinor).toBeNull();
+  });
+
+  it("uses the absolute value of a debit-only record", () => {
+    const r = parseHeuristic(["Transaksi QRIS-PT TOKO", "-Rp461.000", "27 Sep 2026, 13.41"], hints);
+    expect(r.totalMinor).toBe(idr("461000"));
+    expect(r.confidence.total).toBe(0.6);
+  });
+
+  it.each([
+    [["Refund", "-Rp 50.000"]],
+    [["Total Refund", "(Rp 50.000)"]],
+    [["Pengembalian dana -Rp 50.000"]],
+    [["Reembolso -€50,00"]],
+    [["Erstattung -€50,00"]],
+    [["返金 -¥500"]],
+  ])("never reads a refund record as spend: %j", (lines) => {
+    const r = parseHeuristic(["TOKO MAJU", "04 Nov 2026", ...lines], hints);
+    expect(r.totalMinor).toBeNull();
+  });
+
+  it("treats a parenthesised tax note after TOTAL as a qualifier", () => {
+    const r = parseHeuristic(["CAFE ROMA", "04/11/2026", "Latte €4,50", "Cake €3,00", "TOTAL (TAX INCLUDED) €7,50"], hints);
+    expect(r.totalMinor).toBe(toMinor("7.50", "EUR"));
+    expect(r.confidence.total).toBeGreaterThan(0.3);
+  });
+
+  it("treats a payment method after Total Bayar as a qualifier", () => {
+    const r = parseHeuristic(["WARUNG BU SRI", "04 Nov 2026", "Nasi Rames Rp 15.000", "Total Bayar Cash Rp 20.000"], hints);
+    expect(r.totalMinor).toBe(idr("20000"));
+  });
+
+  it("still skips a TOTAL TAX line", () => {
+    const r = parseHeuristic(["SHOP", "11/04/2026", "TOTAL TAX $0.70", "Total Sales Tax $0.70", "TOTAL $10.70"], hints);
+    expect(r.totalMinor).toBe(toMinor("10.70", "USD"));
+  });
+
+  it("keeps amounts on lines that only mention HP or No.", () => {
+    expect(parseHeuristic(["TOKO SELULER", "04 Nov 2026", "Charger HP 150.000"], hints).totalMinor).toBe(idr("150000"));
+    expect(parseHeuristic(["WARUNG", "04 Nov 2026", "No. 3 Nasi 25.000"], hints).totalMinor).toBe(idr("25000"));
+  });
+
+  it("ignores numbers on a phone-labelled line", () => {
+    const r = parseHeuristic(["TOKO", "04 Nov 2026", "Telp 7086.315", "WA: 813.204"], hints);
+    expect(r.totalMinor).toBeNull();
+  });
+});

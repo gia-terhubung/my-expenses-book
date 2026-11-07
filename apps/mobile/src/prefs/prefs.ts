@@ -5,6 +5,18 @@ export type Language = "en" | "id" | "es" | "pt-BR";
 export type LockTimeout = 0 | 60 | 300 | 900;
 export type OnboardingStep = "language" | "currency" | "lock" | "done";
 
+/** FX rate cache (see src/fx). Rates are strings: receipt-currency units per 1 `base` unit. */
+export interface FxCache {
+  /** Lowercase home currency the tables are quoted against; "" = empty. */
+  base: string;
+  latestDate: string | null;
+  fetchedAt: number | null;
+  /** YYYY-MM-DD -> lowercase code -> rate. */
+  byDate: Record<string, Record<string, string>>;
+  /** Dates the API answered 404 for -> when we asked; not re-requested for 7 days. */
+  missingDates?: Record<string, number>;
+}
+
 export interface Prefs {
   homeCurrency: string | null;
   language: Language | null;
@@ -15,6 +27,11 @@ export interface Prefs {
   receiptsSinceBackup: number;
   /** 1-12 */
   taxYearStartMonth: number;
+  /**
+   * Object value: read via store.get() (fresh object per call), never usePref — it would break
+   * useSyncExternalStore's stable-snapshot rule.
+   */
+  fxTables: FxCache;
 }
 
 /** Minimal storage surface; tests use a Map, the app wraps encrypted MMKV. */
@@ -33,6 +50,7 @@ export const PREF_DEFAULTS: Prefs = {
   lastBackupAt: null,
   receiptsSinceBackup: 0,
   taxYearStartMonth: 1,
+  fxTables: { base: "", latestDate: null, fetchedAt: null, byDate: {} },
 };
 
 export interface PrefsStore {

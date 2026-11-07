@@ -1,0 +1,14 @@
+• BCA
+Transfer Successful
+25 Oct 2026 19:33:31
+IDR 111,000.00
+Beneficiary Name  YOHANA PERMATASARI
+Beneficiary Account  462 - 081 - 3307
+Transaction Type  Transfer to BCA Account
+Transfer Currency  IDR - Indonesian Rupiah
+Source of Fund  381 - 0** - **71
+Source Currency  IDR - Indonesian Rupiah
+Transfer Amount  IDR 111,000.00
+Remarks  Bayar arisan
+Reference No.  61840202610251933720
+41TRF2870163542
