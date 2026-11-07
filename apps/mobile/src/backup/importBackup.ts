@@ -11,7 +11,7 @@ import type { PrefsStore } from "@/prefs/prefs";
 
 import { type MergeResult, type RestoreMode, applyMerge, applyReplace } from "./applySnapshot";
 import { type ByteSource, openArchive } from "./container";
-import { ArchiveFormatError, ArchiveVersionError } from "./errors";
+import { ArchiveFormatError, ArchiveTooOldError, ArchiveVersionError } from "./errors";
 import { SCHEMA_VERSION, type Snapshot, snapshotSchema } from "./snapshot";
 
 export type { MergeResult, RestoreMode } from "./applySnapshot";
@@ -33,11 +33,20 @@ function afterCommit(name: string, step: () => void): void {
   }
 }
 
-function parseSnapshot(raw: object): Snapshot {
+/**
+ * A same-version snapshot that fails validation is not a real backup. An older one most likely
+ * predates a schema change this app has no snapshot upgrade for: say so instead of "not a backup".
+ */
+function parseSnapshot(raw: object, archiveSchema: number): Snapshot {
   try {
     return snapshotSchema.parse(raw);
   } catch (e) {
-    if (e instanceof ZodError) throw new ArchiveFormatError("snapshot does not match the schema");
+    if (e instanceof ZodError) {
+      if (archiveSchema < SCHEMA_VERSION) {
+        throw new ArchiveTooOldError(`schema ${archiveSchema} < ${SCHEMA_VERSION}`);
+      }
+      throw new ArchiveFormatError("snapshot does not match the schema");
+    }
     throw e;
   }
 }
@@ -73,7 +82,7 @@ export async function importBackup(deps: {
         throw new ArchiveVersionError(`schema ${manifest.schemaVersion} > ${SCHEMA_VERSION}`);
       }
       // 2. Validate the snapshot before anything is written.
-      snap = parseSnapshot(await reader.snapshot());
+      snap = parseSnapshot(await reader.snapshot(), manifest.schemaVersion);
       if (snap.schemaVersion > SCHEMA_VERSION) {
         throw new ArchiveVersionError(`snapshot schema ${snap.schemaVersion} > ${SCHEMA_VERSION}`);
       }
@@ -150,6 +159,6 @@ export async function importBackup(deps: {
       }
     });
   }
-  notifyDataChanged();
+  afterCommit("notify", () => notifyDataChanged());
   return { result, possibleDuplicates };
 }

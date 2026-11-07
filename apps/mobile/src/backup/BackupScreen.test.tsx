@@ -7,9 +7,17 @@ import type { AppDb } from "@/db/types";
 import { initI18n } from "@/i18n";
 import { captureLease } from "@/images/captureLease";
 import type { FileOps } from "@/images/store";
+import * as money from "@/money/money";
 
 import { BackupScreen } from "./BackupScreen";
-import { ArchiveFormatError, ArchiveIncompleteError, ArchiveVersionError, WrongPassphraseError } from "./errors";
+import {
+  ArchiveFormatError,
+  ArchiveIncompleteError,
+  ArchiveTooOldError,
+  ArchiveVersionError,
+  WrongPassphraseError,
+} from "./errors";
+import { restoreLease } from "./restoreLease";
 
 let mockDb: AppDb;
 const mockPrefsMap: Record<string, unknown> = {};
@@ -38,7 +46,14 @@ jest.mock("@/prefs/PrefsProvider", () => ({
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock("expo-router", () => ({ router: { push: (...a: unknown[]) => mockPush(...a) } }));
+// Latest usePreventRemove call: whether leaving the screen is blocked.
+let mockPrevent: { prevent: boolean; cb?: () => void } = { prevent: false };
+jest.mock("expo-router", () => ({
+  router: { push: (...a: unknown[]) => mockPush(...a) },
+  usePreventRemove: (prevent: boolean, cb?: () => void) => {
+    mockPrevent = { prevent, cb };
+  },
+}));
 jest.mock("./expoBytes", () => ({
   fileOpsSink: (u: string) => ({ uri: u }),
   fileSource: (u: string) => ({ uri: u, close: mockSourceClose }),
@@ -157,6 +172,26 @@ describe("backup", () => {
     expect(mockSet).not.toHaveBeenCalled();
   });
 
+  it("clears only cache/export before writing, never a picked backup", async () => {
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fill(PASS, PASS);
+    await fireEvent.press(btn("Back up now"));
+    await waitFor(() => expect(mockShare).toHaveBeenCalled());
+    expect((fs.removeDir as jest.Mock).mock.calls).toEqual([["file:///cache/export/"]]);
+  });
+
+  it("blocks leaving the screen while a backup runs", async () => {
+    let finish!: () => void;
+    mockExport.mockReturnValue(new Promise<void>((r) => (finish = r)));
+    await render(<BackupScreen fs={fs} now={now} />);
+    expect(mockPrevent.prevent).toBe(false);
+    await fill(PASS, PASS);
+    await fireEvent.press(btn("Back up now"));
+    await waitFor(() => expect(mockPrevent.prevent).toBe(true));
+    await act(async () => finish());
+    await waitFor(() => expect(mockPrevent.prevent).toBe(false));
+  });
+
   it("skip passphrase only proceeds on Continue", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     await render(<BackupScreen fs={fs} now={now} />);
@@ -186,6 +221,7 @@ describe("restore", () => {
     [new ArchiveFormatError("x"), "This file isn't a My Expenses Book backup."],
     [new ArchiveVersionError("x"), "This backup was made by a newer version of the app. Update the app to restore it."],
     [new ArchiveIncompleteError([]), "This backup file is damaged or incomplete."],
+    [new ArchiveTooOldError("x"), "This backup was made by an older version of the app and couldn't be read."],
   ])("maps %p", async (err, copy) => {
     mockOpen.mockRejectedValue(err);
     await render(<BackupScreen fs={fs} now={now} />);
@@ -295,5 +331,80 @@ describe("restore", () => {
     expect(await screen.findByText("Restored 3 receipts")).toBeTruthy();
     expect(mockImport.mock.calls[0][0]).toMatchObject({ mode: "replace" });
     alert.mockRestore();
+  });
+
+  it("backup actions are disabled while a restore is open (the picked file must survive)", async () => {
+    mockOpen.mockResolvedValue({ header: { format: 1, encrypted: false }, unlock: mockUnlock });
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fill(PASS, PASS);
+    expect(btn("Back up now").props.accessibilityState?.disabled).toBe(false);
+    await fireEvent.press(btn("Restore from backup"));
+    await screen.findByRole("button", { name: /^Merge/ });
+    expect(btn("Back up now").props.accessibilityState?.disabled).toBe(true);
+    expect(btn("Back up without passphrase").props.accessibilityState?.disabled).toBe(true);
+    await fireEvent.press(btn("Cancel"));
+    await waitFor(() => expect(btn("Back up now").props.accessibilityState?.disabled).toBe(false));
+  });
+
+  it("while importing: leaving is blocked and the restore lease is held; unmount keeps the picked file until done", async () => {
+    let finish!: (v: unknown) => void;
+    mockImport.mockReturnValue(new Promise((r) => (finish = r)));
+    mockOpen.mockResolvedValue({ header: { format: 1, encrypted: false }, unlock: mockUnlock });
+    const { unmount } = await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    await fireEvent.press(await screen.findByRole("button", { name: /^Merge/ }));
+    await waitFor(() => expect(mockImport).toHaveBeenCalled());
+    expect(mockPrevent.prevent).toBe(true);
+    expect(restoreLease.held()).toBe(true);
+    await unmount();
+    expect(removed).toEqual([]);
+    await act(async () =>
+      finish({ result: { inserted: 1, updated: 0, kept: 0, insertedReceiptIds: [] }, possibleDuplicates: [] }),
+    );
+    await waitFor(() => expect(removed).toEqual(["file:///cache/DocumentPicker/x.meb"]));
+    expect(restoreLease.held()).toBe(false);
+  });
+
+  it("releases the restore lease when the import fails", async () => {
+    mockImport.mockRejectedValue(new ArchiveIncompleteError([]));
+    mockOpen.mockResolvedValue({ header: { format: 1, encrypted: false }, unlock: mockUnlock });
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    await fireEvent.press(await screen.findByRole("button", { name: /^Merge/ }));
+    expect(await screen.findByText("This backup file is damaged or incomplete.")).toBeTruthy();
+    expect(restoreLease.held()).toBe(false);
+    expect(mockPrevent.prevent).toBe(false);
+  });
+
+  it("a committed restore shows success even when a duplicate label can't be built", async () => {
+    const rec = createReceipt(mockDb, {
+      status: "confirmed",
+      merchant: "Toko Contoh",
+      purchasedAtLocal: "2026-05-10T10:00:00",
+      purchasedAtUtc: Date.UTC(2026, 4, 10),
+      scannedAtUtc: Date.UTC(2026, 4, 10),
+      currency: "IDR",
+      totalMinor: 50000,
+      parseSource: "manual",
+    });
+    mockImport.mockResolvedValue({
+      result: { inserted: 3, updated: 2, kept: 0, insertedReceiptIds: [] },
+      possibleDuplicates: [{ receiptId: rec.id, matchId: "m1" }],
+    });
+    const spy = jest.spyOn(money, "formatMoney").mockImplementation(() => {
+      throw new RangeError("Invalid currency code");
+    });
+    mockOpen.mockResolvedValue({ header: { format: 1, encrypted: false }, unlock: mockUnlock });
+    try {
+      await render(<BackupScreen fs={fs} now={now} />);
+      await fireEvent.press(btn("Restore from backup"));
+      await fireEvent.press(await screen.findByRole("button", { name: /^Merge/ }));
+      expect(await screen.findByText("Added 3, updated 2")).toBeTruthy();
+      expect(screen.getByTestId(`dup-${rec.id}`)).toBeTruthy();
+      expect(screen.getByText("Toko Contoh")).toBeTruthy();
+      expect(screen.queryByText("Restore failed")).toBeNull();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

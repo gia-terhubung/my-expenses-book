@@ -1,7 +1,10 @@
+import * as changes from "@/db/changes";
 import { createFolder } from "@/db/repositories/folders";
-import { createPage } from "@/db/repositories/pages";
+import { createPage, listAllPagePaths } from "@/db/repositories/pages";
 import { sumHome } from "@/db/repositories/receiptQueries";
 import { createReceipt } from "@/db/repositories/receipts";
+import { eq } from "drizzle-orm";
+
 import { categories, folders, lineItems, receiptPages, receipts } from "@/db/schema";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb, NewReceiptInput } from "@/db/types";
@@ -9,7 +12,7 @@ import type { ImageStore } from "@/images/store";
 import { createPrefs, type KV, type PrefsStore } from "@/prefs/prefs";
 
 import { type ByteSink, createArchiveWriter } from "./container";
-import { ArchiveFormatError, ArchiveVersionError, WrongPassphraseError } from "./errors";
+import { ArchiveFormatError, ArchiveTooOldError, ArchiveVersionError, WrongPassphraseError } from "./errors";
 import { exportBackup } from "./exportBackup";
 import { importBackup } from "./importBackup";
 import { SCHEMA_VERSION, collectSnapshot, type Snapshot } from "./snapshot";
@@ -373,5 +376,72 @@ describe("importBackup", () => {
     const page = rows(db).receiptPages[0];
     expect(page.thumbPath).toBe(P("thumb-a"));
     expect(fs.files.has(page.imagePath)).toBe(true);
+  });
+
+  it("a throwing data-change notify after commit does not reject the import", async () => {
+    const a = seedA();
+    const bytes = await exportOf(a.db, a.files);
+    const db = testDb();
+    const spy = jest.spyOn(changes, "notifyDataChanged").mockImplementation(() => {
+      throw new Error("listener blew up");
+    });
+    try {
+      await expect(
+        importBackup({ db, prefs: prefs(), store: fakeStore().store, source: source(bytes), passphrase: null, mode: "merge" }),
+      ).resolves.toMatchObject({ result: { inserted: 1 } });
+      expect(spy).toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("an older archive whose snapshot no longer parses -> ArchiveTooOldError, B unchanged", async () => {
+    const bad = { ...collectSnapshot(seedA().db, prefs()), schemaVersion: SCHEMA_VERSION - 1, extra: true };
+    const bytes = await archiveOf(bad, { schemaVersion: SCHEMA_VERSION - 1, pages: [["x.enc", new Uint8Array([1])]] });
+    const b = seedB();
+    const before = rows(b.db);
+    const filesBefore = snapshotOfFiles(b.files);
+    await expect(
+      importBackup({ db: b.db, prefs: prefs(), store: b.store, source: source(bytes), passphrase: null, mode: "merge" }),
+    ).rejects.toBeInstanceOf(ArchiveTooOldError);
+    expect(rows(b.db)).toEqual(before);
+    expect(snapshotOfFiles(b.files)).toEqual(filesBefore);
+  });
+
+  describe("merge into a populated DB: page files follow the winning page row", () => {
+    /** A exported, then restored into B: same row ids, B's own page files. */
+    async function setup() {
+      const a = seedA();
+      const bytes = await exportOf(a.db, a.files);
+      const db = testDb();
+      const fs = fakeStore();
+      await importBackup({ db, prefs: prefs(), store: fs.store, source: source(bytes), passphrase: null, mode: "replace" });
+      const localFiles = [...fs.files.keys()].sort();
+      expect(localFiles).toHaveLength(2);
+      const pageId = rows(db).receiptPages[0].id;
+      return { a, db, fs, localFiles, pageId };
+    }
+
+    it("local page row wins -> local files kept, imported copies removed", async () => {
+      const { a, db, fs, localFiles, pageId } = await setup();
+      db.update(receiptPages).set({ updatedAt: Date.now() + 60_000 }).where(eq(receiptPages.id, pageId)).run();
+      const bytes = await exportOf(a.db, a.files);
+      await importBackup({ db, prefs: prefs(), store: fs.store, source: source(bytes), passphrase: null, mode: "merge" });
+      expect([...fs.files.keys()].sort()).toEqual(localFiles);
+      expect(listAllPagePaths(db).sort()).toEqual(localFiles);
+      expect(fs.imported).toHaveLength(4); // 2 from the replace, 2 imported then cleaned up
+    });
+
+    it("snapshot page row wins -> imported files replace the local ones", async () => {
+      const { a, db, fs, localFiles } = await setup();
+      a.db.update(receiptPages).set({ updatedAt: Date.now() + 60_000 }).run();
+      const bytes = await exportOf(a.db, a.files);
+      await importBackup({ db, prefs: prefs(), store: fs.store, source: source(bytes), passphrase: null, mode: "merge" });
+      const now = [...fs.files.keys()].sort();
+      expect(now).toHaveLength(2);
+      expect(now.filter((p) => localFiles.includes(p))).toEqual([]);
+      expect(listAllPagePaths(db).sort()).toEqual(now);
+      expect(fs.files.get(rows(db).receiptPages[0].imagePath)).toEqual(new Uint8Array([1, 2, 3]));
+    });
   });
 });

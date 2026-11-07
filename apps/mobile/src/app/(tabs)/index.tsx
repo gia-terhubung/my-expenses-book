@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { BackupReminder } from "@/backup/BackupReminder";
+import { mayStartCapture } from "@/capture/captureGate";
 import { CaptureSheet, pickPhotos, scanPages, type CaptureChoice } from "@/capture/CaptureSheet";
 import { pendingCaptures } from "@/capture/pendingCapture";
 import { useDb } from "@/db/DatabaseProvider";
@@ -40,6 +41,7 @@ export default function ReceiptsScreen() {
   useFocusEffect(useCallback(() => setDrafts(listDraftIds(db)), [db]));
 
   const start = async (mode: CaptureChoice) => {
+    if (!mayStartCapture((key) => Alert.alert(t(key)))) return;
     if (mode === "manual") {
       openReview([createManualDraft(db, { home })]);
       return;

@@ -1,9 +1,10 @@
 import { Redirect, router, Stack, useLocalSearchParams, type Href } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Button, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Button, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import type { OcrResult } from "../../../modules/receipt-ocr/src/ReceiptOcr.types";
+import { mayStartCapture } from "@/capture/captureGate";
 import { pendingCaptures, resolveCaptureRequest } from "@/capture/pendingCapture";
 import { runCaptures, type CaptureDeps } from "@/capture/pipeline";
 import { useDb } from "@/db/DatabaseProvider";
@@ -96,6 +97,12 @@ export default function CaptureScreen() {
     // Wait for unlock: nothing is read or written behind the lock screen / privacy cover.
     if (!groups || obscured || started.current) return;
     started.current = true;
+    // A restore began after the picker returned: don't write pages its cleanup would delete.
+    if (!mayStartCapture((key) => Alert.alert(t(key)))) {
+      left.current = true;
+      router.back();
+      return;
+    }
     const deps: CaptureDeps = {
       db,
       images,

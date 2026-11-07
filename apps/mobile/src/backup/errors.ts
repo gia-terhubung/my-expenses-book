@@ -12,6 +12,14 @@ export class ArchiveVersionError extends Error {
   }
 }
 
+/** An older archive whose snapshot the current schema can no longer read (no upgrade path yet). */
+export class ArchiveTooOldError extends Error {
+  constructor(reason: string) {
+    super(`Backup is from an older app version and can't be read: ${reason}`);
+    this.name = "ArchiveTooOldError";
+  }
+}
+
 export class WrongPassphraseError extends Error {
   constructor() {
     super("Wrong passphrase");

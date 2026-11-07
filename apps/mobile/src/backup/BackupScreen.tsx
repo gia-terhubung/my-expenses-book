@@ -1,6 +1,6 @@
 import * as DocumentPicker from "expo-document-picker";
 import Constants from "expo-constants";
-import { router, type Href } from "expo-router";
+import { router, usePreventRemove, type Href } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -21,7 +21,7 @@ import { formatMoney } from "@/money/money";
 import {
   EXPORT_DIR,
   exportFileName,
-  purgeExportFiles,
+  purgeExportDir,
   shareFile,
 } from "@/export/files";
 import { captureLease } from "@/images/captureLease";
@@ -35,6 +35,7 @@ import { openArchive, type ArchiveHeader } from "./container";
 import {
   ArchiveFormatError,
   ArchiveIncompleteError,
+  ArchiveTooOldError,
   ArchiveVersionError,
   WrongPassphraseError,
 } from "./errors";
@@ -46,6 +47,7 @@ import {
 } from "./importBackup";
 import { validatePassphrase } from "./passphrase";
 import { MIN_PASSPHRASE } from "./kdf";
+import { restoreLease } from "./restoreLease";
 
 type Stage =
   | { kind: "idle" }
@@ -161,6 +163,8 @@ export function BackupScreen({
 
   const fsRef = useRef(fs);
   const inflight = useRef(false);
+  /** True for the whole importBackup call; the unmount cleanup then leaves the picked file to it. */
+  const importing = useRef(false);
   const pickedUri = useRef<string | null>(null);
   const firstHandle = useRef<{
     close(): Promise<void>;
@@ -176,6 +180,13 @@ export function BackupScreen({
         ? t("backup.mismatch")
         : null;
 
+  // Leaving mid-backup / mid-restore would orphan files or race the post-commit cleanup: block
+  // Android back, the header back button and the iOS swipe until the work settles.
+  usePreventRemove(busy, () => Alert.alert(t("backup.waitToLeave")));
+
+  // A picked backup is open (passphrase / choose): a backup now must not run alongside it.
+  const restoreOpen = stage.kind === "passphrase" || stage.kind === "choose";
+
   const fail = (title: string, e: unknown) =>
     setError({ title, details: e instanceof Error ? e.message : String(e) });
 
@@ -188,7 +199,7 @@ export function BackupScreen({
     setProgress(null);
     let uri: string | null = null;
     try {
-      await purgeExportFiles(fs);
+      await purgeExportDir(fs);
       uri = fs.cacheDir + EXPORT_DIR + exportFileName("meb", today);
       const at = now().getTime();
       await exportBackup({
@@ -250,6 +261,8 @@ export function BackupScreen({
       const h = firstHandle.current;
       firstHandle.current = null;
       void h?.close().catch(() => undefined);
+      // Mid-import the file is still being read; runRestore's finally deletes it.
+      if (importing.current) return;
       const uri = pickedUri.current;
       pickedUri.current = null;
       if (uri) void fsRef.current.remove(uri).catch(() => undefined);
@@ -260,6 +273,7 @@ export function BackupScreen({
   const restoreError = (e: unknown) => {
     if (e instanceof ArchiveFormatError) setNotice(t("backup.notBackup"));
     else if (e instanceof ArchiveVersionError) setNotice(t("backup.tooNew"));
+    else if (e instanceof ArchiveTooOldError) setNotice(t("backup.tooOld"));
     else if (e instanceof ArchiveIncompleteError)
       setNotice(t("backup.damaged"));
     else fail(t("backup.restoreFailed"), e);
@@ -346,6 +360,8 @@ export function BackupScreen({
       return;
     }
     inflight.current = true;
+    importing.current = true;
+    const releaseLease = restoreLease.acquire();
     setBusy(true);
     setProgress(null);
     try {
@@ -361,19 +377,28 @@ export function BackupScreen({
         mode,
         onProgress: (done, total) => setProgress({ done, total }),
       });
+      // The import is committed: nothing below may turn it into a "Restore failed".
       const duplicates: { id: string; label: string }[] = [];
       for (const d of possibleDuplicates) {
-        const r = getReceipt(db, d.receiptId);
-        if (!r) continue;
-        const [y, m, day] = r.purchasedAtLocal
-          .slice(0, 10)
-          .split("-")
-          .map(Number);
-        const date = new Date(y, m - 1, day).toLocaleDateString(locale);
-        duplicates.push({
-          id: r.id,
-          label: `${r.merchant ?? t("receipts.unknownMerchant")} · ${date} · ${formatMoney(r.totalMinor, r.currency, locale)}`,
-        });
+        try {
+          const r = getReceipt(db, d.receiptId);
+          if (!r) continue;
+          const name = r.merchant ?? t("receipts.unknownMerchant");
+          let label = name;
+          try {
+            const [y, m, day] = r.purchasedAtLocal
+              .slice(0, 10)
+              .split("-")
+              .map(Number);
+            const date = new Date(y, m - 1, day).toLocaleDateString(locale);
+            label = `${name} · ${date} · ${formatMoney(r.totalMinor, r.currency, locale)}`;
+          } catch {
+            // Fallback label: the merchant (or "unknown") alone.
+          }
+          duplicates.push({ id: r.id, label });
+        } catch {
+          // Unreadable row: leave it out of the list.
+        }
       }
       setStage({
         kind: "done",
@@ -386,6 +411,8 @@ export function BackupScreen({
       setStage({ kind: "idle" });
       restoreError(e);
     } finally {
+      releaseLease();
+      importing.current = false;
       await endRestore();
       setProgress(null);
       setBusy(false);
@@ -502,19 +529,20 @@ export function BackupScreen({
           }
           onPress={() => void backup(pass)}
           busy={busy}
-          disabled={busy || validity !== "ok"}
+          disabled={busy || restoreOpen || validity !== "ok"}
           primary
         />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("backup.skip")}
-          accessibilityState={{ disabled: busy }}
-          disabled={busy}
+          accessibilityState={{ disabled: busy || restoreOpen }}
+          disabled={busy || restoreOpen}
           onPress={skipPassphrase}
           style={{
             minHeight: 48,
             justifyContent: "center",
             alignItems: "center",
+            opacity: busy || restoreOpen ? 0.5 : 1,
           }}
         >
           <Text style={[theme.type.body, { color: theme.colors.primary }]}>

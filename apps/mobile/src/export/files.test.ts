@@ -1,5 +1,5 @@
 import type { FileOps } from "../images/store";
-import { EXPORT_DIR, exportFileName, purgeExportFiles, shareFile } from "./files";
+import { EXPORT_DIR, exportFileName, purgeExportDir, purgeExportFiles, shareFile } from "./files";
 
 const mockShare = jest.fn();
 jest.mock("expo-sharing", () => ({ shareAsync: (...a: unknown[]) => mockShare(...a) }));
@@ -12,13 +12,22 @@ describe("exportFileName", () => {
   });
 });
 
-describe("purgeExportFiles", () => {
-  it("removes cache/export and cache/DocumentPicker only", async () => {
+describe("purgeExportFiles (cold start)", () => {
+  it("removes cache/export, cache/DocumentPicker and cache/Print only", async () => {
     const removed: string[] = [];
     const fs = { cacheDir: "file:///cache/", removeDir: async (d: string) => void removed.push(d) } as unknown as FileOps;
     await purgeExportFiles(fs);
     expect(EXPORT_DIR).toBe("export/");
-    expect(removed.sort()).toEqual(["file:///cache/DocumentPicker/", "file:///cache/export/"]);
+    expect(removed.sort()).toEqual(["file:///cache/DocumentPicker/", "file:///cache/Print/", "file:///cache/export/"]);
+  });
+});
+
+describe("purgeExportDir (before a new export)", () => {
+  it("removes cache/export only, never a picked backup", async () => {
+    const removed: string[] = [];
+    const fs = { cacheDir: "file:///cache/", removeDir: async (d: string) => void removed.push(d) } as unknown as FileOps;
+    await purgeExportDir(fs);
+    expect(removed).toEqual(["file:///cache/export/"]);
   });
 });
 
