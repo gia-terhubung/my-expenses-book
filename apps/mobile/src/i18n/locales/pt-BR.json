@@ -195,6 +195,18 @@
     "name": "Nome da pasta",
     "kindProject": "Projeto",
     "kindTrip": "Viagem",
-    "create": "Criar"
+    "create": "Criar",
+    "taxYears": "Anos fiscais",
+    "sectionFolders": "Pastas",
+    "newTitle": "Nova pasta",
+    "renameTitle": "Renomear pasta",
+    "rename": "Renomear",
+    "deleteTitle": "Excluir pasta?",
+    "deleteMessage": "Os recibos nela continuam na lista, sem pasta.",
+    "receiptCount_one": "{{count}} recibo",
+    "receiptCount_other": "{{count}} recibos",
+    "taxYearTitle": "Ano fiscal {{label}}",
+    "noReceipts": "Ainda não há recibos aqui.",
+    "save": "Salvar"
   }
 }

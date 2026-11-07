@@ -195,6 +195,18 @@
     "name": "Nama folder",
     "kindProject": "Proyek",
     "kindTrip": "Perjalanan",
-    "create": "Buat"
+    "create": "Buat",
+    "taxYears": "Tahun pajak",
+    "sectionFolders": "Folder",
+    "newTitle": "Folder baru",
+    "renameTitle": "Ganti nama folder",
+    "rename": "Ganti nama",
+    "deleteTitle": "Hapus folder?",
+    "deleteMessage": "Struk di dalamnya tetap ada di daftar tanpa folder.",
+    "receiptCount_one": "{{count}} struk",
+    "receiptCount_other": "{{count}} struk",
+    "taxYearTitle": "Tahun pajak {{label}}",
+    "noReceipts": "Belum ada struk di sini.",
+    "save": "Simpan"
   }
 }

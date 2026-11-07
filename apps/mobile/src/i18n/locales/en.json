@@ -195,6 +195,18 @@
     "name": "Folder name",
     "kindProject": "Project",
     "kindTrip": "Trip",
-    "create": "Create"
+    "create": "Create",
+    "taxYears": "Tax years",
+    "sectionFolders": "Folders",
+    "newTitle": "New folder",
+    "renameTitle": "Rename folder",
+    "rename": "Rename",
+    "deleteTitle": "Delete folder?",
+    "deleteMessage": "Receipts in it stay in your list without a folder.",
+    "receiptCount_one": "{{count}} receipt",
+    "receiptCount_other": "{{count}} receipts",
+    "taxYearTitle": "Tax year {{label}}",
+    "noReceipts": "No receipts here yet.",
+    "save": "Save"
   }
 }

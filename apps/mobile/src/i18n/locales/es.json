@@ -195,6 +195,18 @@
     "name": "Nombre de la carpeta",
     "kindProject": "Proyecto",
     "kindTrip": "Viaje",
-    "create": "Crear"
+    "create": "Crear",
+    "taxYears": "Años fiscales",
+    "sectionFolders": "Carpetas",
+    "newTitle": "Nueva carpeta",
+    "renameTitle": "Renombrar carpeta",
+    "rename": "Renombrar",
+    "deleteTitle": "¿Eliminar carpeta?",
+    "deleteMessage": "Los recibos que contiene siguen en tu lista sin carpeta.",
+    "receiptCount_one": "{{count}} recibo",
+    "receiptCount_other": "{{count}} recibos",
+    "taxYearTitle": "Año fiscal {{label}}",
+    "noReceipts": "Aún no hay recibos aquí.",
+    "save": "Guardar"
   }
 }
