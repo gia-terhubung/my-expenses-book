@@ -268,3 +268,17 @@ describe("readPlain", () => {
     await expect(store.readPlain("../x.enc")).rejects.toThrow(/Invalid page path/);
   });
 });
+
+describe("export files vs background purge", () => {
+  it("purgeDecryptedCache leaves cache/export/ and cache/DocumentPicker/ alone", async () => {
+    const { store, files } = setup();
+    files.set(CACHE + "export/MyExpensesBook-2026-11-07.csv", new Uint8Array([1]));
+    files.set(CACHE + "DocumentPicker/x.meb", new Uint8Array([2]));
+    files.set(CACHE + "view/a.jpg", new Uint8Array([3]));
+    await store.purgeDecryptedCache();
+    await store.purgeDecryptedCache({ keepCaptureWork: true });
+    expect(files.has(CACHE + "export/MyExpensesBook-2026-11-07.csv")).toBe(true);
+    expect(files.has(CACHE + "DocumentPicker/x.meb")).toBe(true);
+    expect(files.has(CACHE + "view/a.jpg")).toBe(false);
+  });
+});

@@ -55,7 +55,9 @@
       "no_hardware": "Este dispositivo não tem biometria nem senha, então o bloqueio do app não está disponível.",
       "not_enrolled": "Configure uma senha do dispositivo, Face ID ou impressão digital nas configurações do sistema para ativar o bloqueio do app."
     },
-    "categories": "Categorias"
+    "categories": "Categorias",
+    "export": "Exportar",
+    "backupRestore": "Backup e restauração"
   },
   "dbError": {
     "title": "Não foi possível desbloquear seus dados",
@@ -261,6 +263,51 @@
       "receipts": "Recibos",
       "byCategory": "Por categoria",
       "uncategorized": "Sem categoria"
+    },
+    "title": "Exportar",
+    "range": "Período",
+    "thisTaxYear": "Este ano fiscal",
+    "lastTaxYear": "Ano fiscal anterior",
+    "thisMonth": "Este mês",
+    "lastMonth": "Mês anterior",
+    "all": "Todo o período",
+    "custom": "Personalizado",
+    "to": "Até",
+    "folder": "Pasta",
+    "folderAny": "Qualquer pasta",
+    "folderPick": "Pasta específica",
+    "format": "Formato",
+    "csv": "Planilha CSV",
+    "pdf": "Relatório PDF",
+    "images": "Incluir imagens dos recibos",
+    "empty": "Nenhum recibo corresponde a esta seleção.",
+    "failed": "Falha na exportação",
+    "pdfTitle": "Relatório de despesas",
+    "from": "De",
+    "run": "Exportar",
+    "busy": "Exportando…",
+    "summary_one": "{{count}} recibo · {{total}}",
+    "summary_other": "{{count}} recibos · {{total}}",
+    "thumbFailures_one": "{{count}} imagem de recibo não pôde ser incluída.",
+    "thumbFailures_other": "{{count}} imagens de recibos não puderam ser incluídas.",
+    "csvHeader": {
+      "date": "Data",
+      "time": "Hora",
+      "timezone": "Fuso horário",
+      "merchant": "Estabelecimento",
+      "category": "Categoria",
+      "folder": "Pasta",
+      "currency": "Moeda",
+      "total": "Total",
+      "tax": "Imposto",
+      "homeCurrency": "Moeda principal",
+      "homeAmount": "Valor na moeda principal",
+      "fxRate": "Taxa de câmbio",
+      "fxRateDate": "Data da taxa",
+      "fxApproximate": "Taxa aproximada",
+      "notes": "Observações",
+      "refNo": "Referência",
+      "id": "ID"
     }
   }
 }

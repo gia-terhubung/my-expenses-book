@@ -6,6 +6,7 @@ import { deriveKey, getOrCreateMasterKey } from "@/crypto/keys";
 import { expoSecretStore } from "@/crypto/secureStore";
 import { useDb } from "@/db/DatabaseProvider";
 import { listAllPagePaths } from "@/db/repositories/pages";
+import { purgeExportFiles } from "@/export/files";
 
 import { captureLease } from "./captureLease";
 import { purgeScopeOnAppState } from "./purgePolicy";
@@ -24,6 +25,7 @@ export function useImageStore(): ImageStore {
 /**
  * Derives the images key once, sweeps orphaned encrypted pages after the DB is open, and keeps
  * decrypted view files out of cache (purged on mount and whenever the app goes to `background`, not `inactive`).
+ * Export/picker files (`cache/export/`, `cache/DocumentPicker/`) are purged on mount only.
  * savePage waits for the orphan sweep so a page saved mid-sweep is never deleted.
  * While a capture holds `captureLease`, the background purge spares the capture's work files;
  * if the app is still in the background when the lease frees, the full purge runs then.
@@ -77,6 +79,12 @@ export function ImageStoreProvider({ children }: { children: ReactNode }) {
         if (__DEV__) console.warn("purgeCaptureSources failed", e);
       });
     }
+    // Cold start only: plaintext exports and the document picker's backup copy. Deliberately not
+    // in the background purge: the share sheet / picker backgrounds the app while the receiving
+    // app still has to read the file.
+    purgeExportFiles(expoFs).catch((e) => {
+      if (__DEV__) console.warn("purgeExportFiles failed", e);
+    });
     const sub = AppState.addEventListener("change", (s) => {
       const scope = purgeScopeOnAppState(s, captureLease.held());
       if (scope) purge(scope);

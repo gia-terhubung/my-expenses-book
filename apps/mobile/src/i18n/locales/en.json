@@ -55,7 +55,9 @@
       "no_hardware": "This device has no biometrics or passcode support, so app lock is unavailable.",
       "not_enrolled": "Set up a device passcode, Face ID or fingerprint in system settings to turn on app lock."
     },
-    "categories": "Categories"
+    "categories": "Categories",
+    "export": "Export",
+    "backupRestore": "Backup & restore"
   },
   "dbError": {
     "title": "Your data can't be unlocked",
@@ -261,6 +263,51 @@
       "receipts": "Receipts",
       "byCategory": "By category",
       "uncategorized": "Uncategorized"
+    },
+    "title": "Export",
+    "range": "Date range",
+    "thisTaxYear": "This tax year",
+    "lastTaxYear": "Last tax year",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "all": "All time",
+    "custom": "Custom",
+    "to": "To",
+    "folder": "Folder",
+    "folderAny": "Any folder",
+    "folderPick": "Specific folder",
+    "format": "Format",
+    "csv": "CSV spreadsheet",
+    "pdf": "PDF report",
+    "images": "Include receipt images",
+    "empty": "No receipts match this selection.",
+    "failed": "Export failed",
+    "pdfTitle": "Expense report",
+    "from": "From",
+    "run": "Export",
+    "busy": "Exporting…",
+    "summary_one": "{{count}} receipt · {{total}}",
+    "summary_other": "{{count}} receipts · {{total}}",
+    "thumbFailures_one": "{{count}} receipt image couldn't be included.",
+    "thumbFailures_other": "{{count}} receipt images couldn't be included.",
+    "csvHeader": {
+      "date": "Date",
+      "time": "Time",
+      "timezone": "Timezone",
+      "merchant": "Merchant",
+      "category": "Category",
+      "folder": "Folder",
+      "currency": "Currency",
+      "total": "Total",
+      "tax": "Tax",
+      "homeCurrency": "Home currency",
+      "homeAmount": "Home amount",
+      "fxRate": "FX rate",
+      "fxRateDate": "FX rate date",
+      "fxApproximate": "FX approximate",
+      "notes": "Notes",
+      "refNo": "Reference",
+      "id": "ID"
     }
   }
 }

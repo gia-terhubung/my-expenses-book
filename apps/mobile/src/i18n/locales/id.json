@@ -55,7 +55,9 @@
       "no_hardware": "Perangkat ini tidak mendukung biometrik atau kode sandi, jadi kunci aplikasi tidak tersedia.",
       "not_enrolled": "Atur kode sandi perangkat, Face ID, atau sidik jari di pengaturan sistem untuk mengaktifkan kunci aplikasi."
     },
-    "categories": "Kategori"
+    "categories": "Kategori",
+    "export": "Ekspor",
+    "backupRestore": "Cadangan & pemulihan"
   },
   "dbError": {
     "title": "Data Anda tidak dapat dibuka",
@@ -261,6 +263,51 @@
       "receipts": "Struk",
       "byCategory": "Per kategori",
       "uncategorized": "Tanpa kategori"
+    },
+    "title": "Ekspor",
+    "range": "Rentang tanggal",
+    "thisTaxYear": "Tahun pajak ini",
+    "lastTaxYear": "Tahun pajak lalu",
+    "thisMonth": "Bulan ini",
+    "lastMonth": "Bulan lalu",
+    "all": "Semua waktu",
+    "custom": "Kustom",
+    "to": "Sampai",
+    "folder": "Folder",
+    "folderAny": "Semua folder",
+    "folderPick": "Folder tertentu",
+    "format": "Format",
+    "csv": "Spreadsheet CSV",
+    "pdf": "Laporan PDF",
+    "images": "Sertakan gambar struk",
+    "empty": "Tidak ada struk yang cocok dengan pilihan ini.",
+    "failed": "Ekspor gagal",
+    "pdfTitle": "Laporan pengeluaran",
+    "from": "Dari",
+    "run": "Ekspor",
+    "busy": "Mengekspor…",
+    "summary_one": "{{count}} struk · {{total}}",
+    "summary_other": "{{count}} struk · {{total}}",
+    "thumbFailures_one": "{{count}} gambar struk tidak dapat disertakan.",
+    "thumbFailures_other": "{{count}} gambar struk tidak dapat disertakan.",
+    "csvHeader": {
+      "date": "Tanggal",
+      "time": "Waktu",
+      "timezone": "Zona waktu",
+      "merchant": "Pedagang",
+      "category": "Kategori",
+      "folder": "Folder",
+      "currency": "Mata uang",
+      "total": "Total",
+      "tax": "Pajak",
+      "homeCurrency": "Mata uang utama",
+      "homeAmount": "Jumlah mata uang utama",
+      "fxRate": "Kurs",
+      "fxRateDate": "Tanggal kurs",
+      "fxApproximate": "Kurs perkiraan",
+      "notes": "Catatan",
+      "refNo": "Referensi",
+      "id": "ID"
     }
   }
 }

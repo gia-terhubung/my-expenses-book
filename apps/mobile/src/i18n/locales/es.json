@@ -55,7 +55,9 @@
       "no_hardware": "Este dispositivo no admite biometría ni código, así que el bloqueo de la app no está disponible.",
       "not_enrolled": "Configura un código del dispositivo, Face ID o huella en los ajustes del sistema para activar el bloqueo de la app."
     },
-    "categories": "Categorías"
+    "categories": "Categorías",
+    "export": "Exportar",
+    "backupRestore": "Copia de seguridad y restauración"
   },
   "dbError": {
     "title": "No se pueden desbloquear tus datos",
@@ -261,6 +263,51 @@
       "receipts": "Recibos",
       "byCategory": "Por categoría",
       "uncategorized": "Sin categoría"
+    },
+    "title": "Exportar",
+    "range": "Rango de fechas",
+    "thisTaxYear": "Este año fiscal",
+    "lastTaxYear": "Año fiscal anterior",
+    "thisMonth": "Este mes",
+    "lastMonth": "Mes anterior",
+    "all": "Todo el tiempo",
+    "custom": "Personalizado",
+    "to": "Hasta",
+    "folder": "Carpeta",
+    "folderAny": "Cualquier carpeta",
+    "folderPick": "Carpeta específica",
+    "format": "Formato",
+    "csv": "Hoja de cálculo CSV",
+    "pdf": "Informe PDF",
+    "images": "Incluir imágenes de recibos",
+    "empty": "Ningún recibo coincide con esta selección.",
+    "failed": "Error al exportar",
+    "pdfTitle": "Informe de gastos",
+    "from": "Desde",
+    "run": "Exportar",
+    "busy": "Exportando…",
+    "summary_one": "{{count}} recibo · {{total}}",
+    "summary_other": "{{count}} recibos · {{total}}",
+    "thumbFailures_one": "No se pudo incluir {{count}} imagen de recibo.",
+    "thumbFailures_other": "No se pudieron incluir {{count}} imágenes de recibos.",
+    "csvHeader": {
+      "date": "Fecha",
+      "time": "Hora",
+      "timezone": "Zona horaria",
+      "merchant": "Comercio",
+      "category": "Categoría",
+      "folder": "Carpeta",
+      "currency": "Moneda",
+      "total": "Total",
+      "tax": "Impuesto",
+      "homeCurrency": "Moneda principal",
+      "homeAmount": "Importe en moneda principal",
+      "fxRate": "Tipo de cambio",
+      "fxRateDate": "Fecha del tipo de cambio",
+      "fxApproximate": "Tipo de cambio aproximado",
+      "notes": "Notas",
+      "refNo": "Referencia",
+      "id": "ID"
     }
   }
 }

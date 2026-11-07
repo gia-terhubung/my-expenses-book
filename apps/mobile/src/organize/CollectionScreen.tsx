@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -80,6 +80,12 @@ export function CollectionScreen(props: Props) {
       },
     ]);
 
+  const openExport = () =>
+    router.push({
+      pathname: "/export",
+      params: folderId !== null ? { folderId } : taxYearRange(year as number, startMonth),
+    } as unknown as Href);
+
   const action = (label: string, onPress: () => void, destructive = false) => (
     <Pressable
       accessibilityRole="button"
@@ -131,12 +137,15 @@ export function CollectionScreen(props: Props) {
                 t("totals.notConverted", { count: n }),
               )}
             </Text>
-            {folder ? (
-              <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
-                {action(t("folders.rename"), () => setRenaming(true))}
-                {action(t("common.delete"), confirmDelete, true)}
-              </View>
-            ) : null}
+            <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+              {action(t("export.title"), openExport)}
+              {folder ? (
+                <>
+                  {action(t("folders.rename"), () => setRenaming(true))}
+                  {action(t("common.delete"), confirmDelete, true)}
+                </>
+              ) : null}
+            </View>
           </View>
         }
         empty={<EmptyState title={t("folders.noReceipts")} topInset={false} />}

@@ -118,4 +118,20 @@ describe("CollectionScreen", () => {
     expect(screen.queryByText("After")).toBeNull();
     expect(screen.queryByRole("button", { name: "Rename" })).toBeNull();
   });
+
+  it("folder Export action opens /export with the folder id", async () => {
+    const f = createFolder(mockDb, { name: "Bali", kind: "trip" });
+    await render(<CollectionScreen kind="folder" folderId={f.id} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Export" }));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: "/export", params: { folderId: f.id } });
+  });
+
+  it("tax-year Export action opens /export with the tax year range", async () => {
+    await render(<CollectionScreen kind="taxYear" year={2026} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Export" }));
+    expect(mockRouter.push).toHaveBeenCalledWith({
+      pathname: "/export",
+      params: { from: "2026-04-01", to: "2027-03-31" },
+    });
+  });
 });
