@@ -8,6 +8,7 @@ import { pendingCaptures } from "@/capture/pendingCapture";
 import { useDb } from "@/db/DatabaseProvider";
 import { listDraftIds } from "@/db/repositories/receipts";
 import { EmptyState } from "@/layout/EmptyState";
+import { useWhenUnobscured } from "@/lock/useWhenUnobscured";
 import { usePref } from "@/prefs/PrefsProvider";
 import { createManualDraft } from "@/review/manualDraft";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -23,6 +24,7 @@ export default function ReceiptsScreen() {
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const [sheet, setSheet] = useState(false);
+  const afterUnlock = useWhenUnobscured();
   // Drafts left unreviewed (closed with "Review later", app killed mid-run) stay reachable.
   const [drafts, setDrafts] = useState<string[]>([]);
   useFocusEffect(useCallback(() => setDrafts(listDraftIds(db)), [db]));
@@ -42,7 +44,9 @@ export default function ReceiptsScreen() {
     if (!uris.length) return;
     // URIs stay in memory; the route only gets a one-time token (no file paths in deep links).
     const token = pendingCaptures.put(mode, uris);
-    router.push({ pathname: "/capture", params: { token } } as unknown as Href);
+    // The picker/scanner may have backgrounded the app and the lock come up meanwhile: push only
+    // once /lock is gone, so the capture modal never lands above it.
+    afterUnlock(() => router.push({ pathname: "/capture", params: { token } } as unknown as Href));
   };
 
   return (

@@ -14,22 +14,45 @@ import { initI18n } from "@/i18n";
 import { LockGate, LockRoute } from "./LockGate";
 
 // Route-based lock: the mocked router "presents" /lock by mounting <LockRoute/> beside the gate,
-// as the root Stack would. dismiss removes it.
+// as the root Stack would. The root state lists the routes; a keyed POP of the lock route
+// removes it. `above` = routes pushed after /lock (e.g. the capture modal).
 const mockRoute = {
   setShown: null as ((v: boolean) => void) | null,
   hold: false,
+  routes: ["(tabs)"] as string[],
+  seq: 0,
 };
-const mockRouter = { push: jest.fn(), dismiss: jest.fn() };
+const mockRouter = { push: jest.fn(), dismiss: jest.fn(), replace: jest.fn(), dispatch: jest.fn() };
+const mockKey = (name: string) => (name === "lock" ? `lock-${mockRoute.seq}` : `${name}-k`);
 jest.mock("expo-router", () => ({
   useRootNavigationState: () => ({ key: "root" }),
+  useNavigationContainerRef: () => ({
+    getRootState: () => ({
+      key: "root",
+      index: mockRoute.routes.length - 1,
+      routes: mockRoute.routes.map((name) => ({ name, key: mockKey(name) })),
+    }),
+    dispatch: (a: { type: string; source?: string }) => {
+      mockRouter.dispatch(a);
+      if (a.type === "POP" && a.source === mockKey("lock")) {
+        mockRoute.routes = mockRoute.routes.filter((n) => n !== "lock");
+        mockRoute.setShown?.(false);
+      }
+    },
+  }),
   router: {
     push: (...a: unknown[]) => {
       mockRouter.push(...a);
+      if (a[0] === "/lock") {
+        mockRoute.seq++;
+        mockRoute.routes = [...mockRoute.routes, "lock"];
+      } else mockRoute.routes = [...mockRoute.routes, String(a[0])];
       if (!mockRoute.hold) mockRoute.setShown?.(true);
     },
+    replace: (...a: unknown[]) => mockRouter.replace(...a),
     dismiss: (...a: unknown[]) => {
       mockRouter.dismiss(...a);
-      mockRoute.setShown?.(false);
+      mockRoute.routes = mockRoute.routes.slice(0, -1);
     },
   },
 }));
@@ -37,8 +60,8 @@ jest.mock("./snapshotProtection", () => ({
   applySnapshotProtection: jest.fn().mockResolvedValue(undefined),
 }));
 
-function Host({ children }: { children: React.ReactNode }) {
-  const [shown, setShown] = useState(false);
+function Host({ children, initiallyShown = false }: { children: React.ReactNode; initiallyShown?: boolean }) {
+  const [shown, setShown] = useState(initiallyShown);
   useLayoutEffect(() => {
     mockRoute.setShown = setShown;
   }, []);
@@ -87,6 +110,10 @@ beforeEach(() => {
   mockTimeout = 60;
   mockRouter.push.mockReset();
   mockRouter.dismiss.mockReset();
+  mockRouter.replace.mockReset();
+  mockRouter.dispatch.mockReset();
+  mockRoute.routes = ["(tabs)"];
+  mockRoute.seq = 0;
   auth.mockReset();
   setWidth(400);
   listener.current = null;
@@ -148,7 +175,7 @@ describe("LockGate", () => {
     }
   });
 
-  it("pushes /lock above an open modal when locked, once; unlock dismisses only /lock", async () => {
+  it("pushes /lock above an open modal when locked, once; unlock removes only /lock", async () => {
     auth.mockResolvedValueOnce({ success: false, error: "user_cancel" });
     const r = await render(
       <Host>
@@ -164,13 +191,51 @@ describe("LockGate", () => {
       </Host>,
     );
     expect(mockRouter.push).toHaveBeenCalledTimes(1);
-    expect(mockRouter.dismiss).not.toHaveBeenCalled();
+    expect(mockRouter.dispatch).not.toHaveBeenCalled();
 
     auth.mockResolvedValueOnce({ success: true });
     await fireEvent.press(screen.getByText("Unlock"));
-    expect(mockRouter.dismiss).toHaveBeenCalledTimes(1);
-    expect(mockRouter.dismiss).toHaveBeenCalledWith();
+    expect(mockRouter.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockRouter.dispatch).toHaveBeenCalledWith({ type: "POP", payload: { count: 1 }, source: "lock-1", target: "root" });
+    expect(mockRouter.dismiss).not.toHaveBeenCalled();
     expect(mockRouter.push).toHaveBeenCalledTimes(1);
+  });
+
+  it("lock pushed while capture is on top, capture pushed above it: unlock removes only /lock", async () => {
+    mockRoute.routes = ["(tabs)", "(modals)"];
+    auth.mockResolvedValueOnce({ success: false, error: "user_cancel" });
+    await render(
+      <Host>
+        <Counter />
+      </Host>,
+    );
+    await act(async () => {});
+    // A picker result lands after the lock: another modal ends up above /lock.
+    mockRoute.routes = [...mockRoute.routes, "(modals)"];
+    auth.mockResolvedValueOnce({ success: true });
+    await fireEvent.press(screen.getByText("Unlock"));
+    expect(mockRouter.dismiss).not.toHaveBeenCalled();
+    expect(mockRouter.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockRoute.routes).toEqual(["(tabs)", "(modals)", "(modals)"]);
+  });
+
+  it("deep link to /lock while unlocked: the route removes itself (home when alone)", async () => {
+    mockTimeout = 600;
+    auth.mockResolvedValueOnce({ success: true });
+    await render(
+      <Host>
+        <Counter />
+      </Host>,
+    );
+    await act(async () => {});
+    expect(screen.queryByTestId("lock-screen")).toBeNull();
+    mockRouter.dispatch.mockReset();
+    // /lock opened by a link while unlocked, alone in the stack.
+    mockRoute.seq++;
+    mockRoute.routes = ["lock"];
+    await act(async () => mockRoute.setShown?.(true));
+    expect(mockRouter.replace).toHaveBeenCalledWith("/");
+    expect(screen.queryByTestId("lock-screen")).toBeNull();
   });
 
   it("shows the overlay on first render and prompts once; failure does not loop", async () => {

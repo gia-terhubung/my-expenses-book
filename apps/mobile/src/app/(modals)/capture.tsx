@@ -10,6 +10,7 @@ import { useDb } from "@/db/DatabaseProvider";
 import { captureLease } from "@/images/captureLease";
 import { useImageStore } from "@/images/ImageStoreProvider";
 import { useAppObscured } from "@/lock/appObscured";
+import { useWhenUnobscured } from "@/lock/useWhenUnobscured";
 import { parseReceipt } from "@/parsing";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -27,6 +28,9 @@ function nativeOcr(): Ocr {
   };
 }
 
+/** The working phase offers Cancel after this long (a stuck native call is bounded at 20 s). */
+const CANCEL_AFTER_MS = 5_000;
+
 type Phase =
   | { kind: "working"; index: number; total: number }
   | { kind: "split"; count: number }
@@ -37,7 +41,9 @@ type Phase =
  * pendingCapture: photos = one receipt per photo, scan = one receipt), asks before splitting a
  * multi-receipt photo, then replaces itself with the review route for the first draft (`queue` =
  * the rest, `failed` = photos that couldn't be saved). Never starts while the app is locked or
- * covered. File URIs in route params are honoured only in dev builds.
+ * covered, and navigates only once unlocked (never above or in place of `/lock`). Cancel appears
+ * after 5 s of work: it abandons the native call in flight and the pipeline cleans up. File URIs
+ * in route params are honoured only in dev builds.
  */
 export default function CaptureScreen() {
   const { t } = useTranslation();
@@ -49,7 +55,10 @@ export default function CaptureScreen() {
   const language = usePref("language") ?? "en";
   const params = useLocalSearchParams<{ token?: string; mode?: string; uris?: string }>();
   const obscured = useAppObscured();
+  const afterUnlock = useWhenUnobscured();
   const [phase, setPhase] = useState<Phase>({ kind: "working", index: 0, total: 1 });
+  const [canCancel, setCanCancel] = useState(false);
+  const abort = useRef(new AbortController());
   const answer = useRef<((c: "split" | "single" | null) => void) | null>(null);
   const cancelled = useRef(false);
   const left = useRef(false);
@@ -59,13 +68,27 @@ export default function CaptureScreen() {
 
   useEffect(
     () => () => {
-      // Leaving mid-run (swipe down / back): stop after the current step and clean up.
+      // Leaving mid-run (Android back, Cancel): abandon the current step and clean up.
       left.current = true;
       cancelled.current = true;
+      abort.current.abort();
       answer.current?.(null);
     },
     [],
   );
+
+  useEffect(() => {
+    setCanCancel(false);
+    if (phase.kind !== "working") return;
+    const timer = setTimeout(() => setCanCancel(true), CANCEL_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [phase.kind]);
+
+  const cancelWork = () => {
+    cancelled.current = true;
+    abort.current.abort();
+    router.back();
+  };
 
   useEffect(() => {
     // Wait for unlock: nothing is read or written behind the lock screen / privacy cover.
@@ -81,6 +104,7 @@ export default function CaptureScreen() {
       uiLanguage: language,
       clock: () => new Date(),
       lease: () => captureLease.acquire(),
+      signal: abort.current.signal,
     };
     const total = groups.length;
     void runCaptures(groups, deps, {
@@ -98,12 +122,19 @@ export default function CaptureScreen() {
         if (left.current) return;
         if (ids.length) {
           const [first, ...rest] = ids;
-          router.replace({
-            pathname: "/review/[id]",
-            params: { id: first, queue: rest.join(","), failed: String(failed), total: String(total) },
-          } as unknown as Href);
+          // Locked meanwhile (app switched during "Reading receipt…"): wait until /lock is gone,
+          // so REPLACE acts on this screen and never on the lock route.
+          afterUnlock(() => {
+            if (left.current) return;
+            router.replace({
+              pathname: "/review/[id]",
+              params: { id: first, queue: rest.join(","), failed: String(failed), total: String(total) },
+            } as unknown as Href);
+          });
         } else if (wasCancelled) {
-          router.back();
+          afterUnlock(() => {
+            if (!left.current) router.back();
+          });
         } else {
           setPhase({ kind: "failed" });
         }
@@ -185,6 +216,7 @@ export default function CaptureScreen() {
             ? t("capture.processingMany", { current: phase.index + 1, total: phase.total })
             : t("capture.processing")}
         </Text>
+        {canCancel ? <Button title={t("common.cancel")} onPress={cancelWork} /> : null}
       </>
     );
   };
