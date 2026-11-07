@@ -6,7 +6,7 @@ Date: 2026-11-07. Branch feat/m4-export-backup. Status key: PASS / FAIL / OWNER-
 
 | Check | Result | Status |
 |---|---|---|
-| `npx jest --maxWorkers=2` | Test Suites: 100 passed, 100 total. Tests: 736 passed, 736 total | PASS |
+| `npx jest` | Test Suites: 101 passed, 101 total. Tests: 755 passed, 755 total (after the final fix wave) | PASS |
 | `npx tsc --noEmit` | no output, exit 0 | PASS |
 | `npm run check:pii` | ok: 68 dump tokens checked against fixtures, none found | PASS |
 | `npx expo-doctor` | 20/20 checks passed. No issues detected | PASS |
@@ -23,10 +23,10 @@ Install: the new development APK (section 1), then `cd apps/mobile && npx expo s
 | # | Check | Pass criterion | Status |
 |---|---|---|---|
 | R1 | Export a tax year as CSV, open in Google Sheets | columns correct, accents and non-Latin text intact, a merchant starting `=`, `+`, `-` or `@` shows as text (no formula runs) | OWNER-PENDING |
-| R2 | Export a PDF report, open it | opens; receipt thumbnails visible; totals match the Folders tax-year screen | OWNER-PENDING |
+| R2 | Seed ≥500 confirmed receipts with images, export a PDF report with images, open it | no crash or out-of-memory (all thumbnails sit in one HTML string); opens; receipt thumbnails visible; totals match the Folders tax-year screen | OWNER-PENDING |
 | R3 | Share sheet, save to Files/Drive, return to the app | file saved; export screen state kept (range, format) | OWNER-PENDING |
 | R4 | Lock timeout "Immediately": export, share, return | lock screen shows, then returns to the export screen | OWNER-PENDING |
-| R5 | Backup with passphrase, Settings erase all local data, onboarding, restore with replace | receipts, images, folders, categories and home currency all back | OWNER-PENDING |
+| R5 | Backup with passphrase and save the file off the device (Drive), uninstall and reinstall (Android: Settings > Apps > Clear storage), onboarding, restore with replace | receipts, images, folders, categories and home currency all back | OWNER-PENDING |
 | R6 | Restore with a wrong passphrase | rejected with a clear message; nothing changed | OWNER-PENDING |
 | R7 | Backup without passphrase | warning shown before the file is made | OWNER-PENDING |
 | R8 | Merge-import a backup from a second device | receipts added; possible duplicates listed | OWNER-PENDING |
@@ -41,10 +41,10 @@ Needs a registered device build (`eas device:create`, owner step) or `npx expo r
 | # | Check | Pass criterion | Status |
 |---|---|---|---|
 | P1 | CSV export of a tax year, open in Numbers | columns correct, accents intact, no formula execution | OWNER-PENDING |
-| P2 | PDF report | opens; thumbnails visible; totals match the Folders tax-year screen | OWNER-PENDING |
+| P2 | PDF report of ≥500 receipts with images | no crash or out-of-memory; opens; thumbnails visible; totals match the Folders tax-year screen | OWNER-PENDING |
 | P3 | Share sheet, save to Files, return to the app | file saved; screen state kept | OWNER-PENDING |
 | P4 | Lock timeout "Immediately": export, share, return | lock screen shows, then returns to the export screen | OWNER-PENDING |
-| P5 | Backup with passphrase, erase all data, onboarding, restore replace | receipts, images, folders, categories, home currency back | OWNER-PENDING |
+| P5 | Backup with passphrase and save the file to Files (iCloud Drive), uninstall and reinstall, onboarding, restore replace | receipts, images, folders, categories, home currency back | OWNER-PENDING |
 | P6 | Wrong passphrase | rejected; nothing changed | OWNER-PENDING |
 | P7 | Backup without passphrase | warning shown | OWNER-PENDING |
 | P8 | Merge import from a second device | receipts added; possible duplicates listed | OWNER-PENDING |
