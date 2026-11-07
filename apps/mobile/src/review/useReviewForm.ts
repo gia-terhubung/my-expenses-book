@@ -8,6 +8,7 @@ import { useDb } from "@/db/DatabaseProvider";
 import { countPagesByImagePath, listPages, softDeletePages } from "@/db/repositories/pages";
 import { getReceipt, softDeleteReceipt, updateReceipt } from "@/db/repositories/receipts";
 import type { AppDb, Receipt, ReceiptPage } from "@/db/types";
+import { mergeFxCache } from "@/fx/mergeCache";
 import { ensureRates } from "@/fx/rates";
 import { useImageStore } from "@/images/ImageStoreProvider";
 import type { ImageStore } from "@/images/store";
@@ -250,8 +251,9 @@ export function useReviewForm(
     ensureRates(before, home, foreignDate, Date.now()).then(
       (next) => {
         if (next === before) return;
-        prefs.set("fxTables", next);
-        if (!cancelled) setFxCache(next);
+        const merged = mergeFxCache(prefs.get("fxTables"), next);
+        prefs.set("fxTables", merged);
+        if (!cancelled) setFxCache(merged);
       },
       () => undefined, // best effort: offline keeps the preview empty
     );
@@ -287,8 +289,8 @@ export function useReviewForm(
         try {
           const next = await ensureRates(cache, home, v.date, Date.now());
           if (next !== cache) {
-            prefs.set("fxTables", next);
-            cache = next;
+            cache = mergeFxCache(prefs.get("fxTables"), next);
+            prefs.set("fxTables", cache);
           }
         } catch {
           // best effort: offline saves with amountHomeMinor null (filled in by a later FX sync)

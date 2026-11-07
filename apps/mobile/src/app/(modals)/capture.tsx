@@ -7,6 +7,7 @@ import type { OcrResult } from "../../../modules/receipt-ocr/src/ReceiptOcr.type
 import { pendingCaptures, resolveCaptureRequest } from "@/capture/pendingCapture";
 import { runCaptures, type CaptureDeps } from "@/capture/pipeline";
 import { useDb } from "@/db/DatabaseProvider";
+import { mergeFxCache } from "@/fx/mergeCache";
 import { captureLease } from "@/images/captureLease";
 import { useImageStore } from "@/images/ImageStoreProvider";
 import { useAppObscured } from "@/lock/appObscured";
@@ -87,6 +88,7 @@ export default function CaptureScreen() {
   const cancelWork = () => {
     cancelled.current = true;
     abort.current.abort();
+    left.current = true;
     router.back();
   };
 
@@ -99,7 +101,7 @@ export default function CaptureScreen() {
       images,
       ocr: nativeOcr(),
       parse: parseReceipt,
-      fx: { get: () => prefs.get("fxTables"), set: (c) => prefs.set("fxTables", c) },
+      fx: { get: () => prefs.get("fxTables"), set: (c) => prefs.set("fxTables", mergeFxCache(prefs.get("fxTables"), c)) },
       home,
       uiLanguage: language,
       clock: () => new Date(),

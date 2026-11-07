@@ -157,6 +157,26 @@ describe("syncFx", () => {
     expect(getReceipt(db, old.id)).toEqual(before);
   });
 
+  it("keeps dates another writer saved while the sync was fetching", async () => {
+    const { prefs, db } = setup();
+    createReceipt(db, rcpt());
+    const calls: string[] = [];
+    const bodies: Record<string, unknown> = {
+      [rateUrl("IDR", "latest")]: { date: "2026-11-04", idr: { usd: 0.00005 } },
+      [rateUrl("IDR", "2026-11-01")]: { date: "2026-11-01", idr: { usd: 0.00004 } },
+    };
+    const fn = (async (url: string) => {
+      calls.push(url);
+      if (calls.length === 1) {
+        // concurrent capture/review write lands mid-sync
+        prefs.set("fxTables", { base: "idr", latestDate: null, fetchedAt: null, byDate: { "2026-10-15": { usd: "0.00003" } } });
+      }
+      return { ok: true, status: 200, json: async () => bodies[url] };
+    }) as unknown as typeof fetch;
+    await syncFx({ db, prefs, home: "IDR", now, fetchFn: fn });
+    expect(Object.keys(prefs.get("fxTables").byDate).sort()).toEqual(["2026-10-15", "2026-11-01", "2026-11-04"]);
+  });
+
   it("a date older than 120 cached tables is fetched, kept through prune, and converts its receipt", async () => {
     const { prefs, db } = setup();
     const byDate: Record<string, Record<string, string>> = {};
