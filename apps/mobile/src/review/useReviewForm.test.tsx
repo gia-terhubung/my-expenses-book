@@ -345,6 +345,60 @@ describe("useReviewForm edit mode", () => {
     expect(fetchFn).not.toHaveBeenCalled();
   });
 
+  it("keeps the stored conversion when only notes change, offline with an empty cache", async () => {
+    const fetchFn = jest.fn(async () => {
+      throw new TypeError("offline");
+    });
+    global.fetch = fetchFn as unknown as typeof fetch;
+    const r = confirmed({
+      currency: "EUR",
+      totalMinor: 1250,
+      amountHomeMinor: 21250000,
+      fxRate: "17000",
+      fxRateDate: "2026-11-03",
+      fxApproximate: false,
+    });
+    const before = getReceipt(mockDb, r.id)!;
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("notes", "fixed a typo"));
+    // The background ≈ preview may try the network on mount; Save itself must not.
+    const previewCalls = fetchFn.mock.calls.length;
+    await act(async () => {
+      await result.current.save();
+    });
+    const after = getReceipt(mockDb, r.id)!;
+    expect(after.notes).toBe("fixed a typo");
+    expect(after).toMatchObject({
+      amountHomeMinor: before.amountHomeMinor,
+      fxRate: before.fxRate,
+      fxRateDate: before.fxRateDate,
+      fxApproximate: before.fxApproximate,
+      homeCurrencyAtSave: "IDR",
+    });
+    expect(fetchFn).toHaveBeenCalledTimes(previewCalls);
+  });
+
+  it("recomputes the conversion when the date changes", async () => {
+    mockPrefs.set("fxTables", cache);
+    global.fetch = jest.fn(async () => {
+      throw new TypeError("offline");
+    }) as unknown as typeof fetch;
+    const r = confirmed({
+      currency: "USD",
+      totalMinor: 1000,
+      purchasedAtLocal: "2026-11-02T10:15:00",
+      amountHomeMinor: 19000000,
+      fxRate: "19000",
+      fxRateDate: "2026-11-02",
+    });
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("date", "2026-11-03"));
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)).toMatchObject({ amountHomeMinor: 20000000, fxRate: "20000", fxRateDate: "2026-11-03" });
+  });
+
   it("cancel with no changes goes straight back", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     const r = confirmed();

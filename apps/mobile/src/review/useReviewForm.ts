@@ -82,6 +82,9 @@ const EMPTY: ReviewValues = {
 
 const NO_PAGES: ReceiptPage[] = [];
 
+/** Form fields the home amount is computed from. */
+const FX_DRIVERS: readonly ReviewField[] = ["currency", "total", "date", "fxRate"];
+
 /** The receipt and its pages; "missing" when it was deleted or is not in the mode's status. */
 function loadReceipt(db: AppDb, id: string, mode: ReviewFormMode): { receipt: Receipt; pages: ReceiptPage[] } | "missing" {
   const receipt = getReceipt(db, id);
@@ -147,7 +150,9 @@ export async function discardReceipt(
  * and opens the next queued draft (or closes); `discard` deletes the draft and unshared photos.
  *
  * Edit mode (a confirmed receipt): no write-through and no duplicate check; `save` validates and
- * writes the same patch (FX recomputed) in one update, status stays confirmed, then goes back.
+ * writes the same patch in one update, status stays confirmed, then goes back. FX is recomputed
+ * only when currency, total, date or the manual rate changed, or the row is not converted for
+ * the current home.
  */
 export function useReviewForm(
   id: string,
@@ -284,8 +289,15 @@ export function useReviewForm(
     inFlight.current = true;
     setBusy(true);
     try {
+      // Edit: nothing that drives the conversion changed and the row is already converted for
+      // this home, so keep the stored conversion (an offline cache must not downgrade it).
+      const keepFx =
+        editing &&
+        FX_DRIVERS.every((k) => v[k] === initialValues[k]) &&
+        r.homeCurrencyAtSave === home &&
+        r.amountHomeMinor !== null;
       let cache = prefs.get("fxTables");
-      if (v.currency.toUpperCase() !== home.toUpperCase() && !v.fxRate.trim()) {
+      if (!keepFx && v.currency.toUpperCase() !== home.toUpperCase() && !v.fxRate.trim()) {
         try {
           const next = await ensureRates(cache, home, v.date, Date.now());
           if (next !== cache) {
@@ -296,8 +308,16 @@ export function useReviewForm(
           // best effort: offline saves with amountHomeMinor null (filled in by a later FX sync)
         }
       }
+      const patch = draftPatch(r, v, home, cache);
+      if (keepFx) {
+        delete patch.fxRate;
+        delete patch.fxRateDate;
+        delete patch.amountHomeMinor;
+        delete patch.fxApproximate;
+        delete patch.homeCurrencyAtSave;
+      }
       // Edit: same columns, status untouched (stays confirmed).
-      updateReceipt(db, r.id, editing ? draftPatch(r, v, home, cache) : { ...draftPatch(r, v, home, cache), status: "confirmed" });
+      updateReceipt(db, r.id, editing ? patch : { ...patch, status: "confirmed" });
       receiptRef.current = null; // saved: no write-through (and no second save) after this point
     } finally {
       inFlight.current = false;
@@ -305,7 +325,7 @@ export function useReviewForm(
     }
     if (editing) router.back();
     else goNext(queueRef.current);
-  }, [db, editing, flush, home, prefs]);
+  }, [db, editing, flush, home, initialValues, prefs]);
 
   const discard = useCallback(async () => {
     const r = receiptRef.current;
