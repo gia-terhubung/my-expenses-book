@@ -45,9 +45,17 @@ export function SearchScreen() {
     return () => clearTimeout(id);
   }, [state.text]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const categories = useMemo(() => listCategories(db), [db, version]);
+  // A category deleted while selected would keep filtering with no chip to remove it: ignore it.
+  const effective = useMemo<SearchState>(() => {
+    const live = state.categoryIds.filter((id) => categories.some((c) => c.id === id));
+    return live.length === state.categoryIds.length ? state : { ...state, categoryIds: live };
+  }, [state, categories]);
+
   const today = formatLocal(new Date(), deviceTimeZone()).slice(0, 10);
-  const { preset, from, to, categoryIds, folderId, currency } = state;
-  const active = queryText.trim() !== "" || activeFilterCount(state) > 0;
+  const { preset, from, to, categoryIds, folderId, currency } = effective;
+  const active = queryText.trim() !== "" || activeFilterCount(effective) > 0;
   const filter = useMemo<ReceiptFilter>(
     () =>
       active
@@ -57,8 +65,6 @@ export function SearchScreen() {
   );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const total = useMemo(() => (active ? sumHome(db, filter, home) : null), [db, active, filter, home, version]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const categories = useMemo(() => listCategories(db), [db, version]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const folders = useMemo(() => listFolders(db), [db, version]);
 
@@ -95,7 +101,7 @@ export function SearchScreen() {
   }
   if (currency) chips.push({ key: "currency", label: currency, remove: () => patch({ currency: undefined }) });
 
-  const filterCount = activeFilterCount(state);
+  const filterCount = activeFilterCount(effective);
   const link = (label: string, onPress: () => void) => (
     <Pressable
       accessibilityRole="button"
@@ -180,7 +186,7 @@ export function SearchScreen() {
       />
       <FilterSheet
         visible={sheetOpen}
-        value={state}
+        value={effective}
         onApply={(next) => {
           setState((s) => ({ ...next, text: s.text }));
           setSheetOpen(false);

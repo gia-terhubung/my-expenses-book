@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 
+import { createCategory, softDeleteCategory } from "@/db/repositories/categories";
 import { createFolder } from "@/db/repositories/folders";
 import { createReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
@@ -113,6 +114,26 @@ describe("SearchScreen", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Clear all" }));
     expect(screen.queryByText("Indomaret")).toBeNull();
     expect(screen.getByText(/Search your receipts/)).toBeTruthy();
+  });
+
+  it("ignores a filtered category once it is deleted: no hidden filter, no chip", async () => {
+    const snacks = createCategory(mockDb, { name: "Snacks", color: "#FF8800" });
+    seed("Toko Satu", snacks.id);
+    seed("Toko Dua", "default:groceries");
+    await render(<SearchScreen />);
+    await type("toko");
+    await advance(250);
+    await fireEvent.press(screen.getByRole("button", { name: "Filters" }));
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Snacks" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Apply" }));
+    expect(screen.queryByText("Toko Dua")).toBeNull();
+    expect(screen.getByRole("button", { name: "Filters (1)" })).toBeTruthy();
+
+    await act(async () => void softDeleteCategory(mockDb, snacks.id));
+    expect(screen.getByText("Toko Satu")).toBeTruthy();
+    expect(screen.getByText("Toko Dua")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Remove filter Snacks" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Filters" })).toBeTruthy();
   });
 
   it("shows the empty state for a query with no matches", async () => {
