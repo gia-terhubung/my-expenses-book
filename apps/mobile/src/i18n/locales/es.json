@@ -225,5 +225,27 @@
     "deleteMessage_other": "{{count}} recibos pasan a {{other}}.",
     "receiptCount_one": "{{count}} recibo",
     "receiptCount_other": "{{count}} recibos"
+  },
+  "search": {
+    "label": "Buscar recibos",
+    "placeholder": "Comercio, nota o texto",
+    "filters": "Filtros",
+    "apply": "Aplicar",
+    "clearAll": "Borrar todo",
+    "removeFilter": "Quitar filtro {{label}}",
+    "noResults": "Ningún recibo coincide con la búsqueda.",
+    "date": "Fecha",
+    "from": "Desde",
+    "to": "Hasta",
+    "anyFolder": "Cualquier carpeta",
+    "anyCurrency": "Cualquier moneda",
+    "preset": {
+      "all": "Cualquier fecha",
+      "thisMonth": "Este mes",
+      "lastMonth": "Mes pasado",
+      "thisTaxYear": "Este año fiscal",
+      "lastTaxYear": "Año fiscal pasado",
+      "custom": "Rango personalizado"
+    }
   }
 }

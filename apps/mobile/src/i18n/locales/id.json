@@ -225,5 +225,27 @@
     "deleteMessage_other": "{{count}} struk dipindahkan ke {{other}}.",
     "receiptCount_one": "{{count}} struk",
     "receiptCount_other": "{{count}} struk"
+  },
+  "search": {
+    "label": "Cari struk",
+    "placeholder": "Pedagang, catatan atau teks",
+    "filters": "Filter",
+    "apply": "Terapkan",
+    "clearAll": "Hapus semua",
+    "removeFilter": "Hapus filter {{label}}",
+    "noResults": "Tidak ada struk yang cocok.",
+    "date": "Tanggal",
+    "from": "Dari",
+    "to": "Sampai",
+    "anyFolder": "Folder apa pun",
+    "anyCurrency": "Mata uang apa pun",
+    "preset": {
+      "all": "Tanggal apa pun",
+      "thisMonth": "Bulan ini",
+      "lastMonth": "Bulan lalu",
+      "thisTaxYear": "Tahun pajak ini",
+      "lastTaxYear": "Tahun pajak lalu",
+      "custom": "Rentang kustom"
+    }
   }
 }

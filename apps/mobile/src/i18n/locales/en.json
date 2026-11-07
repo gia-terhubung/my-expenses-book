@@ -225,5 +225,27 @@
     "deleteMessage_other": "{{count}} receipts move to {{other}}.",
     "receiptCount_one": "{{count}} receipt",
     "receiptCount_other": "{{count}} receipts"
+  },
+  "search": {
+    "label": "Search receipts",
+    "placeholder": "Merchant, note or text",
+    "filters": "Filters",
+    "apply": "Apply",
+    "clearAll": "Clear all",
+    "removeFilter": "Remove filter {{label}}",
+    "noResults": "No receipts match your search.",
+    "date": "Date",
+    "from": "From",
+    "to": "To",
+    "anyFolder": "Any folder",
+    "anyCurrency": "Any currency",
+    "preset": {
+      "all": "Any date",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "thisTaxYear": "This tax year",
+      "lastTaxYear": "Last tax year",
+      "custom": "Custom range"
+    }
   }
 }

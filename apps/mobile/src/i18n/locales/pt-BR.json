@@ -225,5 +225,27 @@
     "deleteMessage_other": "{{count}} recibos vão para {{other}}.",
     "receiptCount_one": "{{count}} recibo",
     "receiptCount_other": "{{count}} recibos"
+  },
+  "search": {
+    "label": "Buscar recibos",
+    "placeholder": "Estabelecimento, nota ou texto",
+    "filters": "Filtros",
+    "apply": "Aplicar",
+    "clearAll": "Limpar tudo",
+    "removeFilter": "Remover filtro {{label}}",
+    "noResults": "Nenhum recibo corresponde à busca.",
+    "date": "Data",
+    "from": "De",
+    "to": "Até",
+    "anyFolder": "Qualquer pasta",
+    "anyCurrency": "Qualquer moeda",
+    "preset": {
+      "all": "Qualquer data",
+      "thisMonth": "Este mês",
+      "lastMonth": "Mês passado",
+      "thisTaxYear": "Este ano fiscal",
+      "lastTaxYear": "Ano fiscal passado",
+      "custom": "Período personalizado"
+    }
   }
 }
