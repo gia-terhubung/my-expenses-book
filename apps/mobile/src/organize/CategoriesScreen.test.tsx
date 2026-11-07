@@ -81,13 +81,13 @@ describe("CategoriesScreen", () => {
   it("renames a default, then reset restores the translated label", async () => {
     await render(<CategoriesScreen />);
     const row = () => within(screen.getByTestId("category-row-default:food_drink"));
-    expect(row().queryByRole("button", { name: "Reset name" })).toBeNull();
-    await fireEvent.press(row().getByRole("button", { name: "Rename" }));
+    expect(row().queryByRole("button", { name: "Reset name, Food & Drink" })).toBeNull();
+    await fireEvent.press(row().getByRole("button", { name: "Rename, Food & Drink" }));
     await fireEvent.changeText(screen.getByLabelText("Category name"), "Eats");
     await fireEvent.press(screen.getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Eats")).toBeTruthy();
     expect(screen.queryByText("Food & Drink")).toBeNull();
-    await fireEvent.press(row().getByRole("button", { name: "Reset name" }));
+    await fireEvent.press(row().getByRole("button", { name: "Reset name, Eats" }));
     expect(await screen.findByText("Food & Drink")).toBeTruthy();
     expect(screen.queryByText("Eats")).toBeNull();
   });
@@ -95,10 +95,10 @@ describe("CategoriesScreen", () => {
   it("defaults have no delete action; custom rows have no reset", async () => {
     const c = createCategory(mockDb, { name: "Pets", color: "#123456" });
     await render(<CategoriesScreen />);
-    expect(within(screen.getByTestId("category-row-default:other")).queryByRole("button", { name: "Delete" })).toBeNull();
+    expect(within(screen.getByTestId("category-row-default:other")).queryByRole("button", { name: /^Delete/ })).toBeNull();
     const row = within(screen.getByTestId(`category-row-${c.id}`));
-    expect(row.getByRole("button", { name: "Delete" })).toBeTruthy();
-    expect(row.queryByRole("button", { name: "Reset name" })).toBeNull();
+    expect(row.getByRole("button", { name: "Delete, Pets" })).toBeTruthy();
+    expect(row.queryByRole("button", { name: /^Reset name/ })).toBeNull();
   });
 
   it("delete confirms with the move message, then reassigns receipts", async () => {
@@ -108,7 +108,7 @@ describe("CategoriesScreen", () => {
     seed(c.id);
     await render(<CategoriesScreen />);
     expect(within(screen.getByTestId(`category-row-${c.id}`)).getByText("2 receipts")).toBeTruthy();
-    await fireEvent.press(within(screen.getByTestId(`category-row-${c.id}`)).getByRole("button", { name: "Delete" }));
+    await fireEvent.press(within(screen.getByTestId(`category-row-${c.id}`)).getByRole("button", { name: "Delete, Pets" }));
     expect(alert).toHaveBeenCalledTimes(1);
     expect(alert.mock.calls[0][1]).toBe("2 receipts move to Other.");
     expect(listCategories(mockDb).some((x) => x.id === c.id)).toBe(true);

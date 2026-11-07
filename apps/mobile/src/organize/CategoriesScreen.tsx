@@ -54,8 +54,8 @@ export function CategoriesScreen() {
   const action = (text: string, name: string, onPress: () => void, destructive = false) => (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={text}
-      accessibilityHint={name}
+      // Every row has the same actions: the name tells them apart (hints are often turned off).
+      accessibilityLabel={`${text}, ${name}`}
       onPress={onPress}
       style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: theme.spacing.sm }}
     >
