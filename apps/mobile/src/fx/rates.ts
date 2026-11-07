@@ -14,10 +14,26 @@ export class FxHttpError extends Error {
   }
 }
 
-/** Per-sync-pass state: `latest` is tried at most once and a network failure stops the pass. */
+/**
+ * Per-sync-pass state: `latest` is tried at most once and a network failure stops the pass.
+ * `fetched` collects the dates added this pass; pruning never drops them, so the reconvert at the
+ * end of the pass can use every rate the pass paid for.
+ */
 export interface FxPass {
   offline?: boolean;
   latestTried?: boolean;
+  fetched?: Set<string>;
+}
+
+/**
+ * True when `date` needs no fetch for `base`: its table is cached, or the API answered 404 for it
+ * less than 7 days ago (ensureRates would not ask again).
+ */
+export function isDateKnown(cache: FxCache, base: string, date: string, now: number): boolean {
+  if (cache.base !== base.toLowerCase()) return false;
+  if (cache.byDate[date]) return true;
+  const missedAt = cache.missingDates?.[date];
+  return missedAt !== undefined && now - missedAt <= STALE_MS;
 }
 
 export function rateUrl(base: string, date: string | "latest"): string {
@@ -51,11 +67,13 @@ export async function fetchRates(
   return { date: body.date, rates };
 }
 
-function prune(byDate: FxCache["byDate"]): FxCache["byDate"] {
+/** Keeps the newest MAX_DATES tables, plus every `keep` date (fetched in the current pass). */
+function prune(byDate: FxCache["byDate"], keep: ReadonlySet<string> = new Set()): FxCache["byDate"] {
   const keys = Object.keys(byDate).sort();
   if (keys.length <= MAX_DATES) return byDate;
   const out: FxCache["byDate"] = {};
   for (const k of keys.slice(keys.length - MAX_DATES)) out[k] = byDate[k];
+  for (const k of keep) if (byDate[k]) out[k] = byDate[k];
   return out;
 }
 
@@ -95,6 +113,7 @@ export async function ensureRates(
       try {
         const r = await fetchRates(b, date, fetchFn);
         work = { ...work, byDate: { ...work.byDate, [date]: r.rates } };
+        (pass.fetched ??= new Set()).add(date);
         changed = true;
       } catch (e) {
         if (e instanceof FxHttpError && e.status === 404) {
@@ -107,5 +126,5 @@ export async function ensureRates(
     }
   }
   if (!changed) return cache;
-  return { ...work, byDate: prune(work.byDate) };
+  return { ...work, byDate: prune(work.byDate, pass.fetched) };
 }

@@ -21,7 +21,10 @@ export function isManualRate(r: { fxRate: string | null; fxRateDate: string | nu
 /**
  * Recomputes the home-currency amount of every non-deleted receipt, except manual rates for the
  * current home. Writes (and bumps version/updatedAt) only rows whose FX columns actually change.
- * Returns rows changed.
+ * A row already converted to the same `home` is never downgraded: when the cache has no rate for
+ * it (e.g. its date was pruned) the existing conversion stays, and an exact-date conversion is not
+ * replaced by an approximate one. Fields are nulled only when the home currency changed and no
+ * rate exists for the new home. Returns rows changed.
  */
 export function reconvertAll(db: AppDb, home: string, cache: FxCache): number {
   const rows = db.select().from(receipts).where(isNull(receipts.deletedAt)).all();
@@ -36,6 +39,8 @@ export function reconvertAll(db: AppDb, home: string, cache: FxCache): number {
       } catch {
         // currency/home outside the ISO table: leave unconverted
       }
+      const convertedForHome = r.homeCurrencyAtSave === home && r.amountHomeMinor !== null;
+      if (convertedForHome && (c === null || (c.approximate && !r.fxApproximate))) continue;
       const next = {
         fxRate: c?.fxRate ?? null,
         fxRateDate: c?.fxRateDate ?? null,
@@ -78,15 +83,41 @@ export function needsReconvert(db: AppDb, home: string): boolean {
   return row !== undefined;
 }
 
-/** Distinct purchase dates (newest first, max `limit`) of foreign-currency receipts. */
-export function receiptDatesNeedingRates(db: AppDb, home: string, limit = 30): string[] {
+/**
+ * Distinct purchase dates (newest first, max `limit` per call) of foreign-currency receipts that
+ * still need work for `home` (no amount, converted for another home, or only approximate) and
+ * whose date `known` says is not cached yet. Called once per sync pass, so successive passes work
+ * through older receipts instead of re-asking for the same newest dates.
+ */
+export function receiptDatesNeedingRates(
+  db: AppDb,
+  home: string,
+  known: (date: string) => boolean = () => false,
+  limit = 30,
+): string[] {
+  const day = sql<string>`substr(${receipts.purchasedAtLocal}, 1, 10)`;
   const rows = db
-    .select({ d: sql<string>`substr(${receipts.purchasedAtLocal}, 1, 10)` })
+    .select({ d: day })
     .from(receipts)
-    .where(and(isNull(receipts.deletedAt), ne(receipts.currency, home)))
-    .groupBy(sql`substr(${receipts.purchasedAtLocal}, 1, 10)`)
-    .orderBy(desc(sql`substr(${receipts.purchasedAtLocal}, 1, 10)`))
-    .limit(limit)
+    .where(
+      and(
+        isNull(receipts.deletedAt),
+        ne(receipts.currency, home),
+        or(
+          isNull(receipts.amountHomeMinor),
+          isNull(receipts.homeCurrencyAtSave),
+          ne(receipts.homeCurrencyAtSave, home),
+          eq(receipts.fxApproximate, true),
+        ),
+      ),
+    )
+    .groupBy(day)
+    .orderBy(desc(day))
     .all();
-  return rows.map((r) => r.d);
+  const out: string[] = [];
+  for (const { d } of rows) {
+    if (out.length >= limit) break;
+    if (!known(d)) out.push(d);
+  }
+  return out;
 }

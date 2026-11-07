@@ -3,6 +3,7 @@ import { testDb } from "@/db/testing/testDb";
 import { createPrefs, type KV } from "@/prefs/prefs";
 
 import { rateUrl } from "./rates";
+import { reconvertAll } from "./reconvert";
 import { syncFx } from "./syncFx";
 
 const DAY = 86_400_000;
@@ -114,4 +115,61 @@ describe("syncFx", () => {
     await syncFx({ db, prefs, home: "EUR", now, fetchFn: fn });
     expect(getReceipt(db, r.id)).toMatchObject({ homeCurrencyAtSave: "IDR", amountHomeMinor: 24680000 });
   });
+
+  it("old receipts get converted over successive passes (30 dates per pass) after a home change", async () => {
+    const { prefs, db } = setup();
+    prefs.set("fxTables", { base: "idr", latestDate: "2026-11-01", fetchedAt: now - DAY, byDate: { "2026-11-01": { usd: "0.00005" } } });
+    const ids: string[] = [];
+    const bodies: Record<string, unknown> = { [rateUrl("EUR", "latest")]: { date: "2026-11-05", eur: { usd: 1.25 } } };
+    for (let i = 0; i < 31; i++) {
+      const d = isoDay(Date.UTC(2026, 8, 1) + i * DAY);
+      bodies[rateUrl("EUR", d)] = { date: d, eur: { usd: 1.25 } };
+      ids.push(createReceipt(db, rcpt({ purchasedAtLocal: `${d}T10:00:00`, homeCurrencyAtSave: "IDR", fxRate: "20000", amountHomeMinor: 24680000 })).id);
+    }
+    const { fn, calls } = online(bodies);
+    await syncFx({ db, prefs, home: "EUR", now, fetchFn: fn });
+    expect(calls).toHaveLength(31); // latest + 30 newest dates
+    const converted = () => ids.filter((id) => getReceipt(db, id)?.fxRateDate !== null && getReceipt(db, id)?.homeCurrencyAtSave === "EUR" && !getReceipt(db, id)?.fxApproximate);
+    expect(converted()).toHaveLength(30);
+    calls.length = 0;
+    await syncFx({ db, prefs, home: "EUR", now, fetchFn: fn });
+    expect(calls).toEqual([rateUrl("EUR", "2026-09-01")]);
+    expect(converted()).toHaveLength(31);
+    for (const id of ids) expect(getReceipt(db, id)).toMatchObject({ amountHomeMinor: 987, fxRate: "0.8" });
+    calls.length = 0;
+    await syncFx({ db, prefs, home: "EUR", now, fetchFn: fn });
+    expect(calls).toEqual([]); // converged: nothing left to fetch
+  });
+
+  it("pruning old dates never nulls receipts already converted with them", async () => {
+    const { prefs, db } = setup();
+    const byDate: Record<string, Record<string, string>> = { "2026-01-01": { usd: "0.00005" } };
+    for (let i = 0; i < 119; i++) byDate[isoDay(Date.UTC(2026, 3, 1) + i * DAY)] = { usd: "0.00004" };
+    prefs.set("fxTables", { base: "idr", latestDate: "2026-07-28", fetchedAt: now - 8 * DAY, byDate });
+    const old = createReceipt(db, rcpt({ purchasedAtLocal: "2026-01-01T10:00:00" }));
+    reconvertAll(db, "IDR", prefs.get("fxTables"));
+    const before = getReceipt(db, old.id)!;
+    expect(before).toMatchObject({ amountHomeMinor: 24680000, fxRateDate: "2026-01-01" });
+    // Stale weekly refresh adds a 121st date; the oldest (2026-01-01) is pruned.
+    const { fn } = online({ [rateUrl("IDR", "latest")]: { date: "2026-11-05", idr: { usd: 0.00005 } } });
+    await syncFx({ db, prefs, home: "IDR", now, fetchFn: fn });
+    expect(prefs.get("fxTables").byDate["2026-01-01"]).toBeUndefined();
+    expect(getReceipt(db, old.id)).toEqual(before);
+  });
+
+  it("a date older than 120 cached tables is fetched, kept through prune, and converts its receipt", async () => {
+    const { prefs, db } = setup();
+    const byDate: Record<string, Record<string, string>> = {};
+    for (let i = 0; i < 120; i++) byDate[isoDay(Date.UTC(2026, 3, 1) + i * DAY)] = { eur: "0.00006" };
+    prefs.set("fxTables", { base: "idr", latestDate: "2026-07-29", fetchedAt: now - DAY, byDate });
+    const old = createReceipt(db, rcpt({ purchasedAtLocal: "2026-01-01T10:00:00" }));
+    const { fn, calls } = online({ [rateUrl("IDR", "2026-01-01")]: { date: "2026-01-01", idr: { usd: 0.00005 } } });
+    await syncFx({ db, prefs, home: "IDR", now, fetchFn: fn });
+    expect(calls).toEqual([rateUrl("IDR", "2026-01-01")]);
+    expect(getReceipt(db, old.id)).toMatchObject({ amountHomeMinor: 24680000, fxRateDate: "2026-01-01", fxApproximate: false });
+  });
 });
+
+function isoDay(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
