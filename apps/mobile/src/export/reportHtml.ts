@@ -11,8 +11,6 @@ import { formatMoney } from "../money/money";
 import { homeLine, monthLabel, totalLine } from "../receipts/format";
 import { loadExportRows, type ExportRow } from "./rows";
 
-type T = (key: string, opts?: object) => string;
-
 export type ReportInput = {
   title: string;
   rangeLabel: string;
@@ -26,6 +24,8 @@ export type ReportInput = {
     rows: { row: ExportRow; thumbDataUri: string | null }[];
   }[];
   byCategory: { label: string; homeMinor: number }[];
+  /** Thumbnails that failed to load (rows still render without one). */
+  thumbFailures: number;
   t: (key: string, opts?: object) => string;
 };
 
@@ -109,7 +109,7 @@ export async function buildReportInput(deps: {
   filter: ReceiptFilter;
   home: string;
   locale: string;
-  t: T;
+  t: ReportInput["t"];
   includeThumbs: boolean;
   title: string;
   rangeLabel: string;
@@ -124,6 +124,7 @@ export async function buildReportInput(deps: {
   const months: ReportInput["months"] = [];
   const byMonth = new Map<string, ReportInput["months"][number]>();
   const cats = new Map<string, number>();
+  let thumbFailures = 0;
   const uncategorized = t("export.report.uncategorized");
   for (const row of rows) {
     const key = toMonth(row);
@@ -137,7 +138,16 @@ export async function buildReportInput(deps: {
       byMonth.set(key, m);
       months.push(m);
     }
-    m.rows.push({ row, thumbDataUri: deps.includeThumbs ? await thumb(db, store, row.id) : null });
+    let thumbDataUri: string | null = null;
+    if (deps.includeThumbs) {
+      try {
+        thumbDataUri = await thumb(db, store, row.id);
+      } catch (e) {
+        thumbFailures++;
+        if (typeof __DEV__ !== "undefined" && __DEV__) console.warn("report thumbnail failed", e);
+      }
+    }
+    m.rows.push({ row, thumbDataUri });
     const r = row.receipt;
     if (r.homeCurrencyAtSave === home && r.amountHomeMinor != null) {
       const label = row.category || uncategorized;
@@ -156,6 +166,7 @@ export async function buildReportInput(deps: {
     total: sumHome(db, filter, home),
     months,
     byCategory,
+    thumbFailures,
     t,
   };
 }
@@ -163,10 +174,6 @@ export async function buildReportInput(deps: {
 async function thumb(db: AppDb, store: ImageStore, receiptId: string): Promise<string | null> {
   const page = listPages(db, receiptId)[0];
   if (!page?.thumbPath) return null;
-  try {
-    const bytes = await store.readPlain(page.thumbPath);
-    return `data:image/jpeg;base64,${Buffer.from(bytes).toString("base64")}`;
-  } catch {
-    return null;
-  }
+  const bytes = await store.readPlain(page.thumbPath);
+  return `data:image/jpeg;base64,${Buffer.from(bytes).toString("base64")}`;
 }
