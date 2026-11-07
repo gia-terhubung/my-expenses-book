@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { DateField } from "./DateField";
+import { dateToLocalString } from "./dateString";
 
 // jest-expo's ios preset resolves DateField.ios.tsx; the native module is mocked here.
 let pick: ((d: Date) => void) | undefined;
@@ -27,5 +28,14 @@ describe("DateField (platform file)", () => {
     expect(screen.getByText("picker:2026")).toBeTruthy();
     pick?.(new Date(2026, 2, 29, 9, 30));
     expect(onChange).toHaveBeenCalledWith("2026-03-29");
+  });
+
+  it("empty value: shows placeholder, no picker; press writes today", async () => {
+    const onChange = jest.fn();
+    await render(<DateField label="Date" value="" onChange={onChange} placeholder="YYYY-MM-DD" />);
+    expect(screen.getByText("YYYY-MM-DD")).toBeTruthy();
+    expect(screen.queryByText(/^picker:/)).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Date" }));
+    expect(onChange).toHaveBeenCalledWith(dateToLocalString(new Date()));
   });
 });
