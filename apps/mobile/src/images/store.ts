@@ -37,6 +37,8 @@ export interface ImageStore {
   deleteFiles(paths: string[]): Promise<void>;
   /** Decrypts a page file in memory; writes nothing to disk. */
   readPlain(path: string): Promise<Uint8Array>;
+  /** Encrypts restored page bytes with the store key to a fresh `pages/<uuidv7>.enc`; returns that path. */
+  importPage(plain: Uint8Array): Promise<string>;
   /** True when the encrypted page file is present (path validated; reads nothing). */
   exists(path: string): Promise<boolean>;
   /** Deletes the decrypted view copies (cache/view/) of these pages now; missing copies are fine. */
@@ -160,6 +162,17 @@ export function createImageStore(deps: {
     async readPlain(path) {
       assertPagePath(path);
       return decryptBytes(key, await fs.read(docUri(path)));
+    },
+
+    async importPage(plain) {
+      const rel = `${PAGES}${newId()}.enc`;
+      try {
+        await writeEncrypted(rel, plain);
+      } catch (e) {
+        await removeQuietly(docUri(rel)); // no half-written file
+        throw e;
+      }
+      return rel;
     },
 
     async exists(path) {

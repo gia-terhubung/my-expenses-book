@@ -55,7 +55,12 @@ export function ImageStoreProvider({ children }: { children: ReactNode }) {
             if (__DEV__) console.warn("cleanupOrphanPages failed", e);
           },
         );
-        setStore({ ...base, savePage: async (uri) => (await sweep, base.savePage(uri)) });
+        // New page files (capture or restore) wait for the sweep so it cannot delete them unrecorded.
+        setStore({
+          ...base,
+          savePage: async (uri) => (await sweep, base.savePage(uri)),
+          importPage: async (plain) => (await sweep, base.importPage(plain)),
+        });
       },
       (e) => {
         if (!cancelled) setError(e);

@@ -201,6 +201,18 @@ describe("image store", () => {
     expect(left).not.toContain(DOC + b.imagePath);
   });
 
+  it("importPage encrypts to a fresh pages/ path that readPlain decrypts", async () => {
+    const { store, files, key } = setup();
+    const a = await store.importPage(PLAIN_PAGE);
+    const b = await store.importPage(PLAIN_PAGE);
+    expect(a).toMatch(/^pages\/[0-9a-f-]+\.enc$/);
+    expect(a).not.toBe(b);
+    const raw = files.get(DOC + a)!;
+    expect(String.fromCharCode(...raw.slice(0, 4))).toBe("MEB1");
+    expect(Array.from(decryptBytes(key, raw))).toEqual(Array.from(PLAIN_PAGE));
+    expect(Array.from(await store.readPlain(a))).toEqual(Array.from(PLAIN_PAGE));
+  });
+
   it("deleteFiles ignores missing files", async () => {
     const { store, files } = setup();
     const r = await store.savePage(CACHE + "picked.jpg");
