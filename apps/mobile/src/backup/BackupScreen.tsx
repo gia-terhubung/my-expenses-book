@@ -1,7 +1,7 @@
 import * as DocumentPicker from "expo-document-picker";
 import Constants from "expo-constants";
 import { router, type Href } from "expo-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -16,6 +16,8 @@ import { useTranslation } from "react-i18next";
 import { dateToLocalString } from "@/components/dateString";
 import { ErrorPanel } from "@/components/ErrorPanel";
 import { useDb } from "@/db/DatabaseProvider";
+import { getReceipt } from "@/db/repositories/receipts";
+import { formatMoney } from "@/money/money";
 import {
   EXPORT_DIR,
   exportFileName,
@@ -40,7 +42,6 @@ import { fileOpsSink, fileSource } from "./expoBytes";
 import { exportBackup } from "./exportBackup";
 import {
   importBackup,
-  type PossibleDuplicate,
   type RestoreMode,
 } from "./importBackup";
 import { validatePassphrase } from "./passphrase";
@@ -55,7 +56,7 @@ type Stage =
       mode: RestoreMode;
       inserted: number;
       updated: number;
-      duplicates: PossibleDuplicate[];
+      duplicates: { id: string; label: string }[];
     };
 
 type Unlockable = Awaited<ReturnType<typeof openArchive>>;
@@ -158,6 +159,7 @@ export function BackupScreen({
   const [restorePass, setRestorePass] = useState("");
   const [wrong, setWrong] = useState(false);
 
+  const fsRef = useRef(fs);
   const inflight = useRef(false);
   const pickedUri = useRef<string | null>(null);
   const firstHandle = useRef<{
@@ -170,7 +172,7 @@ export function BackupScreen({
   const passMsg =
     started && validity === "tooShort"
       ? t("backup.tooShort", { count: MIN_PASSPHRASE })
-      : validity === "mismatch"
+      : confirm.length > 0 && validity === "mismatch"
         ? t("backup.mismatch")
         : null;
 
@@ -201,7 +203,12 @@ export function BackupScreen({
       });
       const shared = uri;
       uri = null;
-      await shareFile(shared, "meb");
+      try {
+        await shareFile(shared, "meb");
+      } catch (e) {
+        await fs.remove(shared).catch(() => undefined);
+        throw e;
+      }
       prefs.set("lastBackupAt", at);
       prefs.set("receiptsSinceBackup", 0);
     } catch (e) {
@@ -237,6 +244,18 @@ export function BackupScreen({
     setRestorePass("");
     setWrong(false);
   };
+
+  useEffect(
+    () => () => {
+      const h = firstHandle.current;
+      firstHandle.current = null;
+      void h?.close().catch(() => undefined);
+      const uri = pickedUri.current;
+      pickedUri.current = null;
+      if (uri) void fsRef.current.remove(uri).catch(() => undefined);
+    },
+    [],
+  );
 
   const restoreError = (e: unknown) => {
     if (e instanceof ArchiveFormatError) setNotice(t("backup.notBackup"));
@@ -342,12 +361,26 @@ export function BackupScreen({
         mode,
         onProgress: (done, total) => setProgress({ done, total }),
       });
+      const duplicates: { id: string; label: string }[] = [];
+      for (const d of possibleDuplicates) {
+        const r = getReceipt(db, d.receiptId);
+        if (!r) continue;
+        const [y, m, day] = r.purchasedAtLocal
+          .slice(0, 10)
+          .split("-")
+          .map(Number);
+        const date = new Date(y, m - 1, day).toLocaleDateString(locale);
+        duplicates.push({
+          id: r.id,
+          label: `${r.merchant ?? t("receipts.unknownMerchant")} · ${date} · ${formatMoney(r.totalMinor, r.currency, locale)}`,
+        });
+      }
       setStage({
         kind: "done",
         mode,
         inserted: result.inserted,
         updated: result.updated,
-        duplicates: possibleDuplicates,
+        duplicates,
       });
     } catch (e) {
       setStage({ kind: "idle" });
@@ -580,14 +613,14 @@ export function BackupScreen({
                 )}
                 {stage.duplicates.map((d) => (
                   <Pressable
-                    key={d.receiptId}
-                    testID={`dup-${d.receiptId}`}
+                    key={d.id}
+                    testID={`dup-${d.id}`}
                     accessibilityRole="button"
-                    accessibilityLabel={`${d.receiptId}`}
+                    accessibilityLabel={d.label}
                     onPress={() =>
                       router.push({
                         pathname: "/document/[id]",
-                        params: { id: d.receiptId },
+                        params: { id: d.id },
                       } as unknown as Href)
                     }
                     style={{ minHeight: 48, justifyContent: "center" }}
@@ -595,7 +628,7 @@ export function BackupScreen({
                     <Text
                       style={[theme.type.body, { color: theme.colors.primary }]}
                     >
-                      {d.receiptId}
+                      {d.label}
                     </Text>
                   </Pressable>
                 ))}

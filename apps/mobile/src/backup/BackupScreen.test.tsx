@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { Alert, type AlertButton } from "react-native";
 
+import { createReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb } from "@/db/types";
 import { initI18n } from "@/i18n";
@@ -93,6 +94,32 @@ describe("backup", () => {
     expect(screen.getByText("Passphrases don't match.")).toBeTruthy();
   });
 
+  it("mismatch message waits for the confirm field", async () => {
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.changeText(screen.getByLabelText("Passphrase"), PASS);
+    expect(screen.queryByText("Passphrases don't match.")).toBeNull();
+  });
+
+  it("clears passphrase fields after an attempt", async () => {
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fill(PASS, PASS);
+    await fireEvent.press(btn("Back up now"));
+    await waitFor(() => expect(mockShare).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByLabelText("Passphrase").props.value).toBe(""));
+    expect(screen.getByLabelText("Confirm passphrase").props.value).toBe("");
+  });
+
+  it("double tap starts one export", async () => {
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fill(PASS, PASS);
+    await act(async () => {
+      fireEvent.press(btn("Back up now"));
+      fireEvent.press(btn("Back up now"));
+    });
+    await waitFor(() => expect(mockShare).toHaveBeenCalled());
+    expect(mockExport).toHaveBeenCalledTimes(1);
+  });
+
   it("shows never when no backup yet", async () => {
     mockPrefsMap.lastBackupAt = null;
     await render(<BackupScreen fs={fs} now={now} />);
@@ -116,6 +143,7 @@ describe("backup", () => {
     await fireEvent.press(btn("Back up now"));
     expect(await screen.findByText("Backup failed")).toBeTruthy();
     expect(mockSet).not.toHaveBeenCalled();
+    expect(removed).toEqual(["file:///cache/export/MyExpensesBook-backup-2026-11-07.meb"]);
   });
 
   it("export failure deletes the partial file", async () => {
@@ -167,6 +195,26 @@ describe("restore", () => {
     expect(mockSourceClose).toHaveBeenCalled();
   });
 
+  it("unmount in the choose stage deletes the picker copy", async () => {
+    mockOpen.mockResolvedValue({ header: { format: 1, encrypted: false }, unlock: mockUnlock });
+    const { unmount } = await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    await screen.findByRole("button", { name: /^Merge/ });
+    removed.length = 0;
+    await unmount();
+    await waitFor(() => expect(removed).toEqual(["file:///cache/DocumentPicker/x.meb"]));
+  });
+
+  it("unmount in the passphrase stage closes the open source", async () => {
+    const { unmount } = await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    await screen.findByLabelText("Enter the backup passphrase");
+    mockSourceClose.mockClear();
+    await unmount();
+    await waitFor(() => expect(mockSourceClose).toHaveBeenCalledTimes(1));
+    expect(removed).toEqual(["file:///cache/DocumentPicker/x.meb"]);
+  });
+
   it("refuses while a capture is in progress", async () => {
     const release = captureLease.acquire();
     await render(<BackupScreen fs={fs} now={now} />);
@@ -196,9 +244,26 @@ describe("restore", () => {
   });
 
   it("merge shows counts and duplicate rows that open the document", async () => {
+    const rec = createReceipt(mockDb, {
+      status: "confirmed",
+      merchant: "Warung Sari",
+      purchasedAtLocal: "2026-05-10T10:00:00",
+      purchasedTz: "Asia/Jakarta",
+      purchasedAtUtc: Date.UTC(2026, 4, 10),
+      scannedAtUtc: Date.UTC(2026, 4, 10),
+      currency: "IDR",
+      totalMinor: 50000,
+      homeCurrencyAtSave: "IDR",
+      amountHomeMinor: 50000,
+      parseSource: "manual",
+      folderId: null,
+    });
     mockImport.mockResolvedValue({
       result: { inserted: 3, updated: 2, kept: 0, insertedReceiptIds: [] },
-      possibleDuplicates: [{ receiptId: "r1", matchId: "m1" }],
+      possibleDuplicates: [
+        { receiptId: rec.id, matchId: "m1" },
+        { receiptId: "gone", matchId: "m2" },
+      ],
     });
     await render(<BackupScreen fs={fs} now={now} />);
     await fireEvent.press(btn("Restore from backup"));
@@ -208,8 +273,10 @@ describe("restore", () => {
     expect(await screen.findByText("Added 3, updated 2")).toBeTruthy();
     expect(mockImport.mock.calls[0][0]).toMatchObject({ mode: "merge", passphrase: PASS });
     expect(screen.getByText("Possible duplicates (1)")).toBeTruthy();
-    await fireEvent.press(screen.getByTestId("dup-r1"));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: "/document/[id]", params: { id: "r1" } });
+    expect(screen.getByText(/Warung Sari · .*500/)).toBeTruthy();
+    expect(screen.queryByTestId("dup-gone")).toBeNull();
+    await fireEvent.press(screen.getByTestId(`dup-${rec.id}`));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: "/document/[id]", params: { id: rec.id } });
     expect(removed).toEqual(["file:///cache/DocumentPicker/x.meb"]);
   });
 
