@@ -29,9 +29,17 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePrefs: () => mockPrefs,
   usePref: (k: "homeCurrency") => mockPrefs.get(k),
 }));
+// Latest usePreventRemove call: whether removal is blocked, and the blocked-removal callback.
+type PreventCallback = (o: { data: { action: unknown }; repeat: () => void }) => void;
+let mockPrevent: { prevent: boolean; cb?: PreventCallback } = { prevent: false };
+const mockDisablePrevention = jest.fn();
 jest.mock("expo-router", () => ({
   get router() {
     return mockRouter;
+  },
+  usePreventRemove: (prevent: boolean, cb?: PreventCallback) => {
+    mockPrevent = { prevent, cb };
+    return mockDisablePrevention;
   },
 }));
 
@@ -75,6 +83,7 @@ beforeEach(() => {
   mockPrefs.set("homeCurrency", "IDR");
   mockDeleted.length = 0;
   mockClosed.length = 0;
+  mockPrevent = { prevent: false };
   jest.clearAllMocks();
   appStateListener = null;
   jest.spyOn(AppState, "addEventListener").mockImplementation(((_: string, cb: AppStateListener) => {
@@ -89,6 +98,13 @@ afterEach(() => {
 });
 
 describe("useReviewForm", () => {
+  it("never blocks back (edits are already written through)", async () => {
+    const r = draft();
+    const { result } = await mount(r.id);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    expect(mockPrevent.prevent).toBe(false);
+  });
+
   it("writes edits through to the draft", async () => {
     jest.useFakeTimers();
     const r = draft();
@@ -422,6 +438,62 @@ describe("useReviewForm edit mode", () => {
     expect(mockRouter.back).toHaveBeenCalledTimes(1);
     await unmount();
     expect(getReceipt(mockDb, r.id)).toEqual(before);
+  });
+
+  it("blocks back / swipe-dismiss only while there are unsaved changes", async () => {
+    let buttons: AlertButton[] = [];
+    const alert = jest.spyOn(Alert, "alert").mockImplementation((_t, _m, b) => void (buttons = b ?? []));
+    const r = confirmed();
+    const { result } = await mountEdit(r.id);
+    expect(mockPrevent.prevent).toBe(false);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    expect(mockPrevent.prevent).toBe(true);
+
+    // A blocked back asks first; "Keep editing" stays, "Discard" continues the removal.
+    const repeat = jest.fn();
+    await act(async () => mockPrevent.cb?.({ data: { action: { type: "POP" } }, repeat }));
+    expect(alert).toHaveBeenCalledWith("Discard changes?", undefined, expect.any(Array));
+    expect(repeat).not.toHaveBeenCalled();
+    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
+    expect(repeat).toHaveBeenCalledTimes(1);
+    expect(mockPrevent.prevent).toBe(false);
+
+    // Typing the original value back means nothing to lose.
+    await act(async () => result.current.setField("merchant", "Toko Maju"));
+    expect(mockPrevent.prevent).toBe(false);
+  });
+
+  it("Save lifts the guard before it navigates back", async () => {
+    const r = confirmed();
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    expect(mockPrevent.prevent).toBe(true);
+    let disabledBeforeBack = false;
+    mockRouter.back.mockImplementationOnce(() => {
+      disabledBeforeBack = mockDisablePrevention.mock.calls.length > 0;
+    });
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    expect(disabledBeforeBack).toBe(true);
+    expect(mockPrevent.prevent).toBe(false);
+  });
+
+  it("cancel's Discard lifts the guard before it navigates back", async () => {
+    let buttons: AlertButton[] = [];
+    jest.spyOn(Alert, "alert").mockImplementation((_t, _m, b) => void (buttons = b ?? []));
+    const r = confirmed();
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    await act(async () => result.current.cancel());
+    let disabledBeforeBack = false;
+    mockRouter.back.mockImplementationOnce(() => {
+      disabledBeforeBack = mockDisablePrevention.mock.calls.length > 0;
+    });
+    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    expect(disabledBeforeBack).toBe(true);
   });
 
   it("treats a draft or unknown id as missing", async () => {

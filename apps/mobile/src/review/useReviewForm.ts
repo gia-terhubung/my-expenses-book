@@ -1,4 +1,4 @@
-import { router, type Href } from "expo-router";
+import { router, usePreventRemove, type Href } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, AppState } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -96,6 +96,10 @@ function pageHashes(pages: ReceiptPage[]): string[] {
   return pages.flatMap((p) => (p.dhash ? [p.dhash] : []));
 }
 
+function hasChanges(v: ReviewValues, initial: ReviewValues): boolean {
+  return (Object.keys(initial) as ReviewField[]).some((k) => v[k] !== initial[k]);
+}
+
 /** Opens the next queued draft, or closes the review flow. */
 export function goNext(queue: string[]): void {
   const [next, ...rest] = queue;
@@ -152,7 +156,8 @@ export async function discardReceipt(
  * Edit mode (a confirmed receipt): no write-through and no duplicate check; `save` validates and
  * writes the same patch in one update, status stays confirmed, then goes back. FX is recomputed
  * only when currency, total, date or the manual rate changed, or the row is not converted for
- * the current home.
+ * the current home. Leaving with unsaved changes (Cancel, Android back, iOS swipe-dismiss) asks
+ * "Discard changes?" first.
  */
 export function useReviewForm(
   id: string,
@@ -183,6 +188,8 @@ export function useReviewForm(
   const [errors, setErrors] = useState<ReviewErrors>({});
   const [fxCache, setFxCache] = useState<FxCache>(() => prefs.get("fxTables"));
   const [busy, setBusy] = useState(false);
+  // Set once leaving is decided (saved, or changes discarded): lifts the back / swipe guard.
+  const [leaving, setLeaving] = useState(false);
 
   // Latest state for timers / AppState / unmount callbacks.
   const valuesRef = useRef(values);
@@ -278,6 +285,28 @@ export function useReviewForm(
 
   const fx = useMemo(() => previewFx(values, home, fxCache), [values, home, fxCache]);
 
+  /** Edit mode: asks "Discard changes?" and calls `leave` on Discard. */
+  const confirmDiscard = useCallback(
+    (leave: () => void) => {
+      Alert.alert(t("review.discardChangesTitle"), undefined, [
+        { text: t("review.keepEditing"), style: "cancel" },
+        {
+          text: t("review.discard"),
+          style: "destructive",
+          onPress: () => {
+            setLeaving(true);
+            leave();
+          },
+        },
+      ]);
+    },
+    [t],
+  );
+
+  // Edit mode: Android back and iOS swipe-dismiss ask before dropping unsaved changes, like Cancel.
+  const changed = editing && hasChanges(values, initialValues);
+  const disablePrevention = usePreventRemove(changed && !leaving, ({ repeat }) => confirmDiscard(repeat));
+
   const save = useCallback(async () => {
     const r = receiptRef.current;
     if (!r || inFlight.current) return;
@@ -323,9 +352,12 @@ export function useReviewForm(
       inFlight.current = false;
       setBusy(false);
     }
-    if (editing) router.back();
-    else goNext(queueRef.current);
-  }, [db, editing, flush, home, initialValues, prefs]);
+    if (editing) {
+      setLeaving(true);
+      disablePrevention(); // Save's own navigation must not hit the unsaved-changes guard
+      router.back();
+    } else goNext(queueRef.current);
+  }, [db, disablePrevention, editing, flush, home, initialValues, prefs]);
 
   const discard = useCallback(async () => {
     const r = receiptRef.current;
@@ -347,18 +379,16 @@ export function useReviewForm(
 
   const cancel = useCallback(() => {
     if (inFlight.current) return;
-    const v = valuesRef.current;
-    const changed = (Object.keys(initialValues) as ReviewField[]).some((k) => v[k] !== initialValues[k]);
     // Review mode writes through as you type, so leaving never loses anything there.
-    if (!editing || !changed) {
+    if (!editing || !hasChanges(valuesRef.current, initialValues)) {
       router.back();
       return;
     }
-    Alert.alert(t("review.discardChangesTitle"), undefined, [
-      { text: t("review.keepEditing"), style: "cancel" },
-      { text: t("review.discard"), style: "destructive", onPress: () => router.back() },
-    ]);
-  }, [editing, initialValues, t]);
+    confirmDiscard(() => {
+      disablePrevention();
+      router.back();
+    });
+  }, [confirmDiscard, disablePrevention, editing, initialValues]);
 
   return { mode, receipt, pages, values, setField, lowConfidence, duplicates, errors, home, fx, busy, save, discard, cancel };
 }

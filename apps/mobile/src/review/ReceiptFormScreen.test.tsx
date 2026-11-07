@@ -35,6 +35,7 @@ jest.mock("expo-router", () => ({
     return mockRouter;
   },
   useLocalSearchParams: () => mockParams,
+  usePreventRemove: () => () => undefined,
 }));
 
 // Mount counters around the real fields and page viewer: a remount on fold would drop focus,
