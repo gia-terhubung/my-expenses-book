@@ -1,4 +1,4 @@
-import { router, useFocusEffect, type Href } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams, type Href } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,8 +9,10 @@ import { pendingCaptures } from "@/capture/pendingCapture";
 import { useDb } from "@/db/DatabaseProvider";
 import { listDraftIds } from "@/db/repositories/receipts";
 import { EmptyState } from "@/layout/EmptyState";
+import { useWindowClass } from "@/layout/useWindowClass";
 import { useWhenUnobscured } from "@/lock/useWhenUnobscured";
 import { usePref } from "@/prefs/PrefsProvider";
+import { feedFabVisible } from "@/receipts/feedFab";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { TotalsHeader } from "@/receipts/TotalsHeader";
 import { createManualDraft } from "@/review/manualDraft";
@@ -29,6 +31,8 @@ export default function ReceiptsScreen() {
   const feedFilter = useMemo(() => ({}), []);
   const home = usePref("homeCurrency") ?? "USD";
   const [sheet, setSheet] = useState(false);
+  const windowClass = useWindowClass();
+  const { selected } = useLocalSearchParams<{ selected?: string }>();
   const afterUnlock = useWhenUnobscured();
   // Drafts left unreviewed (closed with "Review later", app killed mid-run) stay reachable.
   const [drafts, setDrafts] = useState<string[]>([]);
@@ -86,17 +90,19 @@ export default function ReceiptsScreen() {
         // The header spacer above already applies the top inset.
         empty={<EmptyState title={t("tabs.receipts")} message={t("empty.receipts")} topInset={false} />}
       />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t("capture.add")}
-        onPress={() => setSheet(true)}
-        style={({ pressed }) => [
-          styles.fab,
-          { backgroundColor: theme.colors.primary, right: theme.spacing.xl, bottom: theme.spacing.xl, opacity: pressed ? 0.85 : 1 },
-        ]}
-      >
-        <Text style={[styles.plus, { color: theme.colors.onPrimary }]}>+</Text>
-      </Pressable>
+      {feedFabVisible(windowClass, selected) ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("capture.add")}
+          onPress={() => setSheet(true)}
+          style={({ pressed }) => [
+            styles.fab,
+            { backgroundColor: theme.colors.primary, right: theme.spacing.xl, bottom: theme.spacing.xl, opacity: pressed ? 0.85 : 1 },
+          ]}
+        >
+          <Text style={[styles.plus, { color: theme.colors.onPrimary }]}>+</Text>
+        </Pressable>
+      ) : null}
       <CaptureSheet visible={sheet} onClose={() => setSheet(false)} onChoose={(m) => void start(m)} />
     </>
   );

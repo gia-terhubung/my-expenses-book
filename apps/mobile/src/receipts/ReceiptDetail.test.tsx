@@ -167,4 +167,10 @@ describe("ReceiptDetail", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Back" }));
     expect(onBack).toHaveBeenCalled();
   });
+
+  it("no back control without onBack (route header owns back)", async () => {
+    const r = seed();
+    await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
+    expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+  });
 });
