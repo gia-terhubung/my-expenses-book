@@ -247,5 +247,20 @@
       "lastTaxYear": "Año fiscal pasado",
       "custom": "Rango personalizado"
     }
+  },
+  "export": {
+    "report": {
+      "title": "Informe de recibos",
+      "date": "Fecha",
+      "merchant": "Comercio",
+      "category": "Categoría",
+      "amount": "Importe",
+      "homeAmount": "Importe en moneda local",
+      "generated": "Generado",
+      "total": "Total",
+      "receipts": "Recibos",
+      "byCategory": "Por categoría",
+      "uncategorized": "Sin categoría"
+    }
   }
 }

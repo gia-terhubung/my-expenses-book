@@ -247,5 +247,20 @@
       "lastTaxYear": "Last tax year",
       "custom": "Custom range"
     }
+  },
+  "export": {
+    "report": {
+      "title": "Receipts report",
+      "date": "Date",
+      "merchant": "Merchant",
+      "category": "Category",
+      "amount": "Amount",
+      "homeAmount": "Home amount",
+      "generated": "Generated",
+      "total": "Total",
+      "receipts": "Receipts",
+      "byCategory": "By category",
+      "uncategorized": "Uncategorized"
+    }
   }
 }

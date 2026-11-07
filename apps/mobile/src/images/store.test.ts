@@ -252,3 +252,19 @@ describe("image store", () => {
     expect([...files.keys()].filter((k) => k.startsWith(DOC))).toEqual([]);
   });
 });
+
+describe("readPlain", () => {
+  it("returns original bytes, writes nothing", async () => {
+    const { store, files } = setup();
+    const r = await store.savePage(CACHE + "picked.jpg");
+    const before = new Set(files.keys());
+    const bytes = await store.readPlain(r.thumbPath);
+    expect(Array.from(bytes)).toEqual(Array.from(PLAIN_THUMB));
+    expect(new Set(files.keys())).toEqual(before);
+  });
+
+  it("rejects an invalid path", async () => {
+    const { store } = setup();
+    await expect(store.readPlain("../x.enc")).rejects.toThrow(/Invalid page path/);
+  });
+});

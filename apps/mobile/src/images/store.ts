@@ -34,6 +34,8 @@ export interface ImageStore {
   savePage(srcUri: string): Promise<SavedPage>;
   openForView(path: string): Promise<string>;
   deleteFiles(paths: string[]): Promise<void>;
+  /** Decrypts a page file in memory; writes nothing to disk. */
+  readPlain(path: string): Promise<Uint8Array>;
   /** Deletes the decrypted view copies (cache/view/) of these pages now; missing copies are fine. */
   closeViews(paths: string[]): Promise<void>;
   /** `keepCaptureWork`: a capture is running (capture lease held), so only the view dir goes. */
@@ -150,6 +152,11 @@ export function createImageStore(deps: {
       const out = viewUri(path);
       await fs.write(out, plain);
       return out;
+    },
+
+    async readPlain(path) {
+      assertPagePath(path);
+      return decryptBytes(key, await fs.read(docUri(path)));
     },
 
     async closeViews(paths) {

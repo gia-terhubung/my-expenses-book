@@ -247,5 +247,20 @@
       "lastTaxYear": "Tahun pajak lalu",
       "custom": "Rentang kustom"
     }
+  },
+  "export": {
+    "report": {
+      "title": "Laporan struk",
+      "date": "Tanggal",
+      "merchant": "Toko",
+      "category": "Kategori",
+      "amount": "Jumlah",
+      "homeAmount": "Jumlah mata uang utama",
+      "generated": "Dibuat",
+      "total": "Total",
+      "receipts": "Struk",
+      "byCategory": "Per kategori",
+      "uncategorized": "Tanpa kategori"
+    }
   }
 }

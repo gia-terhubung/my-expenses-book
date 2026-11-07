@@ -247,5 +247,20 @@
       "lastTaxYear": "Ano fiscal passado",
       "custom": "Período personalizado"
     }
+  },
+  "export": {
+    "report": {
+      "title": "Relatório de recibos",
+      "date": "Data",
+      "merchant": "Estabelecimento",
+      "category": "Categoria",
+      "amount": "Valor",
+      "homeAmount": "Valor na moeda principal",
+      "generated": "Gerado em",
+      "total": "Total",
+      "receipts": "Recibos",
+      "byCategory": "Por categoria",
+      "uncategorized": "Sem categoria"
+    }
   }
 }

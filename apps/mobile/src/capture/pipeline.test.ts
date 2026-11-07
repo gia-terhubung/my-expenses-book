@@ -58,6 +58,9 @@ function fakeImages() {
       return p;
     },
     async closeViews() {},
+    async readPlain() {
+      return new Uint8Array();
+    },
     async deleteFiles(paths: string[]) {
       paths.forEach((p) => encrypted.delete(p));
     },
