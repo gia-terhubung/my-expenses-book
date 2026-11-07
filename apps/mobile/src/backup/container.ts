@@ -9,7 +9,7 @@ import {
   ArchiveVersionError,
   WrongPassphraseError,
 } from "./errors";
-import { DEFAULT_KDF, type KdfParams, MIN_PASSPHRASE, SCRYPT_MAXMEM, deriveArchiveKey } from "./kdf";
+import { DEFAULT_KDF, type KdfParams, MIN_PASSPHRASE, SCRYPT_MAXMEM, deriveArchiveKey, passphraseLength } from "./kdf";
 
 export interface ByteSink {
   write(b: Uint8Array): Promise<void>;
@@ -67,6 +67,8 @@ function assertManifest(m: unknown): asserts m is { pageNames: string[]; schemaV
   }
 }
 
+// Close ownership: the writer's finish() closes the sink on success only; the caller owns
+// sink.close() on error paths. The reader never closes the source; the caller always does.
 export async function createArchiveWriter(
   sink: ByteSink,
   opts: { passphrase: string | null },
@@ -76,7 +78,7 @@ export async function createArchiveWriter(
   if (opts.passphrase === null) {
     header = { format: FORMAT, encrypted: false };
   } else {
-    if (opts.passphrase.normalize("NFC").length < MIN_PASSPHRASE) {
+    if (passphraseLength(opts.passphrase) < MIN_PASSPHRASE) {
       throw new Error(`Passphrase must be at least ${MIN_PASSPHRASE} characters`);
     }
     const kdf: KdfParams = {
@@ -90,6 +92,7 @@ export async function createArchiveWriter(
   const headerBytes = utf8(JSON.stringify(header));
   await sink.write(concat(utf8(MAGIC), new Uint8Array([FORMAT]), u32(headerBytes.length), headerBytes));
 
+  let snapshotWritten = false;
   let stage: "manifest" | "snapshot" | "pages" | "done" = "manifest";
   let listed: Set<string> = new Set();
   const written = new Set<string>();
@@ -112,6 +115,7 @@ export async function createArchiveWriter(
       if (stage !== "snapshot") throw new Error("snapshot must follow the manifest, once");
       await record(T_SNAPSHOT, utf8(JSON.stringify(json)));
       stage = "pages";
+      snapshotWritten = true;
     },
     async page(name, bytes) {
       if (stage !== "pages") throw new Error("pages must follow the snapshot");
@@ -126,6 +130,8 @@ export async function createArchiveWriter(
     },
     async finish() {
       if (stage === "done") return;
+      if (stage === "manifest" || !snapshotWritten) throw new Error("manifest and snapshot are required");
+      if (written.size !== listed.size) throw new Error("not every manifest page was written");
       stage = "done";
       await sink.close();
     },
@@ -157,6 +163,20 @@ export async function openArchive(
   }
   const header = parseHeader(parsed);
 
+  type Rec = { type: number; plain: Uint8Array };
+  // Reads one record; returns null at clean EOF on a record boundary.
+  const nextRecord = async (): Promise<{ type: number; plain: Uint8Array } | null> => {
+    const t = await source.read(1);
+    if (t.length === 0) return null;
+    const lenB = await readExact(4, "record length");
+    const len = new DataView(lenB.buffer, lenB.byteOffset, 4).getUint32(0);
+    if (len > MAX_RECORD) throw new ArchiveFormatError("record too large");
+    const payload = await readExact(len, "record");
+    return { type: t[0], plain: payload };
+  };
+  // The first record is read once and cached so a failed unlock can be retried.
+  let firstRecord: Promise<Rec | null> | null = null;
+
   async function unlock(passphrase: string | null): Promise<ArchiveReader> {
     let key: Uint8Array | null = null;
     if (header.encrypted) {
@@ -164,19 +184,10 @@ export async function openArchive(
       key = await deriveArchiveKey(passphrase, header.kdf);
     }
 
-    // Reads one record; returns null at clean EOF on a record boundary.
-    const nextRecord = async (): Promise<{ type: number; plain: Uint8Array } | null> => {
-      const t = await source.read(1);
-      if (t.length === 0) return null;
-      const lenB = await readExact(4, "record length");
-      const len = new DataView(lenB.buffer, lenB.byteOffset, 4).getUint32(0);
-      if (len > MAX_RECORD) throw new ArchiveFormatError("record too large");
-      const payload = await readExact(len, "record");
-      return { type: t[0], plain: payload };
-    };
     const open = (payload: Uint8Array, first: boolean): Uint8Array => {
       if (!key) return payload;
       if (payload.length < MIN_ENCRYPTED) throw new ArchiveFormatError("record too short");
+      if (text(payload.slice(0, 4)) !== "MEB1") throw new ArchiveFormatError("record is not encrypted");
       try {
         return decryptBytes(key, payload);
       } catch (e) {
@@ -197,7 +208,8 @@ export async function openArchive(
       }
     };
 
-    const first = await nextRecord();
+    firstRecord ??= nextRecord();
+    const first = await firstRecord;
     if (!first || first.type !== T_MANIFEST) throw new ArchiveFormatError("missing manifest");
     const manifest = parseJson(open(first.plain, true), "manifest");
     assertManifest(manifest);

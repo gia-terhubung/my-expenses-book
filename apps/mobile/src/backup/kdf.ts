@@ -21,3 +21,6 @@ export function deriveArchiveKey(passphrase: string, params: KdfParams): Promise
     );
   });
 }
+
+/** Passphrase length in code points of the NFC form (what the KDF actually consumes). */
+export const passphraseLength = (p: string) => [...p.normalize("NFC")].length;

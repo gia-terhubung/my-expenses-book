@@ -55,13 +55,13 @@ const manifest = (pageNames: string[]) => ({
 const NAMES = ["a-1.enc", "b-2.enc", "c-3.enc"];
 const pagesData = NAMES.map((n, i) => ({ name: n, bytes: new Uint8Array([i, i + 1, 255, 0, 7]) }));
 
-async function build(passphrase: string | null, names = NAMES, pages = pagesData) {
+async function build(passphrase: string | null, names = NAMES, pages = pagesData, finish = true) {
   const m = memSink();
   const w = await createArchiveWriter(m.sink, { passphrase });
   await w.manifest(manifest(names));
   await w.snapshot({ rows: [{ id: "r1" }] });
   for (const p of pages) await w.page(p.name, p.bytes);
-  await w.finish();
+  if (finish) await w.finish();
   return m;
 }
 
@@ -202,7 +202,7 @@ describe("malformed input", () => {
   });
 
   it("manifest lists 3 pages, archive holds 2", async () => {
-    const m = await build(null, NAMES, pagesData.slice(0, 2));
+    const m = await build(null, NAMES, pagesData.slice(0, 2), false); // writer.finish() would refuse
     await expect(readAll(m.bytes(), null)).rejects.toBeInstanceOf(ArchiveIncompleteError);
   });
 
@@ -271,5 +271,79 @@ describe("writer misuse", () => {
     const w = await createArchiveWriter(memSink().sink, { passphrase: null });
     await expect(w.manifest(manifest(["../x.enc"]))).rejects.toBeInstanceOf(ArchiveFormatError);
     await expect(w.manifest(manifest(["x.png"]))).rejects.toBeInstanceOf(ArchiveFormatError);
+  });
+});
+
+describe("fix round 1", () => {
+  it("wrong passphrase then correct passphrase on same handle", async () => {
+    const m = await build(PASS);
+    const a = await openArchive(memSource(m.bytes()));
+    await expect(a.unlock("wrong-passphrase")).rejects.toBeInstanceOf(WrongPassphraseError);
+    const r = await a.unlock(PASS);
+    expect(await r.manifest()).toEqual(manifest(NAMES));
+    expect(await r.snapshot()).toEqual({ rows: [{ id: "r1" }] });
+    const names: string[] = [];
+    for await (const p of r.pages()) names.push(p.name);
+    expect(names).toEqual(NAMES);
+  });
+
+  it("finish() requires manifest, snapshot and every listed page", async () => {
+    const w0 = await createArchiveWriter(memSink().sink, { passphrase: null });
+    await expect(w0.finish()).rejects.toThrow();
+    const w1 = await createArchiveWriter(memSink().sink, { passphrase: null });
+    await w1.manifest(manifest(["a-1.enc"]));
+    await expect(w1.finish()).rejects.toThrow();
+    await w1.snapshot({});
+    await expect(w1.finish()).rejects.toThrow();
+    await w1.page("a-1.enc", new Uint8Array(1));
+    await expect(w1.finish()).resolves.toBeUndefined();
+  });
+
+  it("manifest without MEB1 prefix in encrypted archive -> format error, not wrong passphrase", async () => {
+    const b = Buffer.from((await build(PASS)).bytes());
+    const off = 9 + b.readUInt32BE(5);
+    b[off + 5] = 0x58; // corrupt first magic byte
+    const a = await openArchive(memSource(new Uint8Array(b)));
+    await expect(a.unlock(PASS)).rejects.toBeInstanceOf(ArchiveFormatError);
+  });
+
+  it("passphrase length counts NFC code points", async () => {
+    // 7 astral code points = 14 UTF-16 units: must still be rejected.
+    const seven = "\u{1F600}".repeat(7);
+    await expect(createArchiveWriter(memSink().sink, { passphrase: seven })).rejects.toThrow();
+  });
+
+  it("source stays closable after a reader error", async () => {
+    const src = memSource(new Uint8Array(0));
+    await expect(openArchive(src)).rejects.toBeInstanceOf(ArchiveFormatError);
+    await expect(src.close()).resolves.toBeUndefined();
+    expect(src.closed).toBe(true);
+  });
+
+  it("hostile kdf params -> format error", async () => {
+    const mk = (kdf: object) => {
+      const h = Buffer.from(JSON.stringify({ format: 1, encrypted: true, kdf }));
+      const len = Buffer.alloc(4);
+      len.writeUInt32BE(h.length);
+      return new Uint8Array(Buffer.concat([Buffer.from("MEBA"), Buffer.from([1]), len, h]));
+    };
+    const salt = "00112233445566778899aabbccddeeff";
+    await expect(
+      openArchive(memSource(mk({ name: "scrypt", N: 1000, r: 8, p: 1, salt }))),
+    ).rejects.toBeInstanceOf(ArchiveFormatError);
+    await expect(
+      openArchive(memSource(mk({ name: "scrypt", N: 1 << 20, r: 8, p: 1, salt }))),
+    ).rejects.toBeInstanceOf(ArchiveFormatError);
+  });
+
+  it("truncated encrypted archive -> format error", async () => {
+    const b = (await build(PASS)).bytes();
+    const a = await openArchive(memSource(b.slice(0, b.length - 5)));
+    const r = await a.unlock(PASS);
+    await expect(
+      (async () => {
+        for await (const p of r.pages()) void p;
+      })(),
+    ).rejects.toBeInstanceOf(ArchiveFormatError);
   });
 });
