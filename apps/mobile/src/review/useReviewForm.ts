@@ -347,6 +347,8 @@ export function useReviewForm(
       }
       // Edit: same columns, status untouched (stays confirmed).
       updateReceipt(db, r.id, editing ? patch : { ...patch, status: "confirmed" });
+      // Only after the write committed (a throw above skips this); edits are not new receipts.
+      if (!editing) prefs.set("receiptsSinceBackup", prefs.get("receiptsSinceBackup") + 1);
       receiptRef.current = null; // saved: no write-through (and no second save) after this point
     } finally {
       inFlight.current = false;

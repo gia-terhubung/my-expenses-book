@@ -311,6 +311,10 @@
     }
   },
   "backup": {
+    "reminder_one": "{{count}} recibo desde o último backup",
+    "reminder_other": "{{count}} recibos desde o último backup",
+    "reminderNow": "Fazer backup",
+    "reminderLater": "Depois",
     "title": "Backup e restauração",
     "backupHeading": "Backup",
     "restoreHeading": "Restaurar",

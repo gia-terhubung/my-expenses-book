@@ -4,6 +4,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { BackupReminder } from "@/backup/BackupReminder";
 import { CaptureSheet, pickPhotos, scanPages, type CaptureChoice } from "@/capture/CaptureSheet";
 import { pendingCaptures } from "@/capture/pendingCapture";
 import { useDb } from "@/db/DatabaseProvider";
@@ -85,6 +86,7 @@ export default function ReceiptsScreen() {
                 </Text>
               </Pressable>
             ) : null}
+            <BackupReminder />
           </>
         }
         // The header spacer above already applies the top inset.

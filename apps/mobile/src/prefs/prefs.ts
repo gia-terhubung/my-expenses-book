@@ -25,6 +25,8 @@ export interface Prefs {
   onboardingStep: OnboardingStep;
   lastBackupAt: number | null;
   receiptsSinceBackup: number;
+  /** Epoch ms until which the backup reminder is snoozed. */
+  backupReminderSnoozedUntil: number | null;
   /** 1-12 */
   taxYearStartMonth: number;
   /**
@@ -49,6 +51,7 @@ export const PREF_DEFAULTS: Prefs = {
   onboardingStep: "language",
   lastBackupAt: null,
   receiptsSinceBackup: 0,
+  backupReminderSnoozedUntil: null,
   taxYearStartMonth: 1,
   fxTables: { base: "", latestDate: null, fetchedAt: null, byDate: {} },
 };

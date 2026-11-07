@@ -311,6 +311,10 @@
     }
   },
   "backup": {
+    "reminder_one": "{{count}} struk sejak cadangan terakhir",
+    "reminder_other": "{{count}} struk sejak cadangan terakhir",
+    "reminderNow": "Cadangkan",
+    "reminderLater": "Nanti",
     "title": "Cadangan & pemulihan",
     "backupHeading": "Cadangkan",
     "restoreHeading": "Pulihkan",

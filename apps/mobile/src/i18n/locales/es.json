@@ -311,6 +311,10 @@
     }
   },
   "backup": {
+    "reminder_one": "{{count}} recibo desde tu última copia",
+    "reminder_other": "{{count}} recibos desde tu última copia",
+    "reminderNow": "Copiar",
+    "reminderLater": "Después",
     "title": "Copia de seguridad y restauración",
     "backupHeading": "Copia de seguridad",
     "restoreHeading": "Restaurar",

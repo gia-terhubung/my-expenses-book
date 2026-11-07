@@ -4,7 +4,7 @@ import { Alert, AppState, type AlertButton } from "react-native";
 import { createFolder } from "@/db/repositories/folders";
 
 import { createPage, listPages } from "@/db/repositories/pages";
-import { createReceipt, getReceipt } from "@/db/repositories/receipts";
+import { createReceipt, getReceipt, softDeleteReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb, NewReceiptInput } from "@/db/types";
 import { initI18n } from "@/i18n";
@@ -295,6 +295,53 @@ describe("useReviewForm", () => {
       await result.current.save();
     });
     expect(getReceipt(mockDb, r.id)).toMatchObject({ status: "confirmed", folderId: folder.id });
+  });
+});
+
+describe("useReviewForm backup counter", () => {
+  it("increments receiptsSinceBackup when a draft is confirmed", async () => {
+    const r = draft();
+    const { result } = await mount(r.id);
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)?.status).toBe("confirmed");
+    expect(mockPrefs.get("receiptsSinceBackup")).toBe(1);
+  });
+
+  it("does not increment on a failed save", async () => {
+    const r = draft({
+      totalMinor: 0,
+      parseSource: "manual",
+      parseConfidence: JSON.stringify({ merchant: 0, date: 0, total: 0, tax: 0, currency: 0, category: 0 }),
+    });
+    const { result } = await mount(r.id);
+    await act(async () => {
+      await result.current.save().catch(() => undefined);
+    });
+    expect(mockPrefs.get("receiptsSinceBackup")).toBe(0);
+  });
+
+  it("does not increment when the write throws", async () => {
+    const r = draft();
+    const { result } = await mount(r.id);
+    // The row vanishes before save: updateReceipt throws "Receipt not found".
+    softDeleteReceipt(mockDb, r.id);
+    await act(async () => {
+      await result.current.save().catch(() => undefined);
+    });
+    expect(mockPrefs.get("receiptsSinceBackup")).toBe(0);
+  });
+
+  it("does not increment when saving in edit mode", async () => {
+    const r = draft({ status: "confirmed", amountHomeMinor: 2500000 });
+    const { result } = await renderHook(() => useReviewForm(r.id, { mode: "edit" }));
+    await act(async () => result.current.setField("merchant", "X"));
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)?.merchant).toBe("X");
+    expect(mockPrefs.get("receiptsSinceBackup")).toBe(0);
   });
 });
 
