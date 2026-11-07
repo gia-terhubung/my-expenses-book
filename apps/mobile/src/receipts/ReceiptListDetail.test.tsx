@@ -32,6 +32,34 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockParams,
 }));
 
+// Mount counters around the real list and detail: a remount would reset scroll offset, loaded
+// window and in-progress detail state.
+const mockMounts = { list: 0, detail: 0 };
+jest.mock("./ReceiptList", () => {
+  const { useEffect } = jest.requireActual("react");
+  const actual = jest.requireActual("./ReceiptList");
+  return {
+    ReceiptList: (props: object) => {
+      useEffect(() => {
+        mockMounts.list += 1;
+      }, []);
+      return actual.ReceiptList(props);
+    },
+  };
+});
+jest.mock("./ReceiptDetail", () => {
+  const { useEffect } = jest.requireActual("react");
+  const actual = jest.requireActual("./ReceiptDetail");
+  return {
+    ReceiptDetail: (props: object) => {
+      useEffect(() => {
+        mockMounts.detail += 1;
+      }, []);
+      return actual.ReceiptDetail(props);
+    },
+  };
+});
+
 function seed(merchant: string, local: string) {
   return createReceipt(mockDb, {
     status: "confirmed",
@@ -58,6 +86,8 @@ beforeEach(() => {
   mockDb = testDb();
   mockParams = {};
   mockClass = "compact";
+  mockMounts.list = 0;
+  mockMounts.detail = 0;
   jest.clearAllMocks();
 });
 
@@ -151,5 +181,23 @@ describe("ReceiptListDetail", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() => expect(mockRouter.setParams).toHaveBeenCalledWith({ selected: undefined }));
     alert.mockRestore();
+  });
+
+  it("fold/unfold keeps the same list and detail instances (no remount)", async () => {
+    mockClass = "expanded";
+    const a = seed("Alpha", "2026-11-03T10:00:00");
+    mockParams = { selected: a.id };
+    const view = await render(ui());
+    mockClass = "compact";
+    await view.rerender(ui());
+    mockClass = "expanded";
+    await view.rerender(ui());
+    mockClass = "compact";
+    await view.rerender(ui());
+    // Back from the folded detail shows the list again.
+    mockParams = {};
+    await view.rerender(ui());
+    expect(screen.getByText("Alpha")).toBeTruthy();
+    expect(mockMounts).toEqual({ list: 1, detail: 1 });
   });
 });
