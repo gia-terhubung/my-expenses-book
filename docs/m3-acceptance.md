@@ -9,7 +9,7 @@ Date: 2026-11-07. Branch feat/m3-organize. Status key: PASS / FAIL / OWNER-PENDI
 | `npx jest --maxWorkers=2` | Test Suites: 82 passed, 82 total. Tests: 570 passed, 570 total (includes `src/dev/seed.test.ts`: 500 seeded, 12+ months, unconverted rows, paging 500 rows at limit 50 under 2 s) | PASS |
 | `npx tsc --noEmit` | no output, exit 0 | PASS |
 | `npm run check:pii` | ok: 68 dump tokens checked against fixtures, none found | PASS |
-| Android EAS development build | Build fd79f317-fa1f-47c4-8fa7-5deac7111dfd, account gia-terhubung. Re-checked 2026-11-07 in the final fix wave with `npx eas-cli build:view fd79f317-fa1f-47c4-8fa7-5deac7111dfd` (apps/mobile): status "in progress", started 11/7/2026 8:34:50 PM, Application Archive URL not yet available. Poll the same command for the final status and APK link. The build is from commit bbf6f87; it is a development client, so the later JS fixes load from Metro and do not need a new build. Build page: https://expo.dev/accounts/gia-terhubung/projects/my-expenses-book/builds/fd79f317-fa1f-47c4-8fa7-5deac7111dfd) | PENDING (still in progress at the final fix wave, one build only) |
+| Android EAS development build | Build fd79f317-fa1f-47c4-8fa7-5deac7111dfd, profile development, account gia-terhubung. Started 11/7/2026 8:34:50 PM, finished 8:55:56 PM. APK: https://expo.dev/artifacts/eas/knfV5qV_WGiYSD_MHtdQpiNW4vJJiDhYguTQA41k-Lw.apk . Build page: https://expo.dev/accounts/gia-terhubung/projects/my-expenses-book/builds/fd79f317-fa1f-47c4-8fa7-5deac7111dfd . EAS records commit bbf6f87. No native config (package.json, app.json, eas.json, lockfiles, plugins) changed between bbf6f87 and the branch head. This is a development client, so it loads JS from Metro: run it against the dev server to test the fix-wave JS. | PASS (compile); runtime OWNER-PENDING |
 
 M2 carry-overs closed in M3 (see `docs/m2-followups.md`): FX cache clobber race (bbf6f87), capture cancelWork double back (bbf6f87), native date picker (1d87ae7, 6891d7e), aggregates constraint (6146d5a).
 
@@ -81,4 +81,4 @@ All OWNER-PENDING rows of `docs/m2-acceptance.md` remain open and block M2 sign-
 
 ## 8. Summary
 
-Host checks PASS. Seed added and tested. Simulator evidence BLOCKED (boot stall, no tap tooling). Android build: PENDING (still in progress when re-checked in the final fix wave; no APK link yet, one build only). All device rows OWNER-PENDING.
+Host checks PASS. Seed added and tested. Simulator evidence BLOCKED (boot stall, no tap tooling). Android build fd79f317: PASS (compile, finished 8:55:56 PM; APK https://expo.dev/artifacts/eas/knfV5qV_WGiYSD_MHtdQpiNW4vJJiDhYguTQA41k-Lw.apk ; build page https://expo.dev/accounts/gia-terhubung/projects/my-expenses-book/builds/fd79f317-fa1f-47c4-8fa7-5deac7111dfd). Runtime OWNER-PENDING. All device rows OWNER-PENDING.
