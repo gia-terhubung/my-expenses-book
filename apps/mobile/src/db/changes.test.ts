@@ -39,7 +39,7 @@ describe("data change emitter", () => {
     let rid = "";
     let fid = "";
     step(() => {
-      rid = createReceipt(db, input).id;
+      rid = createReceipt(db, { ...input, status: "confirmed" }).id;
     });
     step(() => updateReceipt(db, rid, { notes: "x" }));
     step(() => softDeleteReceipt(db, rid));

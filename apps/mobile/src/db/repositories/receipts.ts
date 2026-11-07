@@ -12,7 +12,8 @@ export function createReceipt(db: AppDb, input: NewReceiptInput): Receipt {
     .values({ ...input, status: input.status ?? "draft", id: newId(), createdAt: t, updatedAt: t })
     .returning()
     .get();
-  notifyDataChanged();
+  // Drafts never show in lists or totals, so creating one changes nothing there.
+  if (row.status !== "draft") notifyDataChanged();
   return row;
 }
 
@@ -34,7 +35,9 @@ export function updateReceipt(db: AppDb, id: string, patch: Partial<NewReceiptIn
     .returning()
     .get();
   if (!row) throw new Error(`Receipt not found: ${id}`);
-  notifyDataChanged();
+  // Review write-through edits a draft on every typing pause: no list can change, so no notify.
+  // A status change (confirm) or any edit of a confirmed receipt does notify.
+  if (row.status !== "draft" || patch.status !== undefined) notifyDataChanged();
   return row;
 }
 

@@ -5,14 +5,13 @@ import { useDataVersion } from "@/db/changes";
 import {
   listReceipts,
   monthTotals,
-  sumHome,
   type ReceiptFilter,
 } from "@/db/repositories/receiptQueries";
 import { usePref } from "@/prefs/PrefsProvider";
 
 export const PAGE_SIZE = 50;
 
-/** Paged receipts plus totals. `filter` must be memoised by the caller. */
+/** Paged receipts plus per-month totals. `filter` must be memoised by the caller. */
 export function useReceiptQuery(filter: ReceiptFilter) {
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
@@ -30,22 +29,16 @@ export function useReceiptQuery(filter: ReceiptFilter) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [db, key, version, count],
   );
-  const totals = useMemo(() => {
-    const f = JSON.parse(key) as ReceiptFilter;
-    return { total: sumHome(db, f, home), months: monthTotals(db, f, home) };
+  const months = useMemo(
+    () => monthTotals(db, JSON.parse(key) as ReceiptFilter, home),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [db, key, version, home]);
+    [db, key, version, home],
+  );
 
   const hasMore = rows.length >= count;
   const loadMore = useCallback(() => {
     if (hasMore) setRequested({ key, count: count + PAGE_SIZE });
   }, [hasMore, key, count]);
 
-  return {
-    rows,
-    total: totals.total,
-    months: totals.months,
-    loadMore,
-    hasMore,
-  };
+  return { rows, months, loadMore, hasMore };
 }

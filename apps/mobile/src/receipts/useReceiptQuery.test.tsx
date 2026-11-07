@@ -40,7 +40,6 @@ describe("useReceiptQuery", () => {
     const { result } = await renderHook(() => useReceiptQuery(filter));
     expect(result.current.rows).toHaveLength(50);
     expect(result.current.hasMore).toBe(true);
-    expect(result.current.total.count).toBe(120);
     await act(async () => result.current.loadMore());
     expect(result.current.rows).toHaveLength(100);
     await act(async () => result.current.loadMore());
