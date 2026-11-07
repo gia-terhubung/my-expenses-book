@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import { DateField } from "@/components/DateField";
 import { CurrencyPicker, currencyName } from "@/components/CurrencyPicker";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
@@ -126,7 +127,16 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
       {input("merchant", t("review.merchant"), { autoCapitalize: "words", autoCorrect: false })}
       <View style={{ flexDirection: "row", gap: theme.spacing.md, flexWrap: "wrap" }}>
         <View style={{ flexGrow: 2, flexBasis: 160 }}>
-          {input("date", t("review.date"), { placeholder: t("review.datePlaceholder"), keyboardType: "numbers-and-punctuation", maxLength: 10 })}
+          <DateField
+            label={t("review.date")}
+            value={values.date}
+            onChange={(v) => setField("date", v)}
+            error={errors.date ? t(errors.date) : undefined}
+            hint={isLow("date") ? t("review.checkThis") : undefined}
+            placeholder={t("review.datePlaceholder")}
+            disabled={form.busy}
+            testID="review-date"
+          />
         </View>
         <View style={{ flexGrow: 1, flexBasis: 110 }}>
           {input("time", t("review.time"), { placeholder: t("review.timePlaceholder"), keyboardType: "numbers-and-punctuation", maxLength: 5 })}
