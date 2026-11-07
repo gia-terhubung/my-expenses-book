@@ -71,6 +71,7 @@ export const receipts = sqliteTable(
     index("receipts_folder_id_idx").on(t.folderId),
     index("receipts_category_id_idx").on(t.categoryId),
     index("receipts_ref_no_idx").on(t.refNo),
+    index("receipts_status_local_idx").on(t.status, t.purchasedAtLocal),
   ],
 );
 

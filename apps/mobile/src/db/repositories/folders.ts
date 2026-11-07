@@ -1,5 +1,6 @@
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
 
+import { notifyDataChanged } from "../changes";
 import { newId, now } from "../ids";
 import { folders, receipts } from "../schema";
 import type { AppDb, Folder } from "../types";
@@ -10,7 +11,7 @@ export function createFolder(
   input: { name: string; kind: FolderKind; defaultCurrency?: string },
 ): Folder {
   const t = now();
-  return db
+  const row = db
     .insert(folders)
     .values({
       id: newId(),
@@ -22,6 +23,8 @@ export function createFolder(
     })
     .returning()
     .get();
+  notifyDataChanged();
+  return row;
 }
 
 export function listFolders(db: AppDb): Folder[] {
@@ -41,6 +44,7 @@ export function renameFolder(db: AppDb, id: string, name: string): Folder {
     .returning()
     .get();
   if (!row) throw new Error(`Folder not found: ${id}`);
+  notifyDataChanged();
   return row;
 }
 
@@ -57,4 +61,5 @@ export function softDeleteFolder(db: AppDb, id: string): void {
       .where(and(eq(folders.id, id), isNull(folders.deletedAt)))
       .run();
   });
+  notifyDataChanged();
 }
