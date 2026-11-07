@@ -160,5 +160,13 @@
       "timeInvalid": "Gunakan jam dengan format JJ:MM (24 jam).",
       "rateInvalid": "Isi angka positif."
     }
+  },
+  "receipts": {
+    "unknownMerchant": "Pedagang tidak diketahui"
+  },
+  "totals": {
+    "thisMonth": "Bulan ini",
+    "taxYear": "Tahun pajak {{label}}",
+    "notConverted": "{{count}} belum dikonversi"
   }
 }

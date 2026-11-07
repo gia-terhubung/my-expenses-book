@@ -160,5 +160,13 @@
       "timeInvalid": "Use uma hora no formato HH:MM (24 horas).",
       "rateInvalid": "Informe um número positivo."
     }
+  },
+  "receipts": {
+    "unknownMerchant": "Estabelecimento desconhecido"
+  },
+  "totals": {
+    "thisMonth": "Este mês",
+    "taxYear": "Ano fiscal {{label}}",
+    "notConverted": "{{count}} sem conversão"
   }
 }

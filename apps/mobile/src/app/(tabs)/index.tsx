@@ -1,6 +1,7 @@
 import { router, useFocusEffect, type Href } from "expo-router";
-import { useCallback, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { CaptureSheet, pickPhotos, scanPages, type CaptureChoice } from "@/capture/CaptureSheet";
@@ -10,6 +11,8 @@ import { listDraftIds } from "@/db/repositories/receipts";
 import { EmptyState } from "@/layout/EmptyState";
 import { useWhenUnobscured } from "@/lock/useWhenUnobscured";
 import { usePref } from "@/prefs/PrefsProvider";
+import { ReceiptList } from "@/receipts/ReceiptList";
+import { TotalsHeader } from "@/receipts/TotalsHeader";
 import { createManualDraft } from "@/review/manualDraft";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -22,6 +25,8 @@ export default function ReceiptsScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const db = useDb();
+  const insets = useSafeAreaInsets();
+  const feedFilter = useMemo(() => ({}), []);
   const home = usePref("homeCurrency") ?? "USD";
   const [sheet, setSheet] = useState(false);
   const afterUnlock = useWhenUnobscured();
@@ -51,27 +56,36 @@ export default function ReceiptsScreen() {
 
   return (
     <>
-      <EmptyState title={t("tabs.receipts")} message={t("empty.receipts")}>
-        {drafts.length > 0 ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => openReview(drafts)}
-            style={({ pressed }) => ({
-              minHeight: 48,
-              justifyContent: "center",
-              paddingHorizontal: theme.spacing.lg,
-              borderRadius: theme.radius.md,
-              borderWidth: 1,
-              borderColor: theme.colors.warning,
-              backgroundColor: pressed ? theme.colors.border : theme.colors.surface,
-            })}
-          >
-            <Text style={[theme.type.body, { color: theme.colors.text, fontWeight: "600" }]}>
-              {t("review.continue", { n: drafts.length })}
-            </Text>
-          </Pressable>
-        ) : null}
-      </EmptyState>
+      <ReceiptList
+        filter={feedFilter}
+        onSelect={(id) => router.push({ pathname: "/document/[id]", params: { id } } as unknown as Href)}
+        ListHeaderComponent={
+          <>
+            <View style={{ height: insets.top }} />
+            <TotalsHeader />
+            {drafts.length > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => openReview(drafts)}
+                style={({ pressed }) => ({
+                  minHeight: 48,
+                  justifyContent: "center",
+                  paddingHorizontal: theme.spacing.lg,
+                  borderRadius: theme.radius.md,
+                  borderWidth: 1,
+                  borderColor: theme.colors.warning,
+                  backgroundColor: pressed ? theme.colors.border : theme.colors.surface,
+                })}
+              >
+                <Text style={[theme.type.body, { color: theme.colors.text, fontWeight: "600" }]}>
+                  {t("review.continue", { n: drafts.length })}
+                </Text>
+              </Pressable>
+            ) : null}
+          </>
+        }
+        empty={<EmptyState title={t("tabs.receipts")} message={t("empty.receipts")} />}
+      />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("capture.add")}

@@ -160,5 +160,13 @@
       "timeInvalid": "Use a time as HH:MM (24-hour).",
       "rateInvalid": "Enter a positive number."
     }
+  },
+  "receipts": {
+    "unknownMerchant": "Unknown merchant"
+  },
+  "totals": {
+    "thisMonth": "This month",
+    "taxYear": "Tax year {{label}}",
+    "notConverted": "{{count}} not converted"
   }
 }

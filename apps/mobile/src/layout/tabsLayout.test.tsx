@@ -2,6 +2,7 @@ import { act, fireEvent, screen, within } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
 import { useSyncExternalStore } from "react";
 
+import { testDb } from "@/db/testing/testDb";
 import { initI18n } from "@/i18n";
 import { useWindowClass } from "@/layout/useWindowClass";
 
@@ -17,9 +18,13 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePrefs: () => ({ set: jest.fn() }),
 }));
 // Receipts reads drafts ("Continue reviewing"); the real DB provider needs native SQLCipher.
-jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => null }));
+let mockDb: unknown = null;
+jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 let mockDrafts: string[] = [];
-jest.mock("@/db/repositories/receipts", () => ({ listDraftIds: () => mockDrafts }));
+jest.mock("@/db/repositories/receipts", () => ({
+  ...jest.requireActual("@/db/repositories/receipts"),
+  listDraftIds: () => mockDrafts,
+}));
 jest.mock("expo-local-authentication", () => ({
   getEnrolledLevelAsync: jest.fn().mockResolvedValue(1),
   SecurityLevel: { NONE: 0, SECRET: 1 },
@@ -58,6 +63,7 @@ function renderApp() {
 
 beforeAll(() => initI18n("en"));
 beforeEach(() => {
+  mockDb = testDb();
   mockDrafts = [];
 });
 
