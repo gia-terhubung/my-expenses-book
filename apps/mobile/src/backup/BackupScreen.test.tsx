@@ -1,0 +1,232 @@
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { Alert, type AlertButton } from "react-native";
+
+import { testDb } from "@/db/testing/testDb";
+import type { AppDb } from "@/db/types";
+import { initI18n } from "@/i18n";
+import { captureLease } from "@/images/captureLease";
+import type { FileOps } from "@/images/store";
+
+import { BackupScreen } from "./BackupScreen";
+import { ArchiveFormatError, ArchiveIncompleteError, ArchiveVersionError, WrongPassphraseError } from "./errors";
+
+let mockDb: AppDb;
+const mockPrefsMap: Record<string, unknown> = {};
+const mockSet = jest.fn((k: string, v: unknown) => {
+  mockPrefsMap[k] = v;
+});
+const mockPush = jest.fn();
+const mockShare = jest.fn();
+const mockPick = jest.fn();
+const mockExport = jest.fn();
+const mockImport = jest.fn();
+const mockOpen = jest.fn();
+const mockUnlock = jest.fn();
+const mockSourceClose = jest.fn(async () => undefined);
+
+jest.mock("react-native-quick-crypto", () => ({ scrypt: jest.fn() }));
+jest.mock("expo-sharing", () => ({ shareAsync: (...a: unknown[]) => mockShare(...a) }));
+jest.mock("expo-document-picker", () => ({ getDocumentAsync: (...a: unknown[]) => mockPick(...a) }));
+jest.mock("expo-constants", () => ({ expoConfig: { version: "1.0.0" } }));
+jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
+jest.mock("@/images/ImageStoreProvider", () => ({ useImageStore: () => ({}) }));
+jest.mock("@/prefs/PrefsProvider", () => ({
+  usePref: (k: string) => mockPrefsMap[k] ?? null,
+  usePrefs: () => ({ set: mockSet, get: (k: string) => mockPrefsMap[k] }),
+}));
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
+jest.mock("expo-router", () => ({ router: { push: (...a: unknown[]) => mockPush(...a) } }));
+jest.mock("./expoBytes", () => ({
+  fileOpsSink: (u: string) => ({ uri: u }),
+  fileSource: (u: string) => ({ uri: u, close: mockSourceClose }),
+}));
+jest.mock("./exportBackup", () => ({ exportBackup: (...a: unknown[]) => mockExport(...a) }));
+jest.mock("./importBackup", () => ({ importBackup: (...a: unknown[]) => mockImport(...a) }));
+jest.mock("./container", () => ({ openArchive: (...a: unknown[]) => mockOpen(...a) }));
+
+const removed: string[] = [];
+const fs = {
+  documentDir: "file:///doc/",
+  cacheDir: "file:///cache/",
+  removeDir: jest.fn(async () => undefined),
+  remove: jest.fn(async (u: string) => {
+    removed.push(u);
+  }),
+} as unknown as FileOps;
+
+const now = () => new Date(2026, 10, 7, 12);
+const PASS = "correct horse";
+
+beforeAll(() => initI18n("en"));
+beforeEach(() => {
+  mockDb = testDb();
+  jest.clearAllMocks();
+  removed.length = 0;
+  for (const k of Object.keys(mockPrefsMap)) delete mockPrefsMap[k];
+  mockPrefsMap.receiptsSinceBackup = 5;
+  mockPrefsMap.lastBackupAt = 111;
+  mockShare.mockResolvedValue(undefined);
+  mockExport.mockResolvedValue({ pages: 0, missing: [] });
+  mockPick.mockResolvedValue({ canceled: false, assets: [{ uri: "file:///cache/DocumentPicker/x.meb" }] });
+  mockOpen.mockResolvedValue({ header: { format: 1, encrypted: true }, unlock: mockUnlock });
+  mockUnlock.mockResolvedValue({});
+  mockImport.mockResolvedValue({
+    result: { inserted: 3, updated: 2, kept: 0, insertedReceiptIds: [] },
+    possibleDuplicates: [],
+  });
+});
+
+const btn = (name: string) => screen.getByRole("button", { name });
+const fill = async (p: string, c: string) => {
+  await fireEvent.changeText(screen.getByLabelText("Passphrase"), p);
+  await fireEvent.changeText(screen.getByLabelText("Confirm passphrase"), c);
+};
+const alertButtons = (spy: jest.SpyInstance) => spy.mock.calls[0][2] as AlertButton[];
+
+describe("backup", () => {
+  it("mismatch disables Back up now", async () => {
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fill(PASS, PASS + "x");
+    expect(btn("Back up now").props.accessibilityState?.disabled).toBe(true);
+    expect(screen.getByText("Passphrases don't match.")).toBeTruthy();
+  });
+
+  it("shows never when no backup yet", async () => {
+    mockPrefsMap.lastBackupAt = null;
+    await render(<BackupScreen fs={fs} now={now} />);
+    expect(screen.getByText("Never backed up")).toBeTruthy();
+  });
+
+  it("successful share updates prefs", async () => {
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fill(PASS, PASS);
+    await fireEvent.press(btn("Back up now"));
+    await waitFor(() => expect(mockSet).toHaveBeenCalledWith("receiptsSinceBackup", 0));
+    expect(mockSet).toHaveBeenCalledWith("lastBackupAt", now().getTime());
+    expect(mockExport.mock.calls[0][0].passphrase).toBe(PASS);
+    expect(mockShare.mock.calls[0][0]).toBe("file:///cache/export/MyExpensesBook-backup-2026-11-07.meb");
+  });
+
+  it("share rejection leaves prefs and shows error", async () => {
+    mockShare.mockRejectedValue(new Error("nope"));
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fill(PASS, PASS);
+    await fireEvent.press(btn("Back up now"));
+    expect(await screen.findByText("Backup failed")).toBeTruthy();
+    expect(mockSet).not.toHaveBeenCalled();
+  });
+
+  it("export failure deletes the partial file", async () => {
+    mockExport.mockRejectedValue(new Error("disk"));
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fill(PASS, PASS);
+    await fireEvent.press(btn("Back up now"));
+    expect(await screen.findByText("Backup failed")).toBeTruthy();
+    expect(removed).toEqual(["file:///cache/export/MyExpensesBook-backup-2026-11-07.meb"]);
+    expect(mockShare).not.toHaveBeenCalled();
+    expect(mockSet).not.toHaveBeenCalled();
+  });
+
+  it("skip passphrase only proceeds on Continue", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Back up without passphrase"));
+    expect(alert.mock.calls[0][1]).toMatch(/Without a passphrase/);
+    expect(mockExport).not.toHaveBeenCalled();
+    await act(async () => {
+      await alertButtons(alert).find((b) => b.style === "destructive")!.onPress!();
+    });
+    await waitFor(() => expect(mockShare).toHaveBeenCalled());
+    expect(mockExport.mock.calls[0][0].passphrase).toBeNull();
+    alert.mockRestore();
+  });
+});
+
+describe("restore", () => {
+  it("picker cancel does nothing", async () => {
+    mockPick.mockResolvedValue({ canceled: true, assets: null });
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    await waitFor(() => expect(mockPick).toHaveBeenCalled());
+    expect(mockOpen).not.toHaveBeenCalled();
+    expect(removed).toEqual([]);
+  });
+
+  it.each([
+    [new ArchiveFormatError("x"), "This file isn't a My Expenses Book backup."],
+    [new ArchiveVersionError("x"), "This backup was made by a newer version of the app. Update the app to restore it."],
+    [new ArchiveIncompleteError([]), "This backup file is damaged or incomplete."],
+  ])("maps %p", async (err, copy) => {
+    mockOpen.mockRejectedValue(err);
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    expect(await screen.findByText(copy)).toBeTruthy();
+    expect(removed).toEqual(["file:///cache/DocumentPicker/x.meb"]);
+    expect(mockSourceClose).toHaveBeenCalled();
+  });
+
+  it("refuses while a capture is in progress", async () => {
+    const release = captureLease.acquire();
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    expect(await screen.findByText("Finish the scan in progress first.")).toBeTruthy();
+    expect(mockPick).not.toHaveBeenCalled();
+    release();
+  });
+
+  it("wrong passphrase shows inline error and allows retry", async () => {
+    mockUnlock.mockRejectedValueOnce(new WrongPassphraseError());
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    await fireEvent.changeText(await screen.findByLabelText("Enter the backup passphrase"), "bad pass 1");
+    await fireEvent.press(btn("Unlock"));
+    expect(await screen.findByText("Wrong passphrase")).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText("Enter the backup passphrase"), PASS);
+    await fireEvent.press(btn("Unlock"));
+    expect(await screen.findByRole("button", { name: /^Merge/ })).toBeTruthy();
+  });
+
+  it("unprotected backup shows the note", async () => {
+    mockOpen.mockResolvedValue({ header: { format: 1, encrypted: false }, unlock: mockUnlock });
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    expect(await screen.findByText("This backup isn't protected by a passphrase.")).toBeTruthy();
+  });
+
+  it("merge shows counts and duplicate rows that open the document", async () => {
+    mockImport.mockResolvedValue({
+      result: { inserted: 3, updated: 2, kept: 0, insertedReceiptIds: [] },
+      possibleDuplicates: [{ receiptId: "r1", matchId: "m1" }],
+    });
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    await fireEvent.changeText(await screen.findByLabelText("Enter the backup passphrase"), PASS);
+    await fireEvent.press(btn("Unlock"));
+    await fireEvent.press(await screen.findByRole("button", { name: /^Merge/ }));
+    expect(await screen.findByText("Added 3, updated 2")).toBeTruthy();
+    expect(mockImport.mock.calls[0][0]).toMatchObject({ mode: "merge", passphrase: PASS });
+    expect(screen.getByText("Possible duplicates (1)")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("dup-r1"));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: "/document/[id]", params: { id: "r1" } });
+    expect(removed).toEqual(["file:///cache/DocumentPicker/x.meb"]);
+  });
+
+  it("replace requires the Alert confirm", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    await render(<BackupScreen fs={fs} now={now} />);
+    await fireEvent.press(btn("Restore from backup"));
+    await fireEvent.changeText(await screen.findByLabelText("Enter the backup passphrase"), PASS);
+    await fireEvent.press(btn("Unlock"));
+    await fireEvent.press(await screen.findByRole("button", { name: /^Replace/ }));
+    expect(alert.mock.calls[0][1]).toMatch(/Replace everything on this device/);
+    expect(mockImport).not.toHaveBeenCalled();
+    await act(async () => {
+      await alertButtons(alert).find((b) => b.style === "destructive")!.onPress!();
+    });
+    expect(await screen.findByText("Restored 3 receipts")).toBeTruthy();
+    expect(mockImport.mock.calls[0][0]).toMatchObject({ mode: "replace" });
+    alert.mockRestore();
+  });
+});
