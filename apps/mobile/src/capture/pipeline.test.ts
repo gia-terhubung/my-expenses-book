@@ -87,6 +87,8 @@ function setup(
   opts: {
     pages?: Record<string, string[]>;
     ocrThrows?: boolean;
+    /** Native calls that never settle (stuck native module). */
+    hang?: { ocr?: boolean; hash?: boolean; save?: Promise<SavedPage> };
     home?: string;
     fx?: FxCache;
     fetchFn?: typeof fetch;
@@ -103,12 +105,14 @@ function setup(
     ocr: {
       async recognizeText(uri: string) {
         ocrLease.push(img.leaseHeld());
+        if (opts.hang?.ocr) return new Promise(() => undefined);
         if (opts.ocrThrows) throw Object.assign(new Error("model init failed"), { code: "ERR_OCR" });
         const i = Number(/(\d+)\.jpg$/.exec(uri)![1]);
         const lines = Object.values(opts.pages ?? {})[i] ?? [];
         return { observations: obs(lines), width: 1200, height: 1600, rotation: 0, ms: 1 };
       },
       async imageHash() {
+        if (opts.hang?.hash) return new Promise<string>(() => undefined);
         return "00ff00ff00ff00ff";
       },
     },
@@ -123,7 +127,12 @@ function setup(
     clock: () => NOW,
     lease: img.lease,
     timeZone: "Asia/Jakarta",
+    stepTimeoutMs: 20,
   };
+  if (opts.hang?.save) {
+    const late = opts.hang.save;
+    deps.images = { ...img.images, savePage: () => late };
+  }
   const sources = Object.keys(opts.pages ?? { "file:///cache/ImagePicker/a.jpg": [] });
   return { db, deps, img, sources, fxSet, ocrLease, getFx: () => fxStored };
 }
@@ -217,6 +226,64 @@ describe("capture pipeline", () => {
     expect(pages).toHaveLength(1);
     expect(img.encrypted.has(pages[0].imagePath)).toBe(true);
     expect(img.plaintext.size).toBe(0);
+  });
+
+  it("OCR / hash timeout: manual draft keeps the image, lease released, plaintext deleted", async () => {
+    const { db, deps, img, sources } = setup({
+      pages: { "file:///cache/ImagePicker/a.jpg": USD_RECEIPT },
+      hang: { ocr: true, hash: true },
+    });
+    const res = await runCaptures([sources], deps, { chooseSplit: async () => "split" });
+    expect(res).toMatchObject({ failed: 0, cancelled: false });
+    expect(res.ids).toHaveLength(1);
+    const r = getReceipt(db, res.ids[0])!;
+    expect(r.parseSource).toBe("manual");
+    const pages = listPages(db, r.id);
+    expect(pages).toHaveLength(1);
+    expect(pages[0].dhash).toBeNull();
+    expect(img.encrypted.has(pages[0].imagePath)).toBe(true);
+    expect(img.plaintext.size).toBe(0);
+    expect(img.discarded).toContain(sources[0]);
+    expect(img.leaseHeld()).toBe(false);
+  });
+
+  it("savePage timeout fails the photo; a late result has its files deleted", async () => {
+    let finish!: (s: SavedPage) => void;
+    const save = new Promise<SavedPage>((r) => (finish = r));
+    const { db, deps, img, sources } = setup({ hang: { save } });
+    const res = await runCaptures([sources], deps, { chooseSplit: async () => "split" });
+    expect(res).toEqual({ ids: [], failed: 1, cancelled: false });
+    expect(img.leaseHeld()).toBe(false);
+    expect(img.discarded).toContain(sources[0]);
+    expect(listPages(db, "x")).toHaveLength(0);
+    img.encrypted.add("pages/late.enc").add("pages/late-t.enc");
+    finish({ imagePath: "pages/late.enc", thumbPath: "pages/late-t.enc", width: 1, height: 1, normalizedUri: "file:///cache/work/late.jpg" });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(img.discarded).toContain("file:///cache/work/late.jpg");
+    expect(img.encrypted.size).toBe(0);
+  });
+
+  it("cancel (abort) abandons a stuck OCR call at once and cleans up", async () => {
+    const { deps, img, sources } = setup({
+      pages: { "file:///cache/ImagePicker/a.jpg": USD_RECEIPT, "file:///cache/ImagePicker/b.jpg": USD_RECEIPT },
+      hang: { ocr: true },
+    });
+    const ctrl = new AbortController();
+    let cancelled = false;
+    const run = runCaptures(sources.map((s) => [s]), { ...deps, stepTimeoutMs: 60_000, signal: ctrl.signal }, {
+      chooseSplit: async () => "split",
+      isCancelled: () => cancelled,
+    });
+    await new Promise((r) => setTimeout(r, 5));
+    expect(img.leaseHeld()).toBe(true);
+    cancelled = true;
+    ctrl.abort();
+    const res = await run;
+    expect(res).toMatchObject({ ids: [], cancelled: true });
+    expect(img.leaseHeld()).toBe(false);
+    expect(img.plaintext.size).toBe(0);
+    expect(img.encrypted.size).toBe(0);
+    expect(img.discarded).toEqual(expect.arrayContaining(sources));
   });
 
   it("deletes normalized plaintext files", async () => {

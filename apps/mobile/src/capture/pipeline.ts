@@ -4,7 +4,7 @@ import { createReceipt } from "@/db/repositories/receipts";
 import type { AppDb } from "@/db/types";
 import { convertToHome, type Conversion } from "@/fx/convert";
 import { ensureRates, type FxPass } from "@/fx/rates";
-import type { ImageStore } from "@/images/store";
+import type { ImageStore, SavedPage } from "@/images/store";
 import { OCR_LANGUAGES } from "@/ocr/languages";
 import { toLines } from "@/ocr/readingOrder";
 import type { parseReceipt } from "@/parsing";
@@ -13,6 +13,7 @@ import type { FieldConfidence, ParsedReceipt } from "@/parsing/types";
 import type { FxCache, Language } from "@/prefs/prefs";
 
 import { deviceTimeZone, formatLocal, localToUtc } from "./localTime";
+import { CAPTURE_STEP_TIMEOUT_MS, withTimeout } from "./withTimeout";
 
 /** Every native / IO dependency of the capture pipeline (fakes in tests). */
 export type CaptureDeps = {
@@ -32,6 +33,10 @@ export type CaptureDeps = {
   lease: () => () => void;
   /** IANA zone for purchase/scan local times; defaults to the device zone. */
   timeZone?: string;
+  /** Bound for each native call (savePage, OCR, dHash); defaults to CAPTURE_STEP_TIMEOUT_MS. */
+  stepTimeoutMs?: number;
+  /** User cancel: abandons the native call in flight at once (its late result is cleaned up). */
+  signal?: AbortSignal;
 };
 
 /** An encrypted page saved during analysis (its plaintext is already deleted). */
@@ -54,6 +59,10 @@ export type Analysis = {
  * is deleted at the end, success or not. The capture lease is held for the whole window.
  * OCR failure is not fatal: the result is `ocrFailed` with no lines (manual draft later).
  * A savePage failure deletes the pages already encrypted here and rethrows.
+ * Every native call is bounded (`stepTimeoutMs`) and abandoned when `signal` aborts: an OCR
+ * timeout counts as an OCR failure (manual draft that keeps the image), a dHash timeout leaves
+ * `dhash` null, and a savePage timeout fails the photo; a savePage result that arrives later has
+ * its plaintext and encrypted files deleted.
  */
 export async function analyzeCapture(uris: string[], deps: CaptureDeps): Promise<Analysis> {
   const release = deps.lease();
@@ -61,23 +70,30 @@ export async function analyzeCapture(uris: string[], deps: CaptureDeps): Promise
   const lines: string[] = [];
   let dhash: string | null = null;
   let ocrFailed = false;
+  const ms = deps.stepTimeoutMs ?? CAPTURE_STEP_TIMEOUT_MS;
+  const bound = <T>(task: Promise<T>, onLate?: (v: T) => void) =>
+    withTimeout(task, ms, { signal: deps.signal, onLate });
+  const dropLateSave = (s: SavedPage) => {
+    void deps.images.discardPlaintext(s.normalizedUri).catch(() => undefined);
+    void deps.images.deleteFiles([s.imagePath, s.thumbPath]).catch(() => undefined);
+  };
   try {
     // Inside the try: anything that throws here still releases the lease and drops sources.
     const languages = OCR_LANGUAGES(deps.uiLanguage);
     for (const [i, uri] of uris.entries()) {
-      const saved = await deps.images.savePage(uri);
+      const saved = await bound(deps.images.savePage(uri), dropLateSave);
       pages.push({ imagePath: saved.imagePath, thumbPath: saved.thumbPath, width: saved.width, height: saved.height });
       try {
         if (!ocrFailed) {
           try {
-            lines.push(...toLines((await deps.ocr.recognizeText(saved.normalizedUri, languages)).observations));
+            lines.push(...toLines((await bound(deps.ocr.recognizeText(saved.normalizedUri, languages))).observations));
           } catch {
             ocrFailed = true;
           }
         }
         if (i === 0) {
           try {
-            dhash = await deps.ocr.imageHash(saved.normalizedUri);
+            dhash = await bound(deps.ocr.imageHash(saved.normalizedUri));
           } catch {
             dhash = null;
           }

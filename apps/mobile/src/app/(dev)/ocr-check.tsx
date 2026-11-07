@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Button, ScrollView, Text, View } from "react-native";
 
 import { imageHash, recognizeText } from "../../../modules/receipt-ocr";
+import { CAPTURE_STEP_TIMEOUT_MS, withTimeout } from "@/capture/withTimeout";
 import {
   buildCopyText,
   formatRow,
@@ -37,10 +38,11 @@ async function runOne(
   locale: string,
 ): Promise<Row> {
   try {
-    const [res, hash] = await Promise.all([
-      recognizeText(uri, languages),
-      imageHash(uri),
-    ]);
+    // Same per-photo bound as capture: a stuck native call becomes an error row, not a hang.
+    const [res, hash] = await withTimeout(
+      Promise.all([recognizeText(uri, languages), imageHash(uri)]),
+      CAPTURE_STEP_TIMEOUT_MS,
+    );
     const lines = toLines(res.observations);
     const today = new Date();
     // aiEnabled:false: heuristic parser only, whatever the production flag says.
