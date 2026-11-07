@@ -1,8 +1,9 @@
 import { testDb } from "@/db/testing/testDb";
-import { getReceipt } from "@/db/repositories/receipts";
+import { createFolder } from "@/db/repositories/folders";
+import { createReceipt, getReceipt } from "@/db/repositories/receipts";
 import { listPages } from "@/db/repositories/pages";
 
-import { amountText, parseAmountInput, parseRate, validate, valuesFromReceipt, type ReviewValues } from "./form";
+import { amountText, draftPatch, parseAmountInput, parseRate, validate, valuesFromReceipt, type ReviewValues } from "./form";
 import { createManualDraft } from "./manualDraft";
 
 describe("review form helpers", () => {
@@ -41,6 +42,7 @@ describe("review form helpers", () => {
       categoryId: null,
       notes: "",
       fxRate: "",
+      folderId: null,
     };
     expect(validate(ok)).toEqual({});
     expect(validate({ ...ok, total: "0" }).total).toBe("review.errors.totalInvalid");
@@ -49,6 +51,33 @@ describe("review form helpers", () => {
     expect(validate({ ...ok, date: "2026-02-30" }).date).toBe("review.errors.dateInvalid");
     expect(validate({ ...ok, time: "25:00" }).time).toBe("review.errors.timeInvalid");
     expect(validate({ ...ok, fxRate: "x" }).fxRate).toBe("review.errors.rateInvalid");
+  });
+});
+
+describe("folder field", () => {
+  it("round-trips folderId through valuesFromReceipt and draftPatch", () => {
+    const db = testDb();
+    const folder = createFolder(db, { name: "Bali trip", kind: "trip" });
+    const r = createReceipt(db, {
+      status: "confirmed",
+      merchant: "Toko Maju",
+      purchasedAtLocal: "2026-11-03T10:15:00",
+      purchasedTz: "Asia/Jakarta",
+      purchasedAtUtc: Date.UTC(2026, 10, 3, 3, 15),
+      scannedAtUtc: Date.UTC(2026, 10, 5, 5, 0),
+      scannedTz: "Asia/Jakarta",
+      currency: "IDR",
+      totalMinor: 2500000,
+      taxMinor: null,
+      homeCurrencyAtSave: "IDR",
+      parseSource: "manual",
+      folderId: folder.id,
+    });
+    const cache = { base: "idr", latestDate: null, fetchedAt: null, byDate: {} };
+    const v = valuesFromReceipt(r);
+    expect(v.folderId).toBe(folder.id);
+    expect(draftPatch(r, v, "IDR", cache).folderId).toBe(folder.id);
+    expect(draftPatch(r, { ...v, folderId: null }, "IDR", cache).folderId).toBeNull();
   });
 });
 

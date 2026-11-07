@@ -1,13 +1,16 @@
 import { act, renderHook } from "@testing-library/react-native";
-import { AppState } from "react-native";
+import { Alert, AppState, type AlertButton } from "react-native";
+
+import { createFolder } from "@/db/repositories/folders";
 
 import { createPage, listPages } from "@/db/repositories/pages";
 import { createReceipt, getReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb, NewReceiptInput } from "@/db/types";
+import { initI18n } from "@/i18n";
 import { createPrefs, type FxCache, type PrefsStore } from "@/prefs/prefs";
 
-import { ReviewValidationError, useReviewForm } from "./useReviewForm";
+import { ReviewValidationError, useReviewForm, WRITE_DEBOUNCE_MS } from "./useReviewForm";
 
 let mockDb: AppDb;
 let mockPrefs: PrefsStore;
@@ -63,6 +66,8 @@ async function mount(id: string, queue: string[] = []) {
   const hook = await renderHook(() => useReviewForm(id, { queue }));
   return hook;
 }
+
+beforeAll(() => initI18n("en"));
 
 beforeEach(() => {
   mockDb = testDb();
@@ -262,5 +267,114 @@ describe("useReviewForm", () => {
     expect(getReceipt(mockDb, r.id)).toMatchObject({ status: "confirmed", version: 2 });
     expect(mockRouter.back).toHaveBeenCalledTimes(1);
     expect(mockRouter.replace).not.toHaveBeenCalled();
+  });
+
+  it("saves the folder chosen on review with the draft", async () => {
+    const folder = createFolder(mockDb, { name: "Office", kind: "project" });
+    const r = draft();
+    const { result } = await mount(r.id);
+    expect(result.current.values.folderId).toBeNull();
+    await act(async () => result.current.setField("folderId", folder.id));
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)).toMatchObject({ status: "confirmed", folderId: folder.id });
+  });
+});
+
+describe("useReviewForm edit mode", () => {
+  const cache: FxCache = {
+    base: "idr",
+    latestDate: "2026-11-03",
+    fetchedAt: Date.now(),
+    byDate: { "2026-11-03": { usd: "0.00005" } },
+  };
+
+  function confirmed(over: Partial<NewReceiptInput> = {}) {
+    return draft({ status: "confirmed", amountHomeMinor: 2500000, ...over });
+  }
+
+  async function mountEdit(id: string) {
+    return renderHook(() => useReviewForm(id, { mode: "edit" }));
+  }
+
+  it("writes nothing before save, then saves once and stays confirmed", async () => {
+    jest.useFakeTimers();
+    const r = confirmed();
+    const before = getReceipt(mockDb, r.id)!;
+    const { result, unmount } = await mountEdit(r.id);
+    expect(result.current.receipt).not.toBe("missing");
+    expect(result.current.duplicates).toEqual([]);
+
+    await act(async () => result.current.setField("merchant", "X"));
+    await act(async () => void jest.advanceTimersByTime(WRITE_DEBOUNCE_MS * 3));
+    await act(async () => appStateListener?.("background"));
+    expect(getReceipt(mockDb, r.id)).toEqual(before);
+
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)).toMatchObject({ merchant: "X", status: "confirmed", version: before.version + 1 });
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+
+    // Unmount after save writes nothing more.
+    await unmount();
+    expect(getReceipt(mockDb, r.id)?.version).toBe(before.version + 1);
+  });
+
+  it("recomputes the home amount from the cached rate when the total changes", async () => {
+    mockPrefs.set("fxTables", cache);
+    const fetchFn = jest.fn(async () => {
+      throw new TypeError("offline");
+    });
+    global.fetch = fetchFn as unknown as typeof fetch;
+    const r = confirmed({ currency: "USD", totalMinor: 1234, amountHomeMinor: 24680000, fxRate: "20000", fxRateDate: "2026-11-03" });
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.setField("total", "20"));
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(getReceipt(mockDb, r.id)).toMatchObject({
+      status: "confirmed",
+      totalMinor: 2000,
+      amountHomeMinor: 40000000,
+      fxRate: "20000",
+      fxRateDate: "2026-11-03",
+    });
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("cancel with no changes goes straight back", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    const r = confirmed();
+    const { result } = await mountEdit(r.id);
+    await act(async () => result.current.cancel());
+    expect(alert).not.toHaveBeenCalled();
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancel after changes asks, then goes back without writing", async () => {
+    let buttons: AlertButton[] = [];
+    const alert = jest.spyOn(Alert, "alert").mockImplementation((_t, _m, b) => void (buttons = b ?? []));
+    const r = confirmed();
+    const before = getReceipt(mockDb, r.id)!;
+    const { result, unmount } = await mountEdit(r.id);
+    await act(async () => result.current.setField("merchant", "Changed"));
+    await act(async () => result.current.cancel());
+    expect(alert).toHaveBeenCalledWith("Discard changes?", undefined, expect.any(Array));
+    expect(mockRouter.back).not.toHaveBeenCalled();
+    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    await unmount();
+    expect(getReceipt(mockDb, r.id)).toEqual(before);
+  });
+
+  it("treats a draft or unknown id as missing", async () => {
+    const d = draft();
+    const { result } = await mountEdit(d.id);
+    expect(result.current.receipt).toBe("missing");
+    const { result: none } = await mountEdit("nope");
+    expect(none.current.receipt).toBe("missing");
   });
 });
