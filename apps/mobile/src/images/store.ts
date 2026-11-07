@@ -182,6 +182,8 @@ export function createImageStore(deps: {
 
     async purgeCaptureSources() {
       await fs.removeDir(fs.cacheDir + PICKER_DIR);
+      // Android scanner output left by a kill mid-capture or a scan whose /capture never mounted.
+      await fs.removeDir(fs.cacheDir + MLKIT_SCANNER_DIR);
       for (const name of await fs.list(fs.documentDir)) {
         if (SCANNER_FILE.test(name)) await fs.remove(fs.documentDir + name);
       }

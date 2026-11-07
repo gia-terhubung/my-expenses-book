@@ -179,6 +179,16 @@ describe("image store", () => {
     expect(files.has(DOC + "pages/x.enc")).toBe(true);
   });
 
+  it("purgeCaptureSources also clears the Android ML Kit scanner cache dir", async () => {
+    const { store, files } = setup();
+    files.set(CACHE + "mlkit_docscan_ui_client/scan1.jpg", PLAIN_PAGE);
+    files.set(CACHE + "mlkit_docscan_ui_client/sub/scan2.jpg", PLAIN_PAGE);
+    files.set(CACHE + "other/keep.bin", PLAIN_PAGE);
+    await store.purgeCaptureSources();
+    expect([...files.keys()].filter((k) => k.includes("mlkit_docscan_ui_client"))).toEqual([]);
+    expect(files.has(CACHE + "other/keep.bin")).toBe(true);
+  });
+
   it("cleanupOrphanPages deletes files with no page row", async () => {
     const { store, files } = setup();
     const a = await store.savePage(CACHE + "picked.jpg");
