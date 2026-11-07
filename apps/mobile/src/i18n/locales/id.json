@@ -132,6 +132,8 @@
     "rateLabel": "Kurs: 1 {{from}} = ? {{to}}",
     "ratePlaceholder": "Otomatis",
     "discard": "Buang",
+    "saveReceipt": "Simpan struk",
+    "saving": "Menyimpan struk",
     "discardTitle": "Buang struk ini?",
     "discardMessage": "Draf dan fotonya akan dihapus.",
     "saveFailed": "Gagal menyimpan struk. Coba lagi.",

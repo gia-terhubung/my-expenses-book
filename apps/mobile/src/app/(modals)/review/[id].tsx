@@ -122,6 +122,7 @@ export default function ReviewScreen() {
       </Pressable>
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel={form.busy ? t("review.saving") : t("review.saveReceipt")}
         accessibilityState={{ busy: form.busy }}
         onPress={save}
         disabled={form.busy}

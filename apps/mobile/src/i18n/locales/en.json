@@ -132,6 +132,8 @@
     "rateLabel": "Exchange rate: 1 {{from}} = ? {{to}}",
     "ratePlaceholder": "Automatic",
     "discard": "Discard",
+    "saveReceipt": "Save receipt",
+    "saving": "Saving receipt",
     "discardTitle": "Discard this receipt?",
     "discardMessage": "The draft and its photo will be deleted.",
     "saveFailed": "Couldn't save the receipt. Please try again.",

@@ -57,6 +57,7 @@ function fakeImages() {
     async openForView(p: string) {
       return p;
     },
+    async closeViews() {},
     async deleteFiles(paths: string[]) {
       paths.forEach((p) => encrypted.delete(p));
     },

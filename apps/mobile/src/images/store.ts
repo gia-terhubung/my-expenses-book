@@ -34,6 +34,8 @@ export interface ImageStore {
   savePage(srcUri: string): Promise<SavedPage>;
   openForView(path: string): Promise<string>;
   deleteFiles(paths: string[]): Promise<void>;
+  /** Deletes the decrypted view copies (cache/view/) of these pages now; missing copies are fine. */
+  closeViews(paths: string[]): Promise<void>;
   /** `keepCaptureWork`: a capture is running (capture lease held), so only the view dir goes. */
   purgeDecryptedCache(opts?: { keepCaptureWork?: boolean }): Promise<void>;
   cleanupOrphanPages(knownPaths: string[]): Promise<number>;
@@ -110,6 +112,7 @@ export function createImageStore(deps: {
   const writeEncrypted = async (rel: string, plain: Uint8Array) =>
     fs.write(docUri(rel), encryptBytes(key, plain));
   const removeQuietly = (uri: string) => fs.remove(uri).catch(() => undefined);
+  const viewUri = (path: string) => `${viewDir}${path.slice(PAGES.length, -".enc".length)}.jpg`;
 
   return {
     async savePage(srcUri) {
@@ -144,9 +147,14 @@ export function createImageStore(deps: {
     async openForView(path) {
       assertPagePath(path);
       const plain = decryptBytes(key, await fs.read(docUri(path)));
-      const out = `${viewDir}${path.slice(PAGES.length, -".enc".length)}.jpg`;
+      const out = viewUri(path);
       await fs.write(out, plain);
       return out;
+    },
+
+    async closeViews(paths) {
+      paths.forEach(assertPagePath);
+      for (const p of paths) await removeQuietly(viewUri(p));
     },
 
     async deleteFiles(paths) {

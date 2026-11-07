@@ -9,6 +9,7 @@ import { getReceipt, softDeleteReceipt, updateReceipt } from "@/db/repositories/
 import type { AppDb, Receipt, ReceiptPage } from "@/db/types";
 import { ensureRates } from "@/fx/rates";
 import { useImageStore } from "@/images/ImageStoreProvider";
+import type { ImageStore } from "@/images/store";
 import type { FieldConfidence } from "@/parsing/types";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
 import type { FxCache } from "@/prefs/prefs";
@@ -89,13 +90,24 @@ export function goNext(queue: string[]): void {
   }
 }
 
-/** Soft-deletes a receipt and its page rows, then deletes page files no other live receipt uses. */
+/**
+ * Soft-deletes a receipt and its page rows, deletes the decrypted view copies of its pages, then
+ * deletes page files no other live receipt uses. File errors are swallowed (logged in dev): the
+ * rows are already gone, and the launch sweeps remove what is left.
+ */
 export async function discardReceipt(
   db: AppDb,
-  images: { deleteFiles(paths: string[]): Promise<void> },
+  images: Pick<ImageStore, "deleteFiles" | "closeViews">,
   id: string,
 ): Promise<void> {
   const pages = listPages(db, id);
+  // Plaintext first: the view copies would otherwise wait for the next background purge.
+  const viewed = pages.flatMap((p) => (p.thumbPath ? [p.imagePath, p.thumbPath] : [p.imagePath]));
+  if (viewed.length) {
+    await images.closeViews(viewed).catch((e: unknown) => {
+      if (__DEV__) console.warn("closeViews failed", e);
+    });
+  }
   db.transaction((tx) => {
     softDeleteReceipt(tx as unknown as AppDb, id);
     softDeletePages(tx as unknown as AppDb, id);
@@ -107,7 +119,11 @@ export async function discardReceipt(
     if (p.thumbPath) paths.add(p.thumbPath);
   }
   // A failure leaves orphans that the launch sweep (cleanupOrphanPages) removes.
-  if (paths.size) await images.deleteFiles([...paths]);
+  if (paths.size) {
+    await images.deleteFiles([...paths]).catch((e: unknown) => {
+      if (__DEV__) console.warn("deleteFiles failed", e);
+    });
+  }
 }
 
 /**
@@ -144,6 +160,8 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
   const receiptRef = useRef<Receipt | null>(loaded === "missing" ? null : loaded.receipt);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirty = useRef(false);
+  // One save/discard at a time: a double tap or Save + "Save anyway" must not confirm or navigate twice.
+  const inFlight = useRef(false);
   const homeRef = useRef(home);
   useEffect(() => {
     homeRef.current = home;
@@ -231,12 +249,13 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
 
   const save = useCallback(async () => {
     const r = receiptRef.current;
-    if (!r) return;
+    if (!r || inFlight.current) return;
     flush();
     const v = valuesRef.current;
     const errs = validate(v);
     setErrors(errs);
     if (Object.keys(errs).length) throw new ReviewValidationError(errs);
+    inFlight.current = true;
     setBusy(true);
     try {
       let cache = prefs.get("fxTables");
@@ -254,6 +273,7 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
       updateReceipt(db, r.id, { ...draftPatch(r, v, home, cache), status: "confirmed" });
       receiptRef.current = null; // confirmed: no draft write-through after this point
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
     goNext(queueRef.current);
@@ -261,7 +281,8 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
 
   const discard = useCallback(async () => {
     const r = receiptRef.current;
-    if (!r) return;
+    if (!r || inFlight.current) return;
+    inFlight.current = true;
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
     dirty.current = false;
@@ -270,6 +291,7 @@ export function useReviewForm(id: string, opts: { queue?: string[] } = {}): Revi
     try {
       await discardReceipt(db, images, r.id);
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
     goNext(queueRef.current);

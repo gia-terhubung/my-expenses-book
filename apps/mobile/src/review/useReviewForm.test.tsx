@@ -12,9 +12,11 @@ import { ReviewValidationError, useReviewForm } from "./useReviewForm";
 let mockDb: AppDb;
 let mockPrefs: PrefsStore;
 const mockDeleted: string[] = [];
+const mockClosed: string[] = [];
 const mockImages = {
   openForView: jest.fn(async (p: string) => `file:///cache/view/${p}`),
   deleteFiles: jest.fn(async (paths: string[]) => void mockDeleted.push(...paths)),
+  closeViews: jest.fn(async (paths: string[]) => void mockClosed.push(...paths)),
 };
 const mockRouter = { replace: jest.fn(), back: jest.fn() };
 
@@ -67,6 +69,7 @@ beforeEach(() => {
   mockPrefs = memoryPrefs();
   mockPrefs.set("homeCurrency", "IDR");
   mockDeleted.length = 0;
+  mockClosed.length = 0;
   jest.clearAllMocks();
   appStateListener = null;
   jest.spyOn(AppState, "addEventListener").mockImplementation(((_: string, cb: AppStateListener) => {
@@ -191,6 +194,8 @@ describe("useReviewForm", () => {
     expect(getReceipt(mockDb, a.id)).toBeNull();
     expect(listPages(mockDb, a.id)).toEqual([]);
     expect(mockDeleted.sort()).toEqual(["pages/own-t.enc", "pages/own.enc"]);
+    // Decrypted view copies of every discarded page go now, not at the next background purge.
+    expect(mockClosed.sort()).toEqual(["pages/own-t.enc", "pages/own.enc", "pages/shared-t.enc", "pages/shared.enc"]);
 
     // The last receipt using the shared photo takes its files with it.
     const { result: sib } = await mount(b.id);
@@ -221,5 +226,41 @@ describe("useReviewForm", () => {
       { receiptId: similar.id, strength: "similar" },
     ]);
     expect(result.current.duplicates.some((d) => d.receiptId === r.id)).toBe(false);
+  });
+
+  it("discard still leaves the screen when deleting files fails", async () => {
+    const r = draft();
+    createPage(mockDb, { receiptId: r.id, pageIndex: 0, imagePath: "pages/own.enc", thumbPath: null, width: 10, height: 10, dhash: null });
+    mockImages.deleteFiles.mockRejectedValueOnce(new Error("disk"));
+    mockImages.closeViews.mockRejectedValueOnce(new Error("disk"));
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { result } = await mount(r.id);
+    await act(async () => {
+      await result.current.discard();
+    });
+    expect(getReceipt(mockDb, r.id)).toBeNull();
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    expect(result.current.busy).toBe(false);
+    warn.mockRestore();
+  });
+
+  it("save runs once for a double tap or Save + Save anyway", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((res) => (release = res));
+    global.fetch = jest.fn(async () => {
+      await gate;
+      throw new TypeError("offline");
+    }) as unknown as typeof fetch;
+    const r = draft({ currency: "USD", totalMinor: 1234 });
+    const { result } = await mount(r.id);
+    await act(async () => {
+      const first = result.current.save();
+      const second = result.current.save();
+      release();
+      await Promise.all([first, second]);
+    });
+    expect(getReceipt(mockDb, r.id)).toMatchObject({ status: "confirmed", version: 2 });
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    expect(mockRouter.replace).not.toHaveBeenCalled();
   });
 });

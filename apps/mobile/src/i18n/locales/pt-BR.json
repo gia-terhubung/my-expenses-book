@@ -132,6 +132,8 @@
     "rateLabel": "Câmbio: 1 {{from}} = ? {{to}}",
     "ratePlaceholder": "Automático",
     "discard": "Descartar",
+    "saveReceipt": "Salvar recibo",
+    "saving": "Salvando recibo",
     "discardTitle": "Descartar este recibo?",
     "discardMessage": "O rascunho e a foto serão apagados.",
     "saveFailed": "Não foi possível salvar o recibo. Tente de novo.",

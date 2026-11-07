@@ -132,6 +132,8 @@
     "rateLabel": "Tipo de cambio: 1 {{from}} = ? {{to}}",
     "ratePlaceholder": "Automático",
     "discard": "Descartar",
+    "saveReceipt": "Guardar recibo",
+    "saving": "Guardando recibo",
     "discardTitle": "¿Descartar este recibo?",
     "discardMessage": "Se borrarán el borrador y su foto.",
     "saveFailed": "No se pudo guardar el recibo. Inténtalo de nuevo.",

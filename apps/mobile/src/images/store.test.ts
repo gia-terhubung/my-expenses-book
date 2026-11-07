@@ -82,6 +82,19 @@ describe("image store", () => {
     await expect(store.openForView("pages/../x.enc")).rejects.toThrow();
   });
 
+  it("closeViews deletes the decrypted view copies of the given pages only", async () => {
+    const { store, files } = setup();
+    const a = await store.savePage(CACHE + "picked.jpg");
+    const b = await store.savePage(CACHE + "picked.jpg");
+    const va = await store.openForView(a.imagePath);
+    const vb = await store.openForView(b.imagePath);
+    await store.closeViews([a.imagePath, a.thumbPath]); // thumb never opened: no error
+    expect(files.has(va)).toBe(false);
+    expect(files.has(vb)).toBe(true);
+    expect(files.has(DOC + a.imagePath)).toBe(true); // encrypted page untouched
+    await expect(store.closeViews(["../x.enc"])).rejects.toThrow();
+  });
+
   it("purgeDecryptedCache removes all view files", async () => {
     const { store, files } = setup();
     const r = await store.savePage(CACHE + "picked.jpg");
