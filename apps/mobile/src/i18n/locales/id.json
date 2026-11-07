@@ -162,11 +162,35 @@
     }
   },
   "receipts": {
-    "unknownMerchant": "Pedagang tidak diketahui"
+    "unknownMerchant": "Pedagang tidak diketahui",
+    "detail": {
+      "edit": "Ubah",
+      "move": "Pindahkan ke folder",
+      "missing": "Struk ini sudah tidak tersedia.",
+      "fx": "1 {{from}} = {{rate}} {{to}}",
+      "rateOn": "kurs tanggal {{date}}",
+      "manualRate": "kurs manual",
+      "approximate": "perkiraan (kurs terdekat sebelumnya)",
+      "category": "Kategori",
+      "folder": "Folder",
+      "notes": "Catatan",
+      "deleteTitle": "Hapus struk ini?",
+      "deleteMessage": "Struk dan fotonya akan dihapus dari perangkat ini.",
+      "deleteFailed": "Struk tidak dapat dihapus."
+    }
   },
   "totals": {
     "thisMonth": "Bulan ini",
     "taxYear": "Tahun pajak {{label}}",
     "notConverted": "{{count}} belum dikonversi"
+  },
+  "folders": {
+    "pickerTitle": "Pindahkan ke folder",
+    "none": "Tanpa folder",
+    "new": "Folder baru…",
+    "name": "Nama folder",
+    "kindProject": "Proyek",
+    "kindTrip": "Perjalanan",
+    "create": "Buat"
   }
 }

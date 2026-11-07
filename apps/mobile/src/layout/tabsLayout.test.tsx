@@ -25,6 +25,10 @@ jest.mock("@/db/repositories/receipts", () => ({
   ...jest.requireActual("@/db/repositories/receipts"),
   listDraftIds: () => mockDrafts,
 }));
+// Receipts' detail pane opens photos; the real image store needs native crypto.
+jest.mock("@/images/ImageStoreProvider", () => ({
+  useImageStore: () => ({ openForView: jest.fn(), deleteFiles: jest.fn(), closeViews: jest.fn() }),
+}));
 jest.mock("expo-local-authentication", () => ({
   getEnrolledLevelAsync: jest.fn().mockResolvedValue(1),
   SecurityLevel: { NONE: 0, SECRET: 1 },

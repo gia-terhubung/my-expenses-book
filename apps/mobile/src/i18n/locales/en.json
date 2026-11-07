@@ -162,11 +162,35 @@
     }
   },
   "receipts": {
-    "unknownMerchant": "Unknown merchant"
+    "unknownMerchant": "Unknown merchant",
+    "detail": {
+      "edit": "Edit",
+      "move": "Move to folder",
+      "missing": "This receipt is no longer available.",
+      "fx": "1 {{from}} = {{rate}} {{to}}",
+      "rateOn": "rate of {{date}}",
+      "manualRate": "manual rate",
+      "approximate": "approximate (nearest earlier rate)",
+      "category": "Category",
+      "folder": "Folder",
+      "notes": "Notes",
+      "deleteTitle": "Delete this receipt?",
+      "deleteMessage": "The receipt and its photos will be removed from this device.",
+      "deleteFailed": "Couldn't delete the receipt."
+    }
   },
   "totals": {
     "thisMonth": "This month",
     "taxYear": "Tax year {{label}}",
     "notConverted": "{{count}} not converted"
+  },
+  "folders": {
+    "pickerTitle": "Move to folder",
+    "none": "No folder",
+    "new": "New folder…",
+    "name": "Folder name",
+    "kindProject": "Project",
+    "kindTrip": "Trip",
+    "create": "Create"
   }
 }

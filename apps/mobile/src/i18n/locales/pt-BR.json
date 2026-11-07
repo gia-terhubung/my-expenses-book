@@ -162,11 +162,35 @@
     }
   },
   "receipts": {
-    "unknownMerchant": "Estabelecimento desconhecido"
+    "unknownMerchant": "Estabelecimento desconhecido",
+    "detail": {
+      "edit": "Editar",
+      "move": "Mover para pasta",
+      "missing": "Este recibo não está mais disponível.",
+      "fx": "1 {{from}} = {{rate}} {{to}}",
+      "rateOn": "cotação de {{date}}",
+      "manualRate": "cotação manual",
+      "approximate": "aproximado (cotação anterior mais próxima)",
+      "category": "Categoria",
+      "folder": "Pasta",
+      "notes": "Observações",
+      "deleteTitle": "Excluir este recibo?",
+      "deleteMessage": "O recibo e suas fotos serão removidos deste dispositivo.",
+      "deleteFailed": "Não foi possível excluir o recibo."
+    }
   },
   "totals": {
     "thisMonth": "Este mês",
     "taxYear": "Ano fiscal {{label}}",
     "notConverted": "{{count}} sem conversão"
+  },
+  "folders": {
+    "pickerTitle": "Mover para pasta",
+    "none": "Sem pasta",
+    "new": "Nova pasta…",
+    "name": "Nome da pasta",
+    "kindProject": "Projeto",
+    "kindTrip": "Viagem",
+    "create": "Criar"
   }
 }

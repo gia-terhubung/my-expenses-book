@@ -1,10 +1,15 @@
-import { useLocalSearchParams } from "expo-router";
-import { useTranslation } from "react-i18next";
+import { router, useLocalSearchParams, type Href } from "expo-router";
 
-import { EmptyState } from "@/layout/EmptyState";
+import { ReceiptDetail } from "@/receipts/ReceiptDetail";
 
 export default function DocumentScreen() {
-  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
-  return <EmptyState title={`${t("document.title")} ${id}`} message={t("empty.document")} />;
+  return (
+    <ReceiptDetail
+      id={id}
+      onEdit={(rid) => router.push({ pathname: "/edit/[id]", params: { id: rid } } as unknown as Href)}
+      onDeleted={() => router.back()}
+      onBack={() => router.back()}
+    />
+  );
 }

@@ -11,7 +11,7 @@ import { listDraftIds } from "@/db/repositories/receipts";
 import { EmptyState } from "@/layout/EmptyState";
 import { useWhenUnobscured } from "@/lock/useWhenUnobscured";
 import { usePref } from "@/prefs/PrefsProvider";
-import { ReceiptList } from "@/receipts/ReceiptList";
+import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { TotalsHeader } from "@/receipts/TotalsHeader";
 import { createManualDraft } from "@/review/manualDraft";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -56,9 +56,8 @@ export default function ReceiptsScreen() {
 
   return (
     <>
-      <ReceiptList
+      <ReceiptListDetail
         filter={feedFilter}
-        onSelect={(id) => router.push({ pathname: "/document/[id]", params: { id } } as unknown as Href)}
         ListHeaderComponent={
           <>
             <View style={{ height: insets.top }} />
@@ -84,7 +83,8 @@ export default function ReceiptsScreen() {
             ) : null}
           </>
         }
-        empty={<EmptyState title={t("tabs.receipts")} message={t("empty.receipts")} />}
+        // The header spacer above already applies the top inset.
+        empty={<EmptyState title={t("tabs.receipts")} message={t("empty.receipts")} topInset={false} />}
       />
       <Pressable
         accessibilityRole="button"
