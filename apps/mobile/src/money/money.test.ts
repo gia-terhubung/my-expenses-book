@@ -85,3 +85,17 @@ describe('formatMoney', () => {
     expect(formatMoney(-125, 'USD', 'en-US')).toContain('1.25');
   });
 });
+
+describe('formatMoney formatter cache', () => {
+  it('builds one Intl.NumberFormat per locale and currency', () => {
+    const spy = jest.spyOn(Intl, 'NumberFormat');
+    const a1 = formatMoney(1234, 'XAF', 'fr-FR');
+    const a2 = formatMoney(5678, 'XAF', 'fr-FR');
+    const b = formatMoney(1234, 'XAF', 'en-US');
+    expect(spy).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
+    expect(a1).toBe(new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF' }).format(1234));
+    expect(a2).toBe(new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF' }).format(5678));
+    expect(b).toBe(new Intl.NumberFormat('en-US', { style: 'currency', currency: 'XAF' }).format(1234));
+  });
+});

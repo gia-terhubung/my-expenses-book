@@ -2,14 +2,18 @@ import type { HomeTotal } from "@/db/repositories/receiptQueries";
 import type { Receipt } from "@/db/types";
 import { formatMoney } from "@/money/money";
 
+// One formatter per locale: building Intl formatters is slow on Hermes (one per section header).
+const monthFormats = new Map<string, Intl.DateTimeFormat>();
+
 /** "2026-11" -> "November 2026" (locale-aware). */
 export function monthLabel(yyyyMm: string, locale: string): string {
   const [y, m] = yyyyMm.split("-").map(Number);
-  return new Intl.DateTimeFormat(locale, {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(Date.UTC(y, m - 1, 1));
+  let fmt = monthFormats.get(locale);
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone: "UTC" });
+    monthFormats.set(locale, fmt);
+  }
+  return fmt.format(Date.UTC(y, m - 1, 1));
 }
 
 /** Home-currency amount line; null when the receipt is already in home, "—" when not converted. */

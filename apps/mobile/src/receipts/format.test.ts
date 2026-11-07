@@ -58,3 +58,16 @@ describe("format", () => {
     ).not.toContain("x");
   });
 });
+
+describe("monthLabel formatter cache", () => {
+  it("builds one Intl.DateTimeFormat per locale", () => {
+    const spy = jest.spyOn(Intl, "DateTimeFormat");
+    const a = monthLabel("2026-11", "pt-BR");
+    const b = monthLabel("2026-01", "pt-BR");
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+    const fmt = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
+    expect(a).toBe(fmt.format(Date.UTC(2026, 10, 1)));
+    expect(b).toBe(fmt.format(Date.UTC(2026, 0, 1)));
+  });
+});
