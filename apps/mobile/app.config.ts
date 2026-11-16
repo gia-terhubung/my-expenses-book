@@ -21,7 +21,7 @@ const config: ExpoConfig = {
     package: "com.terhubung.myexpensesbook",
     allowBackup: false,
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#FFD84A",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -55,7 +55,7 @@ const config: ExpoConfig = {
     [
       "expo-splash-screen",
       {
-        backgroundColor: "#208AEF",
+        backgroundColor: "#FFD84A",
         image: "./assets/images/splash-icon.png",
         imageWidth: 76,
       },
