@@ -29,6 +29,26 @@ describe("StatusBarInset", () => {
     expect(flat).toMatchObject({ flex: 1, paddingTop: 40 });
   });
 
+  it("uses the given color", async () => {
+    await render(
+      <StatusBarInset color="#1F5C4C">
+        <Text>body</Text>
+      </StatusBarInset>,
+    );
+    const flat = Object.assign({}, ...[screen.getByTestId("status-bar-inset").props.style].flat());
+    expect(flat).toMatchObject({ paddingTop: 40, backgroundColor: "#1F5C4C" });
+  });
+
+  it("defaults to the page background", async () => {
+    await render(
+      <StatusBarInset>
+        <Text>body</Text>
+      </StatusBarInset>,
+    );
+    const flat = Object.assign({}, ...[screen.getByTestId("status-bar-inset").props.style].flat());
+    expect(flat).toMatchObject({ backgroundColor: "#fff" });
+  });
+
   // Scroll content that carries the top inset slides under the transparent Android status bar.
   it("is the only place screens take the top inset (fixed, non-scrolling chrome excepted)", () => {
     const allowed = new Set([

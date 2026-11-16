@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react-native";
 
-import { ThemedStatusBar } from "./ThemedStatusBar";
+import { ThemedStatusBar, themedStatusBarStyle } from "./ThemedStatusBar";
 
 const mockStatusBar = jest.fn((_props: { style: string }) => null);
 jest.mock("expo-status-bar", () => ({ StatusBar: (p: { style: string }) => mockStatusBar(p) }));
@@ -17,5 +17,9 @@ describe("ThemedStatusBar", () => {
     mockScheme = "dark";
     await render(<ThemedStatusBar />);
     expect(mockStatusBar).toHaveBeenLastCalledWith({ style: "light" });
+  });
+  it("themedStatusBarStyle gives dark icons on light, light icons on dark", () => {
+    expect(themedStatusBarStyle("light")).toBe("dark");
+    expect(themedStatusBarStyle("dark")).toBe("light");
   });
 });

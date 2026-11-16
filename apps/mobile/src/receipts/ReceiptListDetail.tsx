@@ -14,6 +14,8 @@ type Props = {
   filter: ReceiptFilter;
   ListHeaderComponent?: React.ReactElement | null;
   empty: React.ReactElement;
+  /** Colour of the strip behind the status bar above the list pane (Home: the slip green). */
+  topInsetColor?: string;
 };
 
 const openEdit = (id: string) => router.push({ pathname: "/edit/[id]", params: { id } } as unknown as Href);
@@ -24,7 +26,7 @@ const openEdit = (id: string) => router.push({ pathname: "/edit/[id]", params: {
  * folding to compact keeps the open receipt (with a back control) and unfolding keeps the row
  * selected.
  */
-export function ReceiptListDetail({ filter, ListHeaderComponent, empty }: Props) {
+export function ReceiptListDetail({ filter, ListHeaderComponent, empty, topInsetColor }: Props) {
   const windowClass = useWindowClass();
   const compact = windowClass === "compact";
   const { selected } = useLocalSearchParams<{ selected?: string }>();
@@ -53,7 +55,7 @@ export function ReceiptListDetail({ filter, ListHeaderComponent, empty }: Props)
   return (
     <TwoPane
       primary={
-        <StatusBarInset>
+        <StatusBarInset color={topInsetColor}>
           <ReceiptList
             filter={filter}
             selectedId={selected ?? null}

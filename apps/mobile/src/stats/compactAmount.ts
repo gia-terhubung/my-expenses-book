@@ -1,0 +1,52 @@
+import { currencyExponent } from "@/money/currencies";
+import { formatMoney } from "@/money/money";
+
+// Building Intl formatters is slow on Hermes; chart axes format many labels.
+const compactFormats = new Map<string, Intl.NumberFormat | null>();
+
+const THRESHOLDS = [1e12, 1e9, 1e6, 1e3] as const;
+// Largest first, matching THRESHOLDS.
+const SUFFIXES: Record<string, readonly string[]> = {
+  id: ["T", "M", "jt", "rb"],
+  en: ["T", "B", "M", "K"],
+  es: ["B", "mil M", "M", "mil"],
+  pt: ["tri", "bi", "mi", "mil"],
+};
+
+/** Intl compact currency formatter, or null when this runtime lacks compact notation. */
+function compactFormat(locale: string, currency: string): Intl.NumberFormat | null {
+  const key = `${locale}|${currency}`;
+  if (compactFormats.has(key)) return compactFormats.get(key) ?? null;
+  let fmt: Intl.NumberFormat | null;
+  try {
+    fmt = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1, style: "currency", currency });
+    // Some engines accept the option but ignore it and print the full amount.
+    if (fmt.resolvedOptions().notation !== "compact") fmt = null;
+  } catch {
+    fmt = null;
+  }
+  compactFormats.set(key, fmt);
+  return fmt;
+}
+
+function currencySymbol(locale: string, currency: string): string {
+  const part = new Intl.NumberFormat(locale, { style: "currency", currency }).formatToParts(0).find((p) => p.type === "currency");
+  return part?.value ?? currency;
+}
+
+/** Hand-rolled compact form for runtimes without Intl compact notation: "Rp 31,3 jt", "$ 12.4 K". */
+function fallback(major: number, minor: number, currency: string, locale: string): string {
+  const abs = Math.abs(major);
+  const i = THRESHOLDS.findIndex((t) => abs >= t);
+  if (i < 0) return formatMoney(minor, currency, locale);
+  const suffixes = SUFFIXES[locale.split("-")[0]] ?? SUFFIXES.en;
+  const n = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(major / THRESHOLDS[i]);
+  return `${currencySymbol(locale, currency)} ${n} ${suffixes[i]}`;
+}
+
+/** Locale-aware short money label ("Rp 31,3 jt", "¥1.2M", "R$ 3,1 mi"), at most one decimal. Display only. */
+export function compactAmount(minor: number, currency: string, locale: string): string {
+  const major = minor / 10 ** currencyExponent(currency);
+  const fmt = compactFormat(locale, currency);
+  return fmt ? fmt.format(major) : fallback(major, minor, currency, locale);
+}

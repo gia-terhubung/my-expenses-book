@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, within } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
+import { setStatusBarStyle } from "expo-status-bar";
 import { useSyncExternalStore } from "react";
 
 import { testDb } from "@/db/testing/testDb";
@@ -33,6 +34,8 @@ jest.mock("expo-local-authentication", () => ({
   getEnrolledLevelAsync: jest.fn().mockResolvedValue(1),
   SecurityLevel: { NONE: 0, SECRET: 1 },
 }));
+
+jest.mock("expo-status-bar", () => ({ ...jest.requireActual("expo-status-bar"), setStatusBarStyle: jest.fn() }));
 
 // Mutable window class that re-renders subscribers, like a real resize would.
 type WC = "compact" | "medium" | "expanded";
@@ -69,6 +72,7 @@ beforeAll(() => initI18n("en"));
 beforeEach(() => {
   mockDb = testDb();
   mockDrafts = [];
+  (setStatusBarStyle as jest.Mock).mockClear();
 });
 
 describe("tabs layout", () => {
@@ -111,5 +115,29 @@ describe("tabs layout", () => {
     await act(async () => fireEvent.press(banner));
     expect(screen).toHavePathname("/review/d1");
     expect(screen).toHaveSearchParams({ id: "d1", queue: "d2,d3" });
+  });
+
+  it("Receipts: the draft banner is announced as its visible text only (no dot, no chevron)", async () => {
+    setClass("compact");
+    mockDrafts = ["d1", "d2"];
+    await renderApp();
+    const banner = await screen.findByRole("button", { name: "Continue reviewing (2)" });
+    expect(banner.props.accessibilityLabel).toBe("Continue reviewing (2)");
+  });
+
+  it("Receipts: light status-bar icons over the green slip while focused, themed again on blur", async () => {
+    setClass("compact");
+    await renderApp();
+    await screen.findByTestId("tab-bar");
+    expect(setStatusBarStyle).toHaveBeenLastCalledWith("light");
+    await act(async () => fireEvent.press(within(screen.getByTestId("tab-bar")).getByText("Settings")));
+    expect(setStatusBarStyle).toHaveBeenLastCalledWith("dark");
+  });
+
+  it("Receipts on wide layouts keeps the themed icons (the rail and detail pane are not green)", async () => {
+    setClass("expanded");
+    await renderApp();
+    await screen.findByTestId("side-rail");
+    expect(setStatusBarStyle).not.toHaveBeenCalledWith("light");
   });
 });

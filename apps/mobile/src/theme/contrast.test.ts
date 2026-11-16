@@ -38,6 +38,9 @@ const PAIRS: [keyof ColorTokens, keyof ColorTokens, number][] = [
   ["warning", "brassFill", 4.5],
   ["slipText", "slip", 4.5],
   ["slipMuted", "slip", 4.5],
+  ["onHighlight", "highlight", 4.5],
+  // Yellow is a foreground on the green slip (pace line, "see statistics", total bar).
+  ["highlight", "slip", 4.5],
 ];
 
 describe.each([
@@ -52,4 +55,10 @@ describe.each([
 it("contrast() matches WCAG reference values", () => {
   expect(contrast("#000000", "#FFFFFF")).toBeCloseTo(21, 1);
   expect(contrast("#777777", "#FFFFFF")).toBeCloseTo(4.48, 2);
+});
+
+it("yellow accent tokens match the spec", () => {
+  const pick = (c: ColorTokens) => [c.highlight, c.onHighlight, c.brassFill, c.brassRing, c.warning];
+  expect(pick(lightColors)).toEqual(["#FFD84A", "#16201C", "#FFF3C4", "#FFD84A", "#6B4E00"]);
+  expect(pick(darkColors)).toEqual(["#FFD84A", "#16201C", "#2B2610", "#5A4E1C", "#FFD84A"]);
 });

@@ -1,4 +1,5 @@
 import { router, useFocusEffect, useLocalSearchParams, type Href } from "expo-router";
+import { setStatusBarStyle } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -17,6 +18,7 @@ import { feedFabVisible } from "@/receipts/feedFab";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { TotalsHeader } from "@/receipts/TotalsHeader";
 import { createManualDraft } from "@/review/manualDraft";
+import { themedStatusBarStyle } from "@/theme/ThemedStatusBar";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const openReview = (ids: string[]) => {
@@ -37,6 +39,16 @@ export default function ReceiptsScreen() {
   // Drafts left unreviewed (closed with "Review later", app killed mid-run) stay reachable.
   const [drafts, setDrafts] = useState<string[]>([]);
   useFocusEffect(useCallback(() => setDrafts(listDraftIds(db)), [db]));
+  // Compact: the strip above the list is slip green, so its icons go light while Home is focused.
+  // Wide layouts keep the themed icons: the rail and the detail pane under the bar are not green.
+  const greenTop = windowClass === "compact";
+  useFocusEffect(
+    useCallback(() => {
+      if (!greenTop) return;
+      setStatusBarStyle("light");
+      return () => setStatusBarStyle(themedStatusBarStyle(theme.scheme));
+    }, [greenTop, theme.scheme]),
+  );
 
   const start = async (mode: CaptureChoice) => {
     if (!mayStartCapture((key) => Alert.alert(t(key)))) return;
@@ -63,12 +75,15 @@ export default function ReceiptsScreen() {
     <>
       <ReceiptListDetail
         filter={feedFilter}
+        topInsetColor={greenTop ? theme.colors.slip : undefined}
         ListHeaderComponent={
           <>
             <TotalsHeader />
             {drafts.length > 0 ? (
               <Pressable
                 accessibilityRole="button"
+                // The visible text only: the dot and the chevron are decoration.
+                accessibilityLabel={t("review.continue", { n: drafts.length })}
                 onPress={() => openReview(drafts)}
                 style={({ pressed }) => ({
                   minHeight: 48,
