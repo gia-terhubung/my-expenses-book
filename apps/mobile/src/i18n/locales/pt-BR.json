@@ -91,7 +91,9 @@
     "receipts": "Nenhum recibo ainda. Os recibos digitalizados aparecerão aqui.",
     "search": "Busque seus recibos por estabelecimento, nota ou valor.",
     "folders": "Nenhuma pasta ainda. Crie uma para agrupar recibos.",
-    "document": "Os detalhes do recibo aparecerão aqui."
+    "document": "Os detalhes do recibo aparecerão aqui.",
+    "scanFirst": "Digitalizar um recibo",
+    "addManually": "Adicionar manualmente"
   },
   "document": {
     "title": "Recibo"
@@ -217,7 +219,9 @@
     "receiptCount_other": "{{count}} recibos",
     "taxYearTitle": "Ano fiscal {{label}}",
     "noReceipts": "Ainda não há recibos aqui.",
-    "save": "Salvar"
+    "save": "Salvar",
+    "notFound": "Esta pasta não existe mais.",
+    "taxYearInvalid": "Este ano fiscal não pode ser exibido."
   },
   "categoryManage": {
     "title": "Categorias",

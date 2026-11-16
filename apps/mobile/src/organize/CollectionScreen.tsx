@@ -59,8 +59,22 @@ export function CollectionScreen(props: Props) {
     [db, filter, home, version],
   );
 
-  // A folder deleted from here (or elsewhere) has nothing left to show.
-  if (folderId !== null && !folder) return null;
+  // Deleted / unknown folder, or a tax-year param that isn't a number: say so and offer a way out.
+  const missing = folderId !== null ? !folder : !Number.isFinite(year);
+  if (missing) {
+    const leave = () => (router.canGoBack() ? router.back() : router.replace("/folders" as unknown as Href));
+    return (
+      <EmptyState title={t(folderId !== null ? "folders.notFound" : "folders.taxYearInvalid")}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={leave}
+          style={{ minHeight: 48, justifyContent: "center", alignSelf: "flex-start" }}
+        >
+          <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("common.back")}</Text>
+        </Pressable>
+      </EmptyState>
+    );
+  }
 
   const title = folder
     ? folder.name

@@ -91,7 +91,9 @@
     "receipts": "Belum ada struk. Struk yang dipindai akan muncul di sini.",
     "search": "Cari struk berdasarkan toko, catatan, atau jumlah.",
     "folders": "Belum ada folder. Buat satu untuk mengelompokkan struk.",
-    "document": "Detail struk akan muncul di sini."
+    "document": "Detail struk akan muncul di sini.",
+    "scanFirst": "Pindai struk",
+    "addManually": "Tambah manual"
   },
   "document": {
     "title": "Struk"
@@ -217,7 +219,9 @@
     "receiptCount_other": "{{count}} struk",
     "taxYearTitle": "Tahun pajak {{label}}",
     "noReceipts": "Belum ada struk di sini.",
-    "save": "Simpan"
+    "save": "Simpan",
+    "notFound": "Folder ini sudah tidak ada.",
+    "taxYearInvalid": "Tahun pajak ini tidak dapat ditampilkan."
   },
   "categoryManage": {
     "title": "Kategori",

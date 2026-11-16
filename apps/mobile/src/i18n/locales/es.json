@@ -91,7 +91,9 @@
     "receipts": "Aún no hay recibos. Los recibos escaneados aparecerán aquí.",
     "search": "Busca tus recibos por comercio, nota o importe.",
     "folders": "Aún no hay carpetas. Crea una para agrupar recibos.",
-    "document": "Los detalles del recibo aparecerán aquí."
+    "document": "Los detalles del recibo aparecerán aquí.",
+    "scanFirst": "Escanear un recibo",
+    "addManually": "Añadir a mano"
   },
   "document": {
     "title": "Recibo"
@@ -217,7 +219,9 @@
     "receiptCount_other": "{{count}} recibos",
     "taxYearTitle": "Año fiscal {{label}}",
     "noReceipts": "Aún no hay recibos aquí.",
-    "save": "Guardar"
+    "save": "Guardar",
+    "notFound": "Esta carpeta ya no existe.",
+    "taxYearInvalid": "Este año fiscal no se puede mostrar."
   },
   "categoryManage": {
     "title": "Categorías",

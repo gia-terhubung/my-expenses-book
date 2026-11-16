@@ -91,7 +91,9 @@
     "receipts": "No receipts yet. Scanned receipts will show up here.",
     "search": "Search your receipts by merchant, note or amount.",
     "folders": "No folders yet. Create one to group receipts.",
-    "document": "Receipt details will appear here."
+    "document": "Receipt details will appear here.",
+    "scanFirst": "Scan a receipt",
+    "addManually": "Add manually"
   },
   "document": {
     "title": "Receipt"
@@ -217,7 +219,9 @@
     "receiptCount_other": "{{count}} receipts",
     "taxYearTitle": "Tax year {{label}}",
     "noReceipts": "No receipts here yet.",
-    "save": "Save"
+    "save": "Save",
+    "notFound": "This folder no longer exists.",
+    "taxYearInvalid": "This tax year can't be shown."
   },
   "categoryManage": {
     "title": "Categories",
