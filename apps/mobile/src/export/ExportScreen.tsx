@@ -20,6 +20,7 @@ import { totalLine } from "@/receipts/format";
 import { categoryLabel } from "@/organize/categoryLabel";
 import { FolderPicker } from "@/organize/FolderPicker";
 import { useTheme } from "@/theme/ThemeProvider";
+import { StatusBarInset } from "@/layout/StatusBarInset";
 
 import { toCsv } from "./csv";
 import { EXPORT_DIR, exportFileName, purgeExportDir, shareFile } from "./files";
@@ -139,8 +140,7 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   const disabled = busy || empty;
 
   return (
-    // Inset sits on the fixed wrapper, not the content: scrolled rows stop at the status bar.
-    <View testID="export-screen" style={{ flex: 1, paddingTop: insets.top, backgroundColor: theme.colors.background }}>
+    <StatusBarInset>
       <ScrollView
         testID="export-scroll"
         style={{ backgroundColor: theme.colors.background }}
@@ -239,6 +239,6 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
           </Pressable>
         </View>
       </ScrollView>
-    </View>
+    </StatusBarInset>
   );
 }

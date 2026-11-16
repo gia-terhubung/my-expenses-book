@@ -78,7 +78,7 @@ describe("ExportScreen", () => {
     await render(<ExportScreen fs={fs} now={today} />);
     const flat = (st: unknown) => Object.assign({}, ...[st].flat(Infinity).filter(Boolean)) as { paddingTop?: number };
     expect(flat(screen.getByTestId("export-scroll").props.contentContainerStyle).paddingTop ?? 0).toBeLessThan(40);
-    expect(flat(screen.getByTestId("export-screen").props.style).paddingTop).toBe(40);
+    expect(flat(screen.getByTestId("status-bar-inset").props.style).paddingTop).toBe(40);
   });
 
   it("shows count and home total for the selection", async () => {

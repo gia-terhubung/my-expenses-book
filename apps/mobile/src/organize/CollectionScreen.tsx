@@ -1,7 +1,6 @@
 import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { useDb } from "@/db/DatabaseProvider";
@@ -29,7 +28,6 @@ export function CollectionScreen(props: Props) {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
@@ -131,7 +129,7 @@ export function CollectionScreen(props: Props) {
         ListHeaderComponent={
           <View
             style={{
-              paddingTop: insets.top,
+              paddingTop: theme.spacing.sm,
               paddingHorizontal: theme.spacing.lg,
               paddingBottom: theme.spacing.md,
             }}

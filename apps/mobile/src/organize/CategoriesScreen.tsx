@@ -16,6 +16,7 @@ import {
 import type { Category } from "@/db/types";
 import { categoryLabel } from "@/review/ReviewFields";
 import { useTheme } from "@/theme/ThemeProvider";
+import { StatusBarInset } from "@/layout/StatusBarInset";
 
 import { CategoryForm } from "./CategoryForm";
 
@@ -66,11 +67,10 @@ export function CategoriesScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <StatusBarInset>
       <ScrollView
         contentContainerStyle={{
           padding: theme.spacing.lg,
-          paddingTop: insets.top + theme.spacing.lg,
           paddingBottom: insets.bottom + theme.spacing.lg,
           gap: theme.spacing.sm,
         }}
@@ -138,6 +138,6 @@ export function CategoriesScreen() {
           setForm(null);
         }}
       />
-    </View>
+    </StatusBarInset>
   );
 }

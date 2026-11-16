@@ -9,6 +9,7 @@ import { LanguagePicker } from "@/components/LanguagePicker";
 import { LockToggle } from "@/components/LockToggle";
 import { defaultTaxYearStartMonth, resolveHomeCurrency, resolveLanguage } from "@/i18n/resolve";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
+import { StatusBarInset } from "@/layout/StatusBarInset";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { nextStep } from "./steps";
@@ -127,24 +128,28 @@ export function OnboardingFlow() {
       </Text>
     </>
   );
-  const pad = { padding: theme.spacing.xl, paddingTop: insets.top + theme.spacing.xl, paddingBottom: insets.bottom + theme.spacing.xl };
+  const pad = { padding: theme.spacing.xl, paddingBottom: insets.bottom + theme.spacing.xl };
 
   // Same element types per step regardless of width, so a size change never remounts the picker.
   return fillBody ? (
-    <View style={[{ flex: 1, backgroundColor: theme.colors.background }, pad]}>
-      <View style={[column, { flex: 1 }]}>
-        {head}
-        <View style={{ flex: 1, gap: theme.spacing.md }}>{body}</View>
-        {footer}
+    <StatusBarInset>
+      <View style={[{ flex: 1, backgroundColor: theme.colors.background }, pad]}>
+        <View style={[column, { flex: 1 }]}>
+          {head}
+          <View style={{ flex: 1, gap: theme.spacing.md }}>{body}</View>
+          {footer}
+        </View>
       </View>
-    </View>
+    </StatusBarInset>
   ) : (
-    <ScrollView style={{ backgroundColor: theme.colors.background }} contentContainerStyle={pad}>
-      <View style={column}>
-        {head}
-        {body}
-        {footer}
-      </View>
-    </ScrollView>
+    <StatusBarInset>
+      <ScrollView style={{ backgroundColor: theme.colors.background }} contentContainerStyle={pad}>
+        <View style={column}>
+          {head}
+          {body}
+          {footer}
+        </View>
+      </ScrollView>
+    </StatusBarInset>
   );
 }

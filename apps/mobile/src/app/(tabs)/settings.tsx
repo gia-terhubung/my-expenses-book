@@ -17,6 +17,7 @@ import { OptionRow } from "@/components/OptionRow";
 import { TaxYearPicker } from "@/components/TaxYearPicker";
 import { useDb } from "@/db/DatabaseProvider";
 import { fileSize } from "@/images/expoFs";
+import { StatusBarInset } from "@/layout/StatusBarInset";
 import { resolveHomeCurrency, resolveLanguage } from "@/i18n/resolve";
 import type { LockTimeout } from "@/prefs/prefs";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
@@ -121,7 +122,6 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const prefs = usePrefs();
   const [sheet, setSheet] = useState<Sheet>(null);
   const db = useDb();
@@ -157,78 +157,80 @@ export default function SettingsScreen() {
   const close = () => setSheet(null);
 
   return (
-    <ScrollView
-      style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: theme.spacing.xl, paddingTop: insets.top + theme.spacing.xl }}
-    >
-      <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
-        <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
-          {t("settings.title")}
-        </Text>
-        <Row label={t("settings.language")} value={LANGUAGE_NAMES[language]} onPress={() => setSheet("language")} />
-        <Row
-          label={t("settings.homeCurrency")}
-          value={currencyLabel(i18n.language, currency)}
-          onPress={() => setSheet("currency")}
-        />
-        <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} />
-        <Row label={t("settings.categories")} value="" onPress={() => router.push("/categories" as unknown as Href)} />
-        <Row label={t("settings.export")} value="" onPress={() => router.push("/export" as unknown as Href)} />
-        {/* /backup is created in the backup task. */}
-        <Row label={t("settings.backupRestore")} value="" onPress={() => router.push("/backup" as unknown as Href)} />
+    <StatusBarInset>
+      <ScrollView
+        style={{ backgroundColor: theme.colors.background }}
+        contentContainerStyle={{ padding: theme.spacing.xl }}
+      >
+        <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
+          <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
+            {t("settings.title")}
+          </Text>
+          <Row label={t("settings.language")} value={LANGUAGE_NAMES[language]} onPress={() => setSheet("language")} />
+          <Row
+            label={t("settings.homeCurrency")}
+            value={currencyLabel(i18n.language, currency)}
+            onPress={() => setSheet("currency")}
+          />
+          <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} />
+          <Row label={t("settings.categories")} value="" onPress={() => router.push("/categories" as unknown as Href)} />
+          <Row label={t("settings.export")} value="" onPress={() => router.push("/export" as unknown as Href)} />
+          {/* /backup is created in the backup task. */}
+          <Row label={t("settings.backupRestore")} value="" onPress={() => router.push("/backup" as unknown as Href)} />
 
-        <View style={{ backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm }}>
-          <LockToggle label={t("settings.appLock")} value={lockEnabled} onChange={(v) => prefs.set("lockEnabled", v)} />
+          <View style={{ backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm }}>
+            <LockToggle label={t("settings.appLock")} value={lockEnabled} onChange={(v) => prefs.set("lockEnabled", v)} />
+          </View>
+          {lockEnabled ? (
+            <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
+              <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{t("settings.lockTimeout")}</Text>
+              {TIMEOUTS.map((s) => (
+                <OptionRow key={s} label={timeoutLabel(s)} selected={s === lockTimeout} onPress={() => prefs.set("lockTimeout", s)} />
+              ))}
+            </View>
+          ) : null}
+          <InfoRow
+            label={t("settings.storage")}
+            value={storage ? t("settings.storageValue", { count: storage.receipts, size: formatBytes(storage.bytes, i18n.language) }) : "…"}
+          />
+
+          <GroupTitle title={t("settings.support")} />
+          <Row label={t("settings.tipJar")} value="" onPress={() => router.push("/tip-jar" as unknown as Href)} />
+          <Row label={t("settings.errorLog")} value="" onPress={() => router.push("/error-log" as unknown as Href)} />
+
+          <GroupTitle title={t("about.title")} />
+          <Row label={t("about.privacyPolicy")} value="" onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)} />
+          <InfoRow label={t("about.version")} value={Constants.expoConfig?.version ?? "?"} />
+
+          {__DEV__ && (
+            <View style={{ gap: theme.spacing.sm, marginTop: theme.spacing.xl }}>
+              <Text style={[theme.type.title, { color: theme.colors.text }]}>{t("settings.devTools")}</Text>
+              <Link href="/db-spike">DB spike</Link>
+              <Link href="/ai-spike">AI spike</Link>
+              <Link href="/db-check">DB check</Link>
+              <Link href="/ocr-check">OCR check</Link>
+            </View>
+          )}
         </View>
-        {lockEnabled ? (
-          <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
-            <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{t("settings.lockTimeout")}</Text>
-            {TIMEOUTS.map((s) => (
-              <OptionRow key={s} label={timeoutLabel(s)} selected={s === lockTimeout} onPress={() => prefs.set("lockTimeout", s)} />
-            ))}
-          </View>
-        ) : null}
-        <InfoRow
-          label={t("settings.storage")}
-          value={storage ? t("settings.storageValue", { count: storage.receipts, size: formatBytes(storage.bytes, i18n.language) }) : "…"}
-        />
 
-        <GroupTitle title={t("settings.support")} />
-        <Row label={t("settings.tipJar")} value="" onPress={() => router.push("/tip-jar" as unknown as Href)} />
-        <Row label={t("settings.errorLog")} value="" onPress={() => router.push("/error-log" as unknown as Href)} />
-
-        <GroupTitle title={t("about.title")} />
-        <Row label={t("about.privacyPolicy")} value="" onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)} />
-        <InfoRow label={t("about.version")} value={Constants.expoConfig?.version ?? "?"} />
-
-        {__DEV__ && (
-          <View style={{ gap: theme.spacing.sm, marginTop: theme.spacing.xl }}>
-            <Text style={[theme.type.title, { color: theme.colors.text }]}>{t("settings.devTools")}</Text>
-            <Link href="/db-spike">DB spike</Link>
-            <Link href="/ai-spike">AI spike</Link>
-            <Link href="/db-check">DB check</Link>
-            <Link href="/ocr-check">OCR check</Link>
-          </View>
+        {sheet === "language" && (
+          <PickerSheet title={t("settings.language")} onClose={close}>
+            <LanguagePicker value={language} onChange={(l) => prefs.set("language", l)} />
+          </PickerSheet>
         )}
-      </View>
-
-      {sheet === "language" && (
-        <PickerSheet title={t("settings.language")} onClose={close}>
-          <LanguagePicker value={language} onChange={(l) => prefs.set("language", l)} />
-        </PickerSheet>
-      )}
-      {sheet === "currency" && (
-        <PickerSheet title={t("settings.homeCurrency")} onClose={close}>
-          <CurrencyPicker lang={i18n.language} value={currency} onChange={(c) => prefs.set("homeCurrency", c)} />
-        </PickerSheet>
-      )}
-      {sheet === "taxYear" && (
-        <PickerSheet title={t("settings.taxYearStart")} onClose={close}>
-          <ScrollView>
-            <TaxYearPicker lang={language} value={taxYear} onChange={(m) => prefs.set("taxYearStartMonth", m)} />
-          </ScrollView>
-        </PickerSheet>
-      )}
-    </ScrollView>
+        {sheet === "currency" && (
+          <PickerSheet title={t("settings.homeCurrency")} onClose={close}>
+            <CurrencyPicker lang={i18n.language} value={currency} onChange={(c) => prefs.set("homeCurrency", c)} />
+          </PickerSheet>
+        )}
+        {sheet === "taxYear" && (
+          <PickerSheet title={t("settings.taxYearStart")} onClose={close}>
+            <ScrollView>
+              <TaxYearPicker lang={language} value={taxYear} onChange={(m) => prefs.set("taxYearStartMonth", m)} />
+            </ScrollView>
+          </PickerSheet>
+        )}
+      </ScrollView>
+    </StatusBarInset>
   );
 }

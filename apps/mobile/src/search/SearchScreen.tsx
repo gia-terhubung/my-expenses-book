@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { deviceTimeZone, formatLocal } from "@/capture/localTime";
@@ -31,7 +30,6 @@ export function SearchScreen() {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
@@ -117,7 +115,7 @@ export function SearchScreen() {
       <ReceiptListDetail
         filter={filter}
         ListHeaderComponent={
-          <View style={{ paddingTop: insets.top, paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.md, gap: theme.spacing.sm }}>
+          <View style={{ paddingTop: theme.spacing.sm, paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.md, gap: theme.spacing.sm }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.sm }}>
               <TextInput
                 accessibilityLabel={t("search.label")}

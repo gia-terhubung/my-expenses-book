@@ -1,12 +1,11 @@
 import { router, useFocusEffect, useLocalSearchParams, type Href } from "expo-router";
 import { useCallback } from "react";
-import { BackHandler, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BackHandler } from "react-native";
 
 import type { ReceiptFilter } from "@/db/repositories/receiptQueries";
 import { TwoPane } from "@/layout/TwoPane";
 import { useWindowClass } from "@/layout/useWindowClass";
-import { useTheme } from "@/theme/ThemeProvider";
+import { StatusBarInset } from "@/layout/StatusBarInset";
 
 import { ReceiptDetail } from "./ReceiptDetail";
 import { ReceiptList } from "./ReceiptList";
@@ -26,8 +25,6 @@ const openEdit = (id: string) => router.push({ pathname: "/edit/[id]", params: {
  * selected.
  */
 export function ReceiptListDetail({ filter, ListHeaderComponent, empty }: Props) {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const windowClass = useWindowClass();
   const compact = windowClass === "compact";
   const { selected } = useLocalSearchParams<{ selected?: string }>();
@@ -56,20 +53,22 @@ export function ReceiptListDetail({ filter, ListHeaderComponent, empty }: Props)
   return (
     <TwoPane
       primary={
-        <ReceiptList
-          filter={filter}
-          selectedId={selected ?? null}
-          onSelect={onSelect}
-          ListHeaderComponent={ListHeaderComponent}
-          empty={empty}
-        />
+        <StatusBarInset>
+          <ReceiptList
+            filter={filter}
+            selectedId={selected ?? null}
+            onSelect={onSelect}
+            ListHeaderComponent={ListHeaderComponent}
+            empty={empty}
+          />
+        </StatusBarInset>
       }
       secondary={
         selected ? (
           // This screen has no header, so the pane takes the status-bar inset itself.
-          <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: theme.colors.background }}>
+          <StatusBarInset>
             <ReceiptDetail id={selected} onEdit={openEdit} onDeleted={clear} onBack={compact ? clear : undefined} />
-          </View>
+          </StatusBarInset>
         ) : null
       }
     />

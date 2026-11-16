@@ -1,7 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams, type Href } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Alert, Pressable, StyleSheet, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { BackupReminder } from "@/backup/BackupReminder";
@@ -29,7 +28,6 @@ export default function ReceiptsScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const db = useDb();
-  const insets = useSafeAreaInsets();
   const feedFilter = useMemo(() => ({}), []);
   const home = usePref("homeCurrency") ?? "USD";
   const [sheet, setSheet] = useState(false);
@@ -67,7 +65,6 @@ export default function ReceiptsScreen() {
         filter={feedFilter}
         ListHeaderComponent={
           <>
-            <View style={{ height: insets.top }} />
             <TotalsHeader />
             {drafts.length > 0 ? (
               <Pressable

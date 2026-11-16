@@ -1,7 +1,6 @@
 import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { useDb } from "@/db/DatabaseProvider";
@@ -16,6 +15,7 @@ import {
   taxYearsFromMonths,
 } from "@/taxYear/taxYear";
 import { useTheme } from "@/theme/ThemeProvider";
+import { StatusBarInset } from "@/layout/StatusBarInset";
 
 import { FolderForm } from "./FolderForm";
 
@@ -27,7 +27,6 @@ export function FoldersScreen() {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
@@ -115,11 +114,10 @@ export function FoldersScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <StatusBarInset>
       <ScrollView
         contentContainerStyle={{
           padding: theme.spacing.lg,
-          paddingTop: insets.top + theme.spacing.lg,
           gap: theme.spacing.sm,
         }}
       >
@@ -180,6 +178,6 @@ export function FoldersScreen() {
           setCreating(false);
         }}
       />
-    </View>
+    </StatusBarInset>
   );
 }

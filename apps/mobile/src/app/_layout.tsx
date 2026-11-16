@@ -15,6 +15,7 @@ import { useFx } from "@/fx/useFx";
 import { LockGate } from "@/lock/LockGate";
 import { PrefsProvider, usePref } from "@/prefs/PrefsProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
+import { ThemedStatusBar } from "@/theme/ThemedStatusBar";
 
 // Provides global crypto.getRandomValues (needed by uuidv7).
 install();
@@ -60,6 +61,7 @@ export default function RootLayout() {
       <DatabaseProvider>
         <ImageStoreProvider>
           <PrefsProvider>
+            <ThemedStatusBar />
             <FxSync />
             <LockGate>
               <Stack screenOptions={{ headerShown: false }}>
