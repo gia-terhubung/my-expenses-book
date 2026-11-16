@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react-native";
 import { useEffect } from "react";
-import { Text, useWindowDimensions } from "react-native";
+import { StyleSheet, Text, useWindowDimensions } from "react-native";
 
 import { initI18n } from "@/i18n";
+import { tokens } from "@/theme/tokens";
 
 import { TwoPane } from "./TwoPane";
 
@@ -49,6 +50,13 @@ describe("TwoPane", () => {
     expect(screen.getByTestId("pane-secondary")).toBeTruthy();
     expect(screen.getByTestId("pane-placeholder")).toBeTruthy();
     expect(screen.getByText("Receipt details will appear here.")).toBeTruthy();
+  });
+
+  it("placeholder pane uses the theme background (not white in dark mode)", async () => {
+    setWidth(700);
+    await render(<TwoPane primary={primary} secondary={null} />);
+    const style = StyleSheet.flatten(screen.getByTestId("pane-placeholder").props.style);
+    expect(style.backgroundColor).toBe(tokens.light.colors.background);
   });
 
   it("compact: the hidden pane is kept mounted but hidden from accessibility", async () => {

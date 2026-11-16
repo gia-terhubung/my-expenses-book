@@ -15,6 +15,8 @@ type Props = {
   home: string;
   locale: string;
   selected: boolean;
+  /** First row of its month: no dashed separator above it. */
+  first?: boolean;
   onPress(id: string): void;
 };
 
@@ -25,6 +27,7 @@ export const ReceiptRow = memo(function ReceiptRow({
   home,
   locale,
   selected,
+  first = false,
   onPress,
 }: Props) {
   const { t } = useTranslation();
@@ -45,8 +48,14 @@ export const ReceiptRow = memo(function ReceiptRow({
         gap: theme.spacing.md,
         paddingVertical: theme.spacing.sm,
         paddingHorizontal: theme.spacing.lg,
-        backgroundColor:
-          selected || pressed ? theme.colors.border : theme.colors.background,
+        backgroundColor: pressed
+          ? theme.colors.surfacePressed
+          : selected
+            ? theme.colors.tonal
+            : theme.colors.background,
+        borderTopWidth: first ? 0 : 1,
+        borderTopColor: theme.colors.border,
+        borderStyle: "dashed",
       })}
     >
       <Text
@@ -57,12 +66,12 @@ export const ReceiptRow = memo(function ReceiptRow({
       >
         {day}
       </Text>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, flexShrink: 1 }}>
         <Text
           numberOfLines={1}
           style={[
             theme.type.body,
-            { color: theme.colors.text, fontWeight: "600" },
+            { color: theme.colors.text, fontWeight: "600", flexShrink: 1 },
           ]}
         >
           {merchant}
@@ -92,8 +101,11 @@ export const ReceiptRow = memo(function ReceiptRow({
           </View>
         ) : null}
       </View>
-      <View style={{ alignItems: "flex-end" }}>
-        <Text style={[theme.type.body, { color: theme.colors.text }]}>
+      <View style={{ alignItems: "flex-end", flexShrink: 0 }}>
+        <Text
+          numberOfLines={1}
+          style={[theme.type.body, theme.type.money, { color: theme.colors.text, flexShrink: 0 }]}
+        >
           {formatMoney(r.totalMinor, r.currency, locale)}
         </Text>
         {conv ? (

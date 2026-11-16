@@ -202,16 +202,17 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
                 accessibilityRole="radio"
                 accessibilityState={{ checked: selected }}
                 disabled={form.busy}
+                hitSlop={{ top: 2, bottom: 2 }}
                 onPress={() => setField("categoryId", id)}
-                style={{
+                style={({ pressed }) => ({
                   minHeight: 44,
                   justifyContent: "center",
                   paddingHorizontal: theme.spacing.md,
                   borderRadius: theme.radius.pill,
                   borderWidth: selected ? 2 : 1,
                   borderColor: selected ? theme.colors.primary : isLow("categoryId") ? theme.colors.warning : theme.colors.border,
-                  backgroundColor: selected ? theme.colors.primary : theme.colors.surface,
-                }}
+                  backgroundColor: selected ? (pressed ? theme.colors.primaryPressed : theme.colors.primary) : pressed ? theme.colors.surfacePressed : theme.colors.surface,
+                })}
               >
                 <Text style={[theme.type.body, { color: selected ? theme.colors.onPrimary : theme.colors.text }]}>{label}</Text>
               </Pressable>

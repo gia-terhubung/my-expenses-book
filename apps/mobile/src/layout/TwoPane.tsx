@@ -51,7 +51,7 @@ export function TwoPane({ primary, secondary }: Props) {
       >
         {secondary ??
           (compact ? null : (
-            <View style={styles.placeholder} testID="pane-placeholder">
+            <View style={[styles.placeholder, { backgroundColor: theme.colors.background }]} testID="pane-placeholder">
               <Text style={{ color: theme.colors.textMuted, ...theme.type.body }}>{t("empty.document")}</Text>
             </View>
           ))}

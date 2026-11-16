@@ -36,11 +36,11 @@ export function SideRail({ state, navigateToTab }: BottomTabBarProps) {
             accessibilityRole="tab"
             accessibilityState={{ selected: focused }}
             onPress={() => navigateToTab(route.key)}
-            style={[
+            style={({ pressed }) => [
               styles.item,
               {
-                backgroundColor: focused ? theme.colors.primary : "transparent",
-                borderRadius: theme.radius.md,
+                backgroundColor: focused ? theme.colors.tonal : pressed ? theme.colors.surfacePressed : "transparent",
+                borderRadius: theme.radius.pill,
                 padding: theme.spacing.md,
                 marginHorizontal: theme.spacing.sm,
               },
@@ -49,7 +49,7 @@ export function SideRail({ state, navigateToTab }: BottomTabBarProps) {
             <Text
               style={[
                 theme.type.body,
-                { color: focused ? theme.colors.onPrimary : theme.colors.text },
+                { color: theme.colors.text, fontWeight: focused ? "700" : "400" },
               ]}
             >
               {t(TAB_LABEL_KEYS[route.name as TabRoute])}

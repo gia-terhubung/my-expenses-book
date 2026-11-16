@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 
 import { createReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
@@ -83,5 +83,31 @@ describe("ReceiptList", () => {
       <ReceiptList filter={filter} onSelect={() => {}} empty={empty} />,
     );
     expect(screen.getByText("nothing here")).toBeTruthy();
+  });
+
+  it("long merchant truncates, amount stays whole", async () => {
+    seed("A very long merchant name that keeps going and going and going", "2026-11-03T10:00:00", 123456789);
+    seed("Second", "2026-11-02T10:00:00", 100);
+    await render(<ReceiptList filter={filter} onSelect={() => {}} empty={empty} />);
+    const merchant = screen.getByText(/A very long merchant/);
+    expect(merchant.props.numberOfLines).toBe(1);
+    expect(StyleSheet.flatten(merchant.props.style).flexShrink).toBe(1);
+    const amount = screen.getByText(/1,234,568/);
+    expect(amount.props.numberOfLines).toBe(1);
+    const a = StyleSheet.flatten(amount.props.style);
+    expect(a.flexShrink).toBe(0);
+    expect(a.fontVariant).toEqual(["tabular-nums"]);
+  });
+
+  it("rows after the first in a month have a dashed top border", async () => {
+    const a = await seed("A", "2026-11-03T10:00:00", 100);
+    const b = await seed("B", "2026-11-01T10:00:00", 200);
+    await render(<ReceiptList filter={filter} onSelect={() => {}} empty={empty} />);
+    const st = (id: string) => {
+      return StyleSheet.flatten(screen.getByTestId(`receipt-row-${id}`).props.style);
+    };
+    const ids = [a, b].map((r: any) => r?.id ?? r);
+    expect(st(ids[0]).borderTopWidth ?? 0).toBe(0);
+    expect(st(ids[1])).toMatchObject({ borderTopWidth: 1, borderStyle: "dashed" });
   });
 });

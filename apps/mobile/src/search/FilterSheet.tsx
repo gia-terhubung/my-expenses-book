@@ -111,26 +111,7 @@ function SheetBody({ value, onApply, onClose }: Props) {
           const checked = draft.categoryIds.includes(c.id);
           const label = categoryLabel(c, (k) => t(k));
           return (
-            <Pressable
-              key={c.id}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked }}
-              accessibilityLabel={label}
-              onPress={() => toggleCategory(c.id)}
-              style={{
-                minHeight: 48,
-                justifyContent: "center",
-                paddingHorizontal: theme.spacing.lg,
-                borderRadius: theme.radius.md,
-                borderWidth: 1,
-                borderColor: checked ? theme.colors.primary : theme.colors.border,
-                backgroundColor: checked ? theme.colors.primary : theme.colors.surface,
-              }}
-            >
-              <Text style={[theme.type.body, { color: checked ? theme.colors.onPrimary : theme.colors.text, fontWeight: "600" }]}>
-                {label}
-              </Text>
-            </Pressable>
+            <OptionRow key={c.id} role="checkbox" label={label} selected={checked} onPress={() => toggleCategory(c.id)} />
           );
         })}
 

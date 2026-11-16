@@ -149,15 +149,15 @@ export function SearchScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={t("search.removeFilter", { label: c.label })}
                     onPress={c.remove}
-                    style={{
+                    style={({ pressed }) => ({
                       minHeight: 48,
                       justifyContent: "center",
                       paddingHorizontal: theme.spacing.md,
                       borderRadius: theme.radius.md,
-                      backgroundColor: theme.colors.surface,
+                      backgroundColor: pressed ? theme.colors.surfacePressed : theme.colors.surface,
                       borderWidth: 1,
                       borderColor: theme.colors.border,
-                    }}
+                    })}
                   >
                     <Text style={[theme.type.body, { color: theme.colors.text }]}>{`${c.label} ✕`}</Text>
                   </Pressable>

@@ -97,7 +97,7 @@ export function ReceiptList({
           </View>
         );
       }}
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const c = item.categoryId ? catById.get(item.categoryId) : undefined;
         return (
           <ReceiptRow
@@ -107,6 +107,7 @@ export function ReceiptList({
             home={home}
             locale={locale}
             selected={item.id === selectedId}
+            first={index === 0}
             onPress={onSelect}
           />
         );
