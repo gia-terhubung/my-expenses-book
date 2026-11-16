@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import { receipts } from "../schema";
 import type { AppDb, Receipt } from "../types";
@@ -17,6 +17,8 @@ export type ReceiptFilter = {
   folderId?: string | null;
   /** Receipt currency, ISO upper-case. */
   currency?: string;
+  /** Rows NOT converted to this home currency: the inverse of totalColumns' `converted` rule. */
+  unconvertedFor?: string;
 };
 export type ReceiptCursor = { purchasedAtLocal: string; id: string };
 export type HomeTotal = { homeMinor: number; count: number; unconverted: number };
@@ -44,6 +46,12 @@ function conditions(filter: ReceiptFilter): SQL[] {
     c.push(filter.folderId === null ? isNull(receipts.folderId) : eq(receipts.folderId, filter.folderId));
   }
   if (filter.currency) c.push(eq(receipts.currency, filter.currency));
+  if (filter.unconvertedFor) {
+    // IS NOT handles a null homeCurrencyAtSave, which `!=` would drop.
+    c.push(
+      sql`(${receipts.homeCurrencyAtSave} IS NOT ${filter.unconvertedFor} OR ${receipts.amountHomeMinor} IS NULL)`,
+    );
+  }
   return c;
 }
 
@@ -102,6 +110,59 @@ export function monthTotals(db: AppDb, filter: ReceiptFilter, home: string): Rec
   const out: Record<string, HomeTotal> = {};
   for (const { month: m, ...t } of rows) out[m] = t;
   return out;
+}
+
+/** Category totals (null = uncategorised), biggest first. */
+export function totalsByCategory(
+  db: AppDb,
+  filter: ReceiptFilter,
+  home: string,
+): { categoryId: string | null; total: HomeTotal }[] {
+  const t = totalColumns(home);
+  return db
+    .select({ categoryId: receipts.categoryId, ...t })
+    .from(receipts)
+    .where(and(...conditions(filter)))
+    .groupBy(receipts.categoryId)
+    .orderBy(desc(t.homeMinor), receipts.categoryId)
+    .all()
+    .map(({ categoryId, ...total }) => ({ categoryId, total }));
+}
+
+/** Merchant totals (null = no merchant), biggest first. */
+export function topMerchants(
+  db: AppDb,
+  filter: ReceiptFilter,
+  home: string,
+  limit: number,
+): { merchant: string | null; total: HomeTotal }[] {
+  const t = totalColumns(home);
+  return db
+    .select({ merchant: receipts.merchant, ...t })
+    .from(receipts)
+    .where(and(...conditions(filter)))
+    .groupBy(receipts.merchant)
+    .orderBy(desc(t.homeMinor), receipts.merchant)
+    .limit(limit)
+    .all()
+    .map(({ merchant, ...total }) => ({ merchant, total }));
+}
+
+/** Totals per folder, only for receipts that have one, biggest first. */
+export function totalsByFolder(
+  db: AppDb,
+  filter: ReceiptFilter,
+  home: string,
+): { folderId: string; total: HomeTotal }[] {
+  const t = totalColumns(home);
+  return db
+    .select({ folderId: receipts.folderId, ...t })
+    .from(receipts)
+    .where(and(...conditions(filter), isNotNull(receipts.folderId)))
+    .groupBy(receipts.folderId)
+    .orderBy(desc(t.homeMinor), receipts.folderId)
+    .all()
+    .map(({ folderId, ...total }) => ({ folderId: folderId!, total }));
 }
 
 /** Distinct local "YYYY-MM" of confirmed live receipts, newest first. */

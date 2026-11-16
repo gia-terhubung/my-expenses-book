@@ -7,6 +7,9 @@ import {
   listReceipts,
   monthTotals,
   sumHome,
+  topMerchants,
+  totalsByCategory,
+  totalsByFolder,
 } from "./receiptQueries";
 import { createReceipt, softDeleteReceipt } from "./receipts";
 
@@ -136,5 +139,53 @@ describe("receipt queries", () => {
     softDeleteReceipt(db, del.id);
     expect(listPurchaseMonths(db)).toEqual(["2026-03", "2026-02"]);
     expect(listCurrenciesInUse(db)).toEqual(["EUR", "IDR"]);
+  });
+  it("totalsByCategory groups, keeps null as its own row and orders by homeMinor desc", () => {
+    const db = testDb();
+    const home = { homeCurrencyAtSave: "IDR", amountHomeMinor: 100 };
+    seed(db, { ...home, categoryId: "default:food", amountHomeMinor: 300 });
+    seed(db, { ...home, categoryId: "default:food", amountHomeMinor: 200 });
+    seed(db, { ...home, categoryId: "default:other", amountHomeMinor: 100 });
+    seed(db, { ...home, categoryId: null, amountHomeMinor: 900 });
+    seed(db, { categoryId: "default:food", currency: "USD" });
+    const rows = totalsByCategory(db, {}, "IDR");
+    expect(rows.map((r) => r.categoryId)).toEqual([null, "default:food", "default:other"]);
+    expect(rows[1]!.total).toEqual({ homeMinor: 500, count: 3, unconverted: 1 });
+  });
+
+  it("unconvertedFor matches other home currencies and null amounts only", () => {
+    const db = testDb();
+    const ok = seed(db, { homeCurrencyAtSave: "IDR", amountHomeMinor: 100 });
+    const otherHome = seed(db, { homeCurrencyAtSave: "USD", amountHomeMinor: 100 });
+    const noAmount = seed(db, { homeCurrencyAtSave: "IDR" });
+    const noHome = seed(db);
+    const got = ids(listReceipts(db, { unconvertedFor: "IDR" }, { limit: 50 }));
+    expect(got.sort()).toEqual([otherHome.id, noAmount.id, noHome.id].sort());
+    expect(got).not.toContain(ok.id);
+  });
+
+  it("topMerchants respects limit and orders by homeMinor desc", () => {
+    const db = testDb();
+    const h = { homeCurrencyAtSave: "IDR" };
+    seed(db, { ...h, merchant: "A", amountHomeMinor: 100 });
+    seed(db, { ...h, merchant: "B", amountHomeMinor: 500 });
+    seed(db, { ...h, merchant: "B", amountHomeMinor: 100 });
+    seed(db, { ...h, merchant: "C", amountHomeMinor: 300 });
+    const rows = topMerchants(db, {}, "IDR", 2);
+    expect(rows.map((r) => r.merchant)).toEqual(["B", "C"]);
+    expect(rows[0]!.total.count).toBe(2);
+  });
+
+  it("totalsByFolder only includes rows with a folder", () => {
+    const db = testDb();
+    const f1 = createFolder(db, { name: "Trip", kind: "trip" });
+    const f2 = createFolder(db, { name: "Proj", kind: "project" });
+    const h = { homeCurrencyAtSave: "IDR" };
+    seed(db, { ...h, amountHomeMinor: 999 });
+    seed(db, { ...h, amountHomeMinor: 100, folderId: f1.id });
+    seed(db, { ...h, amountHomeMinor: 400, folderId: f2.id });
+    const rows = totalsByFolder(db, {}, "IDR");
+    expect(rows.map((r) => r.folderId)).toEqual([f2.id, f1.id]);
+    expect(rows[0]!.total.homeMinor).toBe(400);
   });
 });
