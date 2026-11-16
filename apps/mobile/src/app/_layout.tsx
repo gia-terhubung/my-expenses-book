@@ -16,6 +16,7 @@ import { LockGate } from "@/lock/LockGate";
 import { PrefsProvider, usePref } from "@/prefs/PrefsProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { ThemedStatusBar } from "@/theme/ThemedStatusBar";
+import { useAppFonts } from "@/theme/useAppFonts";
 
 // Provides global crypto.getRandomValues (needed by uuidv7).
 install();
@@ -56,6 +57,9 @@ export default function RootLayout() {
   // In render (not module scope) so a failure reaches the exported ErrorBoundary rather than
   // letting ids fall back to Math.random.
   assertSecureRandom();
+  // Hold the first frame until the display font is ready (or failed: system font fallback).
+  const fontsReady = useAppFonts();
+  if (!fontsReady) return null;
   return (
     <ThemeProvider>
       <DatabaseProvider>

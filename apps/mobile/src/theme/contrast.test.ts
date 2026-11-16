@@ -25,6 +25,19 @@ const PAIRS: [keyof ColorTokens, keyof ColorTokens, number][] = [
   // Primary is used for 16px text actions, so it needs body-text contrast, not 3:1.
   ["primary", "surface", 4.5],
   ["primary", "background", 4.5],
+  ["text", "surfacePressed", 4.5],
+  ["textMuted", "surfacePressed", 4.5],
+  ["primary", "surfacePressed", 4.5],
+  ["danger", "surfacePressed", 4.5],
+  ["text", "tonal", 4.5],
+  ["textMuted", "tonal", 4.5],
+  ["primary", "tonal", 4.5],
+  ["primary", "tonalPressed", 4.5],
+  ["onPrimary", "primaryPressed", 4.5],
+  ["danger", "tonalDanger", 4.5],
+  ["warning", "brassFill", 4.5],
+  ["slipText", "slip", 4.5],
+  ["slipMuted", "slip", 4.5],
 ];
 
 describe.each([
