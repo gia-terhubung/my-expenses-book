@@ -358,5 +358,17 @@
     "duplicates": "Kemungkinan duplikat ({{count}})",
     "done": "Selesai",
     "resultReplace_one": "{{count}} struk dipulihkan"
+  },
+  "tips": {
+    "title": "Kotak tip",
+    "intro": "My Expenses Book gratis, tanpa iklan dan tanpa pelacakan. Jika aplikasi ini menghemat waktu Anda, Anda bisa mentraktir pengembangnya kopi.",
+    "small": "Kopi kecil",
+    "standard": "Kopi",
+    "generous": "Kopi istimewa",
+    "thanks": "Terima kasih! Tip Anda membuat aplikasi ini tetap independen.",
+    "unavailable": "Tip belum tersedia saat ini. Periksa koneksi Anda lalu coba lagi.",
+    "failed": "Pembelian tidak berhasil. Anda tidak dikenai biaya.",
+    "retry": "Coba lagi",
+    "loading": "Memuat tip…"
   }
 }

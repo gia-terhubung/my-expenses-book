@@ -358,5 +358,17 @@
     "resultReplace_other": "Restored {{count}} receipts",
     "duplicates": "Possible duplicates ({{count}})",
     "done": "Done"
+  },
+  "tips": {
+    "title": "Tip jar",
+    "intro": "My Expenses Book is free, with no ads and no tracking. If it saves you time, you can buy the developer a coffee.",
+    "small": "Small coffee",
+    "standard": "Coffee",
+    "generous": "Generous coffee",
+    "thanks": "Thank you! Your tip keeps this app independent.",
+    "unavailable": "Tips aren't available right now. Check your connection and try again.",
+    "failed": "The purchase didn't go through. You weren't charged.",
+    "retry": "Try again",
+    "loading": "Loading tips…"
   }
 }

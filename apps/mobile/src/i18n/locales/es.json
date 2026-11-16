@@ -358,5 +358,17 @@
     "resultReplace_other": "{{count}} recibos restaurados",
     "duplicates": "Posibles duplicados ({{count}})",
     "done": "Listo"
+  },
+  "tips": {
+    "title": "Propinas",
+    "intro": "My Expenses Book es gratis, sin anuncios ni rastreo. Si te ahorra tiempo, puedes invitar un café al desarrollador.",
+    "small": "Café pequeño",
+    "standard": "Café",
+    "generous": "Café generoso",
+    "thanks": "¡Gracias! Tu propina mantiene esta app independiente.",
+    "unavailable": "Las propinas no están disponibles ahora. Revisa tu conexión e inténtalo de nuevo.",
+    "failed": "La compra no se completó. No se te ha cobrado.",
+    "retry": "Reintentar",
+    "loading": "Cargando propinas…"
   }
 }

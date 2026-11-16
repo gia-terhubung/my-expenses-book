@@ -358,5 +358,17 @@
     "resultReplace_other": "{{count}} recibos restaurados",
     "duplicates": "Possíveis duplicatas ({{count}})",
     "done": "Concluído"
+  },
+  "tips": {
+    "title": "Gorjetas",
+    "intro": "O My Expenses Book é gratuito, sem anúncios e sem rastreamento. Se ele economiza seu tempo, você pode pagar um café para o desenvolvedor.",
+    "small": "Café pequeno",
+    "standard": "Café",
+    "generous": "Café generoso",
+    "thanks": "Obrigado! Sua gorjeta mantém este app independente.",
+    "unavailable": "As gorjetas não estão disponíveis agora. Verifique sua conexão e tente novamente.",
+    "failed": "A compra não foi concluída. Você não foi cobrado.",
+    "retry": "Tentar novamente",
+    "loading": "Carregando gorjetas…"
   }
 }
