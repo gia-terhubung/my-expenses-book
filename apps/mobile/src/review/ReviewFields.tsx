@@ -89,6 +89,8 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
     <FieldShell label={label} hint={isLow(name)} error={errors[name]}>
       <TextInput
         accessibilityLabel={label}
+        // Screen readers hear the error and the "Check this" flag with the field, not only nearby.
+        accessibilityHint={[errors[name] ? t(errors[name]) : null, isLow(name) ? t("review.checkThis") : null].filter(Boolean).join(". ") || undefined}
         value={(values[name] as string) ?? ""}
         onChangeText={(v) => setField(name, v)}
         editable={!form.busy}

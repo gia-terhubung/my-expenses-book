@@ -70,12 +70,14 @@ export function FoldersScreen() {
     sub: string,
     total: string,
     onPress: () => void,
-    icon?: string,
+    icon?: { glyph: string; kind: string },
   ) => (
     <Pressable
       key={testID}
       testID={testID}
       accessibilityRole="button"
+      // The kind is spoken as a word; the emoji itself is decorative.
+      accessibilityLabel={[icon?.kind, title, sub, total].filter(Boolean).join(", ")}
       onPress={onPress}
       style={({ pressed }) => ({
         minHeight: 56,
@@ -88,7 +90,11 @@ export function FoldersScreen() {
         backgroundColor: pressed ? theme.colors.border : theme.colors.surface,
       })}
     >
-      {icon ? <Text style={{ fontSize: 22 }}>{icon}</Text> : null}
+      {icon ? (
+        <Text accessibilityElementsHidden importantForAccessibility="no" style={{ fontSize: 22 }}>
+          {icon.glyph}
+        </Text>
+      ) : null}
       <View style={{ flex: 1 }}>
         <Text
           style={[
@@ -140,7 +146,9 @@ export function FoldersScreen() {
             t("folders.receiptCount", { count: total.count }),
             totalLine(total, home, locale, notConverted),
             () => go("/folder/[id]", { id: folder.id }),
-            folder.kind === "trip" ? "✈️" : "📁",
+            folder.kind === "trip"
+              ? { glyph: "✈️", kind: t("folders.kindTrip") }
+              : { glyph: "📁", kind: t("folders.kindProject") },
           ),
         )}
         <Pressable

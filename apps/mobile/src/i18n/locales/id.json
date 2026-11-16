@@ -237,7 +237,17 @@
     "deleteMessage_one": "{{count}} struk dipindahkan ke {{other}}.",
     "deleteMessage_other": "{{count}} struk dipindahkan ke {{other}}.",
     "receiptCount_one": "{{count}} struk",
-    "receiptCount_other": "{{count}} struk"
+    "receiptCount_other": "{{count}} struk",
+    "colors": {
+      "red": "Merah",
+      "orange": "Oranye",
+      "green": "Hijau",
+      "teal": "Hijau toska",
+      "blue": "Biru",
+      "purple": "Ungu",
+      "pink": "Merah muda",
+      "brown": "Cokelat"
+    }
   },
   "search": {
     "label": "Cari struk",

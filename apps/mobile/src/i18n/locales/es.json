@@ -237,7 +237,17 @@
     "deleteMessage_one": "{{count}} recibo pasa a {{other}}.",
     "deleteMessage_other": "{{count}} recibos pasan a {{other}}.",
     "receiptCount_one": "{{count}} recibo",
-    "receiptCount_other": "{{count}} recibos"
+    "receiptCount_other": "{{count}} recibos",
+    "colors": {
+      "red": "Rojo",
+      "orange": "Naranja",
+      "green": "Verde",
+      "teal": "Verde azulado",
+      "blue": "Azul",
+      "purple": "Morado",
+      "pink": "Rosa",
+      "brown": "Marrón"
+    }
   },
   "search": {
     "label": "Buscar recibos",

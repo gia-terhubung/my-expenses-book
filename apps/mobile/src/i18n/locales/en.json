@@ -237,7 +237,17 @@
     "deleteMessage_one": "{{count}} receipt moves to {{other}}.",
     "deleteMessage_other": "{{count}} receipts move to {{other}}.",
     "receiptCount_one": "{{count}} receipt",
-    "receiptCount_other": "{{count}} receipts"
+    "receiptCount_other": "{{count}} receipts",
+    "colors": {
+      "red": "Red",
+      "orange": "Orange",
+      "green": "Green",
+      "teal": "Teal",
+      "blue": "Blue",
+      "purple": "Purple",
+      "pink": "Pink",
+      "brown": "Brown"
+    }
   },
   "search": {
     "label": "Search receipts",

@@ -12,3 +12,6 @@ export const CATEGORY_COLORS = [
   "#D13F94",
   "#857354",
 ] as const;
+
+/** Spoken names for the swatches above, same order (i18n keys under categoryManage.colors). */
+export const CATEGORY_COLOR_NAMES = ["red", "orange", "green", "teal", "blue", "purple", "pink", "brown"] as const;
