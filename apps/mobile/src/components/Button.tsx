@@ -88,6 +88,7 @@ export function Button({
           : null,
         variant === "primary" && pressed && !inert ? { transform: [{ translateY: 1 }] } : null,
         variant === "quiet" && pressed && !inert ? { opacity: state.pressedOpacity } : null,
+        variant === "secondary" && danger && pressed && !inert ? { opacity: 0.85 } : null,
         style,
       ]}
     >

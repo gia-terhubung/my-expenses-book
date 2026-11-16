@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
 import { StyleSheet, Text } from "react-native";
 
 import { tokens } from "@/theme/tokens";
@@ -42,5 +42,15 @@ describe("Card", () => {
       </Card>,
     );
     expect(flat(screen.getByTestId("card")).backgroundColor).toBe(light.tonal);
+  });
+
+  it.each([false, true])("pressed uses surfacePressed (selected=%s)", async (selected) => {
+    await render(
+      <Card onPress={() => {}} selected={selected} accessibilityLabel="Open">
+        <Text>Hi</Text>
+      </Card>,
+    );
+    await fireEvent(screen.getByRole("button", { name: "Open" }), "responderGrant", { nativeEvent: { touches: [] }, persist() {} });
+    expect(flat(screen.getByRole("button", { name: "Open" })).backgroundColor).toBe(light.surfacePressed);
   });
 });

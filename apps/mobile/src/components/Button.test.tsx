@@ -73,4 +73,31 @@ describe("Button", () => {
     expect(later.textDecorationLine).toBeUndefined();
     expect(later.color).toBe(light.textMuted);
   });
+
+  describe("pressed state", () => {
+    async function pressed(props: Partial<React.ComponentProps<typeof Button>>) {
+      await render(<Button label="X" onPress={() => {}} {...props} />);
+      const button = screen.getByRole("button", { name: "X" });
+      await fireEvent(button, "responderGrant", { nativeEvent: { touches: [] }, persist() {} });
+      return flat(screen.getByRole("button", { name: "X" }));
+    }
+
+    it("primary uses primaryPressed and translateY 1", async () => {
+      const style = await pressed({ variant: "primary" });
+      expect(style.backgroundColor).toBe(light.primaryPressed);
+      expect(style.transform).toEqual([{ translateY: 1 }]);
+    });
+
+    it("secondary uses tonalPressed", async () => {
+      expect((await pressed({})).backgroundColor).toBe(light.tonalPressed);
+    });
+
+    it("danger secondary dims to 0.85", async () => {
+      expect((await pressed({ tone: "danger" })).opacity).toBe(0.85);
+    });
+
+    it("quiet uses pressedOpacity", async () => {
+      expect((await pressed({ variant: "quiet" })).opacity).toBe(tokens.light.state.pressedOpacity);
+    });
+  });
 });
