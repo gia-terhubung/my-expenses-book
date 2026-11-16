@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
+import { Button } from "@/components/Button";
 import { logError } from "@/errorLog/instance";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -40,8 +41,9 @@ export function ErrorPanel({
       {details ? (
         <>
           <Button
-            title={show ? t("errors.hideDetails") : t("errors.showDetails")}
-            color={theme.colors.primary}
+            variant="quiet"
+            align="center"
+            label={show ? t("errors.hideDetails") : t("errors.showDetails")}
             onPress={() => setShow((s) => !s)}
           />
           {show ? (
@@ -54,7 +56,7 @@ export function ErrorPanel({
         </>
       ) : null}
       {onRetry ? (
-        <Button title={t("errors.retry")} color={theme.colors.primary} onPress={onRetry} />
+        <Button variant="primary" label={t("errors.retry")} onPress={onRetry} />
       ) : null}
     </View>
   );

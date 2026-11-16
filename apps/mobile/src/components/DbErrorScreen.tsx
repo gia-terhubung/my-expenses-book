@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 
+import { Button } from "@/components/Button";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const CONFIRM_WORD = "RESET";
@@ -43,8 +44,8 @@ export function DbErrorScreen({ onReset }: { onReset: () => void | Promise<void>
         }}
       />
       <Button
-        title={t("dbError.resetButton")}
-        color={theme.colors.danger}
+        tone="danger"
+        label={t("dbError.resetButton")}
         disabled={typed !== CONFIRM_WORD}
         onPress={onReset}
       />

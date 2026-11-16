@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "fs";
-import { join, relative } from "path";
+import { join, relative, sep } from "path";
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((n) => {
@@ -48,6 +48,20 @@ describe("Pressable guard", () => {
         .map((t) => `${rel}:${t.line}`);
     });
     expect(seen).toBeGreaterThan(17); // the scan really found the app's Pressables
+    expect(offenders).toEqual([]);
+  });
+
+  it("no product file imports Button from react-native", () => {
+    const root = join(__dirname, "..");
+    const offenders = files(root)
+      .map((f) => relative(root, f))
+      .filter((rel) => !rel.startsWith(`dev${sep}`))
+      .filter((rel) => {
+        const src = readFileSync(join(root, rel), "utf8");
+        return [...src.matchAll(/import\s*\{([^}]*)\}\s*from\s*["']react-native["']/g)].some((m) =>
+          /\bButton\b/.test(m[1]),
+        );
+      });
     expect(offenders).toEqual([]);
   });
 });
