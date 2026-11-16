@@ -57,7 +57,13 @@
     },
     "categories": "Categories",
     "export": "Export",
-    "backupRestore": "Backup & restore"
+    "backupRestore": "Backup & restore",
+    "tipJar": "Tip jar",
+    "storage": "Storage",
+    "storageValue_one": "{{count}} receipt · {{size}}",
+    "storageValue_other": "{{count}} receipts · {{size}}",
+    "errorLog": "Error log",
+    "support": "Support"
   },
   "dbError": {
     "title": "Your data can't be unlocked",
@@ -378,5 +384,10 @@
     "export": "Export",
     "clear": "Clear log",
     "clearConfirm": "Delete all recorded errors? This can't be undone."
+  },
+  "about": {
+    "title": "About",
+    "privacyPolicy": "Privacy policy",
+    "version": "Version"
   }
 }

@@ -9,7 +9,17 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePref: (k: string) => ({ language: "en", homeCurrency: "USD", taxYearStartMonth: 1, lockEnabled: false, lockTimeout: 60 })[k],
   usePrefs: () => ({ set: jest.fn() }),
 }));
-jest.mock("expo-router", () => ({ Link: require("react-native").Text }));
+jest.mock("expo-router", () => ({
+  Link: require("react-native").Text,
+  useFocusEffect: (cb: () => void) => require("react").useEffect(cb, []),
+}));
+jest.mock("expo-web-browser", () => ({ openBrowserAsync: jest.fn() }));
+jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => ({}) }));
+jest.mock("@/images/expoFs", () => ({ fileSize: async () => 0 }));
+jest.mock("@/about/storageStats", () => ({
+  storageStats: async () => ({ receipts: 0, pages: 0, bytes: 0 }),
+  formatBytes: () => "0 kB",
+}));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));

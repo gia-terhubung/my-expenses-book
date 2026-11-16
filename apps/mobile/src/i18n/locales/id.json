@@ -57,7 +57,13 @@
     },
     "categories": "Kategori",
     "export": "Ekspor",
-    "backupRestore": "Cadangan & pemulihan"
+    "backupRestore": "Cadangan & pemulihan",
+    "tipJar": "Kotak tip",
+    "storage": "Penyimpanan",
+    "storageValue_one": "{{count}} struk · {{size}}",
+    "storageValue_other": "{{count}} struk · {{size}}",
+    "errorLog": "Log galat",
+    "support": "Dukungan"
   },
   "dbError": {
     "title": "Data Anda tidak dapat dibuka",
@@ -378,5 +384,10 @@
     "export": "Ekspor",
     "clear": "Hapus log",
     "clearConfirm": "Hapus semua galat yang tercatat? Tindakan ini tidak bisa dibatalkan."
+  },
+  "about": {
+    "title": "Tentang",
+    "privacyPolicy": "Kebijakan privasi",
+    "version": "Versi"
   }
 }

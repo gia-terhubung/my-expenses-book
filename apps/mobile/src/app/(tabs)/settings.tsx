@@ -1,16 +1,22 @@
 import { getLocales } from "expo-localization";
-import { Link, router, type Href } from "expo-router";
-import { useState, type ReactNode } from "react";
+import Constants from "expo-constants";
+import { Link, router, useFocusEffect, type Href } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import { useCallback, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { PRIVACY_POLICY_URL } from "@/about/links";
+import { formatBytes, storageStats, type StorageStats } from "@/about/storageStats";
 import { AppModal } from "@/components/AppModal";
 import { CurrencyPicker, currencyName } from "@/components/CurrencyPicker";
 import { LANGUAGE_NAMES, LanguagePicker } from "@/components/LanguagePicker";
 import { LockToggle } from "@/components/LockToggle";
 import { OptionRow } from "@/components/OptionRow";
 import { TaxYearPicker } from "@/components/TaxYearPicker";
+import { useDb } from "@/db/DatabaseProvider";
+import { fileSize } from "@/images/expoFs";
 import { resolveHomeCurrency, resolveLanguage } from "@/i18n/resolve";
 import type { LockTimeout } from "@/prefs/prefs";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
@@ -39,10 +45,53 @@ function Row({ label, value, onPress }: { label: string; value: string; onPress:
       }}
     >
       <Text style={[theme.type.body, { color: theme.colors.text }]}>{label}</Text>
-      <Text numberOfLines={1} style={[theme.type.body, { color: theme.colors.textMuted, flexShrink: 1 }]}>
-        {value || "›"}
-      </Text>
+      {value ? (
+        <Text numberOfLines={1} style={[theme.type.body, { color: theme.colors.textMuted, flexShrink: 1 }]}>
+          {value}
+        </Text>
+      ) : (
+        // Decorative: the row's role already says it opens something.
+        <Text
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          style={[theme.type.body, { color: theme.colors.textMuted }]}
+        >
+          ›
+        </Text>
+      )}
     </Pressable>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${label}, ${value}`}
+      style={{
+        minHeight: 56,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: theme.spacing.md,
+        paddingHorizontal: theme.spacing.lg,
+        backgroundColor: theme.colors.surface,
+        borderRadius: theme.radius.md,
+      }}
+    >
+      <Text style={[theme.type.body, { color: theme.colors.text }]}>{label}</Text>
+      <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{value}</Text>
+    </View>
+  );
+}
+
+function GroupTitle({ title }: { title: string }) {
+  const theme = useTheme();
+  return (
+    <Text accessibilityRole="header" style={[theme.type.caption, { color: theme.colors.textMuted, marginTop: theme.spacing.lg }]}>
+      {title}
+    </Text>
   );
 }
 
@@ -75,6 +124,19 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const prefs = usePrefs();
   const [sheet, setSheet] = useState<Sheet>(null);
+  const db = useDb();
+  const [storage, setStorage] = useState<StorageStats | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      let live = true;
+      storageStats(db, fileSize)
+        .then((s) => live && setStorage(s))
+        .catch(() => {});
+      return () => {
+        live = false;
+      };
+    }, [db]),
+  );
 
   const device = getLocales();
   const language = usePref("language") ?? resolveLanguage(device);
@@ -126,6 +188,18 @@ export default function SettingsScreen() {
             ))}
           </View>
         ) : null}
+        <InfoRow
+          label={t("settings.storage")}
+          value={storage ? t("settings.storageValue", { count: storage.receipts, size: formatBytes(storage.bytes, i18n.language) }) : "…"}
+        />
+
+        <GroupTitle title={t("settings.support")} />
+        <Row label={t("settings.tipJar")} value="" onPress={() => router.push("/tip-jar" as unknown as Href)} />
+        <Row label={t("settings.errorLog")} value="" onPress={() => router.push("/error-log" as unknown as Href)} />
+
+        <GroupTitle title={t("about.title")} />
+        <Row label={t("about.privacyPolicy")} value="" onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)} />
+        <InfoRow label={t("about.version")} value={Constants.expoConfig?.version ?? "?"} />
 
         {__DEV__ && (
           <View style={{ gap: theme.spacing.sm, marginTop: theme.spacing.xl }}>

@@ -57,7 +57,13 @@
     },
     "categories": "Categorías",
     "export": "Exportar",
-    "backupRestore": "Copia de seguridad y restauración"
+    "backupRestore": "Copia de seguridad y restauración",
+    "tipJar": "Propinas",
+    "storage": "Almacenamiento",
+    "storageValue_one": "{{count}} recibo · {{size}}",
+    "storageValue_other": "{{count}} recibos · {{size}}",
+    "errorLog": "Registro de errores",
+    "support": "Soporte"
   },
   "dbError": {
     "title": "No se pueden desbloquear tus datos",
@@ -378,5 +384,10 @@
     "export": "Exportar",
     "clear": "Borrar registro",
     "clearConfirm": "¿Eliminar todos los errores registrados? No se puede deshacer."
+  },
+  "about": {
+    "title": "Acerca de",
+    "privacyPolicy": "Política de privacidad",
+    "version": "Versión"
   }
 }
