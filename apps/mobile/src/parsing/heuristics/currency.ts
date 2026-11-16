@@ -42,9 +42,10 @@ export function detectCurrency(
     const code = m[1]!;
     if (!VALID.has(code)) continue;
     const i = m.index ?? 0;
+    // Same line only: "…146.975\nPLN MENYATAKAN" (Indonesian electricity company) is not "975 PLN".
     const near =
-      /\d\s*$/.test(text.slice(Math.max(0, i - 3), i)) ||
-      /^\s*\d/.test(text.slice(i + 3, i + 6));
+      /\d[^\S\n]*$/.test(text.slice(Math.max(0, i - 3), i)) ||
+      /^[^\S\n]*\d/.test(text.slice(i + 3, i + 6));
     if (near || COMMON.has(code)) add(code, 0.95, 1);
   }
   if (!score.has("USD") && BARE_DOLLAR.test(text)) {
