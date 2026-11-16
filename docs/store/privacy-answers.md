@@ -1,10 +1,11 @@
 # Store privacy questionnaires: answers
 
-These answers follow from the spec's anti-goals: no network call carries user data, and there is no analytics or crash SDK. Re-check them whenever a dependency or a network call is added.
+These answers reflect the app as built. The app makes no network call that carries receipt data. On Android, Google ML Kit sends Google its own diagnostics (see below). Re-check them whenever a dependency or a network call is added.
 
 Facts behind every answer:
 - All receipt data (images, OCR text, amounts, notes) is stored only on the device, encrypted (SQLCipher DB, AES-256-GCM images).
-- Outbound calls: (1) `cdn.jsdelivr.net` `@fawazahmed0/currency-api` exchange-rate tables. The request holds only a currency code and a date in the URL. (2) App Store / Google Play billing, only while the Tip jar screen is open.
+- Outbound calls made by the app: (1) `cdn.jsdelivr.net` `@fawazahmed0/currency-api` exchange-rate tables. The request holds only a currency code and a date in the URL. (2) App Store / Google Play billing requests (products, purchase, recovery), only from the Tip jar screen. On iOS, expo-iap's StoreKit observer starts at app launch, but it makes no request of its own until Tip jar opens.
+- **Android only:** Google ML Kit (`text-recognition`, `genai-prompt`, `play-services-mlkit-document-scanner`) sends Google diagnostics and usage data: device info, app package and version, per-installation identifiers, and performance metrics. It may also download models. Per Google's ML Kit data disclosure (developers.google.com/ml-kit/android-data-disclosure), this data is not shared with third parties and is encrypted in transit. iOS uses Apple Vision: nothing is sent.
 - No account, no analytics, no ads, no crash reporting. The local error log never leaves the device unless the user exports it through the share sheet.
 - Tips are consumable IAPs handled entirely by Apple/Google. The app stores no purchase record.
 
@@ -18,10 +19,18 @@ Facts behind every answer:
 
 ## Google Play: Play Console → App content → Data safety
 
-- **Does your app collect or share any of the required user data types?** No.
-- **Is all of the user data collected by your app encrypted in transit?** Yes. The only traffic is HTTPS: the FX tables and Play Billing.
-- **Do you provide a way for users to request that their data is deleted?** Data is stored only on the device. Uninstalling the app, or clearing its storage, deletes it.
+The Android build collects data through Google ML Kit (see the facts above), so the answer is **not** "no data collected".
+
+- **Does your app collect or share any of the required user data types?** Yes, collected (not shared):
+  - **App info and performance → Diagnostics:** collected; purpose **Analytics** (ML Kit diagnostics); processed ephemerally: no; required.
+  - **Device or other IDs:** collected; purpose **Analytics** (ML Kit per-installation identifier); required.
+  - Nothing else. Receipt images, text, amounts and financial info never leave the device.
+- **Is any of it shared with third parties?** No (Google, as the SDK provider, processes it for the developer).
+- **Is all of the user data collected by your app encrypted in transit?** Yes (HTTPS).
+- **Do you provide a way for users to request that their data is deleted?** Receipt data is stored only on the device; uninstalling deletes it. ML Kit diagnostics are not linked to the user. If the form requires a deletion path, state that there is no account and no user-linked data.
 - **Independent security review:** No.
+
+> **Owner decision needed:** the spec's anti-goals forbid any SDK that phones home by default, and ML Kit does, on Android only. Either accept it and disclose it (the answers above), or replace the Android OCR, scanner and AI paths. Re-confirm with the D5 proxy run before submitting.
 
 ### Other App content forms
 

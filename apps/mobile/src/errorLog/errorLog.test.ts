@@ -40,6 +40,22 @@ describe("createErrorLog", () => {
     expect(entry.stack!.split("\n")).toHaveLength(8);
   });
 
+  it("drops query params (receipt values) from drizzle errors, in message and stack", () => {
+    const log = createErrorLog(memoryKV());
+    const e = new Error('Failed query: insert into "receipts" ("merchant") values (?)\nparams: Toko Rahasia,12500');
+    e.stack = `Error: ${e.message}\n    at run (bundle:1:2)`;
+    log.append("render", e);
+    const multi = new Error("Failed query: update x\nparams: line one note\nsecond line Toko Rahasia");
+    multi.stack = `Error: ${multi.message}\n    at run (bundle:1:2)\n    at go (bundle:3:4)`;
+    log.append("render", multi);
+    const [m, entry] = log.list();
+    expect(m.message).toBe("Failed query: update x");
+    expect(m.stack).toBe("Error: Failed query: update x\n    at run (bundle:1:2)\n    at go (bundle:3:4)");
+    expect(entry.message).toBe('Failed query: insert into "receipts" ("merchant") values (?)');
+    expect(entry.stack).not.toContain("Toko Rahasia");
+    expect(log.toText("1.0.0")).not.toContain("Toko Rahasia");
+  });
+
   it("stores non-Error values by String()", () => {
     const log = createErrorLog(memoryKV());
     log.append("s", "boom");

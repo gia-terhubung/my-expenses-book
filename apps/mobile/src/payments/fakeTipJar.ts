@@ -7,7 +7,9 @@ const DEFAULT_PRODUCTS: TipProduct[] = TIP_IDS.map((id, i) => ({
 }));
 
 /** In-memory TipJar for tests and dev screens; `emit` plays a store event. */
-export function createFakeTipJar(opts: { products?: TipProduct[]; failConnect?: boolean } = {}) {
+export function createFakeTipJar(
+  opts: { products?: TipProduct[]; failConnect?: boolean; hangConnect?: boolean; buyRejects?: { code: string } } = {},
+) {
   const listeners = new Set<(e: TipEvent) => void>();
   const jar: TipJar & { emit(e: TipEvent): void; bought: TipId[]; connects: number; disconnects: number } = {
     bought: [],
@@ -15,6 +17,7 @@ export function createFakeTipJar(opts: { products?: TipProduct[]; failConnect?: 
     disconnects: 0,
     async connect() {
       jar.connects += 1;
+      if (opts.hangConnect) return new Promise<void>(() => {});
       if (opts.failConnect) throw new Error("store unavailable");
     },
     async products() {
@@ -22,6 +25,8 @@ export function createFakeTipJar(opts: { products?: TipProduct[]; failConnect?: 
     },
     async buy(id) {
       jar.bought.push(id);
+      // Like expo-iap: every purchase error (cancel included) also rejects requestPurchase.
+      if (opts.buyRejects) throw Object.assign(new Error(opts.buyRejects.code), opts.buyRejects);
     },
     onEvent(cb) {
       listeners.add(cb);

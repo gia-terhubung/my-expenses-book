@@ -389,7 +389,9 @@
     "unavailable": "Tips aren't available right now. Check your connection and try again.",
     "failed": "The purchase didn't go through. You weren't charged.",
     "retry": "Try again",
-    "loading": "Loading tips…"
+    "loading": "Loading tips…",
+    "pending": "Your payment is pending. The tip completes once the store confirms it.",
+    "finishLater": "Your tip went through. It finishes the next time you open the tip jar."
   },
   "errorLog": {
     "title": "Error log",

@@ -66,3 +66,52 @@ describe("TipJarScreen", () => {
     expect(screen.getAllByText("Thank you! Your tip keeps this app independent.")).toHaveLength(1);
   });
 });
+
+describe("TipJarScreen final-review fixes", () => {
+  afterEach(() => jest.useRealTimers());
+
+  it("a buy() rejected with user-cancelled shows no failure text (C1)", async () => {
+    const jar = createFakeTipJar({ buyRejects: { code: "user-cancelled" } });
+    await render(<TipJarScreen jar={jar} />);
+    await fireEvent.press(await screen.findByLabelText("Coffee, $4.99"));
+    await act(async () => jar.emit({ kind: "cancelled" }));
+    expect(screen.queryByText(/didn't go through/)).toBeNull();
+    expect(screen.getByLabelText("Coffee, $4.99").props.accessibilityState).toMatchObject({ disabled: false });
+  });
+
+  it("a buy() rejected with a real error shows the failure text", async () => {
+    const jar = createFakeTipJar({ buyRejects: { code: "E_NETWORK" } });
+    await render(<TipJarScreen jar={jar} />);
+    await fireEvent.press(await screen.findByLabelText("Coffee, $4.99"));
+    expect(await screen.findByText("The purchase didn't go through. You weren't charged.")).toBeTruthy();
+  });
+
+  it("a store that never answers becomes unavailable after the timeout (I2)", async () => {
+    jest.useFakeTimers();
+    const jar = createFakeTipJar({ hangConnect: true });
+    await render(<TipJarScreen jar={jar} />);
+    await act(async () => jest.advanceTimersByTime(15_000));
+    expect(screen.getByText(/Tips aren't available right now/)).toBeTruthy();
+  });
+
+  it("buttons come back when the purchase request resolves with no event (I3)", async () => {
+    jest.useFakeTimers();
+    const jar = createFakeTipJar();
+    await render(<TipJarScreen jar={jar} />);
+    await act(async () => {});
+    await fireEvent.press(screen.getByLabelText("Coffee, $4.99"));
+    await act(async () => jest.advanceTimersByTime(3_000));
+    expect(screen.getByLabelText("Coffee, $4.99").props.accessibilityState).toMatchObject({ disabled: false });
+  });
+
+  it("pending and finishLater events show their own copy, never 'not charged'", async () => {
+    const jar = createFakeTipJar();
+    await render(<TipJarScreen jar={jar} />);
+    await screen.findByLabelText("Coffee, $4.99");
+    await act(async () => jar.emit({ kind: "pending" }));
+    expect(screen.getByText("Your payment is pending. The tip completes once the store confirms it.")).toBeTruthy();
+    await act(async () => jar.emit({ kind: "finishLater" }));
+    expect(screen.getByText("Your tip went through. It finishes the next time you open the tip jar.")).toBeTruthy();
+    expect(screen.queryByText(/weren't charged/)).toBeNull();
+  });
+});

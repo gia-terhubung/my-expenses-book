@@ -28,7 +28,7 @@ Everything stays on your phone. There's no account, no ads and no tracking. The 
 • Encrypted backup file you keep wherever you like, with restore and merge
 • Works on phones, tablets and foldables
 
-The app uses the network only to download exchange-rate tables (a currency code and a date, never your data) and for the optional tip jar through Google Play.
+The app uses the network to download exchange-rate tables (a currency code and a date, never your data) and for the optional tip jar through Google Play. On-device text recognition uses Google ML Kit, which sends Google anonymous diagnostics (never your receipts).
 
 ## Bahasa Indonesia (id)
 
@@ -51,4 +51,4 @@ Semuanya tetap di ponsel Anda. Tanpa akun, tanpa iklan, tanpa pelacakan. Databas
 • File cadangan terenkripsi yang Anda simpan di mana saja, bisa dipulihkan atau digabung
 • Berjalan di ponsel, tablet, dan perangkat lipat
 
-Aplikasi memakai jaringan hanya untuk mengunduh tabel kurs (kode mata uang dan tanggal, bukan data Anda) dan untuk kotak tip opsional lewat Google Play.
+Aplikasi memakai jaringan untuk mengunduh tabel kurs (kode mata uang dan tanggal, bukan data Anda) dan untuk kotak tip opsional lewat Google Play. Pengenalan teks di perangkat memakai Google ML Kit, yang mengirim data diagnostik anonim ke Google (bukan struk Anda).

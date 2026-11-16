@@ -31,13 +31,14 @@
 <ul>
   <li>Receipt photos, the text read from them, and every amount, date, note, category and folder are stored only on your device.</li>
   <li>The database and the images are encrypted. You can also lock the app with Face ID, fingerprint or your device passcode.</li>
-  <li>There is no account. There are no ads, no analytics and no crash reporting.</li>
+  <li>There is no account. There are no ads, no analytics and no crash reporting in the app itself (see Google ML Kit below for Android).</li>
 </ul>
 
-<h2>The only network connections</h2>
+<h2>Network connections</h2>
 <ol>
   <li><strong>Exchange rates.</strong> To convert foreign receipts into your home currency, the app downloads public exchange-rate tables from <code>cdn.jsdelivr.net</code> (the open <code>@fawazahmed0/currency-api</code> data set). The request contains only a currency code and a date. It contains no receipt data.</li>
-  <li><strong>Tips.</strong> When you open the Tip jar, the app connects to the App Store or Google Play to show prices and process a tip you choose to give. Apple or Google handles the payment. The app stores no payment information.</li>
+  <li><strong>Tips.</strong> When you open the Tip jar, the app asks the App Store or Google Play for prices and processes a tip you choose to give. Apple or Google handles the payment. The app stores no payment information.</li>
+  <li><strong>Android only: Google ML Kit.</strong> On Android, text recognition, document scanning and on-device AI run on your phone using Google ML Kit. ML Kit may download its models from Google and sends Google diagnostic data: device model and OS version, the app's package name and version, a per-installation identifier, and performance metrics such as latency and error codes. It never sends your receipt images or text. Google says it does not share this data with third parties and encrypts it in transit. On iPhone, text recognition uses Apple's on-device Vision framework and sends nothing.</li>
 </ol>
 
 <h2>Backups and exports</h2>
@@ -63,13 +64,14 @@
 <ul>
   <li>Foto struk, teks yang dibaca darinya, serta semua jumlah, tanggal, catatan, kategori, dan folder hanya disimpan di perangkat Anda.</li>
   <li>Database dan gambar dienkripsi. Anda juga bisa mengunci aplikasi dengan Face ID, sidik jari, atau kode sandi perangkat.</li>
-  <li>Tidak ada akun. Tidak ada iklan, analitik, maupun pelaporan crash.</li>
+  <li>Tidak ada akun. Aplikasi ini sendiri tidak memiliki iklan, analitik, maupun pelaporan crash (lihat Google ML Kit di bawah untuk Android).</li>
 </ul>
 
-<h2>Satu-satunya koneksi jaringan</h2>
+<h2>Koneksi jaringan</h2>
 <ol>
   <li><strong>Kurs mata uang.</strong> Untuk mengonversi struk asing ke mata uang utama Anda, aplikasi mengunduh tabel kurs publik dari <code>cdn.jsdelivr.net</code> (data terbuka <code>@fawazahmed0/currency-api</code>). Permintaan itu hanya berisi kode mata uang dan tanggal, tanpa data struk.</li>
   <li><strong>Tip.</strong> Saat Anda membuka Kotak tip, aplikasi terhubung ke App Store atau Google Play untuk menampilkan harga dan memproses tip yang Anda pilih. Pembayaran ditangani oleh Apple atau Google. Aplikasi tidak menyimpan informasi pembayaran.</li>
+  <li><strong>Khusus Android: Google ML Kit.</strong> Di Android, pengenalan teks, pemindaian dokumen, dan AI di perangkat berjalan di ponsel Anda memakai Google ML Kit. ML Kit dapat mengunduh modelnya dari Google dan mengirim data diagnostik ke Google: model perangkat dan versi OS, nama paket dan versi aplikasi, pengenal per instalasi, serta metrik performa seperti latensi dan kode galat. ML Kit tidak pernah mengirim gambar atau teks struk Anda. Menurut Google, data ini tidak dibagikan ke pihak ketiga dan dienkripsi saat dikirim. Di iPhone, pengenalan teks memakai framework Vision milik Apple di perangkat dan tidak mengirim apa pun.</li>
 </ol>
 
 <h2>Cadangan dan ekspor</h2>

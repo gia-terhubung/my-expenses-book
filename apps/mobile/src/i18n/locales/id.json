@@ -389,7 +389,9 @@
     "unavailable": "Tip belum tersedia saat ini. Periksa koneksi Anda lalu coba lagi.",
     "failed": "Pembelian tidak berhasil. Anda tidak dikenai biaya.",
     "retry": "Coba lagi",
-    "loading": "Memuat tip…"
+    "loading": "Memuat tip…",
+    "pending": "Pembayaran Anda masih tertunda. Tip selesai setelah toko aplikasi mengonfirmasinya.",
+    "finishLater": "Tip Anda sudah berhasil. Prosesnya selesai saat Anda membuka kotak tip lagi."
   },
   "errorLog": {
     "title": "Log galat",

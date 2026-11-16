@@ -15,7 +15,7 @@ Date: 2026-11-16. Branch feat/m5-polish-ship. Status key: PASS / FAIL / OWNER-PE
 
 | Check | Result | Status |
 |---|---|---|
-| `npx jest` | Test Suites: 111 passed, 111 total. Tests: 822 passed, 822 total | PASS |
+| `npx jest` | Test Suites: 111 passed, 111 total. Tests: 831 passed, 831 total (after the final-review fix pass) | PASS |
 | `npx tsc --noEmit` | no output, exit 0 | PASS |
 | `npm run check:pii` | ok: 68 dump tokens checked against fixtures, none found | PASS |
 | `npx expo lint` | 18 problems (4 errors, 14 warnings). The 4 errors were already on `main` before M5 (capture.tsx, BackupReminder.tsx x2, useWhenUnobscured.ts). New warnings: 2 `require()` calls inside `jest.mock` factories, the same pattern as existing tests | PASS (no new errors) |
@@ -32,10 +32,13 @@ Tip purchases need store-installed builds. On iOS, use a sandbox Apple ID on a T
 | # | Check | Pass criterion | Status |
 |---|---|---|---|
 | D1 | Tip jar, iOS sandbox: buy each of the three tiers | price from the store, thanks shown, no replay on the next open of Tip jar | OWNER-PENDING |
+| D1b | Kill the app right after paying (before thanks), reopen Tip jar | the purchase is recovered on open: thanks shown once, finished (buying that tier again works) | OWNER-PENDING |
+| D1c | Android: pay with a slow/pending test card ("Slow test card, approves after a few minutes") | "Your payment is pending…" shown; after approval, the next Tip jar open thanks and consumes it | OWNER-PENDING |
 | D2 | Tip jar, Play license tester: buy each tier | same as D1; buying the same tier twice works (consumed) | OWNER-PENDING |
 | D3 | Tip jar: cancel the purchase sheet | back to the tier list, no error text | OWNER-PENDING |
 | D4 | Tip jar in airplane mode | "Tips aren't available right now…" with Try again; Try again works once online | OWNER-PENDING |
-| D5 | Proxy session (Proxyman/Charles): onboarding, scan, save, search, export, backup, Tip jar | the only hosts are `cdn.jsdelivr.net` and Apple/Google store endpoints, and store hosts appear only while Tip jar is open | OWNER-PENDING |
+| D5 | Proxy session (Proxyman/Charles): onboarding, scan, save, search, export, backup, Tip jar | iOS: only `cdn.jsdelivr.net` plus Apple store endpoints, with store requests only after Tip jar opens. Android: the same, plus Google ML Kit / Play services hosts. Record every ML Kit host and payload type, then confirm that `docs/store/privacy-answers.md` and the policy match | OWNER-PENDING |
+| D5b | Owner decision: Android ML Kit diagnostics vs the spec anti-goal "any analytics/crash SDK that phones home by default" | accept and disclose (current docs), or replace the Android OCR/scanner/AI path | PENDING |
 | D6 | VoiceOver (iPhone): feed, review, save (with an empty total first), search, export | every control is announced with a role; the blocked save announces "Enter the total."; folder rows say "Trip, …" / "Project, …"; swatches say color names | OWNER-PENDING |
 | D7 | TalkBack (Redmi): same flow as D6 | same as D6 | OWNER-PENDING |
 | D8 | Largest font size, both OSes: feed, review, settings, tip jar | no clipped totals, labels or buttons | OWNER-PENDING |

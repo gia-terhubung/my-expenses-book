@@ -14,9 +14,20 @@ export type ErrorLog = {
   toText(appVersion: string): string;
 };
 
+/**
+ * drizzle's DrizzleQueryError message is "Failed query: <sql>\nparams: <values>", and the values
+ * are receipt data (merchant, notes, amounts). The log must never hold them (plan C2).
+ */
+function scrub(text: string): string {
+  // From "params:" up to the first stack frame ("    at …"), or to the end when there is none:
+  // a value may itself contain newlines.
+  return text.replace(/\n\s*params:[\s\S]*?(?=\n\s+at |$)/g, "");
+}
+
 function toEntry(scope: string, e: unknown, at: number): ErrorEntry {
-  const message = (e instanceof Error ? e.message : String(e)).slice(0, MAX_MESSAGE);
-  const stack = e instanceof Error && e.stack ? e.stack.split("\n").slice(0, MAX_STACK_LINES).join("\n") : undefined;
+  const message = scrub(e instanceof Error ? e.message : String(e)).slice(0, MAX_MESSAGE);
+  const stack =
+    e instanceof Error && e.stack ? scrub(e.stack).split("\n").slice(0, MAX_STACK_LINES).join("\n") : undefined;
   return stack ? { at, scope, message, stack } : { at, scope, message };
 }
 

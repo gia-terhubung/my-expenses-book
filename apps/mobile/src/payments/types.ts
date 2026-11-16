@@ -5,7 +5,14 @@ export type TipId = (typeof TIP_IDS)[number];
 /** Price text comes from the store (localized `displayPrice`); never hardcoded. */
 export type TipProduct = { id: TipId; displayPrice: string; title: string };
 
-export type TipEvent = { kind: "thanks"; id: TipId } | { kind: "cancelled" } | { kind: "failed"; code: string };
+export type TipEvent =
+  | { kind: "thanks"; id: TipId }
+  | { kind: "cancelled" }
+  | { kind: "failed"; code: string }
+  /** Paid by a deferred method (e.g. cash at a store); not finished until the store confirms. */
+  | { kind: "pending" }
+  /** Charged, but finishing the transaction failed; recovered on the next connect. */
+  | { kind: "finishLater" };
 
 /**
  * Purchase surface used by the app. Only `expoIap.ts` talks to the store, so a later swap to

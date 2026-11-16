@@ -15,7 +15,7 @@ const TIER_KEYS: Record<TipId, string> = {
 export function TipJarScreen({ jar }: { jar: TipJar }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { state, products, thanked, failed, buy, retry } = useTipJar(jar);
+  const { state, products, thanked, notice, buy, retry } = useTipJar(jar);
   const busy = state === "buying";
 
   return (
@@ -73,7 +73,11 @@ export function TipJarScreen({ jar }: { jar: TipJar }) {
 
         <View accessibilityLiveRegion="polite">
           {thanked ? <Text style={[theme.type.body, { color: theme.colors.text }]}>{t("tips.thanks")}</Text> : null}
-          {failed ? <Text style={[theme.type.body, { color: theme.colors.danger }]}>{t("tips.failed")}</Text> : null}
+          {notice ? (
+            <Text style={[theme.type.body, { color: notice === "failed" ? theme.colors.danger : theme.colors.text }]}>
+              {t(`tips.${notice}`)}
+            </Text>
+          ) : null}
         </View>
       </View>
     </ScrollView>

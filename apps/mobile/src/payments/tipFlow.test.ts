@@ -1,4 +1,4 @@
-import { handlePurchase, mapPurchaseError } from "./tipFlow";
+import { handlePurchase, mapPurchaseError, recoverPurchases, settlePurchase } from "./tipFlow";
 import { TIP_IDS } from "./types";
 
 describe("TIP_IDS", () => {
@@ -37,5 +37,42 @@ describe("mapPurchaseError", () => {
   });
   it("uses unknown when no code is given", () => {
     expect(mapPurchaseError({})).toEqual({ kind: "failed", code: "unknown" });
+  });
+});
+
+describe("pending and recovery (final review C2)", () => {
+  it("does not finish or thank a pending purchase", async () => {
+    const finish = jest.fn().mockResolvedValue(undefined);
+    await expect(
+      handlePurchase({ productId: "tip_coffee_small", purchaseState: "pending" }, finish),
+    ).resolves.toEqual({ kind: "pending" });
+    expect(finish).not.toHaveBeenCalled();
+  });
+
+  it("settlePurchase maps a finish failure to finishLater, never to failed (the store did charge)", async () => {
+    const finish = jest.fn().mockRejectedValue(new Error("network"));
+    await expect(settlePurchase({ productId: "tip_coffee_small", purchaseState: "purchased" }, finish)).resolves.toEqual({
+      kind: "finishLater",
+    });
+  });
+
+  it("recoverPurchases finishes every completed purchase, skips pending ones, emits each result", async () => {
+    const finished: string[] = [];
+    const events: unknown[] = [];
+    await recoverPurchases(
+      [
+        { productId: "tip_coffee_small", purchaseState: "purchased" },
+        { productId: "tip_coffee_generous", purchaseState: "pending" },
+        { productId: "tip_coffee_standard", purchaseState: "purchased" },
+      ],
+      (p) => async () => void finished.push(p.productId),
+      (e) => events.push(e),
+    );
+    expect(finished).toEqual(["tip_coffee_small", "tip_coffee_standard"]);
+    expect(events).toEqual([
+      { kind: "thanks", id: "tip_coffee_small" },
+      { kind: "pending" },
+      { kind: "thanks", id: "tip_coffee_standard" },
+    ]);
   });
 });

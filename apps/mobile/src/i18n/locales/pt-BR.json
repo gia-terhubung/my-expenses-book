@@ -389,7 +389,9 @@
     "unavailable": "As gorjetas não estão disponíveis agora. Verifique sua conexão e tente novamente.",
     "failed": "A compra não foi concluída. Você não foi cobrado.",
     "retry": "Tentar novamente",
-    "loading": "Carregando gorjetas…"
+    "loading": "Carregando gorjetas…",
+    "pending": "Seu pagamento está pendente. A gorjeta é concluída quando a loja confirmar.",
+    "finishLater": "Sua gorjeta foi feita. Ela termina na próxima vez que você abrir as gorjetas."
   },
   "errorLog": {
     "title": "Registro de erros",

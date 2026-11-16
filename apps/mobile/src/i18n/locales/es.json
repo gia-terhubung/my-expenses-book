@@ -389,7 +389,9 @@
     "unavailable": "Las propinas no están disponibles ahora. Revisa tu conexión e inténtalo de nuevo.",
     "failed": "La compra no se completó. No se te ha cobrado.",
     "retry": "Reintentar",
-    "loading": "Cargando propinas…"
+    "loading": "Cargando propinas…",
+    "pending": "Tu pago está pendiente. La propina se completa cuando la tienda lo confirme.",
+    "finishLater": "Tu propina se realizó. Terminará la próxima vez que abras las propinas."
   },
   "errorLog": {
     "title": "Registro de errores",
