@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo } from "react";
-import { AccessibilityInfo, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/Button";
 import { useDb } from "@/db/DatabaseProvider";
 import { listCategories } from "@/db/repositories/categories";
 import { TwoPane } from "@/layout/TwoPane";
@@ -109,9 +110,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
       </View>
       {editing ? null : (
         // Keeps the draft (edits are already written); "Continue reviewing" on Receipts reopens it.
-        <Pressable accessibilityRole="button" onPress={() => router.back()} style={{ minHeight: 48, justifyContent: "center" }}>
-          <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("review.later")}</Text>
-        </Pressable>
+        <Button variant="quiet" label={t("review.later")} onPress={() => router.back()} />
       )}
     </View>
   );
@@ -129,30 +128,21 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
         backgroundColor: theme.colors.background,
       }}
     >
-      <Pressable
-        accessibilityRole="button"
+      <Button
+        tone={editing ? "default" : "danger"}
+        label={t(editing ? "common.cancel" : "review.discard")}
         onPress={editing ? form.cancel : discard}
         disabled={form.busy}
-        style={{ minHeight: 48, flex: 1, justifyContent: "center", alignItems: "center", borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border }}
-      >
-        <Text style={[theme.type.body, { color: editing ? theme.colors.text : theme.colors.danger, fontWeight: "600" }]}>
-          {t(editing ? "common.cancel" : "review.discard")}
-        </Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
+        style={{ flex: 1 }}
+      />
+      <Button
+        variant="primary"
+        label={t("common.save")}
         accessibilityLabel={form.busy ? t("review.saving") : t("review.saveReceipt")}
-        accessibilityState={{ busy: form.busy }}
         onPress={save}
-        disabled={form.busy}
-        style={{ minHeight: 48, flex: 2, justifyContent: "center", alignItems: "center", borderRadius: theme.radius.md, backgroundColor: theme.colors.primary }}
-      >
-        {form.busy ? (
-          <ActivityIndicator color={theme.colors.onPrimary} />
-        ) : (
-          <Text style={[theme.type.body, { color: theme.colors.onPrimary, fontWeight: "600" }]}>{t("common.save")}</Text>
-        )}
-      </Pressable>
+        busy={form.busy}
+        style={{ flex: 2 }}
+      />
     </View>
   );
 

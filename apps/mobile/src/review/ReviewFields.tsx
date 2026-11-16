@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import { Button } from "@/components/Button";
 import { DateField } from "@/components/DateField";
 import { CurrencyPicker, currencyName } from "@/components/CurrencyPicker";
 import { useDb } from "@/db/DatabaseProvider";
@@ -269,9 +270,7 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
               <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text, flexShrink: 1 }]}>
                 {t("review.currency")}
               </Text>
-              <Pressable accessibilityRole="button" onPress={() => setCurrencyOpen(false)} style={{ minHeight: 48, justifyContent: "center" }}>
-                <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("common.done")}</Text>
-              </Pressable>
+              <Button variant="quiet" label={t("common.done")} onPress={() => setCurrencyOpen(false)} />
             </View>
             <CurrencyPicker
               lang={i18n.language}

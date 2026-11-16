@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import type { DuplicateMatch } from "@/capture/duplicates";
+import { Button } from "@/components/Button";
 import { useDb } from "@/db/DatabaseProvider";
 import { getReceipt } from "@/db/repositories/receipts";
 import { formatMoney } from "@/money/money";
@@ -28,23 +29,8 @@ export function DuplicateBanner({
   if (!duplicates.length) return null;
   const exact = duplicates.some((d) => d.strength === "exact-ref");
 
-  const button = (label: string, onPress: () => void, primary = false) => (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      disabled={disabled}
-      style={{
-        minHeight: 44,
-        paddingHorizontal: theme.spacing.lg,
-        justifyContent: "center",
-        borderRadius: theme.radius.md,
-        borderWidth: 1,
-        borderColor: primary ? theme.colors.warning : theme.colors.border,
-        backgroundColor: theme.colors.surface,
-      }}
-    >
-      <Text style={[theme.type.body, { color: theme.colors.text, fontWeight: "600" }]}>{label}</Text>
-    </Pressable>
+  const button = (label: string, onPress: () => void) => (
+    <Button label={label} onPress={onPress} disabled={disabled} align="start" />
   );
 
   const money = (minor: number, code: string) => {
@@ -86,7 +72,7 @@ export function DuplicateBanner({
         : null}
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
         {button(t(open ? "review.hide" : "review.view"), () => setOpen((o) => !o))}
-        {button(t("review.saveAnyway"), onSaveAnyway, true)}
+        {button(t("review.saveAnyway"), onSaveAnyway)}
       </View>
     </View>
   );

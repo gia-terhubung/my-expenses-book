@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/Button";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import { listCategories } from "@/db/repositories/categories";
@@ -83,14 +84,13 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
   /* eslint-enable react-hooks/exhaustive-deps */
 
   const back = onBack ? (
-    <Pressable
-      accessibilityRole="button"
+    <Button
+      variant="quiet"
+      label={`‹ ${t("common.back")}`}
       accessibilityLabel={t("common.back")}
       onPress={onBack}
-      style={{ minHeight: 48, minWidth: 48, justifyContent: "center", alignSelf: "flex-start" }}
-    >
-      <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>‹ {t("common.back")}</Text>
-    </Pressable>
+      style={{ alignSelf: "flex-start" }}
+    />
   ) : null;
 
   if (!receipt) {
@@ -135,27 +135,8 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
     </View>
   );
 
-  const action = (label: string, onPress: () => void, color = theme.colors.primary, disabled = false) => (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        minHeight: 48,
-        flexGrow: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: theme.spacing.lg,
-        borderRadius: theme.radius.md,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-        backgroundColor: pressed ? theme.colors.border : theme.colors.surface,
-        opacity: disabled ? 0.4 : 1,
-      })}
-    >
-      <Text style={[theme.type.body, { color, fontWeight: "600" }]}>{label}</Text>
-    </Pressable>
+  const action = (label: string, onPress: () => void, tone: "default" | "danger" = "default", disabled = false) => (
+    <Button label={label} onPress={onPress} tone={tone} disabled={disabled} style={{ flexGrow: 1 }} />
   );
 
   return (
@@ -183,7 +164,7 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
           {action(t("receipts.detail.edit"), () => onEdit(receipt.id))}
           {action(t("receipts.detail.move"), () => setPicking(true))}
-          {action(t("common.delete"), confirmDelete, theme.colors.danger, deleting)}
+          {action(t("common.delete"), confirmDelete, "danger", deleting)}
         </View>
         {field(t("receipts.detail.category"), category ? categoryLabel(category, t) : t("review.noCategory"))}
         {field(t("receipts.detail.folder"), folder?.name ?? t("folders.none"))}
