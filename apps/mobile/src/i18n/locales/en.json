@@ -370,5 +370,13 @@
     "failed": "The purchase didn't go through. You weren't charged.",
     "retry": "Try again",
     "loading": "Loading tips…"
+  },
+  "errorLog": {
+    "title": "Error log",
+    "intro": "Errors the app ran into. Nothing leaves your phone unless you export it.",
+    "empty": "No errors recorded.",
+    "export": "Export",
+    "clear": "Clear log",
+    "clearConfirm": "Delete all recorded errors? This can't be undone."
   }
 }

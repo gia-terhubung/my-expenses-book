@@ -45,7 +45,7 @@ function Migrated({
   // useMigrations only needs the drizzle expo-sqlite handle's session/dialect.
   const { success, error } = useMigrations(db as unknown as Parameters<typeof useMigrations>[0], migrations);
   if (error) {
-    return <ErrorPanel title={t("dbError.migrationFailed")} details={error.message} onRetry={onRetry} />;
+    return <ErrorPanel title={t("dbError.migrationFailed")} details={error.message} onRetry={onRetry} scope="db.migrate" />;
   }
   if (!success) return <Loading />;
   return <DbContext.Provider value={db}>{children}</DbContext.Provider>;
@@ -139,7 +139,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
     case "locked":
       return <DbErrorScreen onReset={reset} />;
     case "failed":
-      return <ErrorPanel title={t(state.titleKey)} details={state.message} onRetry={retry} />;
+      return <ErrorPanel title={t(state.titleKey)} details={state.message} onRetry={retry} scope="db.open" />;
     case "ready":
       return <Migrated db={state.db} onRetry={retry}>{children}</Migrated>;
   }

@@ -128,7 +128,7 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   };
 
   if (error !== null) {
-    return <ErrorPanel title={t("export.failed")} details={error} onRetry={() => setError(null)} />;
+    return <ErrorPanel title={t("export.failed")} details={error} onRetry={() => setError(null)} scope="export" />;
   }
 
   const section = (title: string) => (

@@ -1,22 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, ScrollView, Text, View } from "react-native";
 
+import { logError } from "@/errorLog/instance";
 import { useTheme } from "@/theme/ThemeProvider";
 
-/** Themed full-screen error: title, optional raw details behind a toggle, Retry. */
+/**
+ * Themed full-screen error: title, optional raw details behind a toggle, Retry. With `scope`,
+ * the details go to the local error log once per distinct message.
+ */
 export function ErrorPanel({
   title,
   details,
   onRetry,
+  scope,
 }: {
   title: string;
   details?: string;
   onRetry?: () => void;
+  scope?: string;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (scope && details) logError(scope, new Error(details));
+  }, [scope, details]);
   return (
     <View
       style={{

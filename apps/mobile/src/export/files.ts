@@ -9,7 +9,7 @@ const PICKER_DIR = "DocumentPicker/";
 /** expo-print's temp output (a plaintext PDF left behind if the app dies mid-render). */
 const PRINT_DIR = "Print/";
 
-export type ExportKind = "csv" | "pdf" | "meb";
+export type ExportKind = "csv" | "pdf" | "meb" | "txt";
 
 export function exportFileName(kind: ExportKind, localDate: string): string {
   return kind === "meb" ? `MyExpensesBook-backup-${localDate}.meb` : `MyExpensesBook-${localDate}.${kind}`;
@@ -36,6 +36,7 @@ const SHARE: Record<ExportKind, { mimeType: string; UTI: string }> = {
   csv: { mimeType: "text/csv", UTI: "public.comma-separated-values-text" },
   pdf: { mimeType: "application/pdf", UTI: "com.adobe.pdf" },
   meb: { mimeType: "application/octet-stream", UTI: "public.data" },
+  txt: { mimeType: "text/plain", UTI: "public.plain-text" },
 };
 
 export async function shareFile(uri: string, kind: ExportKind): Promise<void> {

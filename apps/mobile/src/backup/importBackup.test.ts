@@ -16,6 +16,7 @@ import { ArchiveFormatError, ArchiveTooOldError, ArchiveVersionError, WrongPassp
 import { exportBackup } from "./exportBackup";
 import { importBackup } from "./importBackup";
 import { SCHEMA_VERSION, collectSnapshot, type Snapshot } from "./snapshot";
+import { errorLog, resetErrorLogForTests } from "@/errorLog/instance";
 
 const PASS = "correct horse";
 
@@ -355,6 +356,7 @@ describe("importBackup", () => {
   });
 
   it("a throwing cleanupOrphanPages after commit does not reject the import", async () => {
+    resetErrorLogForTests();
     const a = seedA();
     const bytes = await exportOf(a.db, a.files);
     const db = testDb();
@@ -364,6 +366,7 @@ describe("importBackup", () => {
     ).resolves.toMatchObject({ result: { inserted: 1 } });
     expect(rows(db).receipts).toHaveLength(1);
     expect(fs.files.size).toBe(2);
+    expect(errorLog.list().some((e) => e.scope === "backup.postCommit")).toBe(true);
   });
 
   it("keeps a page path with no page record (file missing at backup time)", async () => {

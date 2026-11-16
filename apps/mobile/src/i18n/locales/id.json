@@ -370,5 +370,13 @@
     "failed": "Pembelian tidak berhasil. Anda tidak dikenai biaya.",
     "retry": "Coba lagi",
     "loading": "Memuat tip…"
+  },
+  "errorLog": {
+    "title": "Log galat",
+    "intro": "Galat yang dialami aplikasi. Tidak ada yang keluar dari ponsel Anda kecuali Anda mengekspornya.",
+    "empty": "Tidak ada galat tercatat.",
+    "export": "Ekspor",
+    "clear": "Hapus log",
+    "clearConfirm": "Hapus semua galat yang tercatat? Tindakan ini tidak bisa dibatalkan."
   }
 }

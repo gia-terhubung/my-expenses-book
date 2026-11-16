@@ -370,5 +370,13 @@
     "failed": "A compra não foi concluída. Você não foi cobrado.",
     "retry": "Tentar novamente",
     "loading": "Carregando gorjetas…"
+  },
+  "errorLog": {
+    "title": "Registro de erros",
+    "intro": "Erros que o app encontrou. Nada sai do seu telefone a menos que você exporte.",
+    "empty": "Nenhum erro registrado.",
+    "export": "Exportar",
+    "clear": "Limpar registro",
+    "clearConfirm": "Excluir todos os erros registrados? Isso não pode ser desfeito."
   }
 }

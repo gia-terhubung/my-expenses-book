@@ -370,5 +370,13 @@
     "failed": "La compra no se completó. No se te ha cobrado.",
     "retry": "Reintentar",
     "loading": "Cargando propinas…"
+  },
+  "errorLog": {
+    "title": "Registro de errores",
+    "intro": "Errores que encontró la app. Nada sale de tu teléfono a menos que lo exportes.",
+    "empty": "No hay errores registrados.",
+    "export": "Exportar",
+    "clear": "Borrar registro",
+    "clearConfirm": "¿Eliminar todos los errores registrados? No se puede deshacer."
   }
 }
