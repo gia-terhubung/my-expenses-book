@@ -75,6 +75,8 @@ export function ReceiptList({
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
+              alignItems: "center",
+              gap: theme.spacing.sm,
               paddingHorizontal: theme.spacing.lg,
               paddingVertical: theme.spacing.sm,
               backgroundColor: theme.colors.background,
@@ -84,7 +86,7 @@ export function ReceiptList({
               accessibilityRole="header"
               style={[
                 theme.type.body,
-                { color: theme.colors.text, fontWeight: "700" },
+                { color: theme.colors.text, fontWeight: "700", flexShrink: 1 },
               ]}
             >
               {monthLabel(section.month, locale)}
@@ -92,6 +94,9 @@ export function ReceiptList({
             {mt ? (
               <Text
                 testID={`month-total-${section.month}`}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
                 style={[theme.type.body, { color: theme.colors.textMuted }]}
               >
                 {totalLine(mt, home, locale, notConverted)}

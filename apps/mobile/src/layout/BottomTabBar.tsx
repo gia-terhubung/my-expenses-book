@@ -46,11 +46,18 @@ export function BottomTabs({ state, navigateToTab }: BottomTabBarProps) {
             <Pressable
               key={route.key}
               accessibilityRole="tab"
+              accessibilityLabel={t(TAB_LABEL_KEYS[name])}
               accessibilityState={{ selected: focused }}
               onPress={() => navigateToTab(route.key)}
               style={[styles.tab, focused ? { backgroundColor: theme.colors.tonal } : null]}
             >
-              <Ionicons name={TAB_ICONS[name]} size={22} color={color} />
+              <Ionicons
+                name={TAB_ICONS[name]}
+                size={22}
+                color={color}
+                accessible={false}
+                importantForAccessibility="no"
+              />
               <Text
                 // Never ellipsize: "Pengaturan" at 1.3x is wider than a 360 dp phone's tab, so it shrinks.
                 numberOfLines={1}

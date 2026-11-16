@@ -51,6 +51,17 @@ describe("BottomTabs (floating duo)", () => {
     expect(flat(screen.getByTestId("tab-bar"))).toMatchObject({ position: "absolute", bottom: 59, left: 12, right: 12 });
   });
 
+  it("each tab's accessible name is its label only, icon hidden from a11y", async () => {
+    await render(<BottomTabs {...props()} />);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.map((tab) => tab.props.accessibilityLabel)).toEqual(["Struk", "Cari", "Folder", "Pengaturan"]);
+    for (const tab of tabs) {
+      const icon = tab.children[0] as { props: Record<string, unknown> };
+      expect(icon.props.accessible).toBe(false);
+      expect(icon.props.importantForAccessibility).toBe("no");
+    }
+  });
+
   it("tab labels cap font scaling at 1.3", async () => {
     await render(<BottomTabs {...props()} />);
     for (const label of ["Struk", "Cari", "Folder", "Pengaturan"]) {

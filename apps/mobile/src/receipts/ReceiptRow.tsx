@@ -59,9 +59,10 @@ export const ReceiptRow = memo(function ReceiptRow({
       })}
     >
       <Text
+        numberOfLines={1}
         style={[
           theme.type.body,
-          { color: theme.colors.textMuted, width: 24, textAlign: "center" },
+          { color: theme.colors.textMuted, minWidth: 30, flexShrink: 0, textAlign: "center" },
         ]}
       >
         {day}

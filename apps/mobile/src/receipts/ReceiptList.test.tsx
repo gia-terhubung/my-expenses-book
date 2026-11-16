@@ -40,6 +40,26 @@ beforeEach(() => {
 const empty = <Text>nothing here</Text>;
 
 describe("ReceiptList", () => {
+  it("day number never wraps: one line, no shrink, min width", async () => {
+    seed("A", "2026-11-16T10:00:00", 100);
+    await render(<ReceiptList filter={filter} onSelect={() => {}} empty={empty} />);
+    const day = screen.getByText("16");
+    expect(day.props.numberOfLines).toBe(1);
+    expect(StyleSheet.flatten(day.props.style)).toMatchObject({ flexShrink: 0, minWidth: 30 });
+  });
+
+  it("month header: total shrinks to fit on one line, month name shrinks first", async () => {
+    seed("A", "2026-11-03T10:00:00", 100);
+    await render(<ReceiptList filter={filter} onSelect={() => {}} empty={empty} />);
+    expect(screen.getByTestId("month-total-2026-11").props).toMatchObject({
+      numberOfLines: 1,
+      adjustsFontSizeToFit: true,
+      minimumFontScale: 0.6,
+    });
+    const name = screen.getByText(/November 2026/);
+    expect(StyleSheet.flatten(name.props.style).flexShrink).toBe(1);
+  });
+
   it("one header per month with month totals", async () => {
     seed("A", "2026-11-03T10:00:00", 100);
     seed("B", "2026-11-01T10:00:00", 200);
