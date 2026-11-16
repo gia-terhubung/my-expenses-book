@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 
 import { createPage } from "@/db/repositories/pages";
 import { createReceipt, getReceipt } from "@/db/repositories/receipts";
@@ -138,6 +139,18 @@ describe("ReceiptFormScreen", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Save receipt" }));
     expect(getReceipt(mockDb, r.id)).toMatchObject({ merchant: "Warung Sari", status: "confirmed" });
     expect(mockRouter.back).toHaveBeenCalledTimes(1);
+  });
+
+  it("a blocked save announces the first error and puts it in the field's hint", async () => {
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility").mockImplementation(() => {});
+    const r = seed("confirmed");
+    mockParams = { id: r.id };
+    await render(<ReceiptFormScreen mode="edit" />);
+    await fireEvent.changeText(screen.getByLabelText("Total"), "");
+    await fireEvent.press(screen.getByRole("button", { name: "Save receipt" }));
+    expect(announce).toHaveBeenCalledWith("Enter the total.");
+    expect(screen.getByLabelText("Total").props.accessibilityHint).toContain("Enter the total.");
+    announce.mockRestore();
   });
 
   it("edit: Cancel without changes goes back", async () => {

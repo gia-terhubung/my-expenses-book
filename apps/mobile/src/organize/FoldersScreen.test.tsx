@@ -106,6 +106,15 @@ describe("FoldersScreen", () => {
     expect(await screen.findByText("Office")).toBeTruthy();
   });
 
+  it("a folder row speaks its kind and hides the emoji icon", async () => {
+    createFolder(mockDb, { name: "Bali 2026", kind: "trip" });
+    await render(<FoldersScreen />);
+    const row = screen.getByRole("button", { name: /^Trip, Bali 2026, / });
+    expect(row).toBeTruthy();
+    const icon = screen.getByText("✈️", { includeHiddenElements: true });
+    expect(icon.props.importantForAccessibility).toBe("no");
+  });
+
   it("blank name cannot be saved", async () => {
     await render(<FoldersScreen />);
     await fireEvent.press(screen.getByRole("button", { name: "New folder" }));

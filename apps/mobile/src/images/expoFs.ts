@@ -38,3 +38,9 @@ export function deletePagesDir(): void {
   const d = new Directory(expoFs.documentDir + "pages/");
   if (d.exists) d.delete();
 }
+
+/** Size in bytes of a file under documentDir (stored relative path); 0 when missing. */
+export async function fileSize(relPath: string): Promise<number> {
+  const f = new File(expoFs.documentDir + relPath);
+  return f.exists ? (f.size ?? 0) : 0;
+}

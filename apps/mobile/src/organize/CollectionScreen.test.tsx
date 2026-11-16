@@ -11,7 +11,7 @@ import { initI18n } from "@/i18n";
 import { CollectionScreen } from "./CollectionScreen";
 
 let mockDb: AppDb;
-const mockRouter = { push: jest.fn(), back: jest.fn(), setParams: jest.fn() };
+const mockRouter = { push: jest.fn(), back: jest.fn(), setParams: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) };
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 jest.mock("@/images/ImageStoreProvider", () => ({ useImageStore: () => ({}) }));
 jest.mock("@/prefs/PrefsProvider", () => ({
@@ -133,5 +133,27 @@ describe("CollectionScreen", () => {
       pathname: "/export",
       params: { from: "2026-04-01", to: "2027-03-31" },
     });
+  });
+});
+
+describe("CollectionScreen not found", () => {
+  it("a missing folder shows not-found; Back with no history goes to /folders", async () => {
+    mockRouter.canGoBack.mockReturnValueOnce(false);
+    await render(<CollectionScreen kind="folder" folderId="does-not-exist" />);
+    expect(screen.getByText("This folder no longer exists.")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Back" }));
+    expect(mockRouter.replace).toHaveBeenCalledWith("/folders");
+  });
+
+  it("a missing folder with history goes back", async () => {
+    mockRouter.back.mockClear();
+    await render(<CollectionScreen kind="folder" folderId="does-not-exist" />);
+    await fireEvent.press(screen.getByRole("button", { name: "Back" }));
+    expect(mockRouter.back).toHaveBeenCalled();
+  });
+
+  it("a NaN tax year shows not-found", async () => {
+    await render(<CollectionScreen kind="taxYear" year={Number("abc")} />);
+    expect(screen.getByText("This tax year can't be shown.")).toBeTruthy();
   });
 });

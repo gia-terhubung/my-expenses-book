@@ -57,7 +57,13 @@
     },
     "categories": "Categories",
     "export": "Export",
-    "backupRestore": "Backup & restore"
+    "backupRestore": "Backup & restore",
+    "tipJar": "Tip jar",
+    "storage": "Storage",
+    "storageValue_one": "{{count}} receipt · {{size}}",
+    "storageValue_other": "{{count}} receipts · {{size}}",
+    "errorLog": "Error log",
+    "support": "Support"
   },
   "dbError": {
     "title": "Your data can't be unlocked",
@@ -85,7 +91,9 @@
     "receipts": "No receipts yet. Scanned receipts will show up here.",
     "search": "Search your receipts by merchant, note or amount.",
     "folders": "No folders yet. Create one to group receipts.",
-    "document": "Receipt details will appear here."
+    "document": "Receipt details will appear here.",
+    "scanFirst": "Scan a receipt",
+    "addManually": "Add manually"
   },
   "document": {
     "title": "Receipt"
@@ -211,7 +219,9 @@
     "receiptCount_other": "{{count}} receipts",
     "taxYearTitle": "Tax year {{label}}",
     "noReceipts": "No receipts here yet.",
-    "save": "Save"
+    "save": "Save",
+    "notFound": "This folder no longer exists.",
+    "taxYearInvalid": "This tax year can't be shown."
   },
   "categoryManage": {
     "title": "Categories",
@@ -227,7 +237,17 @@
     "deleteMessage_one": "{{count}} receipt moves to {{other}}.",
     "deleteMessage_other": "{{count}} receipts move to {{other}}.",
     "receiptCount_one": "{{count}} receipt",
-    "receiptCount_other": "{{count}} receipts"
+    "receiptCount_other": "{{count}} receipts",
+    "colors": {
+      "red": "Red",
+      "orange": "Orange",
+      "green": "Green",
+      "teal": "Teal",
+      "blue": "Blue",
+      "purple": "Purple",
+      "pink": "Pink",
+      "brown": "Brown"
+    }
   },
   "search": {
     "label": "Search receipts",
@@ -358,5 +378,32 @@
     "resultReplace_other": "Restored {{count}} receipts",
     "duplicates": "Possible duplicates ({{count}})",
     "done": "Done"
+  },
+  "tips": {
+    "title": "Tip jar",
+    "intro": "My Expenses Book is free, with no ads and no tracking. If it saves you time, you can buy the developer a coffee.",
+    "small": "Small coffee",
+    "standard": "Coffee",
+    "generous": "Generous coffee",
+    "thanks": "Thank you! Your tip keeps this app independent.",
+    "unavailable": "Tips aren't available right now. Check your connection and try again.",
+    "failed": "The purchase didn't go through. You weren't charged.",
+    "retry": "Try again",
+    "loading": "Loading tips…",
+    "pending": "Your payment is pending. The tip completes once the store confirms it.",
+    "finishLater": "Your tip went through. It finishes the next time you open the tip jar."
+  },
+  "errorLog": {
+    "title": "Error log",
+    "intro": "Errors the app ran into. Nothing leaves your phone unless you export it.",
+    "empty": "No errors recorded.",
+    "export": "Export",
+    "clear": "Clear log",
+    "clearConfirm": "Delete all recorded errors? This can't be undone."
+  },
+  "about": {
+    "title": "About",
+    "privacyPolicy": "Privacy policy",
+    "version": "Version"
   }
 }

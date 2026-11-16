@@ -57,7 +57,13 @@
     },
     "categories": "Kategori",
     "export": "Ekspor",
-    "backupRestore": "Cadangan & pemulihan"
+    "backupRestore": "Cadangan & pemulihan",
+    "tipJar": "Kotak tip",
+    "storage": "Penyimpanan",
+    "storageValue_one": "{{count}} struk · {{size}}",
+    "storageValue_other": "{{count}} struk · {{size}}",
+    "errorLog": "Log galat",
+    "support": "Dukungan"
   },
   "dbError": {
     "title": "Data Anda tidak dapat dibuka",
@@ -85,7 +91,9 @@
     "receipts": "Belum ada struk. Struk yang dipindai akan muncul di sini.",
     "search": "Cari struk berdasarkan toko, catatan, atau jumlah.",
     "folders": "Belum ada folder. Buat satu untuk mengelompokkan struk.",
-    "document": "Detail struk akan muncul di sini."
+    "document": "Detail struk akan muncul di sini.",
+    "scanFirst": "Pindai struk",
+    "addManually": "Tambah manual"
   },
   "document": {
     "title": "Struk"
@@ -211,7 +219,9 @@
     "receiptCount_other": "{{count}} struk",
     "taxYearTitle": "Tahun pajak {{label}}",
     "noReceipts": "Belum ada struk di sini.",
-    "save": "Simpan"
+    "save": "Simpan",
+    "notFound": "Folder ini sudah tidak ada.",
+    "taxYearInvalid": "Tahun pajak ini tidak dapat ditampilkan."
   },
   "categoryManage": {
     "title": "Kategori",
@@ -227,7 +237,17 @@
     "deleteMessage_one": "{{count}} struk dipindahkan ke {{other}}.",
     "deleteMessage_other": "{{count}} struk dipindahkan ke {{other}}.",
     "receiptCount_one": "{{count}} struk",
-    "receiptCount_other": "{{count}} struk"
+    "receiptCount_other": "{{count}} struk",
+    "colors": {
+      "red": "Merah",
+      "orange": "Oranye",
+      "green": "Hijau",
+      "teal": "Hijau toska",
+      "blue": "Biru",
+      "purple": "Ungu",
+      "pink": "Merah muda",
+      "brown": "Cokelat"
+    }
   },
   "search": {
     "label": "Cari struk",
@@ -358,5 +378,32 @@
     "duplicates": "Kemungkinan duplikat ({{count}})",
     "done": "Selesai",
     "resultReplace_one": "{{count}} struk dipulihkan"
+  },
+  "tips": {
+    "title": "Kotak tip",
+    "intro": "My Expenses Book gratis, tanpa iklan dan tanpa pelacakan. Jika aplikasi ini menghemat waktu Anda, Anda bisa mentraktir pengembangnya kopi.",
+    "small": "Kopi kecil",
+    "standard": "Kopi",
+    "generous": "Kopi istimewa",
+    "thanks": "Terima kasih! Tip Anda membuat aplikasi ini tetap independen.",
+    "unavailable": "Tip belum tersedia saat ini. Periksa koneksi Anda lalu coba lagi.",
+    "failed": "Pembelian tidak berhasil. Anda tidak dikenai biaya.",
+    "retry": "Coba lagi",
+    "loading": "Memuat tip…",
+    "pending": "Pembayaran Anda masih tertunda. Tip selesai setelah toko aplikasi mengonfirmasinya.",
+    "finishLater": "Tip Anda sudah berhasil. Prosesnya selesai saat Anda membuka kotak tip lagi."
+  },
+  "errorLog": {
+    "title": "Log galat",
+    "intro": "Galat yang dialami aplikasi. Tidak ada yang keluar dari ponsel Anda kecuali Anda mengekspornya.",
+    "empty": "Tidak ada galat tercatat.",
+    "export": "Ekspor",
+    "clear": "Hapus log",
+    "clearConfirm": "Hapus semua galat yang tercatat? Tindakan ini tidak bisa dibatalkan."
+  },
+  "about": {
+    "title": "Tentang",
+    "privacyPolicy": "Kebijakan privasi",
+    "version": "Versi"
   }
 }

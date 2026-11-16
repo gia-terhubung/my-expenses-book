@@ -436,6 +436,7 @@ export function BackupScreen({
         title={error.title}
         details={error.details}
         onRetry={() => setError(null)}
+        scope="backup"
       />
     );
   }

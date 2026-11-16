@@ -12,6 +12,8 @@ import type { PrefsStore } from "@/prefs/prefs";
 import { type MergeResult, type RestoreMode, applyMerge, applyReplace } from "./applySnapshot";
 import { type ByteSource, openArchive } from "./container";
 import { ArchiveFormatError, ArchiveTooOldError, ArchiveVersionError } from "./errors";
+import { logError } from "@/errorLog/instance";
+
 import { SCHEMA_VERSION, type Snapshot, snapshotSchema } from "./snapshot";
 
 export type { MergeResult, RestoreMode } from "./applySnapshot";
@@ -20,7 +22,9 @@ export type PossibleDuplicate = { receiptId: string; matchId: string };
 
 const PAGES_PREFIX = "pages/";
 
-function devWarn(msg: string, e: unknown): void {
+/** Post-commit failures go to the local error log in every build; also printed in dev. */
+function devWarn(msg: string, e: unknown, scope = "backup.postCommit"): void {
+  logError(scope, e instanceof Error ? new Error(`${msg}: ${e.message}`) : `${msg}: ${String(e)}`);
   if (typeof __DEV__ !== "undefined" && __DEV__) console.warn(msg, e);
 }
 
@@ -119,7 +123,7 @@ export async function importBackup(deps: {
     } catch (e) {
       // 6. Undo the only side effect so far: the new page files.
       if (newPaths.length > 0) {
-        await store.deleteFiles(newPaths).catch((err: unknown) => devWarn("restore: deleting new pages failed", err));
+        await store.deleteFiles(newPaths).catch((err: unknown) => devWarn("restore: deleting new pages failed", err, "backup.rollback"));
       }
       throw e;
     }

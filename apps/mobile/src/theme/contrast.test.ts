@@ -1,0 +1,42 @@
+import { darkColors, lightColors, type ColorTokens } from "./tokens";
+
+/** WCAG 2.1 relative luminance of a #RRGGBB color. */
+function luminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+export function contrast(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+const PAIRS: [keyof ColorTokens, keyof ColorTokens, number][] = [
+  ["text", "background", 4.5],
+  ["text", "surface", 4.5],
+  ["textMuted", "background", 4.5],
+  ["textMuted", "surface", 4.5],
+  ["onPrimary", "primary", 4.5],
+  ["danger", "surface", 4.5],
+  ["warning", "surface", 4.5],
+  // Primary is used for 16px text actions, so it needs body-text contrast, not 3:1.
+  ["primary", "surface", 4.5],
+  ["primary", "background", 4.5],
+];
+
+describe.each([
+  ["light", lightColors as ColorTokens],
+  ["dark", darkColors],
+])("%s theme contrast", (_name, colors) => {
+  it.each(PAIRS)("%s on %s ≥ %s", (fg, bg, min) => {
+    expect(contrast(colors[fg], colors[bg])).toBeGreaterThanOrEqual(min);
+  });
+});
+
+it("contrast() matches WCAG reference values", () => {
+  expect(contrast("#000000", "#FFFFFF")).toBeCloseTo(21, 1);
+  expect(contrast("#777777", "#FFFFFF")).toBeCloseTo(4.48, 2);
+});

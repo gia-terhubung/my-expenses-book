@@ -62,7 +62,7 @@ describe("CategoriesScreen", () => {
     await render(<CategoriesScreen />);
     await fireEvent.press(screen.getByRole("button", { name: "New category…" }));
     await fireEvent.changeText(screen.getByLabelText("Category name"), "  Pets ");
-    await fireEvent.press(screen.getByRole("radio", { name: "Color 3" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Green" }));
     await fireEvent.press(screen.getByRole("button", { name: "Add" }));
     const added = listCategories(mockDb).find((c) => c.customName === "Pets")!;
     expect(added.isDefault).toBe(false);

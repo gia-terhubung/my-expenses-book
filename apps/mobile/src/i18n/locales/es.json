@@ -57,7 +57,13 @@
     },
     "categories": "Categorías",
     "export": "Exportar",
-    "backupRestore": "Copia de seguridad y restauración"
+    "backupRestore": "Copia de seguridad y restauración",
+    "tipJar": "Propinas",
+    "storage": "Almacenamiento",
+    "storageValue_one": "{{count}} recibo · {{size}}",
+    "storageValue_other": "{{count}} recibos · {{size}}",
+    "errorLog": "Registro de errores",
+    "support": "Soporte"
   },
   "dbError": {
     "title": "No se pueden desbloquear tus datos",
@@ -85,7 +91,9 @@
     "receipts": "Aún no hay recibos. Los recibos escaneados aparecerán aquí.",
     "search": "Busca tus recibos por comercio, nota o importe.",
     "folders": "Aún no hay carpetas. Crea una para agrupar recibos.",
-    "document": "Los detalles del recibo aparecerán aquí."
+    "document": "Los detalles del recibo aparecerán aquí.",
+    "scanFirst": "Escanear un recibo",
+    "addManually": "Añadir a mano"
   },
   "document": {
     "title": "Recibo"
@@ -211,7 +219,9 @@
     "receiptCount_other": "{{count}} recibos",
     "taxYearTitle": "Año fiscal {{label}}",
     "noReceipts": "Aún no hay recibos aquí.",
-    "save": "Guardar"
+    "save": "Guardar",
+    "notFound": "Esta carpeta ya no existe.",
+    "taxYearInvalid": "Este año fiscal no se puede mostrar."
   },
   "categoryManage": {
     "title": "Categorías",
@@ -227,7 +237,17 @@
     "deleteMessage_one": "{{count}} recibo pasa a {{other}}.",
     "deleteMessage_other": "{{count}} recibos pasan a {{other}}.",
     "receiptCount_one": "{{count}} recibo",
-    "receiptCount_other": "{{count}} recibos"
+    "receiptCount_other": "{{count}} recibos",
+    "colors": {
+      "red": "Rojo",
+      "orange": "Naranja",
+      "green": "Verde",
+      "teal": "Verde azulado",
+      "blue": "Azul",
+      "purple": "Morado",
+      "pink": "Rosa",
+      "brown": "Marrón"
+    }
   },
   "search": {
     "label": "Buscar recibos",
@@ -358,5 +378,32 @@
     "resultReplace_other": "{{count}} recibos restaurados",
     "duplicates": "Posibles duplicados ({{count}})",
     "done": "Listo"
+  },
+  "tips": {
+    "title": "Propinas",
+    "intro": "My Expenses Book es gratis, sin anuncios ni rastreo. Si te ahorra tiempo, puedes invitar un café al desarrollador.",
+    "small": "Café pequeño",
+    "standard": "Café",
+    "generous": "Café generoso",
+    "thanks": "¡Gracias! Tu propina mantiene esta app independiente.",
+    "unavailable": "Las propinas no están disponibles ahora. Revisa tu conexión e inténtalo de nuevo.",
+    "failed": "La compra no se completó. No se te ha cobrado.",
+    "retry": "Reintentar",
+    "loading": "Cargando propinas…",
+    "pending": "Tu pago está pendiente. La propina se completa cuando la tienda lo confirme.",
+    "finishLater": "Tu propina se realizó. Terminará la próxima vez que abras las propinas."
+  },
+  "errorLog": {
+    "title": "Registro de errores",
+    "intro": "Errores que encontró la app. Nada sale de tu teléfono a menos que lo exportes.",
+    "empty": "No hay errores registrados.",
+    "export": "Exportar",
+    "clear": "Borrar registro",
+    "clearConfirm": "¿Eliminar todos los errores registrados? No se puede deshacer."
+  },
+  "about": {
+    "title": "Acerca de",
+    "privacyPolicy": "Política de privacidad",
+    "version": "Versión"
   }
 }

@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
@@ -68,7 +68,12 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
 
   const save = () => {
     form.save().catch((e: unknown) => {
-      if (e instanceof ReviewValidationError) return; // shown inline
+      if (e instanceof ReviewValidationError) {
+        // Shown inline; announced too, since the first error may be off screen.
+        const first = Object.values(e.errors).find(Boolean);
+        if (first) AccessibilityInfo.announceForAccessibility(t(first));
+        return;
+      }
       if (__DEV__) console.warn("receipt save failed", e);
       Alert.alert(t("review.saveFailed"));
     });

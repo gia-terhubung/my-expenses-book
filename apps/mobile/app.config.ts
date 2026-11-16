@@ -14,6 +14,8 @@ const config: ExpoConfig = {
     icon: "./assets/expo.icon",
     bundleIdentifier: "com.terhubung.myexpensesbook",
     supportsTablet: true,
+    // Standard OS/AES encryption only: exempt from export documentation (spec "Store prep").
+    config: { usesNonExemptEncryption: false },
   },
   android: {
     package: "com.terhubung.myexpensesbook",
@@ -27,10 +29,6 @@ const config: ExpoConfig = {
     predictiveBackGestureEnabled: false,
     blockedPermissions: ["android.permission.RECORD_AUDIO"],
   },
-  web: {
-    output: "server",
-    favicon: "./assets/images/favicon.png",
-  },
   plugins: [
     "expo-router",
     "expo-secure-store",
@@ -38,6 +36,7 @@ const config: ExpoConfig = {
     "expo-localization",
     ["expo-local-authentication", { faceIDPermission: "Allow $(PRODUCT_NAME) to unlock your receipts with Face ID." }],
     ["expo-sqlite", { useSQLCipher: true }],
+    "expo-iap",
     // Ruling V: the picker only reads the library; capture uses the document scanner, which needs
     // the iOS camera string. Listed first: the picker's `cameraPermission: false` would otherwise
     // strip NSCameraUsageDescription (the first plugin's Info.plist mod has the final say).

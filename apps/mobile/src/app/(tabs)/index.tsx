@@ -10,10 +10,10 @@ import { CaptureSheet, pickPhotos, scanPages, type CaptureChoice } from "@/captu
 import { pendingCaptures } from "@/capture/pendingCapture";
 import { useDb } from "@/db/DatabaseProvider";
 import { listDraftIds } from "@/db/repositories/receipts";
-import { EmptyState } from "@/layout/EmptyState";
 import { useWindowClass } from "@/layout/useWindowClass";
 import { useWhenUnobscured } from "@/lock/useWhenUnobscured";
 import { usePref } from "@/prefs/PrefsProvider";
+import { FeedEmpty } from "@/receipts/FeedEmpty";
 import { feedFabVisible } from "@/receipts/feedFab";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { TotalsHeader } from "@/receipts/TotalsHeader";
@@ -92,7 +92,7 @@ export default function ReceiptsScreen() {
           </>
         }
         // The header spacer above already applies the top inset.
-        empty={<EmptyState title={t("tabs.receipts")} message={t("empty.receipts")} topInset={false} />}
+        empty={<FeedEmpty onStart={(m) => void start(m)} />}
       />
       {feedFabVisible(windowClass, selected) ? (
         <Pressable

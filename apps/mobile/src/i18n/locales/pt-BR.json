@@ -57,7 +57,13 @@
     },
     "categories": "Categorias",
     "export": "Exportar",
-    "backupRestore": "Backup e restauração"
+    "backupRestore": "Backup e restauração",
+    "tipJar": "Gorjetas",
+    "storage": "Armazenamento",
+    "storageValue_one": "{{count}} recibo · {{size}}",
+    "storageValue_other": "{{count}} recibos · {{size}}",
+    "errorLog": "Registro de erros",
+    "support": "Suporte"
   },
   "dbError": {
     "title": "Não foi possível desbloquear seus dados",
@@ -85,7 +91,9 @@
     "receipts": "Nenhum recibo ainda. Os recibos digitalizados aparecerão aqui.",
     "search": "Busque seus recibos por estabelecimento, nota ou valor.",
     "folders": "Nenhuma pasta ainda. Crie uma para agrupar recibos.",
-    "document": "Os detalhes do recibo aparecerão aqui."
+    "document": "Os detalhes do recibo aparecerão aqui.",
+    "scanFirst": "Digitalizar um recibo",
+    "addManually": "Adicionar manualmente"
   },
   "document": {
     "title": "Recibo"
@@ -211,7 +219,9 @@
     "receiptCount_other": "{{count}} recibos",
     "taxYearTitle": "Ano fiscal {{label}}",
     "noReceipts": "Ainda não há recibos aqui.",
-    "save": "Salvar"
+    "save": "Salvar",
+    "notFound": "Esta pasta não existe mais.",
+    "taxYearInvalid": "Este ano fiscal não pode ser exibido."
   },
   "categoryManage": {
     "title": "Categorias",
@@ -227,7 +237,17 @@
     "deleteMessage_one": "{{count}} recibo vai para {{other}}.",
     "deleteMessage_other": "{{count}} recibos vão para {{other}}.",
     "receiptCount_one": "{{count}} recibo",
-    "receiptCount_other": "{{count}} recibos"
+    "receiptCount_other": "{{count}} recibos",
+    "colors": {
+      "red": "Vermelho",
+      "orange": "Laranja",
+      "green": "Verde",
+      "teal": "Verde-azulado",
+      "blue": "Azul",
+      "purple": "Roxo",
+      "pink": "Rosa",
+      "brown": "Marrom"
+    }
   },
   "search": {
     "label": "Buscar recibos",
@@ -358,5 +378,32 @@
     "resultReplace_other": "{{count}} recibos restaurados",
     "duplicates": "Possíveis duplicatas ({{count}})",
     "done": "Concluído"
+  },
+  "tips": {
+    "title": "Gorjetas",
+    "intro": "O My Expenses Book é gratuito, sem anúncios e sem rastreamento. Se ele economiza seu tempo, você pode pagar um café para o desenvolvedor.",
+    "small": "Café pequeno",
+    "standard": "Café",
+    "generous": "Café generoso",
+    "thanks": "Obrigado! Sua gorjeta mantém este app independente.",
+    "unavailable": "As gorjetas não estão disponíveis agora. Verifique sua conexão e tente novamente.",
+    "failed": "A compra não foi concluída. Você não foi cobrado.",
+    "retry": "Tentar novamente",
+    "loading": "Carregando gorjetas…",
+    "pending": "Seu pagamento está pendente. A gorjeta é concluída quando a loja confirmar.",
+    "finishLater": "Sua gorjeta foi feita. Ela termina na próxima vez que você abrir as gorjetas."
+  },
+  "errorLog": {
+    "title": "Registro de erros",
+    "intro": "Erros que o app encontrou. Nada sai do seu telefone a menos que você exporte.",
+    "empty": "Nenhum erro registrado.",
+    "export": "Exportar",
+    "clear": "Limpar registro",
+    "clearConfirm": "Excluir todos os erros registrados? Isso não pode ser desfeito."
+  },
+  "about": {
+    "title": "Sobre",
+    "privacyPolicy": "Política de privacidade",
+    "version": "Versão"
   }
 }

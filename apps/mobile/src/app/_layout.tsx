@@ -1,10 +1,12 @@
 import { getLocales } from "expo-localization";
 import { install } from "react-native-quick-crypto";
 import { Redirect, Stack, useSegments, type ErrorBoundaryProps } from "expo-router";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ErrorPanel } from "@/components/ErrorPanel";
 import { assertSecureRandom } from "@/crypto/secureRandom";
+import { logError } from "@/errorLog/instance";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { ImageStoreProvider } from "@/images/ImageStoreProvider";
 import { initI18n } from "@/i18n";
@@ -36,6 +38,7 @@ function FxSync() {
 
 function ErrorFallback({ error, retry }: ErrorBoundaryProps) {
   const { t } = useTranslation();
+  useEffect(() => logError("render", error), [error]);
   return <ErrorPanel title={t("common.error")} details={error.message} onRetry={() => void retry()} />;
 }
 

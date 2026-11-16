@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
 import { useTheme } from "@/theme/ThemeProvider";
@@ -22,6 +23,7 @@ const hiddenPane = {
 export function TwoPane({ primary, secondary }: Props) {
   const windowClass = useWindowClass();
   const theme = useTheme();
+  const { t } = useTranslation();
   const compact = windowClass === "compact";
   const showPrimary = !compact || secondary == null;
   const showSecondary = !compact || secondary != null;
@@ -50,7 +52,7 @@ export function TwoPane({ primary, secondary }: Props) {
         {secondary ??
           (compact ? null : (
             <View style={styles.placeholder} testID="pane-placeholder">
-              <Text style={{ color: theme.colors.textMuted, ...theme.type.body }}>—</Text>
+              <Text style={{ color: theme.colors.textMuted, ...theme.type.body }}>{t("empty.document")}</Text>
             </View>
           ))}
       </View>

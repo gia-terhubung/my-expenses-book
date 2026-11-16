@@ -2,7 +2,11 @@ import { render, screen } from "@testing-library/react-native";
 import { useEffect } from "react";
 import { Text, useWindowDimensions } from "react-native";
 
+import { initI18n } from "@/i18n";
+
 import { TwoPane } from "./TwoPane";
+
+beforeAll(() => initI18n("en"));
 
 jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
   __esModule: true,
@@ -44,6 +48,7 @@ describe("TwoPane", () => {
     expect(screen.getByTestId("pane-primary")).toBeTruthy();
     expect(screen.getByTestId("pane-secondary")).toBeTruthy();
     expect(screen.getByTestId("pane-placeholder")).toBeTruthy();
+    expect(screen.getByText("Receipt details will appear here.")).toBeTruthy();
   });
 
   it("compact: the hidden pane is kept mounted but hidden from accessibility", async () => {

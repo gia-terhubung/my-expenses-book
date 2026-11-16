@@ -1,0 +1,25 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 Terhubung",
+    "categories": ["FINANCE", "PRODUCTIVITY"],
+    "info": {
+      "en-US": {
+        "title": "My Expenses Book",
+        "subtitle": "Private receipt scanner",
+        "description": "Scan a receipt and get a structured, searchable expense record: merchant, date, total, tax, currency and category are read for you, and you only confirm.\n\nEverything stays on your phone. No account, no ads, no tracking. The database and images are encrypted, and you can lock the app with Face ID, fingerprint or your passcode.\n\n• Scan multi-page receipts or import photos and screenshots\n• On-device reading of totals, dates and currencies in many languages\n• Multi-currency: foreign receipts are converted at the rate of the purchase date\n• Folders for trips and projects, plus tax-year views with totals\n• Fast full-text search across merchants, notes and receipt text\n• Export CSV or a PDF report for expense claims and taxes\n• Encrypted backup file you keep wherever you like, with restore and merge\n• Works on phones, tablets and foldables\n\nThe only network use is downloading exchange-rate tables (currency codes and a date, never your data) and the optional tip jar through the App Store.",
+        "keywords": ["receipt", "scanner", "expense", "tax", "invoice", "budget", "travel", "currency", "offline", "private"],
+        "privacyPolicyUrl": "https://example.invalid/privacy",
+        "supportUrl": "https://example.invalid/privacy"
+      },
+      "id": {
+        "title": "My Expenses Book",
+        "subtitle": "Pemindai struk yang privat",
+        "description": "Pindai struk dan dapatkan catatan pengeluaran yang rapi dan bisa dicari: nama toko, tanggal, total, pajak, mata uang, dan kategori terbaca otomatis, Anda tinggal mengonfirmasi.\n\nSemuanya tetap di ponsel Anda. Tanpa akun, tanpa iklan, tanpa pelacakan. Database dan gambar dienkripsi, dan aplikasi bisa dikunci dengan Face ID, sidik jari, atau kode sandi.\n\n• Pindai struk beberapa halaman atau impor foto dan tangkapan layar\n• Membaca total, tanggal, dan mata uang di perangkat, dalam banyak bahasa\n• Multi mata uang: struk asing dikonversi dengan kurs tanggal pembelian\n• Folder untuk perjalanan dan proyek, plus tampilan tahun pajak dengan total\n• Pencarian cepat di nama toko, catatan, dan teks struk\n• Ekspor CSV atau laporan PDF untuk klaim dan pajak\n• File cadangan terenkripsi yang Anda simpan di mana saja, bisa dipulihkan atau digabung\n• Berjalan di ponsel, tablet, dan perangkat lipat\n\nKoneksi jaringan hanya untuk mengunduh tabel kurs (kode mata uang dan tanggal, bukan data Anda) dan kotak tip opsional lewat App Store.",
+        "keywords": ["struk", "nota", "pengeluaran", "pajak", "kwitansi", "scanner", "keuangan", "kurs", "offline", "privat"],
+        "privacyPolicyUrl": "https://example.invalid/privacy",
+        "supportUrl": "https://example.invalid/privacy"
+      }
+    }
+  }
+}

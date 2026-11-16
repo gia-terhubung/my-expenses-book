@@ -96,7 +96,7 @@ export function CaptureSheet({
       statusBarTranslucent
       navigationBarTranslucent
     >
-      <Pressable accessibilityLabel={t("common.cancel")} style={styles.backdrop} onPress={onClose} />
+      <Pressable accessibilityRole="button" accessibilityLabel={t("common.cancel")} style={styles.backdrop} onPress={onClose} />
       <View
         style={{
           backgroundColor: theme.colors.surface,

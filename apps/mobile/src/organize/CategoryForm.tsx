@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { AppModal } from "@/components/AppModal";
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { CATEGORY_COLORS } from "./categoryColors";
+import { CATEGORY_COLOR_NAMES, CATEGORY_COLORS } from "./categoryColors";
 
 type Props = {
   visible: boolean;
@@ -94,7 +94,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
                 key={c}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: color === c }}
-                accessibilityLabel={`${t("categoryManage.color")} ${i + 1}`}
+                accessibilityLabel={t(`categoryManage.colors.${CATEGORY_COLOR_NAMES[i]}`)}
                 onPress={() => setColor(c)}
                 style={{
                   width: 48,
