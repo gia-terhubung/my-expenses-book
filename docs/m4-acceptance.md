@@ -22,16 +22,16 @@ Install: the new development APK (section 1), then `cd apps/mobile && npx expo s
 
 | # | Check | Pass criterion | Status |
 |---|---|---|---|
-| R1 | Export a tax year as CSV, open in Google Sheets | columns correct, accents and non-Latin text intact, a merchant starting `=`, `+`, `-` or `@` shows as text (no formula runs) | OWNER-PENDING |
-| R2 | Seed ≥500 confirmed receipts with images, export a PDF report with images, open it | no crash or out-of-memory (all thumbnails sit in one HTML string); opens; receipt thumbnails visible; totals match the Folders tax-year screen | OWNER-PENDING |
-| R3 | Share sheet, save to Files/Drive, return to the app | file saved; export screen state kept (range, format) | OWNER-PENDING |
+| R1 | Export a tax year as CSV, open in Google Sheets | columns correct, accents and non-Latin text intact, a merchant starting `=`, `+`, `-` or `@` shows as text (no formula runs) | PASS (partial, Redmi 2026-11-16 via adb): 309 rows x 17 cols, UTF-8 BOM, `=1+1`/`+`/`-`/`@` merchants exported as `'=1+1` etc. Owner still to do: accented/non-Latin merchant, open in Google Sheets. OWNER-PENDING |
+| R2 | Seed ≥500 confirmed receipts with images, export a PDF report with images, open it | no crash or out-of-memory (all thumbnails sit in one HTML string); opens; receipt thumbnails visible; totals match the Folders tax-year screen | PASS (partial, Redmi 2026-11-16): 520 receipts, 14-page PDF in ~4 s, no crash, opens. Seed has no images, so thumbnails not exercised. OWNER-PENDING (thumbnails) |
+| R3 | Share sheet, save to Files/Drive, return to the app | file saved; export screen state kept (range, format) | PASS (Redmi 2026-11-16): saved via File Manager+, range/format/scroll kept on return |
 | R4 | Lock timeout "Immediately": export, share, return | lock screen shows, then returns to the export screen | OWNER-PENDING |
-| R5 | Backup with passphrase and save the file off the device (Drive), uninstall and reinstall (Android: Settings > Apps > Clear storage), onboarding, restore with replace | receipts, images, folders, categories and home currency all back | OWNER-PENDING |
-| R6 | Restore with a wrong passphrase | rejected with a clear message; nothing changed | OWNER-PENDING |
-| R7 | Backup without passphrase | warning shown before the file is made | OWNER-PENDING |
+| R5 | Backup with passphrase and save the file off the device (Drive), uninstall and reinstall (Android: Settings > Apps > Clear storage), onboarding, restore with replace | receipts, images, folders, categories and home currency all back | PASS (Redmi 2026-11-16): Clear storage (`pm clear`), onboarding with USD, restore replace from Downloads: 523 restored, home currency back to IDR, 520 confirmed + draft with its photo back |
+| R6 | Restore with a wrong passphrase | rejected with a clear message; nothing changed | PASS (Redmi 2026-11-16): "Frasa sandi salah"; receipt count unchanged (520) |
+| R7 | Backup without passphrase | warning shown before the file is made | PASS (Redmi 2026-11-16): warning dialog before any file |
 | R8 | Merge-import a backup from a second device | receipts added; possible duplicates listed | OWNER-PENDING |
-| R9 | Pick a non-backup file (PDF or photo) to restore | "not a My Expenses Book backup" message; no data change | OWNER-PENDING |
-| R10 | Confirm 20 receipts, open Home | backup reminder banner appears; Later hides it | OWNER-PENDING |
+| R9 | Pick a non-backup file (PDF or photo) to restore | "not a My Expenses Book backup" message; no data change | PASS (Redmi 2026-11-16): "Berkas ini bukan cadangan My Expenses Book." |
+| R10 | Confirm 20 receipts, open Home | backup reminder banner appears; Later hides it | PASS (Redmi 2026-11-16): 20 manual confirms -> banner "20 struk sejak cadangan terakhir"; Nanti hides it |
 | R11 | Proxy session (e.g. mitmproxy) during export and backup | only the FX host appears; no other host | OWNER-PENDING |
 
 ## 3. iOS: iPhone 12 Pro owner checklist
@@ -73,3 +73,9 @@ See `docs/m4-followups.md`.
 ## 7. Summary
 
 Host checks PASS (100 suites, 736 tests, tsc, check:pii, expo-doctor, Android prebuild compile check in a throwaway copy). Android EAS dev build PENDING owner approval (new native deps: expo-print, expo-sharing, expo-document-picker). All device rows OWNER-PENDING.
+
+## Device run 2026-11-16 (Redmi 14C, EAS dev build ed128da2)
+
+Rows R1-R3, R5-R7, R9, R10 run over wireless adb. R4 (needs the owner's biometric), R8 (needs the Z Flip), R11 (proxy) remain OWNER-PENDING. Z Flip rows F1-F5 deferred by the owner to before ship.
+Fixes found on device (branch fix/device-findings): PLN read as Polish zloty on PLN electricity receipts; "IDR IDR" home currency label; Export content scrolled under the status bar; Rupiah shown with sen; OptionRow label clipped ("Spreadsheet CSV").
+Same scroll-under-status-bar pattern still in Settings, Categories, Folders, Collection and Onboarding (not fixed).
