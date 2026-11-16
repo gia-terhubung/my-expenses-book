@@ -52,7 +52,10 @@ export function BottomTabs({ state, navigateToTab }: BottomTabBarProps) {
             >
               <Ionicons name={TAB_ICONS[name]} size={22} color={color} />
               <Text
+                // Never ellipsize: "Pengaturan" at 1.3x is wider than a 360 dp phone's tab, so it shrinks.
                 numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
                 maxFontSizeMultiplier={1.3}
                 style={[theme.type.caption, styles.label, { color }]}
               >

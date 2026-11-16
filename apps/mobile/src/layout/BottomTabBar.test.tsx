@@ -58,6 +58,17 @@ describe("BottomTabs (floating duo)", () => {
     }
   });
 
+  it("tab labels shrink to fit on one line instead of ellipsizing", async () => {
+    await render(<BottomTabs {...props()} />);
+    for (const label of ["Struk", "Cari", "Folder", "Pengaturan"]) {
+      expect(screen.getByText(label).props).toMatchObject({
+        numberOfLines: 1,
+        adjustsFontSizeToFit: true,
+        minimumFontScale: 0.75,
+      });
+    }
+  });
+
   it("focused tab has the tonal pill", async () => {
     await render(<BottomTabs {...props(1)} />);
     const tabs = screen.getAllByRole("tab");
