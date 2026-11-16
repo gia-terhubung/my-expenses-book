@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import { Button } from "@/components/Button";
 import { OptionRow } from "@/components/OptionRow";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
@@ -55,9 +56,7 @@ export function FolderPicker({ visible, value, onChange, onClose }: Props) {
             <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
               {t("folders.pickerTitle")}
             </Text>
-            <Pressable accessibilityRole="button" onPress={close} style={{ minHeight: 48, justifyContent: "center" }}>
-              <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("common.cancel")}</Text>
-            </Pressable>
+            <Button variant="quiet" label={t("common.cancel")} onPress={close} />
           </View>
           <ScrollView contentContainerStyle={{ gap: theme.spacing.sm }} keyboardShouldPersistTaps="handled">
             <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
@@ -101,31 +100,15 @@ export function FolderPicker({ visible, value, onChange, onClose }: Props) {
                     </View>
                   ))}
                 </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: !trimmed }}
-                  disabled={!trimmed}
-                  onPress={create}
-                  style={({ pressed }) => ({
-                    minHeight: 48,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: theme.radius.md,
-                    backgroundColor: theme.colors.primary,
-                    opacity: !trimmed ? 0.4 : pressed ? 0.85 : 1,
-                  })}
-                >
-                  <Text style={[theme.type.body, { color: theme.colors.onPrimary, fontWeight: "600" }]}>{t("folders.create")}</Text>
-                </Pressable>
+                <Button variant="primary" label={t("folders.create")} disabled={!trimmed} onPress={create} />
               </View>
             ) : (
-              <Pressable
-                accessibilityRole="button"
+              <Button
+                variant="quiet"
+                label={t("folders.new")}
                 onPress={() => setCreating(true)}
-                style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: theme.spacing.lg }}
-              >
-                <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("folders.new")}</Text>
-              </Pressable>
+                style={{ paddingHorizontal: theme.spacing.lg }}
+              />
             )}
           </ScrollView>
         </View>

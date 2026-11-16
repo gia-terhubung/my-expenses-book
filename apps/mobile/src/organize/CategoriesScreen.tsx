@@ -1,9 +1,11 @@
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import {
@@ -53,17 +55,15 @@ export function CategoriesScreen() {
   };
 
   const action = (text: string, name: string, onPress: () => void, destructive = false) => (
-    <Pressable
-      accessibilityRole="button"
+    <Button
+      variant="quiet"
+      tone={destructive ? "danger" : "default"}
+      label={text}
       // Every row has the same actions: the name tells them apart (hints are often turned off).
       accessibilityLabel={`${text}, ${name}`}
       onPress={onPress}
-      style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: theme.spacing.sm }}
-    >
-      <Text style={[theme.type.body, { color: destructive ? theme.colors.danger : theme.colors.primary, fontWeight: "600" }]}>
-        {text}
-      </Text>
-    </Pressable>
+      style={{ paddingHorizontal: theme.spacing.sm }}
+    />
   );
 
   return (
@@ -80,27 +80,12 @@ export function CategoriesScreen() {
             <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
               {t("categoryManage.title")}
             </Text>
-            <Pressable accessibilityRole="button" onPress={() => router.back()} style={{ minHeight: 48, justifyContent: "center" }}>
-              <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("common.done")}</Text>
-            </Pressable>
+            <Button variant="quiet" label={t("common.done")} onPress={() => router.back()} />
           </View>
           {list.map((c) => {
             const name = label(c);
             return (
-              <View
-                key={c.id}
-                testID={`category-row-${c.id}`}
-                style={{
-                  minHeight: 56,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: theme.spacing.md,
-                  paddingHorizontal: theme.spacing.lg,
-                  paddingVertical: theme.spacing.sm,
-                  borderRadius: theme.radius.md,
-                  backgroundColor: theme.colors.surface,
-                }}
-              >
+              <Card key={c.id} testID={`category-row-${c.id}`}>
                 {c.color ? (
                   <View style={{ width: 12, height: 12, borderRadius: theme.radius.pill, backgroundColor: c.color }} />
                 ) : null}
@@ -115,16 +100,15 @@ export function CategoriesScreen() {
                   ? action(t("categoryManage.reset"), name, () => renameCategory(db, c.id, null))
                   : null}
                 {!c.isDefault ? action(t("common.delete"), name, () => confirmDelete(c), true) : null}
-              </View>
+              </Card>
             );
           })}
-          <Pressable
-            accessibilityRole="button"
+          <Button
+            variant="quiet"
+            label={t("categoryManage.new")}
             onPress={() => setForm({ mode: "create" })}
-            style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: theme.spacing.lg }}
-          >
-            <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("categoryManage.new")}</Text>
-          </Pressable>
+            style={{ paddingHorizontal: theme.spacing.lg }}
+          />
         </View>
       </ScrollView>
       <CategoryForm

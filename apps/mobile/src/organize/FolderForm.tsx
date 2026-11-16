@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import { Button } from "@/components/Button";
 import { OptionRow } from "@/components/OptionRow";
 import type { FolderKind } from "@/db/schema";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -77,20 +78,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
             >
               {t(create ? "folders.newTitle" : "folders.renameTitle")}
             </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={onClose}
-              style={{ minHeight: 48, justifyContent: "center" }}
-            >
-              <Text
-                style={[
-                  theme.type.body,
-                  { color: theme.colors.primary, fontWeight: "600" },
-                ]}
-              >
-                {t("common.cancel")}
-              </Text>
-            </Pressable>
+            <Button variant="quiet" label={t("common.cancel")} onPress={onClose} />
           </View>
           <TextInput
             value={name}
@@ -134,29 +122,12 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
               ))}
             </View>
           ) : null}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !trimmed }}
+          <Button
+            variant="primary"
+            label={t(create ? "folders.create" : "common.save")}
             disabled={!trimmed}
             onPress={submit}
-            style={({ pressed }) => ({
-              minHeight: 48,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: theme.radius.md,
-              backgroundColor: theme.colors.primary,
-              opacity: !trimmed ? 0.4 : pressed ? 0.85 : 1,
-            })}
-          >
-            <Text
-              style={[
-                theme.type.body,
-                { color: theme.colors.onPrimary, fontWeight: "600" },
-              ]}
-            >
-              {t(create ? "folders.create" : "common.save")}
-            </Text>
-          </Pressable>
+          />
         </View>
       </View>
     </>

@@ -3,13 +3,15 @@ import Constants from "expo-constants";
 import { Link, router, useFocusEffect, type Href } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useState, type ReactNode } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PRIVACY_POLICY_URL } from "@/about/links";
 import { formatBytes, storageStats, type StorageStats } from "@/about/storageStats";
 import { AppModal } from "@/components/AppModal";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { CurrencyPicker, currencyLabel } from "@/components/CurrencyPicker";
 import { LANGUAGE_NAMES, LanguagePicker } from "@/components/LanguagePicker";
 import { LockToggle } from "@/components/LockToggle";
@@ -30,21 +32,7 @@ type Sheet = "language" | "currency" | "taxYear" | null;
 function Row({ label, value, onPress }: { label: string; value: string; onPress: () => void }) {
   const theme = useTheme();
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={value ? `${label}, ${value}` : label}
-      onPress={onPress}
-      style={{
-        minHeight: 56,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: theme.spacing.md,
-        paddingHorizontal: theme.spacing.lg,
-        backgroundColor: theme.colors.surface,
-        borderRadius: theme.radius.md,
-      }}
-    >
+    <Card accessibilityLabel={value ? `${label}, ${value}` : label} onPress={onPress} style={{ justifyContent: "space-between" }}>
       <Text style={[theme.type.body, { color: theme.colors.text }]}>{label}</Text>
       {value ? (
         <Text numberOfLines={1} style={[theme.type.body, { color: theme.colors.textMuted, flexShrink: 1 }]}>
@@ -60,30 +48,17 @@ function Row({ label, value, onPress }: { label: string; value: string; onPress:
           ›
         </Text>
       )}
-    </Pressable>
+    </Card>
   );
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   const theme = useTheme();
   return (
-    <View
-      accessible
-      accessibilityLabel={`${label}, ${value}`}
-      style={{
-        minHeight: 56,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: theme.spacing.md,
-        paddingHorizontal: theme.spacing.lg,
-        backgroundColor: theme.colors.surface,
-        borderRadius: theme.radius.md,
-      }}
-    >
+    <Card accessible accessibilityLabel={`${label}, ${value}`} style={{ justifyContent: "space-between" }}>
       <Text style={[theme.type.body, { color: theme.colors.text }]}>{label}</Text>
       <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{value}</Text>
-    </View>
+    </Card>
   );
 }
 
@@ -108,9 +83,7 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
             <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
               {title}
             </Text>
-            <Pressable accessibilityRole="button" onPress={onClose} style={{ minHeight: 48, justifyContent: "center" }}>
-              <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("common.done")}</Text>
-            </Pressable>
+            <Button variant="quiet" label={t("common.done")} onPress={onClose} />
           </View>
           {children}
         </View>
@@ -178,9 +151,9 @@ export default function SettingsScreen() {
           {/* /backup is created in the backup task. */}
           <Row label={t("settings.backupRestore")} value="" onPress={() => router.push("/backup" as unknown as Href)} />
 
-          <View style={{ backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm }}>
+          <Card style={{ flexDirection: "column", alignItems: "stretch" }}>
             <LockToggle label={t("settings.appLock")} value={lockEnabled} onChange={(v) => prefs.set("lockEnabled", v)} />
-          </View>
+          </Card>
           {lockEnabled ? (
             <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
               <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{t("settings.lockTimeout")}</Text>

@@ -47,7 +47,7 @@ describe("Pressable guard", () => {
         .filter((t) => !/\baccessibilityRole\b|\brole=/.test(t.tag))
         .map((t) => `${rel}:${t.line}`);
     });
-    expect(seen).toBeGreaterThan(40); // the scan really found the app's Pressables
+    expect(seen).toBeGreaterThan(17); // the scan really found the app's Pressables
     expect(offenders).toEqual([]);
   });
 });

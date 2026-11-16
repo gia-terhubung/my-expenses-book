@@ -1,8 +1,9 @@
 import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/Button";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import {
@@ -63,13 +64,7 @@ export function CollectionScreen(props: Props) {
     const leave = () => (router.canGoBack() ? router.back() : router.replace("/folders" as unknown as Href));
     return (
       <EmptyState title={t(folderId !== null ? "folders.notFound" : "folders.taxYearInvalid")}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={leave}
-          style={{ minHeight: 48, justifyContent: "center", alignSelf: "flex-start" }}
-        >
-          <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("common.back")}</Text>
-        </Pressable>
+        <Button variant="quiet" label={t("common.back")} onPress={leave} style={{ alignSelf: "flex-start" }} />
       </EmptyState>
     );
   }
@@ -99,27 +94,13 @@ export function CollectionScreen(props: Props) {
     } as unknown as Href);
 
   const action = (label: string, onPress: () => void, destructive = false) => (
-    <Pressable
-      accessibilityRole="button"
+    <Button
+      variant="quiet"
+      tone={destructive ? "danger" : "default"}
+      label={label}
       onPress={onPress}
-      style={{
-        minHeight: 48,
-        justifyContent: "center",
-        paddingHorizontal: theme.spacing.sm,
-      }}
-    >
-      <Text
-        style={[
-          theme.type.body,
-          {
-            color: destructive ? theme.colors.danger : theme.colors.primary,
-            fontWeight: "600",
-          },
-        ]}
-      >
-        {label}
-      </Text>
-    </Pressable>
+      style={{ paddingHorizontal: theme.spacing.sm }}
+    />
   );
 
   return (

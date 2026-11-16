@@ -1,8 +1,10 @@
 import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import { createFolder, listFolders } from "@/db/repositories/folders";
@@ -71,23 +73,12 @@ export function FoldersScreen() {
     onPress: () => void,
     icon?: { glyph: string; kind: string },
   ) => (
-    <Pressable
+    <Card
       key={testID}
       testID={testID}
-      accessibilityRole="button"
       // The kind is spoken as a word; the emoji itself is decorative.
       accessibilityLabel={[icon?.kind, title, sub, total].filter(Boolean).join(", ")}
       onPress={onPress}
-      style={({ pressed }) => ({
-        minHeight: 56,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: theme.spacing.md,
-        paddingHorizontal: theme.spacing.lg,
-        paddingVertical: theme.spacing.sm,
-        borderRadius: theme.radius.md,
-        backgroundColor: pressed ? theme.colors.border : theme.colors.surface,
-      })}
     >
       {icon ? (
         <Text accessibilityElementsHidden importantForAccessibility="no" style={{ fontSize: 22 }}>
@@ -110,7 +101,7 @@ export function FoldersScreen() {
       <Text style={[theme.type.body, { color: theme.colors.text }]}>
         {total}
       </Text>
-    </Pressable>
+    </Card>
   );
 
   return (
@@ -149,25 +140,13 @@ export function FoldersScreen() {
               : { glyph: "📁", kind: t("folders.kindProject") },
           ),
         )}
-        <Pressable
-          accessibilityRole="button"
+        <Button
+          variant="quiet"
+          label={t("folders.new")}
           accessibilityLabel={t("folders.newTitle")}
           onPress={() => setCreating(true)}
-          style={{
-            minHeight: 48,
-            justifyContent: "center",
-            paddingHorizontal: theme.spacing.lg,
-          }}
-        >
-          <Text
-            style={[
-              theme.type.body,
-              { color: theme.colors.primary, fontWeight: "600" },
-            ]}
-          >
-            {t("folders.new")}
-          </Text>
-        </Pressable>
+          style={{ paddingHorizontal: theme.spacing.lg }}
+        />
       </ScrollView>
       <FolderForm
         visible={creating}

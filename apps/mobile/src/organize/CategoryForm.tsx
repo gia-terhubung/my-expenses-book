@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import { Button } from "@/components/Button";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { CATEGORY_COLOR_NAMES, CATEGORY_COLORS } from "./categoryColors";
@@ -59,11 +60,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
           <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
             {t(create ? "categoryManage.newTitle" : "categoryManage.renameTitle")}
           </Text>
-          <Pressable accessibilityRole="button" onPress={onClose} style={{ minHeight: 48, justifyContent: "center" }}>
-            <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>
-              {t("common.cancel")}
-            </Text>
-          </Pressable>
+          <Button variant="quiet" label={t("common.cancel")} onPress={onClose} />
         </View>
         <TextInput
           value={name}
@@ -108,24 +105,12 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
             ))}
           </View>
         ) : null}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !trimmed }}
+        <Button
+          variant="primary"
+          label={t(create ? "categoryManage.add" : "common.save")}
           disabled={!trimmed}
           onPress={submit}
-          style={({ pressed }) => ({
-            minHeight: 48,
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: theme.radius.md,
-            backgroundColor: theme.colors.primary,
-            opacity: !trimmed ? 0.4 : pressed ? 0.85 : 1,
-          })}
-        >
-          <Text style={[theme.type.body, { color: theme.colors.onPrimary, fontWeight: "600" }]}>
-            {t(create ? "categoryManage.add" : "common.save")}
-          </Text>
-        </Pressable>
+        />
       </View>
     </View>
   );
