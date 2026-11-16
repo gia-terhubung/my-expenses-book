@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { initI18n } from "@/i18n";
 
-import { CurrencyPicker, currencyName } from "./CurrencyPicker";
+import { CurrencyPicker, currencyLabel, currencyName } from "./CurrencyPicker";
 
 // Intl.DisplayNames is typed read-only; tests swap it to simulate Hermes gaps.
 const setDisplayNames = (v: unknown) =>
@@ -30,6 +30,21 @@ describe("currencyName", () => {
     });
     try {
       expect(currencyName("en", "EUR")).toBe("EUR");
+    } finally {
+      setDisplayNames(orig);
+    }
+  });
+});
+
+describe("currencyLabel", () => {
+  it("is code plus name when a name is known", () => {
+    expect(currencyLabel("en", "USD")).toMatch(/^USD .*dollar/i);
+  });
+  it("is the code once when no name is known (Hermes without DisplayNames)", () => {
+    const orig = Intl.DisplayNames;
+    setDisplayNames(undefined);
+    try {
+      expect(currencyLabel("id", "IDR")).toBe("IDR");
     } finally {
       setDisplayNames(orig);
     }

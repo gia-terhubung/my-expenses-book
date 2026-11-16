@@ -84,6 +84,23 @@ describe('formatMoney', () => {
     expect(formatMoney(1500, 'JPY', 'en-US')).toContain('1,500');
     expect(formatMoney(-125, 'USD', 'en-US')).toContain('1.25');
   });
+  it('shows rupiah without sen, as Indonesian receipts print it', () => {
+    expect(formatMoney(15697500, 'IDR', 'id-ID').replace(/\s/g, ' ')).toBe('Rp 156.975');
+    expect(formatMoney(84402022, 'IDR', 'id-ID').replace(/\s/g, ' ')).toBe('Rp 844.020');
+    expect(formatMoney(2000000, 'IDR', 'en-US').replace(/\s/g, ' ')).toBe('IDR 20,000');
+  });
+  it('asks Intl for 0 rupiah fraction digits (older ICU, e.g. Android, defaults IDR to 2)', () => {
+    const spy = jest.spyOn(Intl, 'NumberFormat');
+    try {
+      formatMoney(15697500, 'IDR', 'id-x-icu-old');
+      formatMoney(1234, 'EUR', 'de-x-icu-old');
+      const opts = (code: string) => spy.mock.calls.find((c) => (c[1] as Intl.NumberFormatOptions).currency === code)?.[1];
+      expect(opts('IDR')).toMatchObject({ minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      expect(opts('EUR')).not.toHaveProperty('maximumFractionDigits');
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });
 
 describe('formatMoney formatter cache', () => {

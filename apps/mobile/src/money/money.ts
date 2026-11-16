@@ -52,12 +52,20 @@ export function fromMinor(minor: number, code: string): string {
 // Building an Intl formatter is slow on Hermes; lists format several amounts per row.
 const moneyFormats = new Map<string, Intl.NumberFormat>();
 
+// ISO minor units that are never printed in practice. Display only: stored amounts keep them.
+// Older ICU (Android) still defaults IDR to 2 fraction digits ("Rp 20.000,00").
+const DISPLAY_NO_FRACTION = new Set(['IDR']);
+
 /** Locale-formatted currency string. Display only; never parse the result. */
 export function formatMoney(minor: number, code: string, locale: string): string {
   const key = `${locale}|${code}`;
   let fmt = moneyFormats.get(key);
   if (!fmt) {
-    fmt = new Intl.NumberFormat(locale, { style: 'currency', currency: code });
+    fmt = new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: code,
+      ...(DISPLAY_NO_FRACTION.has(code) ? { minimumFractionDigits: 0, maximumFractionDigits: 0 } : {}),
+    });
     moneyFormats.set(key, fmt);
   }
   return fmt.format(Number(fromMinor(minor, code)));

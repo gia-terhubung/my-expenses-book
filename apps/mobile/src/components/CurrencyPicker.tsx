@@ -20,6 +20,12 @@ export function currencyName(lang: string, code: string): string {
   }
 }
 
+/** "USD US Dollar", or just "IDR" when no localized name is available. */
+export function currencyLabel(lang: string, code: string): string {
+  const name = currencyName(lang, code);
+  return name === code ? code : `${code} ${name}`;
+}
+
 export function CurrencyPicker({
   lang,
   value,
@@ -80,7 +86,7 @@ export function CurrencyPicker({
           <OptionRow
             label={item.code}
             detail={item.name === item.code ? undefined : item.name}
-            accessibilityLabel={item.name === item.code ? item.code : `${item.code} ${item.name}`}
+            accessibilityLabel={currencyLabel(lang, item.code)}
             selected={item.code === value}
             onPress={() => onChange(item.code)}
           />

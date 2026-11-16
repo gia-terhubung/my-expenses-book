@@ -11,6 +11,7 @@ import { ExportScreen } from "./ExportScreen";
 
 let mockDb: AppDb;
 let mockParams: Record<string, string> = {};
+let mockTop = 0;
 const mockRouter = { back: jest.fn() };
 const mockShare = jest.fn();
 jest.mock("expo-sharing", () => ({ shareAsync: (...a: unknown[]) => mockShare(...a) }));
@@ -21,7 +22,7 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePref: (k: string) => (k === "taxYearStartMonth" ? 1 : k === "language" ? "en" : "IDR"),
 }));
 jest.mock("react-native-safe-area-context", () => ({
-  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  useSafeAreaInsets: () => ({ top: mockTop, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock("expo-router", () => ({
   router: { back: () => mockRouter.back() },
@@ -65,11 +66,21 @@ beforeAll(() => initI18n("en"));
 beforeEach(() => {
   mockDb = testDb();
   mockParams = {};
+  mockTop = 0;
   jest.clearAllMocks();
   mockShare.mockResolvedValue(undefined);
 });
 
 describe("ExportScreen", () => {
+  it("keeps the status-bar inset outside the scrolling content (no scroll under the status bar)", async () => {
+    mockTop = 40;
+    const { fs } = fakeFs();
+    await render(<ExportScreen fs={fs} now={today} />);
+    const flat = (st: unknown) => Object.assign({}, ...[st].flat(Infinity).filter(Boolean)) as { paddingTop?: number };
+    expect(flat(screen.getByTestId("export-scroll").props.contentContainerStyle).paddingTop ?? 0).toBeLessThan(40);
+    expect(flat(screen.getByTestId("export-screen").props.style).paddingTop).toBe(40);
+  });
+
   it("shows count and home total for the selection", async () => {
     seed("A", "2026-05-10T10:00:00", 50000);
     seed("B", "2026-06-10T10:00:00", 25000);

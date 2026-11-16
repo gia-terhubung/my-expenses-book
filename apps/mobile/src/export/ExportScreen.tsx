@@ -139,102 +139,106 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   const disabled = busy || empty;
 
   return (
-    <ScrollView
-      style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: theme.spacing.xl, paddingTop: insets.top + theme.spacing.lg, paddingBottom: insets.bottom + theme.spacing.xl }}
-    >
-      <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-          onPress={() => router.back()}
-          style={{ minHeight: 48, justifyContent: "center", alignSelf: "flex-start" }}
-        >
-          <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("common.back")}</Text>
-        </Pressable>
-        <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
-          {t("export.title")}
-        </Text>
+    // Inset sits on the fixed wrapper, not the content: scrolled rows stop at the status bar.
+    <View testID="export-screen" style={{ flex: 1, paddingTop: insets.top, backgroundColor: theme.colors.background }}>
+      <ScrollView
+        testID="export-scroll"
+        style={{ backgroundColor: theme.colors.background }}
+        contentContainerStyle={{ padding: theme.spacing.xl, paddingTop: theme.spacing.lg, paddingBottom: insets.bottom + theme.spacing.xl }}
+      >
+        <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("common.back")}
+            onPress={() => router.back()}
+            style={{ minHeight: 48, justifyContent: "center", alignSelf: "flex-start" }}
+          >
+            <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("common.back")}</Text>
+          </Pressable>
+          <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
+            {t("export.title")}
+          </Text>
 
-        {section(t("export.range"))}
-        <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
-          {PRESETS.map((p) => (
-            <OptionRow key={p} label={t(`export.${p}`)} selected={p === preset} onPress={() => setPreset(p)} />
-          ))}
-        </View>
-        {preset === "custom" ? (
-          <View style={{ gap: theme.spacing.sm }}>
-            <DateField label={t("export.from")} value={custom.from} onChange={(v) => setCustom((c) => ({ ...c, from: v }))} />
-            <DateField label={t("export.to")} value={custom.to} onChange={(v) => setCustom((c) => ({ ...c, to: v }))} />
+          {section(t("export.range"))}
+          <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
+            {PRESETS.map((p) => (
+              <OptionRow key={p} label={t(`export.${p}`)} selected={p === preset} onPress={() => setPreset(p)} />
+            ))}
           </View>
-        ) : null}
+          {preset === "custom" ? (
+            <View style={{ gap: theme.spacing.sm }}>
+              <DateField label={t("export.from")} value={custom.from} onChange={(v) => setCustom((c) => ({ ...c, from: v }))} />
+              <DateField label={t("export.to")} value={custom.to} onChange={(v) => setCustom((c) => ({ ...c, to: v }))} />
+            </View>
+          ) : null}
 
-        {section(t("export.folder"))}
-        <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
-          <OptionRow label={t("export.folderAny")} selected={folder === undefined} onPress={() => setFolder(undefined)} />
-          <OptionRow
-            label={t("export.folderPick")}
-            detail={folder === undefined ? undefined : (folderName ?? t("folders.none"))}
-            selected={folder !== undefined}
-            onPress={() => setPickingFolder(true)}
+          {section(t("export.folder"))}
+          <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
+            <OptionRow label={t("export.folderAny")} selected={folder === undefined} onPress={() => setFolder(undefined)} />
+            <OptionRow
+              label={t("export.folderPick")}
+              detail={folder === undefined ? undefined : (folderName ?? t("folders.none"))}
+              selected={folder !== undefined}
+              onPress={() => setPickingFolder(true)}
+            />
+          </View>
+          <FolderPicker
+            visible={pickingFolder}
+            value={folder ?? null}
+            onChange={(id) => {
+              setFolder(id);
+              setPickingFolder(false);
+            }}
+            onClose={() => setPickingFolder(false)}
           />
-        </View>
-        <FolderPicker
-          visible={pickingFolder}
-          value={folder ?? null}
-          onChange={(id) => {
-            setFolder(id);
-            setPickingFolder(false);
-          }}
-          onClose={() => setPickingFolder(false)}
-        />
 
-        {section(t("export.format"))}
-        <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
-          <OptionRow label={t("export.csv")} selected={format === "csv"} onPress={() => setFormat("csv")} />
-          <OptionRow label={t("export.pdf")} selected={format === "pdf"} onPress={() => setFormat("pdf")} />
-        </View>
-        {format === "pdf" ? (
-          <View style={{ minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: theme.spacing.md }}>
-            <Text style={[theme.type.body, { color: theme.colors.text, flex: 1 }]}>{t("export.images")}</Text>
-            <Switch accessibilityLabel={t("export.images")} value={images} onValueChange={setImages} />
+          {section(t("export.format"))}
+          <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
+            <OptionRow label={t("export.csv")} selected={format === "csv"} onPress={() => setFormat("csv")} />
+            <OptionRow label={t("export.pdf")} selected={format === "pdf"} onPress={() => setFormat("pdf")} />
           </View>
-        ) : null}
+          {format === "pdf" ? (
+            <View style={{ minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: theme.spacing.md }}>
+              <Text style={[theme.type.body, { color: theme.colors.text, flex: 1 }]}>{t("export.images")}</Text>
+              <Switch accessibilityLabel={t("export.images")} value={images} onValueChange={setImages} />
+            </View>
+          ) : null}
 
-        <Text testID="export-summary" accessibilityLiveRegion="polite" style={[theme.type.body, { color: theme.colors.text }]}>
-          {empty
-            ? t("export.empty")
-            : t("export.summary", {
-                count: total.count,
-                total: totalLine(total, home, locale, (n) => t("totals.notConverted", { count: n })),
-              })}
-        </Text>
-        {thumbFailures > 0 ? (
-          <Text accessibilityLiveRegion="polite" style={[theme.type.caption, { color: theme.colors.warning }]}>
-            {t("export.thumbFailures", { count: thumbFailures })}
+          <Text testID="export-summary" accessibilityLiveRegion="polite" style={[theme.type.body, { color: theme.colors.text }]}>
+            {empty
+              ? t("export.empty")
+              : t("export.summary", {
+                  count: total.count,
+                  total: totalLine(total, home, locale, (n) => t("totals.notConverted", { count: n })),
+                })}
           </Text>
-        ) : null}
+          {thumbFailures > 0 ? (
+            <Text accessibilityLiveRegion="polite" style={[theme.type.caption, { color: theme.colors.warning }]}>
+              {t("export.thumbFailures", { count: thumbFailures })}
+            </Text>
+          ) : null}
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("export.run")}
-          accessibilityState={{ disabled, busy }}
-          disabled={disabled}
-          onPress={() => void run()}
-          style={{
-            minHeight: 48,
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: theme.radius.md,
-            backgroundColor: theme.colors.primary,
-            opacity: disabled ? 0.5 : 1,
-          }}
-        >
-          <Text style={[theme.type.body, { color: theme.colors.onPrimary, fontWeight: "600" }]}>
-            {busy ? t("export.busy") : t("export.run")}
-          </Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("export.run")}
+            accessibilityState={{ disabled, busy }}
+            disabled={disabled}
+            onPress={() => void run()}
+            style={{
+              minHeight: 48,
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: theme.radius.md,
+              backgroundColor: theme.colors.primary,
+              opacity: disabled ? 0.5 : 1,
+            }}
+          >
+            <Text style={[theme.type.body, { color: theme.colors.onPrimary, fontWeight: "600" }]}>
+              {busy ? t("export.busy") : t("export.run")}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </View>
   );
 }

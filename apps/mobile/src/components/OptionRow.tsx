@@ -36,7 +36,14 @@ export function OptionRow({
         borderColor: selected ? theme.colors.primary : theme.colors.border,
       }}
     >
-      <Text style={[theme.type.body, { color: selected ? theme.colors.onPrimary : theme.colors.text, fontWeight: "600" }]}>
+      {/* Full row width when alone: Android measures the bold label short and clips its wrap ("Spreadsheet CSV"). */}
+      <Text
+        style={[
+          theme.type.body,
+          { color: selected ? theme.colors.onPrimary : theme.colors.text, fontWeight: "600" },
+          detail ? { flexShrink: 1 } : { flex: 1 },
+        ]}
+      >
         {label}
       </Text>
       {detail ? (

@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PRIVACY_POLICY_URL } from "@/about/links";
 import { formatBytes, storageStats, type StorageStats } from "@/about/storageStats";
 import { AppModal } from "@/components/AppModal";
-import { CurrencyPicker, currencyName } from "@/components/CurrencyPicker";
+import { CurrencyPicker, currencyLabel } from "@/components/CurrencyPicker";
 import { LANGUAGE_NAMES, LanguagePicker } from "@/components/LanguagePicker";
 import { LockToggle } from "@/components/LockToggle";
 import { OptionRow } from "@/components/OptionRow";
@@ -168,7 +168,7 @@ export default function SettingsScreen() {
         <Row label={t("settings.language")} value={LANGUAGE_NAMES[language]} onPress={() => setSheet("language")} />
         <Row
           label={t("settings.homeCurrency")}
-          value={`${currency} ${currencyName(i18n.language, currency)}`.trim()}
+          value={currencyLabel(i18n.language, currency)}
           onPress={() => setSheet("currency")}
         />
         <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} />
