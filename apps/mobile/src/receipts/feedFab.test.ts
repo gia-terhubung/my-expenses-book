@@ -1,10 +1,11 @@
 import { feedFabVisible } from "./feedFab";
 
 describe("feedFabVisible", () => {
-  it("hides only when compact with a selected receipt", () => {
+  it("shows only on medium/expanded (compact adds from the floating tab bar's +)", () => {
     expect(feedFabVisible("compact", "r1")).toBe(false);
-    expect(feedFabVisible("compact", undefined)).toBe(true);
-    expect(feedFabVisible("compact", "")).toBe(true);
+    expect(feedFabVisible("compact", undefined)).toBe(false);
+    expect(feedFabVisible("compact", "")).toBe(false);
+    expect(feedFabVisible("medium", undefined)).toBe(true);
     expect(feedFabVisible("medium", "r1")).toBe(true);
     expect(feedFabVisible("expanded", "r1")).toBe(true);
   });

@@ -20,6 +20,7 @@ import { TaxYearPicker } from "@/components/TaxYearPicker";
 import { useDb } from "@/db/DatabaseProvider";
 import { fileSize } from "@/images/expoFs";
 import { StatusBarInset } from "@/layout/StatusBarInset";
+import { useTabBarSpace } from "@/layout/useTabBarSpace";
 import { resolveHomeCurrency, resolveLanguage } from "@/i18n/resolve";
 import type { LockTimeout } from "@/prefs/prefs";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
@@ -97,6 +98,7 @@ export default function SettingsScreen() {
   const theme = useTheme();
   const prefs = usePrefs();
   const [sheet, setSheet] = useState<Sheet>(null);
+  const tabBarSpace = useTabBarSpace();
   const db = useDb();
   const [storage, setStorage] = useState<StorageStats | null>(null);
   useFocusEffect(
@@ -133,7 +135,7 @@ export default function SettingsScreen() {
     <StatusBarInset>
       <ScrollView
         style={{ backgroundColor: theme.colors.background }}
-        contentContainerStyle={{ padding: theme.spacing.xl }}
+        contentContainerStyle={{ padding: theme.spacing.xl, paddingBottom: tabBarSpace || theme.spacing.xl }}
       >
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
           <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>

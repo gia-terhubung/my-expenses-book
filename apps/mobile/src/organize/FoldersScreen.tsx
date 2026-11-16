@@ -18,6 +18,7 @@ import {
 } from "@/taxYear/taxYear";
 import { useTheme } from "@/theme/ThemeProvider";
 import { StatusBarInset } from "@/layout/StatusBarInset";
+import { useTabBarSpace } from "@/layout/useTabBarSpace";
 
 import { FolderForm } from "./FolderForm";
 
@@ -29,6 +30,7 @@ export function FoldersScreen() {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
+  const tabBarSpace = useTabBarSpace();
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
@@ -109,6 +111,7 @@ export function FoldersScreen() {
       <ScrollView
         contentContainerStyle={{
           padding: theme.spacing.lg,
+          paddingBottom: tabBarSpace || theme.spacing.lg,
           gap: theme.spacing.sm,
         }}
       >

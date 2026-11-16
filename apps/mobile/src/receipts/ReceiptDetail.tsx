@@ -12,6 +12,7 @@ import { getReceipt, updateReceipt } from "@/db/repositories/receipts";
 import type { Receipt } from "@/db/types";
 import { useImageStore } from "@/images/ImageStoreProvider";
 import { formatMoney } from "@/money/money";
+import { useTabBarSpace } from "@/layout/useTabBarSpace";
 import { FolderPicker } from "@/organize/FolderPicker";
 import { usePref } from "@/prefs/PrefsProvider";
 import { PageViewer } from "@/review/PageViewer";
@@ -64,6 +65,8 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
   const theme = useTheme();
   const db = useDb();
   const images = useImageStore();
+  // Compact detail shown over a tab's list: clear the floating tab bar.
+  const tabBarSpace = useTabBarSpace();
   const home = usePref("homeCurrency") ?? "USD";
   const version = useDataVersion();
   const [picking, setPicking] = useState(false);
@@ -143,7 +146,7 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
     <>
       <ScrollView
         style={{ flex: 1, backgroundColor: theme.colors.background }}
-        contentContainerStyle={{ padding: theme.spacing.xl, gap: theme.spacing.lg }}
+        contentContainerStyle={{ padding: theme.spacing.xl, paddingBottom: tabBarSpace || theme.spacing.xl, gap: theme.spacing.lg }}
       >
         {back}
         <View style={{ gap: theme.spacing.xs }}>
