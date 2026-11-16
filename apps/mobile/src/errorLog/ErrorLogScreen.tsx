@@ -11,6 +11,15 @@ import { useTheme } from "@/theme/ThemeProvider";
 import type { ErrorEntry, ErrorLog } from "./errorLog";
 import { errorLog } from "./instance";
 
+function Action({ label, onPress, color }: { label: string; onPress: () => void; color: string }) {
+  const theme = useTheme();
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={{ minHeight: 48, justifyContent: "center" }}>
+      <Text style={[theme.type.body, { color, fontWeight: "600" }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 /** Local error log: view, export through the share sheet (cache/export/), clear. */
 export function ErrorLogScreen({
   log = errorLog,
@@ -56,12 +65,6 @@ export function ErrorLogScreen({
       },
     ]);
 
-  const action = (label: string, onPress: () => void, color: string) => (
-    <Pressable accessibilityRole="button" onPress={onPress} style={{ minHeight: 48, justifyContent: "center" }}>
-      <Text style={[theme.type.body, { color, fontWeight: "600" }]}>{label}</Text>
-    </Pressable>
-  );
-
   return (
     <FlatList
       style={{ backgroundColor: theme.colors.background }}
@@ -73,8 +76,8 @@ export function ErrorLogScreen({
           <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("errorLog.intro")}</Text>
           {entries.length ? (
             <View style={{ flexDirection: "row", gap: theme.spacing.xl }}>
-              {action(t("errorLog.export"), () => void exportLog(), theme.colors.primary)}
-              {action(t("errorLog.clear"), clear, theme.colors.danger)}
+              <Action label={t("errorLog.export")} onPress={() => void exportLog()} color={theme.colors.primary} />
+              <Action label={t("errorLog.clear")} onPress={clear} color={theme.colors.danger} />
             </View>
           ) : null}
         </View>
