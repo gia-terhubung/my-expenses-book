@@ -108,6 +108,29 @@ system font. All money uses tabular figures (`fontVariant: ["tabular-nums"]`).
 - Accessibility: keeps today's tablist/tab roles and labels; + keeps "Tambah struk".
 - Medium/expanded layouts keep the side rail.
 
+
+## Yellow accent and app icon (owner, 2026-11-17)
+
+The owner picked the round-4 logo "Long page" (`docs/design/logo/meb-long-page.svg`, mono variant alongside;
+yellow ground, open book whose right page runs on into a torn receipt edge) and asked to add its yellow to the
+app palette. Yellow is light, so it has strict jobs:
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| highlight | #FFD84A | #FFD84A | yellow accents ON the green slip only (pace line arrow and %, "Lihat statistik ›", a 4 dp "total bar" under the Bulan ini amount, echoing the logo) |
+| onHighlight | #16201C | #16201C | text on a yellow fill (12.07:1) |
+| brassFill (now soft yellow) | #FFF3C4 | #2B2610 | "waiting on you" surfaces: draft banner, Belum dikonversi card |
+| brassRing (now yellow) | #FFD84A | #5A4E1C | their ring and dot |
+| warning (text on those) | #6B4E00 | #FFD84A | 6.95:1 / 10.94:1 |
+
+Rules: never yellow text or yellow icons on light backgrounds (1.26:1 on #F2F5F1); never yellow chart bars on the
+light background (fails 3:1 for non-text); actions stay green; yellow means "the number that matters" (on the slip)
+or "waiting on you" (drafts, unconverted). Contrast: yellow on slip 5.63:1 light, 8.45:1 dark.
+
+App icon: generate from `meb-long-page.svg`: Android adaptive (foreground inside the 66% safe zone, yellow
+background layer, monochrome themed icon from the mono SVG), iOS 1024 opaque (art scaled up, not cropped), splash
+icon and favicon-free (no web build). Wire through `app.config.ts` (`icon`, `android.adaptiveIcon`, iOS icon).
+
 ## Approaches considered
 
 1. **Token + shared component pass with a distinct "Ledger slip" identity** (picked). One loud element,

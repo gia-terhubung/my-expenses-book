@@ -127,7 +127,7 @@
 
 - [ ] **Step 1: Failing tests:** `SlipEdge` `"renders ceil(width/10) teeth after layout"` (fire `layout` with width 360 → 36 children); `TotalsHeader` `"amounts are single-line and shrink to fit"` (`numberOfLines={1}`, `adjustsFontSizeToFit`, `minimumFontScale={0.6}`, `ellipsizeMode` absent on both amounts), `"cell accessibility label keeps the combined totalLine text"`; `slipAmount.test.ts`: `"Rp 198.238.841 stays full"`, `"IDR 10^12 major switches to compact and keeps exact"`, `"JPY ¥123,456,789,012 switches to compact"`; `statusBarInset` `"uses the given color"`.
 - [ ] **Step 2: Run** → FAIL.
-- [ ] **Step 3: Implement:** TotalsHeader becomes the slip (`slip` fill, labels `slipMuted`, amounts `type.display` + `type.money` in `slipText`, currency prefix smaller) with `SlipEdge color={background}` at its bottom; Home passes `topInsetColor={colors.slip}`; Home sets light status-bar icons while focused (`setStatusBarStyle("light")` in `useFocusEffect`, restore the themed style on blur).
+- [ ] **Step 3: Implement:** yellow accent first (spec section "Yellow accent and app icon"): add `highlight`, `onHighlight` tokens and change `brassFill`, `brassRing`, `warning` to the soft-yellow values, with contrast-test pairs `onHighlight/highlight`, `highlight/slip`, `warning/brassFill` (both schemes). Then TotalsHeader becomes the slip (`slip` fill, labels `slipMuted`, amounts `type.display` + `type.money` in `slipText`, currency prefix smaller) with `SlipEdge color={background}` at its bottom; Home passes `topInsetColor={colors.slip}`; Home sets light status-bar icons while focused (`setStatusBarStyle("light")` in `useFocusEffect`, restore the themed style on blur).
 - [ ] **Step 4: Run** → PASS; full gates.
 - [ ] **Step 5: Commit** `feat(feed): Ledger slip header with torn edge`.
 
@@ -174,6 +174,14 @@
   - landscape side rail
 
   Wait for "go".
+
+### Task 7b: App icon from the "Long page" logo
+
+**Files:** `docs/design/logo/meb-long-page*.svg`, `apps/mobile/assets/images/` (icon, adaptive foreground/background/monochrome, splash), `apps/mobile/app.config.ts`, a small Node script `apps/mobile/scripts/build-icons.mjs` (uses a dev-only rasteriser already available, e.g. `sharp` via `npx`, not added to app dependencies).
+
+- [ ] **Step 1:** Generate PNGs: `icon.png` 1024 opaque (iOS, art scaled up), `adaptive-icon.png` foreground 1024 with art inside the central 66%, `adaptive-icon-background` = solid #FFD84A (`backgroundColor` in config), `adaptive-icon-monochrome.png` from the mono SVG, `splash-icon.png`.
+- [ ] **Step 2:** Wire `app.config.ts` (`icon`, `android.adaptiveIcon.{foregroundImage, backgroundColor, monochromeImage}`, splash). Test: extend the existing app-config test (or add `app.config.test.ts`) asserting those paths exist on disk and `backgroundColor` is `#FFD84A`.
+- [ ] **Step 3:** Gates; commit `feat(brand): Long page app icon`. Note: the new icon only shows on device after the next EAS build (native asset), not via the dev server.
 
 ## Checkpoint 4: stats
 
