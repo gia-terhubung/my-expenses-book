@@ -14,6 +14,8 @@ const config: ExpoConfig = {
     icon: "./assets/expo.icon",
     bundleIdentifier: "com.terhubung.myexpensesbook",
     supportsTablet: true,
+    // Standard OS/AES encryption only: exempt from export documentation (spec "Store prep").
+    config: { usesNonExemptEncryption: false },
   },
   android: {
     package: "com.terhubung.myexpensesbook",
@@ -26,10 +28,6 @@ const config: ExpoConfig = {
     },
     predictiveBackGestureEnabled: false,
     blockedPermissions: ["android.permission.RECORD_AUDIO"],
-  },
-  web: {
-    output: "server",
-    favicon: "./assets/images/favicon.png",
   },
   plugins: [
     "expo-router",
