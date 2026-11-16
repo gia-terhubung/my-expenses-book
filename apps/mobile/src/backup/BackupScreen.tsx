@@ -4,7 +4,6 @@ import { router, usePreventRemove, type Href } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -13,6 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/Button";
 import { dateToLocalString } from "@/components/dateString";
 import { ErrorPanel } from "@/components/ErrorPanel";
 import { useDb } from "@/db/DatabaseProvider";
@@ -78,50 +78,16 @@ function ActionButton({
   primary?: boolean;
   hint?: string;
 }) {
-  const theme = useTheme();
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: disabled ?? false, busy }}
-      disabled={disabled}
+    <Button
+      variant={primary ? "primary" : "secondary"}
+      label={label}
+      detail={hint}
       onPress={onPress}
-      style={{
-        minHeight: 48,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: theme.spacing.md,
-        borderRadius: theme.radius.md,
-        backgroundColor: primary ? theme.colors.primary : "transparent",
-        borderWidth: primary ? 0 : 1,
-        borderColor: theme.colors.border,
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      <Text
-        style={[
-          theme.type.body,
-          {
-            color: primary ? theme.colors.onPrimary : theme.colors.text,
-            fontWeight: "600",
-          },
-        ]}
-      >
-        {label}
-      </Text>
-      {hint ? (
-        <Text
-          style={[
-            theme.type.caption,
-            {
-              color: primary ? theme.colors.onPrimary : theme.colors.textMuted,
-            },
-          ]}
-        >
-          {hint}
-        </Text>
-      ) : null}
-    </Pressable>
+      busy={busy}
+      busyIndicator={false}
+      disabled={disabled}
+    />
   );
 }
 
@@ -533,23 +499,13 @@ export function BackupScreen({
           disabled={busy || restoreOpen || validity !== "ok"}
           primary
         />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("backup.skip")}
-          accessibilityState={{ disabled: busy || restoreOpen }}
+        <Button
+          variant="quiet"
+          align="center"
+          label={t("backup.skip")}
           disabled={busy || restoreOpen}
           onPress={skipPassphrase}
-          style={{
-            minHeight: 48,
-            justifyContent: "center",
-            alignItems: "center",
-            opacity: busy || restoreOpen ? 0.5 : 1,
-          }}
-        >
-          <Text style={[theme.type.body, { color: theme.colors.primary }]}>
-            {t("backup.skip")}
-          </Text>
-        </Pressable>
+        />
 
         {section(t("backup.restoreHeading"))}
         {notice ? small(notice, theme.colors.danger) : null}
@@ -641,25 +597,18 @@ export function BackupScreen({
                   t("backup.duplicates", { count: stage.duplicates.length }),
                 )}
                 {stage.duplicates.map((d) => (
-                  <Pressable
+                  <Button
                     key={d.id}
                     testID={`dup-${d.id}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={d.label}
+                    variant="quiet"
+                    label={d.label}
                     onPress={() =>
                       router.push({
                         pathname: "/document/[id]",
                         params: { id: d.id },
                       } as unknown as Href)
                     }
-                    style={{ minHeight: 48, justifyContent: "center" }}
-                  >
-                    <Text
-                      style={[theme.type.body, { color: theme.colors.primary }]}
-                    >
-                      {d.label}
-                    </Text>
-                  </Pressable>
+                  />
                 ))}
               </View>
             ) : null}

@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import { Button } from "@/components/Button";
 import { DateField } from "@/components/DateField";
 import { OptionRow } from "@/components/OptionRow";
 import { useDb } from "@/db/DatabaseProvider";
@@ -63,13 +64,7 @@ function SheetBody({ value, onApply, onClose }: Props) {
     </Text>
   );
   const action = (label: string, onPress: () => void) => (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: theme.spacing.sm }}
-    >
-      <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{label}</Text>
-    </Pressable>
+    <Button variant="quiet" label={label} onPress={onPress} style={{ paddingHorizontal: theme.spacing.sm }} />
   );
 
   return (

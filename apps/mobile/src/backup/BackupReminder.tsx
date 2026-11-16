@@ -1,7 +1,8 @@
 import { router, type Href } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/Button";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -17,26 +18,13 @@ export function BackupReminder() {
   if (!shouldRemindBackup({ receiptsSinceBackup, backupReminderSnoozedUntil }, Date.now())) return null;
 
   const action = (label: string, onPress: () => void, primary: boolean) => (
-    <Pressable
-      accessibilityRole="button"
+    <Button
+      variant="quiet"
+      tone={primary ? "default" : "muted"}
+      label={label}
       onPress={onPress}
-      style={({ pressed }) => ({
-        minHeight: 48,
-        minWidth: 48,
-        justifyContent: "center",
-        paddingHorizontal: theme.spacing.md,
-        opacity: pressed ? 0.6 : 1,
-      })}
-    >
-      <Text
-        style={[
-          theme.type.body,
-          { color: primary ? theme.colors.primary : theme.colors.textMuted, fontWeight: "600" },
-        ]}
-      >
-        {label}
-      </Text>
-    </Pressable>
+      style={{ paddingHorizontal: theme.spacing.md }}
+    />
   );
 
   return (

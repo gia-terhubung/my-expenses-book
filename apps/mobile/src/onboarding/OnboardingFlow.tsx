@@ -1,9 +1,10 @@
 import { getLocales } from "expo-localization";
 import { router } from "expo-router";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Button } from "@/components/Button";
 import { CurrencyPicker } from "@/components/CurrencyPicker";
 import { LanguagePicker } from "@/components/LanguagePicker";
 import { LockToggle } from "@/components/LockToggle";
@@ -13,27 +14,6 @@ import { StatusBarInset } from "@/layout/StatusBarInset";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { nextStep } from "./steps";
-
-function Button({ label, onPress, primary = true }: { label: string; onPress: () => void; primary?: boolean }) {
-  const theme = useTheme();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={{
-        minHeight: 48,
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: theme.radius.pill,
-        backgroundColor: primary ? theme.colors.primary : "transparent",
-      }}
-    >
-      <Text style={[theme.type.body, { fontWeight: "600", color: primary ? theme.colors.onPrimary : theme.colors.primary }]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
 
 /**
  * First-run flow. The current step lives in prefs (not component state), so a relaunch resumes
@@ -76,6 +56,7 @@ export function OnboardingFlow() {
       );
       footer = (
         <Button
+          variant="primary"
           label={t("common.next")}
           onPress={() => {
             // Persist the (possibly preselected) choice and the silent regional tax-year default.
@@ -97,8 +78,9 @@ export function OnboardingFlow() {
       );
       footer = (
         <Button
+          variant={lockEnabled ? "primary" : "quiet"}
+          align="center"
           label={lockEnabled ? t("onboarding.getStarted") : t("onboarding.lockSkip")}
-          primary={lockEnabled}
           onPress={finish}
         />
       );
@@ -108,6 +90,7 @@ export function OnboardingFlow() {
       body = <LanguagePicker value={language} onChange={(l) => prefs.set("language", l)} />;
       footer = (
         <Button
+          variant="primary"
           label={t("common.next")}
           onPress={() => {
             prefs.set("language", language);

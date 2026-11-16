@@ -1,12 +1,13 @@
 import { Redirect, router, Stack, useLocalSearchParams, type Href } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Button, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import type { OcrResult } from "../../../modules/receipt-ocr/src/ReceiptOcr.types";
 import { mayStartCapture } from "@/capture/captureGate";
 import { pendingCaptures, resolveCaptureRequest } from "@/capture/pendingCapture";
 import { runCaptures, type CaptureDeps } from "@/capture/pipeline";
+import { Button } from "@/components/Button";
 import { useDb } from "@/db/DatabaseProvider";
 import { mergeFxCache } from "@/fx/mergeCache";
 import { captureLease } from "@/images/captureLease";
@@ -172,7 +173,7 @@ export default function CaptureScreen() {
       return (
         <>
           <Text style={[theme.type.title, { color: theme.colors.text }]}>{t("capture.failed")}</Text>
-          <Button title={t("common.done")} onPress={() => router.back()} />
+          <Button variant="quiet" align="center" label={t("common.done")} onPress={() => router.back()} />
         </>
       );
     }
@@ -183,37 +184,10 @@ export default function CaptureScreen() {
             {t("capture.multiTitle", { n: phase.count })}
           </Text>
           <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("capture.multiHint")}</Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => reply("split")}
-            style={{
-              minHeight: 48,
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: theme.radius.md,
-              backgroundColor: theme.colors.primary,
-            }}
-          >
-            <Text style={[theme.type.body, { color: theme.colors.onPrimary, fontWeight: "600" }]}>
-              {t("capture.split", { n: phase.count })}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => reply("single")}
-            style={{
-              minHeight: 48,
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: theme.radius.md,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-            }}
-          >
-            <Text style={[theme.type.body, { color: theme.colors.text }]}>{t("capture.keepOne")}</Text>
-          </Pressable>
+          <Button variant="primary" label={t("capture.split", { n: phase.count })} onPress={() => reply("split")} />
+          <Button label={t("capture.keepOne")} onPress={() => reply("single")} />
           {/* Cancel deletes this photo's files; drafts made from earlier photos still open for review. */}
-          <Button title={t("common.cancel")} onPress={() => reply(null)} />
+          <Button variant="quiet" align="center" label={t("common.cancel")} onPress={() => reply(null)} />
         </>
       );
     }
@@ -225,7 +199,7 @@ export default function CaptureScreen() {
             ? t("capture.processingMany", { current: phase.index + 1, total: phase.total })
             : t("capture.processing")}
         </Text>
-        {canCancel ? <Button title={t("common.cancel")} onPress={cancelWork} /> : null}
+        {canCancel ? <Button variant="quiet" align="center" label={t("common.cancel")} onPress={cancelWork} /> : null}
       </>
     );
   };

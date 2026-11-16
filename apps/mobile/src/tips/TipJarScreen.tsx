@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import type { TipId, TipJar } from "@/payments/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -32,13 +34,7 @@ export function TipJarScreen({ jar }: { jar: TipJar }) {
             <Text accessibilityLiveRegion="polite" style={[theme.type.body, { color: theme.colors.textMuted }]}>
               {t("tips.unavailable")}
             </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={retry}
-              style={{ minHeight: 48, justifyContent: "center", alignSelf: "flex-start" }}
-            >
-              <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("tips.retry")}</Text>
-            </Pressable>
+            <Button variant="quiet" label={t("tips.retry")} onPress={retry} style={{ alignSelf: "flex-start" }} />
           </View>
         ) : null}
 
@@ -46,27 +42,16 @@ export function TipJarScreen({ jar }: { jar: TipJar }) {
           ? products.map((p) => {
               const tier = t(TIER_KEYS[p.id]);
               return (
-                <Pressable
+                <Card
                   key={p.id}
-                  accessibilityRole="button"
                   accessibilityLabel={`${tier}, ${p.displayPrice}`}
-                  accessibilityState={{ disabled: busy }}
                   disabled={busy}
                   onPress={() => buy(p.id)}
-                  style={{
-                    minHeight: 56,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    paddingHorizontal: theme.spacing.lg,
-                    borderRadius: theme.radius.md,
-                    backgroundColor: theme.colors.surface,
-                    opacity: busy ? 0.5 : 1,
-                  }}
+                  style={{ justifyContent: "space-between" }}
                 >
                   <Text style={[theme.type.body, { color: theme.colors.text }]}>{tier}</Text>
                   <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{p.displayPrice}</Text>
-                </Pressable>
+                </Card>
               );
             })
           : null}

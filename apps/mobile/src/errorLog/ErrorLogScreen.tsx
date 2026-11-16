@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, FlatList, Pressable, Text, View } from "react-native";
+import { Alert, FlatList, Text, View } from "react-native";
 
+import { Button } from "@/components/Button";
 import { dateToLocalString } from "@/components/dateString";
 import { EXPORT_DIR, purgeExportDir, shareFile } from "@/export/files";
 import { expoFs } from "@/images/expoFs";
@@ -10,15 +11,6 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 import type { ErrorEntry, ErrorLog } from "./errorLog";
 import { errorLog } from "./instance";
-
-function Action({ label, onPress, color }: { label: string; onPress: () => void; color: string }) {
-  const theme = useTheme();
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={{ minHeight: 48, justifyContent: "center" }}>
-      <Text style={[theme.type.body, { color, fontWeight: "600" }]}>{label}</Text>
-    </Pressable>
-  );
-}
 
 /** Local error log: view, export through the share sheet (cache/export/), clear. */
 export function ErrorLogScreen({
@@ -76,8 +68,8 @@ export function ErrorLogScreen({
           <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("errorLog.intro")}</Text>
           {entries.length ? (
             <View style={{ flexDirection: "row", gap: theme.spacing.xl }}>
-              <Action label={t("errorLog.export")} onPress={() => void exportLog()} color={theme.colors.primary} />
-              <Action label={t("errorLog.clear")} onPress={clear} color={theme.colors.danger} />
+              <Button variant="quiet" label={t("errorLog.export")} onPress={() => void exportLog()} />
+              <Button variant="quiet" tone="danger" label={t("errorLog.clear")} onPress={clear} />
             </View>
           ) : null}
         </View>

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
+import { Button } from "@/components/Button";
 import { useTheme } from "@/theme/ThemeProvider";
 
 /** Opaque full-window lock UI. Layout is width-agnostic (centered column) so fold/rotate just reflow. */
 export function LockScreen({ onUnlock }: { onUnlock: () => Promise<boolean> }) {
   const { t } = useTranslation();
-  const { colors, spacing, radius, type } = useTheme();
+  const { colors, spacing, type } = useTheme();
   const [failed, setFailed] = useState(false);
 
   const retry = async () => setFailed(!(await onUnlock()));
@@ -40,24 +41,12 @@ export function LockScreen({ onUnlock }: { onUnlock: () => Promise<boolean> }) {
             {t("lock.failed")}
           </Text>
         ) : null}
-        <Pressable
-          accessibilityRole="button"
+        <Button
+          variant="primary"
+          label={failed ? t("lock.retry") : t("lock.unlock")}
           onPress={retry}
-          style={{
-            backgroundColor: colors.primary,
-            borderRadius: radius.md,
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.xl,
-            minHeight: 48,
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            style={[type.body, { color: colors.onPrimary, fontWeight: "600" }]}
-          >
-            {failed ? t("lock.retry") : t("lock.unlock")}
-          </Text>
-        </Pressable>
+          style={{ paddingHorizontal: spacing.xl }}
+        />
       </View>
     </View>
   );

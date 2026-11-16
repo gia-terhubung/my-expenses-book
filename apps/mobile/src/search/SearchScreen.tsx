@@ -8,6 +8,7 @@ import { useDataVersion } from "@/db/changes";
 import { listCategories } from "@/db/repositories/categories";
 import { listFolders } from "@/db/repositories/folders";
 import { sumHome, type ReceiptFilter } from "@/db/repositories/receiptQueries";
+import { Button } from "@/components/Button";
 import { EmptyState } from "@/layout/EmptyState";
 import { usePref } from "@/prefs/PrefsProvider";
 import { totalLine } from "@/receipts/format";
@@ -101,13 +102,7 @@ export function SearchScreen() {
 
   const filterCount = activeFilterCount(effective);
   const link = (label: string, onPress: () => void) => (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: theme.spacing.sm }}
-    >
-      <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{label}</Text>
-    </Pressable>
+    <Button variant="quiet" label={label} onPress={onPress} style={{ paddingHorizontal: theme.spacing.sm }} />
   );
 
   return (

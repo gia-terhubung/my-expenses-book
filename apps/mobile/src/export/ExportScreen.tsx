@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/Button";
 import { DateField } from "@/components/DateField";
 import { dateToLocalString } from "@/components/dateString";
 import { ErrorPanel } from "@/components/ErrorPanel";
@@ -147,14 +148,7 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
         contentContainerStyle={{ padding: theme.spacing.xl, paddingTop: theme.spacing.lg, paddingBottom: insets.bottom + theme.spacing.xl }}
       >
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("common.back")}
-            onPress={() => router.back()}
-            style={{ minHeight: 48, justifyContent: "center", alignSelf: "flex-start" }}
-          >
-            <Text style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>{t("common.back")}</Text>
-          </Pressable>
+          <Button variant="quiet" label={t("common.back")} onPress={() => router.back()} style={{ alignSelf: "flex-start" }} />
           <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
             {t("export.title")}
           </Text>
@@ -218,25 +212,15 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
             </Text>
           ) : null}
 
-          <Pressable
-            accessibilityRole="button"
+          <Button
+            variant="primary"
+            label={busy ? t("export.busy") : t("export.run")}
             accessibilityLabel={t("export.run")}
-            accessibilityState={{ disabled, busy }}
             disabled={disabled}
+            busy={busy}
+            busyIndicator={false}
             onPress={() => void run()}
-            style={{
-              minHeight: 48,
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: theme.radius.md,
-              backgroundColor: theme.colors.primary,
-              opacity: disabled ? 0.5 : 1,
-            }}
-          >
-            <Text style={[theme.type.body, { color: theme.colors.onPrimary, fontWeight: "600" }]}>
-              {busy ? t("export.busy") : t("export.run")}
-            </Text>
-          </Pressable>
+          />
         </View>
       </ScrollView>
     </StatusBarInset>
