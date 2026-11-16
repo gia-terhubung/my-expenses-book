@@ -52,3 +52,13 @@ Carried out of the M5 (polish & ship) native run on branch `feat/m5-polish-ship`
 - M8 disconnect() not chained after in-flight connect
 - M9 import order in importBackup.ts
 - M10 receipt save/delete failures not logged to the error log
+
+## Next version (v1.1)
+
+### Bulk "add exchange rates" screen (owner chose for next version, 2026-11-16)
+v1 ships option A: the Statistik "Belum dikonversi" card links to Search filtered to unconverted receipts ("Lihat struk"), and rates are fixed one receipt at a time in the edit form. v1.1 adds a screen to set rates in bulk:
+- One row per receipt currency that has unconverted receipts: currency, receipt count, total in that currency, a rate input (home units per 1 unit, same rules as the review screen's manual rate, `convertWithRate`), and the cached table rate as a hint when one exists (`ensureRates`/`FxCache`).
+- Apply writes a manual rate (`fxRate` set, `fxRateDate` null, see `isManualRate`) to every unconverted receipt of that currency, in one transaction, bumping version/updatedAt like `reconvertAll`; one undo.
+- Receipts unconverted because they were saved under an earlier home currency (`homeCurrencyAtSave != home`) are a separate group: offer "Konversi ulang" (run `reconvertAll` for the current home) instead of a rate input; say plainly when no rate is available offline.
+- Entry points: the Statistik card, the slip's "N belum dikonversi" note, and the Search filter's empty/edit state.
+- Open questions for then: one rate per currency vs per month (trips span months), and whether a bulk manual rate should later be replaced by an exact-date table rate (today manual rates are kept).

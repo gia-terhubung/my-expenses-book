@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger Slip Direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- page chrome (not the app) ---------- */
+  :root { --page: #E4E8E5; --ink: #16201C; --muted: #56635D; --chip: rgba(22,32,28,.06); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: #070B0A; --ink: #EEF3F0; --muted: #93A39C; --chip: rgba(238,243,240,.07); } }
+  :root[data-theme="dark"] { --page: #070B0A; --ink: #EEF3F0; --muted: #93A39C; --chip: rgba(238,243,240,.07); }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 28px 16px 72px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .intro { display: flex; flex-wrap: wrap; gap: 16px 32px; justify-content: space-between; align-items: end; margin-bottom: 24px; }
+  .intro h1 { font: 800 30px/1.1 "Bricolage Grotesque", system-ui, sans-serif; margin: 0 0 8px; letter-spacing: -.01em; }
+  .intro p { margin: 0; color: var(--muted); max-width: 62ch; }
+  .controls { display: flex; gap: 6px; padding: 4px; border-radius: 12px; background: var(--chip); }
+  .controls button { font: inherit; padding: 8px 14px; border-radius: 9px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+  .controls button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+  .controls button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .system { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-bottom: 40px; }
+  .system div { background: var(--chip); border-radius: 14px; padding: 14px 16px; }
+  .system b { display: block; font: 700 16px/1.3 "Bricolage Grotesque", system-ui, sans-serif; margin-bottom: 4px; }
+  .system p { margin: 0; color: var(--muted); }
+  .swatches { display: flex; gap: 6px; margin-top: 10px; }
+  .swatches i { width: 28px; height: 28px; border-radius: 8px; outline: 1px solid rgba(0,0,0,.08); }
+
+  section.pair { margin-bottom: 44px; }
+  section.pair h2 { font: 700 20px/1.2 "Bricolage Grotesque", system-ui, sans-serif; margin: 0 0 6px; }
+  section.pair > p { margin: 0 0 16px; color: var(--muted); max-width: 72ch; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  .tag { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  /* ---------- phone + app tokens ---------- */
+  .phone { width: 360px; max-width: calc(100vw - 32px); border-radius: 30px; overflow: hidden; position: relative; background: var(--bg); color: var(--text);
+    outline: 1px solid rgba(0,0,0,.08); font-family: Roboto, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+
+  /* BEFORE = current tokens */
+  .before .phone { --bg: #F7F7F5; --surface: #FFFFFF; --text: #1C1C1E; --tmuted: #6B6B70; --border: #E0E0DC; --primary: #2F6F5E; --onPrimary: #FFFFFF; --danger: #B3261E; --warning: #9A6700; }
+  .scheme-dark .before .phone { --bg: #101112; --surface: #1B1C1E; --text: #F2F2F0; --tmuted: #9A9AA0; --border: #2E2F32; --primary: #6CC4A8; --onPrimary: #08261D; --danger: #F2B8B5; --warning: #E3B341; }
+
+  /* AFTER = Ledger slip */
+  .after .phone { --bg: #F2F5F1; --surface: #FFFFFF; --text: #16201C; --tmuted: #56635D; --border: #DCE5DF;
+    --primary: #1F5C4C; --primaryPressed: #174639; --onPrimary: #FFFFFF;
+    --tonal: #E3EEE8; --tonalPressed: #D3E4DA; --danger: #B3261E; --tonalDanger: #FBE9E7;
+    --brass: #7A5A12; --brassFill: #FBF1DA; --brassRing: #E9CF8E;
+    --slip: #1F5C4C; --slipText: #FFFFFF; --slipMuted: #BFD9CF;
+    --lift: 0 1px 0 rgba(22,32,28,.04);
+    --raised: 0 10px 22px -8px rgba(31,92,76,.55), 0 2px 4px rgba(31,92,76,.25);
+    --sheet: 0 -12px 32px -12px rgba(22,32,28,.35); }
+  .scheme-dark .after .phone { --bg: #0E1513; --surface: #17211E; --text: #EEF3F0; --tmuted: #93A39C; --border: #26332E;
+    --primary: #74C9AE; --primaryPressed: #93D7C1; --onPrimary: #06241B;
+    --tonal: #1E3A32; --tonalPressed: #25463C; --danger: #F2B8B5; --tonalDanger: #3A1F1D;
+    --brass: #E7BC5C; --brassFill: #2A2314; --brassRing: #5A4823;
+    --slip: #163F34; --slipText: #EEF3F0; --slipMuted: #BFD9CF;
+    --lift: 0 0 0 rgba(0,0,0,0);
+    --raised: 0 10px 22px -8px rgba(0,0,0,.8), 0 0 0 1px rgba(116,201,174,.25);
+    --sheet: 0 -12px 32px -8px rgba(0,0,0,.8); }
+
+  .statusbar { height: 34px; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-size: 13px; font-weight: 600; color: var(--text); position: relative; z-index: 2; }
+  .before .statusbar { color: rgba(255,255,255,.9); }
+  .scheme-dark .before .statusbar { color: var(--text); }
+  .screen { padding: 8px 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .screen.wide { padding: 8px 24px 24px; }
+  .muted { color: var(--tmuted); }
+  .body { font-size: 16px; line-height: 22px; }
+  .caption { font-size: 12px; line-height: 16px; color: var(--tmuted); }
+  .title { font-size: 20px; line-height: 26px; font-weight: 600; }
+  .headline { font-size: 28px; line-height: 34px; font-weight: 700; }
+  .after .headline, .after .title { font-family: "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -.01em; }
+  .after .headline { font-weight: 800; }
+  .after .title { font-weight: 700; }
+
+  /* ---- feed totals: the one bold moment ---- */
+  .totals { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .totals .cell { min-width: 0; }
+  .before .totals .amount { word-break: break-all; }
+  .after .feed-top { margin: -42px -16px 0; padding: 50px 16px 26px; background: var(--slip); color: var(--slipText);
+    --tooth: 9px;
+    -webkit-mask: radial-gradient(circle at 50% 100%, transparent 5px, #000 5.5px) bottom/ var(--tooth) 10px repeat-x, linear-gradient(#000,#000) top/100% calc(100% - 9px) no-repeat;
+            mask: radial-gradient(circle at 50% 100%, transparent 5px, #000 5.5px) bottom/ var(--tooth) 10px repeat-x, linear-gradient(#000,#000) top/100% calc(100% - 9px) no-repeat; }
+  .after .feed-top .label { color: var(--slipMuted); font-size: 14px; }
+  .after .feed-top .amount { font: 800 23px/30px "Bricolage Grotesque", system-ui, sans-serif; white-space: nowrap; letter-spacing: -.015em; }
+  .after .feed-top .amount small { font-size: 15px; font-weight: 700; margin-right: 3px; opacity: .8; }
+  .after .feed-top .sub { color: var(--slipMuted); font-size: 12px; margin-top: 2px; }
+  .after .statusbar.on-slip { color: var(--slipText); }
+
+  .banner { min-height: 48px; display: flex; align-items: center; gap: 10px; border-radius: 12px; font-weight: 600; font-size: 16px; }
+  .before .banner { border: 1px solid var(--warning); margin: 0 -16px; padding: 0 16px; }
+  .after .banner { background: var(--brassFill); color: var(--brass); padding: 0 14px; box-shadow: inset 0 0 0 1px var(--brassRing); }
+  .after .banner .coin { width: 10px; height: 10px; border-radius: 5px; box-shadow: 0 0 0 4px var(--brassRing); background: var(--brass); color: var(--brassFill); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+  .after .banner .go { margin-left: auto; font-size: 20px; }
+
+  .list .month { display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px; }
+  .after .list .month .title { font-size: 18px; }
+  .list .item { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; }
+  .list .item .day { color: var(--tmuted); font-size: 15px; }
+  .list .item small { display: block; color: var(--tmuted); font-size: 14px; }
+  .after .list .item + .item { border-top: 1px dashed var(--border); }
+  .after .list .item .amt { font-weight: 600; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 4px; margin-right: 6px; background: currentColor; }
+  .fab { position: absolute; right: 22px; bottom: 74px; width: 60px; height: 60px; border-radius: 30px; background: var(--primary); color: var(--onPrimary); display: grid; place-items: center; font-size: 32px; font-weight: 300; }
+  .before .fab { box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+  .after .fab { border-radius: 20px; box-shadow: var(--raised); }
+  .tabs { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid var(--border); background: var(--bg); }
+  .tabs span { display: grid; place-items: center; font-size: 14px; color: var(--tmuted); }
+  .before .tabs span { height: 40px; }
+  .after .tabs { background: var(--surface); padding: 0 8px; }
+  .after .tabs span { height: 52px; }
+  .tabs span.on { color: var(--primary); font-weight: 600; }
+  .after .tabs span.on b { padding: 5px 14px; border-radius: 99px; background: var(--tonal); }
+  .feedscreen { min-height: 610px; padding-bottom: 80px; }
+
+  /* ---- settings rows ---- */
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .card { min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; border-radius: 12px; background: var(--surface); font-size: 16px; }
+  .after .card { border-radius: 14px; box-shadow: inset 0 0 0 1px var(--border), var(--lift); }
+  .after .card .val { color: var(--tmuted); }
+  .after .card .chev { color: var(--primary); font-weight: 700; }
+  .after .card.is-pressed { background: var(--tonal); box-shadow: inset 0 0 0 1px var(--tonalPressed); }
+  .group { font-size: 14px; color: var(--tmuted); margin-top: 6px; }
+
+  /* ---- buttons ---- */
+  .btn { min-height: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 8px 16px; border-radius: 12px; font-size: 16px; line-height: 22px; text-align: center; }
+  .btn.primary { background: var(--primary); color: var(--onPrimary); font-weight: 600; }
+  .before .btn.primary.disabled { opacity: .5; }
+  .before .btn.secondary { border: 1px solid var(--border); }
+  .before .btn.secondary.plain { color: var(--text); }
+  .btn.quiet { padding: 0; color: var(--primary); }
+  .before .btn.quiet.weak { font-weight: 400; }
+  .after .btn { border-radius: 14px; font-weight: 600; min-height: 52px; }
+  .after .btn.primary { box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 6px 14px -8px rgba(31,92,76,.7); }
+  .after .btn.primary.is-pressed { background: var(--primaryPressed); box-shadow: inset 0 2px 4px rgba(0,0,0,.25); transform: translateY(1px); }
+  .after .btn.primary.disabled { background: var(--tonal); color: var(--tmuted); box-shadow: none; }
+  .after .btn.secondary { background: var(--tonal); color: var(--primary); }
+  .after .btn.secondary.is-pressed { background: var(--tonalPressed); }
+  .after .btn.secondary.danger { background: var(--tonalDanger); color: var(--danger); }
+  .after .btn.secondary.danger.is-pressed { filter: brightness(.96); }
+  .after .btn.quiet { min-height: 48px; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent); }
+  .pressed-demo { display: flex; gap: 12px; flex-wrap: wrap; }
+  .pressed-demo .btn { flex: 1 1 130px; }
+  .input { min-height: 48px; border: 1px solid var(--border); border-radius: 12px; padding: 0 16px; display: flex; align-items: center; color: var(--tmuted); font-size: 16px; }
+  .after .input { background: var(--surface); border-radius: 14px; border-width: 1.5px; }
+  .after .input.focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--tonal); color: var(--text); }
+
+  /* ---- sheet ---- */
+  .sheetwrap { min-height: 380px; background: rgba(0,0,0,.38); display: flex; align-items: flex-end; }
+  .sheet { width: 100%; background: var(--surface); border-radius: 20px 20px 0 0; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .after .sheet { border-radius: 26px 26px 0 0; box-shadow: var(--sheet); padding-top: 10px; }
+  .after .sheet .grab { width: 40px; height: 4px; border-radius: 2px; background: var(--border); align-self: center; margin-bottom: 4px; }
+  .sheet .opt { min-height: 52px; border-radius: 12px; background: var(--bg); display: grid; place-items: center; font-size: 16px; }
+  .after .sheet .opt { border-radius: 14px; font-weight: 600; color: var(--primary); background: var(--tonal); }
+  .after .sheet .opt.lead { background: var(--primary); color: var(--onPrimary); }
+
+
+  /* ---- floating duo bar (iOS 26 style): tab capsule + separate add button ---- */
+  .after .feedscreen { padding-bottom: 110px; }
+  .duo { position: absolute; left: 12px; right: 12px; bottom: 16px; display: flex; gap: 8px; align-items: center; z-index: 3; }
+  .duo .capsule { flex: 1; height: 60px; border-radius: 30px; display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 8px;
+    background: color-mix(in srgb, var(--surface) 72%, transparent); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 80%, transparent), inset 0 1px 0 rgba(255,255,255,.55), 0 12px 28px -10px rgba(22,32,28,.35); }
+  .scheme-dark .duo .capsule { box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), inset 0 1px 0 rgba(255,255,255,.06), 0 12px 28px -10px rgba(0,0,0,.9); }
+  .duo .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 24px; color: var(--tmuted); min-width: 0; padding: 0 4px; }
+  .duo .tab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .duo .tab i { font-style: normal; font-size: 10px; line-height: 13px; font-weight: 600; white-space: nowrap; letter-spacing: -.01em; }
+  .duo .tab.on { color: var(--primary); background: var(--tonal); }
+  .duo .plus { width: 56px; height: 56px; flex: none; border-radius: 28px; display: grid; place-items: center; background: var(--primary); color: var(--onPrimary); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), var(--raised); }
+  .duo .plus svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+
+  .navdemo .duo-at { position: absolute; left: 0; right: 0; height: 60px; }
+  .duo.static { position: absolute; bottom: 0; }
+  .sysnav { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-around; color: var(--text); }
+  .sysnav.gest i { width: 120px; height: 4px; border-radius: 2px; background: var(--text); opacity: .7; margin: 0 auto; }
+  .sysnav.btns { font-size: 18px; background: color-mix(in srgb, var(--bg) 70%, transparent); }
+  @media (prefers-reduced-motion: no-preference) { .after .btn, .after .card { transition: background-color .12s ease, transform .12s ease; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <div>
+      <h1>Ledger slip</h1>
+      <p>A bolder take on the polish pass. The app is a book of receipts, so the one loud element is the totals header, printed as a green till slip with a torn edge. Everything else gets quieter and more exact: tinted borders instead of grey shadows, tonal buttons, brass for things waiting on you. Element positions and wording stay as they are.</p>
+    </div>
+    <div class="controls" role="group" aria-label="App colour scheme">
+      <button id="light" aria-pressed="true">Light app</button>
+      <button id="dark" aria-pressed="false">Dark app</button>
+    </div>
+  </div>
+
+  <div class="system">
+    <div><b>Colour</b><p>Ledger green carries actions and the slip. Brass marks drafts and warnings. Backgrounds lean green-grey, not neutral.</p>
+      <div class="swatches"><i style="background:#1F5C4C"></i><i style="background:#E3EEE8"></i><i style="background:#F2F5F1"></i><i style="background:#16201C"></i><i style="background:#7A5A12"></i><i style="background:#FBF1DA"></i></div></div>
+    <div><b>Type</b><p>Bricolage Grotesque for totals, screen titles and month headings, bundled with the app so it works offline. Body stays the system font. All amounts use tabular figures so columns line up.</p></div>
+    <div><b>Surfaces</b><p>Three levels with meaning: the slip (loud), raised (FAB, primary button, sheet) with a green-tinted shadow, and flat rows outlined in a green hairline. No grey drop shadow on every card.</p></div>
+    <div><b>Contrast</b><p>Every text pair checked at 4.5:1 or more in light and dark (lowest 5.2:1). Touch targets 48 dp or more.</p></div>
+  </div>
+
+  <main id="root">
+  <section class="pair">
+    <h2>Feed</h2>
+    <p>The totals become the slip, in the same place, and never break mid-number. The draft banner turns brass. Rows get a dashed tear line between them. The tab bar floats as a frosted capsule with icons, and the add button sits beside it as its own round button (the iOS 26 "duo" layout). The list scrolls under both.</p>
+    <div class="row">
+      <div class="col before"><span class="tag">Now</span>
+        <div class="phone"><div class="statusbar"><span>6:08</span><span>43%</span></div>
+          <div class="screen feedscreen">
+            <div class="totals">
+              <div class="cell"><div class="body muted">Bulan ini</div><div class="headline amount">Rp 12.053.899</div></div>
+              <div class="cell"><div class="body muted">Tahun pajak 2026</div><div class="headline amount">Rp 198.238.841</div></div>
+            </div>
+            <div class="banner">Lanjutkan memeriksa (2)</div>
+            <div class="list">
+              <div class="month"><span class="title">November 2026</span><span class="muted">Rp 12.053.899</span></div>
+              <div class="item"><span class="day">16</span><span>Harbor Hotel Fictional<small><span class="dot"></span>Belanja Harian</small></span><span>Rp 844.020</span></div>
+              <div class="item"><span class="day">16</span><span>Demo Toko 20</span><span>Rp 20.000</span></div>
+              <div class="item"><span class="day">15</span><span>Bluebird Demo Cab<small><span class="dot"></span>Kantor</small></span><span>Rp 765.450</span></div>
+            </div>
+          </div>
+          <div class="fab">+</div>
+          <div class="tabs"><span class="on">Struk</span><span>Cari</span><span>Folder</span><span>Pengaturan</span></div>
+        </div>
+      </div>
+      <div class="col after"><span class="tag">Ledger slip</span>
+        <div class="phone"><div class="statusbar on-slip"><span>6:08</span><span>43%</span></div>
+          <div class="screen feedscreen">
+            <div class="feed-top">
+              <div class="totals">
+                <div class="cell"><div class="label">Bulan ini</div><div class="amount"><small>Rp</small>12.053.899</div></div>
+                <div class="cell"><div class="label">Tahun pajak 2026</div><div class="amount"><small>Rp</small>198.238.841</div></div>
+              </div>
+            </div>
+            <div class="banner"><span class="coin" aria-hidden="true"></span>Lanjutkan memeriksa (2)<span class="go">›</span></div>
+            <div class="list">
+              <div class="month"><span class="title">November 2026</span><span class="muted">Rp 12.053.899</span></div>
+              <div class="item"><span class="day">16</span><span>Harbor Hotel Fictional<small><span class="dot" style="color:#8A6BB8"></span>Belanja Harian</small></span><span class="amt">Rp 844.020</span></div>
+              <div class="item"><span class="day">16</span><span>Demo Toko 20</span><span class="amt">Rp 20.000</span></div>
+              <div class="item"><span class="day">15</span><span>Bluebird Demo Cab<small><span class="dot" style="color:#3B7FB0"></span>Kantor</small></span><span class="amt">Rp 765.450</span></div>
+              <div class="item"><span class="day">14</span><span>Pasar Mini Imajiner<small><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</small></span><span class="amt">Rp 103.194</span></div>
+              <div class="item"><span class="day">12</span><span>Warung Kopi Contoh<small><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</small></span><span class="amt">Rp 48.500</span></div>
+              <div class="item"><span class="day">10</span><span>Acme Office Supply<small><span class="dot" style="color:#3B7FB0"></span>Kantor</small></span><span class="amt">Rp 410.085</span></div>
+            </div>
+          </div>
+          <nav class="duo" aria-label="Tabs">
+            <div class="capsule" role="tablist">
+              <span class="tab on" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><i>Struk</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><i>Cari</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><i>Folder</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><i>Pengaturan</i></span>
+            </div>
+            <span class="plus" role="button" aria-label="Tambah struk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="pair">
+    <h2>Android navigation modes</h2>
+    <p>Checked on the Redmi in both modes. Today the tab bar, review footer and add sheet already sit above the system bar in both (they read the system bottom inset). The floating bar keeps that rule: it floats 12 dp above whatever the system reserves, 16 dp for the gesture handle or 47 dp for the three buttons, and the list scrolls under both.</p>
+    <div class="row">
+      <div class="col after"><span class="tag">Full-screen gestures</span>
+        <div class="phone navdemo" style="height:300px">
+          <div class="list" style="padding:8px 16px">
+              <div class="item"><span class="day">12</span><span>Warung Kopi Contoh<small><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</small></span><span class="amt">Rp 48.500</span></div>
+              <div class="item"><span class="day">10</span><span>Acme Office Supply<small><span class="dot" style="color:#3B7FB0"></span>Kantor</small></span><span class="amt">Rp 410.085</span></div>
+              <div class="item"><span class="day">09</span><span>Demo Pharmacy<small><span class="dot" style="color:#3BA07A"></span>Kesehatan</small></span><span class="amt">Rp 87.583</span></div>
+            </div>
+          <div class="duo-at" style="bottom:28px"><nav class="duo static" aria-label="Tabs">
+            <div class="capsule" role="tablist">
+              <span class="tab on" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><i>Struk</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><i>Cari</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><i>Folder</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><i>Pengaturan</i></span>
+            </div>
+            <span class="plus" role="button" aria-label="Tambah struk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </nav></div>
+          <div class="sysnav gest" style="height:16px"><i></i></div>
+        </div>
+      </div>
+      <div class="col after"><span class="tag">Three buttons</span>
+        <div class="phone navdemo" style="height:300px">
+          <div class="list" style="padding:8px 16px">
+              <div class="item"><span class="day">12</span><span>Warung Kopi Contoh<small><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</small></span><span class="amt">Rp 48.500</span></div>
+              <div class="item"><span class="day">10</span><span>Acme Office Supply<small><span class="dot" style="color:#3B7FB0"></span>Kantor</small></span><span class="amt">Rp 410.085</span></div>
+              <div class="item"><span class="day">09</span><span>Demo Pharmacy<small><span class="dot" style="color:#3BA07A"></span>Kesehatan</small></span><span class="amt">Rp 87.583</span></div>
+            </div>
+          <div class="duo-at" style="bottom:59px"><nav class="duo static" aria-label="Tabs">
+            <div class="capsule" role="tablist">
+              <span class="tab on" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><i>Struk</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><i>Cari</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><i>Folder</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><i>Pengaturan</i></span>
+            </div>
+            <span class="plus" role="button" aria-label="Tambah struk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </nav></div>
+          <div class="sysnav btns" style="height:47px"><span>■</span><span>◉</span><span>◀</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="pair">
+    <h2>Settings</h2>
+    <p>Rows get a green hairline and green chevrons so they read as tappable. The pressed row (Cadangan) fills with the tonal green. Screen title switches to the display face.</p>
+    <div class="row">
+      <div class="col before"><span class="tag">Now</span>
+        <div class="phone"><div class="statusbar"><span>6:08</span><span>43%</span></div>
+          <div class="screen wide">
+            <div class="headline">Pengaturan</div>
+            <div class="stack">
+              <div class="card"><span>Bahasa</span><span class="muted">Bahasa Indonesia ›</span></div>
+              <div class="card"><span>Mata uang utama</span><span class="muted">IDR ›</span></div>
+              <div class="card"><span>Tahun pajak dimulai pada</span><span class="muted">Januari ›</span></div>
+              <div class="card"><span>Kategori</span><span class="muted">›</span></div>
+              <div class="card"><span>Ekspor</span><span class="muted">›</span></div>
+              <div class="card is-pressed"><span>Cadangan &amp; pemulihan</span><span class="muted">›</span></div>
+              <div class="group">Dukungan</div>
+              <div class="card"><span>Kotak tip</span><span class="muted">›</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col after"><span class="tag">Ledger slip</span>
+        <div class="phone"><div class="statusbar"><span>6:08</span><span>43%</span></div>
+          <div class="screen wide">
+            <div class="headline">Pengaturan</div>
+            <div class="stack">
+              <div class="card"><span>Bahasa</span><span><span class="val">Bahasa Indonesia</span> <span class="chev">›</span></span></div>
+              <div class="card"><span>Mata uang utama</span><span><span class="val">IDR</span> <span class="chev">›</span></span></div>
+              <div class="card"><span>Tahun pajak dimulai pada</span><span><span class="val">Januari</span> <span class="chev">›</span></span></div>
+              <div class="card"><span>Kategori</span><span class="chev">›</span></div>
+              <div class="card"><span>Ekspor</span><span class="chev">›</span></div>
+              <div class="card is-pressed"><span>Cadangan &amp; pemulihan</span><span class="chev">›</span></div>
+              <div class="group">Dukungan</div>
+              <div class="card"><span>Kotak tip</span><span class="chev">›</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pair">
+    <h2>Backup</h2>
+    <p>Disabled primary turns tonal instead of half-transparent, so it reads as "not yet" rather than "broken". The focused field shows a green ring. "Pulihkan dari cadangan" becomes a tonal button, clearly different from an option row. The link without a passphrase stays a quiet underlined link.</p>
+    <div class="row">
+      <div class="col before"><span class="tag">Now</span>
+        <div class="phone"><div class="statusbar"><span>6:08</span><span>43%</span></div>
+          <div class="screen wide">
+            <div class="headline">Cadangkan</div>
+            <div class="body">Cadangan terakhir: 16/11/2026</div>
+            <div class="input">Frasa sandi</div>
+            <div class="input">Konfirmasi frasa sandi</div>
+            <div class="caption">Minimal 8 karakter. Jika hilang, cadangan tidak bisa dibuka.</div>
+            <div class="btn primary disabled">Cadangkan sekarang</div>
+            <div class="btn quiet weak">Cadangkan tanpa frasa sandi</div>
+            <div class="headline" style="margin-top:8px">Pulihkan</div>
+            <div class="btn secondary plain">Pulihkan dari cadangan</div>
+          </div>
+        </div>
+      </div>
+      <div class="col after"><span class="tag">Ledger slip</span>
+        <div class="phone"><div class="statusbar"><span>6:08</span><span>43%</span></div>
+          <div class="screen wide">
+            <div class="headline">Cadangkan</div>
+            <div class="body">Cadangan terakhir: 16/11/2026</div>
+            <div class="input focus">••••••</div>
+            <div class="input">Konfirmasi frasa sandi</div>
+            <div class="caption">Minimal 8 karakter. Jika hilang, cadangan tidak bisa dibuka.</div>
+            <div class="btn primary disabled">Cadangkan sekarang</div>
+            <div class="btn quiet">Cadangkan tanpa frasa sandi</div>
+            <div class="headline" style="margin-top:8px">Pulihkan</div>
+            <div class="btn secondary">Pulihkan dari cadangan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pair">
+    <h2>Buttons, at rest and pressed</h2>
+    <p>Left of each pair at rest, right while pressed. Primary sinks a pixel with an inner shadow, like a stamp. Destructive actions get their own soft red fill instead of red text on white.</p>
+    <div class="row">
+      <div class="col before"><span class="tag">Now</span>
+        <div class="phone"><div class="screen wide">
+          <div class="pressed-demo"><div class="btn primary">Simpan</div><div class="btn primary is-pressed">Simpan</div></div>
+          <div class="pressed-demo"><div class="btn secondary plain">Edit</div><div class="btn secondary plain is-pressed">Edit</div></div>
+          <div class="pressed-demo"><div class="btn secondary" style="background:var(--surface);color:var(--danger)">Hapus</div><div class="btn secondary" style="background:var(--surface);color:var(--danger)">Hapus</div></div>
+        </div></div>
+      </div>
+      <div class="col after"><span class="tag">Ledger slip</span>
+        <div class="phone"><div class="screen wide">
+          <div class="pressed-demo"><div class="btn primary">Simpan</div><div class="btn primary is-pressed">Simpan</div></div>
+          <div class="pressed-demo"><div class="btn secondary">Edit</div><div class="btn secondary is-pressed">Edit</div></div>
+          <div class="pressed-demo"><div class="btn secondary danger">Hapus</div><div class="btn secondary danger is-pressed">Hapus</div></div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pair">
+    <h2>Add sheet</h2>
+    <p>Scanning is the main job, so it leads in solid green; the other two ways in are tonal. A grab handle and an upward shadow lift the sheet off the dimmed screen, which matters most in dark mode.</p>
+    <div class="row">
+      <div class="col before"><span class="tag">Now</span>
+        <div class="phone"><div class="sheetwrap"><div class="sheet">
+          <div class="title" style="text-align:center">Tambah struk</div>
+          <div class="opt">Pindai struk</div><div class="opt">Impor dari Foto</div><div class="opt">Tambah manual</div>
+          <div class="btn quiet weak" style="color:var(--tmuted)">Batal</div>
+        </div></div></div>
+      </div>
+      <div class="col after"><span class="tag">Ledger slip</span>
+        <div class="phone"><div class="sheetwrap"><div class="sheet">
+          <div class="grab"></div>
+          <div class="title" style="text-align:center">Tambah struk</div>
+          <div class="opt lead">Pindai struk</div><div class="opt">Impor dari Foto</div><div class="opt">Tambah manual</div>
+          <div class="btn quiet" style="color:var(--tmuted);text-decoration:none">Batal</div>
+        </div></div></div>
+      </div>
+    </div>
+  </section>
+  </main>
+</div>
+<script>
+  const root = document.getElementById('root');
+  const set = (dark) => {
+    root.classList.toggle('scheme-dark', dark);
+    document.getElementById('light').setAttribute('aria-pressed', String(!dark));
+    document.getElementById('dark').setAttribute('aria-pressed', String(dark));
+  };
+  document.getElementById('light').onclick = () => set(false);
+  document.getElementById('dark').onclick = () => set(true);
+</script>
+</body>
+</html>

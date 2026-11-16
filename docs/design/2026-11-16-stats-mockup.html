@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger Slip Stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<!--
+  Contrast pairs used by the stats additions (WCAG 2.x ratio). Every text pair is 4.5:1 or more; lowest is 4.66:1.
+  "shape" rows are bars and dots, not text; they are listed for reference and are always paired with a printed value or label.
+  light
+    text  #16201C on #F2F5F1  15.19:1  body text, amounts, period total
+    text  #16201C on #FFFFFF  16.70:1  bar value of current month, text in chart card
+    text  #56635D on #F2F5F1   5.72:1  captions, percentages, rank numbers, pace remainder
+    text  #56635D on #FFFFFF   6.29:1  bar values and month labels in chart card
+    text  #56635D on #E3EEE8   5.29:1  unselected segment label
+    text  #1F5C4C on #FFFFFF   7.80:1  selected segment label
+    text  #1F5C4C on #F2F5F1   7.09:1  back chevron
+    text  #7A5A12 on #FBF1DA   5.67:1  unconverted card text and link
+    text  #FFFFFF on #1F5C4C   7.80:1  slip totals, pace figure, legend names, "Lihat statistik"
+    text  #BFD9CF on #1F5C4C   5.21:1  slip labels, pace remainder, legend percentages
+    shape #6F9E8E on #FFFFFF   3.02:1  past-month bars
+    shape #1F5C4C on #FFFFFF   7.80:1  current-month bar
+    shape #1F5C4C on #E3EEE8   6.56:1  category bar on its track
+    shape #E9CF8E on #1F5C4C   5.12:1  brass dot on slip
+    shape #FFFFFF (slipText at 1.00) on #1F5C4C   7.80:1  stacked-bar segment
+    shape #C0D1CD (slipText at 0.72) on #1F5C4C   4.92:1  stacked-bar segment
+    shape #8BAAA2 (slipText at 0.48) on #1F5C4C   3.11:1  stacked-bar segment
+    shape #5E8A7E (slipText at 0.28) on #1F5C4C   2.01:1  stacked-bar segment
+  dark
+    text  #EEF3F0 on #0E1513  16.48:1  body text, amounts, period total
+    text  #EEF3F0 on #17211E  14.70:1  bar value of current month, text in chart card
+    text  #93A39C on #0E1513   7.01:1  captions, percentages, rank numbers, pace remainder
+    text  #93A39C on #17211E   6.25:1  bar values and month labels in chart card
+    text  #93A39C on #1E3A32   4.66:1  unselected segment label
+    text  #74C9AE on #17211E   8.41:1  selected segment label
+    text  #74C9AE on #0E1513   9.43:1  back chevron
+    text  #E7BC5C on #2A2314   8.71:1  unconverted card text and link
+    text  #EEF3F0 on #163F34  10.43:1  slip totals, pace figure, legend names, "Lihat statistik"
+    text  #BFD9CF on #163F34   7.82:1  slip labels, pace remainder, legend percentages
+    shape #4A7A6B on #17211E   3.37:1  past-month bars
+    shape #74C9AE on #17211E   8.41:1  current-month bar
+    shape #74C9AE on #1E3A32   6.28:1  category bar on its track
+    shape #E9CF8E on #163F34   7.68:1  brass dot on slip
+    shape #EEF3F0 (slipText at 1.00) on #163F34  10.43:1  stacked-bar segment
+    shape #B2C1BB (slipText at 0.72) on #163F34   6.26:1  stacked-bar segment
+    shape #7E958E (slipText at 0.48) on #163F34   3.66:1  stacked-bar segment
+    shape #527169 (slipText at 0.28) on #163F34   2.19:1  stacked-bar segment
+  Category dots reuse the app's category colours and always sit beside the category name.
+-->
+<style>
+  /* ---------- page chrome (not the app), same as the approved Ledger slip page ---------- */
+  :root { --page: #E4E8E5; --ink: #16201C; --muted: #56635D; --chip: rgba(22,32,28,.06); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: #070B0A; --ink: #EEF3F0; --muted: #93A39C; --chip: rgba(238,243,240,.07); } }
+  :root[data-theme="dark"] { --page: #070B0A; --ink: #EEF3F0; --muted: #93A39C; --chip: rgba(238,243,240,.07); }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 28px 16px 72px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .intro { display: flex; flex-wrap: wrap; gap: 16px 32px; justify-content: space-between; align-items: end; margin-bottom: 24px; }
+  .intro h1 { font: 800 30px/1.1 "Bricolage Grotesque", system-ui, sans-serif; margin: 0 0 8px; letter-spacing: -.01em; }
+  .intro p { margin: 0; color: var(--muted); max-width: 62ch; }
+  .controls { display: flex; gap: 6px; padding: 4px; border-radius: 12px; background: var(--chip); }
+  .controls button { font: inherit; padding: 8px 14px; border-radius: 9px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+  .controls button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+  .controls button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .system { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-bottom: 40px; }
+  .system div { background: var(--chip); border-radius: 14px; padding: 14px 16px; }
+  .system b { display: block; font: 700 16px/1.3 "Bricolage Grotesque", system-ui, sans-serif; margin-bottom: 4px; }
+  .system p { margin: 0; color: var(--muted); }
+  section.pair { margin-bottom: 44px; }
+  section.pair h2 { font: 700 20px/1.2 "Bricolage Grotesque", system-ui, sans-serif; margin: 0 0 6px; }
+  section.pair > p { margin: 0 0 16px; color: var(--muted); max-width: 72ch; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  .tag { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .col.notes { max-width: 40ch; padding-top: 28px; }
+  .col.notes b { font: 700 16px/1.3 "Bricolage Grotesque", system-ui, sans-serif; }
+  .col.notes ul { margin: 0; padding-left: 18px; color: var(--muted); display: grid; gap: 8px; }
+
+  /* ---------- phone + app tokens (copied from the approved file) ---------- */
+  .phone { width: 360px; max-width: calc(100vw - 32px); border-radius: 30px; overflow: hidden; position: relative; background: var(--bg); color: var(--text);
+    outline: 1px solid rgba(0,0,0,.08); font-family: Roboto, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+  .before .phone { --bg: #F7F7F5; --surface: #FFFFFF; --text: #1C1C1E; --tmuted: #6B6B70; --border: #E0E0DC; --primary: #2F6F5E; --onPrimary: #FFFFFF; --danger: #B3261E; --warning: #9A6700; }
+  .scheme-dark .before .phone { --bg: #101112; --surface: #1B1C1E; --text: #F2F2F0; --tmuted: #9A9AA0; --border: #2E2F32; --primary: #6CC4A8; --onPrimary: #08261D; --danger: #F2B8B5; --warning: #E3B341; }
+  .after .phone { --bg: #F2F5F1; --surface: #FFFFFF; --text: #16201C; --tmuted: #56635D; --border: #DCE5DF;
+    --primary: #1F5C4C; --primaryPressed: #174639; --onPrimary: #FFFFFF;
+    --tonal: #E3EEE8; --tonalPressed: #D3E4DA; --danger: #B3261E; --tonalDanger: #FBE9E7;
+    --brass: #7A5A12; --brassFill: #FBF1DA; --brassRing: #E9CF8E;
+    --slip: #1F5C4C; --slipText: #FFFFFF; --slipMuted: #BFD9CF;
+    --bar: #6F9E8E; /* new: past-period bars */
+    --lift: 0 1px 0 rgba(22,32,28,.04);
+    --raised: 0 10px 22px -8px rgba(31,92,76,.55), 0 2px 4px rgba(31,92,76,.25); }
+  .scheme-dark .after .phone { --bg: #0E1513; --surface: #17211E; --text: #EEF3F0; --tmuted: #93A39C; --border: #26332E;
+    --primary: #74C9AE; --primaryPressed: #93D7C1; --onPrimary: #06241B;
+    --tonal: #1E3A32; --tonalPressed: #25463C; --danger: #F2B8B5; --tonalDanger: #3A1F1D;
+    --brass: #E7BC5C; --brassFill: #2A2314; --brassRing: #5A4823;
+    --slip: #163F34; --slipText: #EEF3F0; --slipMuted: #BFD9CF;
+    --bar: #4A7A6B;
+    --lift: 0 0 0 rgba(0,0,0,0);
+    --raised: 0 10px 22px -8px rgba(0,0,0,.8), 0 0 0 1px rgba(116,201,174,.25); }
+
+  .statusbar { height: 34px; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-size: 13px; font-weight: 600; color: var(--text); position: relative; z-index: 2; }
+  .before .statusbar { color: rgba(255,255,255,.9); }
+  .scheme-dark .before .statusbar { color: var(--text); }
+  .screen { padding: 8px 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .muted { color: var(--tmuted); }
+  .body { font-size: 16px; line-height: 22px; }
+  .title { font-size: 20px; line-height: 26px; font-weight: 600; }
+  .headline { font-size: 28px; line-height: 34px; font-weight: 700; }
+  .after .headline, .after .title { font-family: "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -.01em; }
+  .after .headline { font-weight: 800; }
+  .after .title { font-weight: 700; }
+
+  .totals { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .totals .cell { min-width: 0; }
+  .before .totals .amount { word-break: break-all; }
+  .after .feed-top { margin: -42px -16px 0; padding: 50px 16px 18px; background: var(--slip); color: var(--slipText);
+    --tooth: 9px;
+    -webkit-mask: radial-gradient(circle at 50% 100%, transparent 5px, #000 5.5px) bottom/ var(--tooth) 10px repeat-x, linear-gradient(#000,#000) top/100% calc(100% - 9px) no-repeat;
+            mask: radial-gradient(circle at 50% 100%, transparent 5px, #000 5.5px) bottom/ var(--tooth) 10px repeat-x, linear-gradient(#000,#000) top/100% calc(100% - 9px) no-repeat; }
+  .after .feed-top .label { color: var(--slipMuted); font-size: 14px; }
+  .after .feed-top .amount { font: 800 23px/30px "Bricolage Grotesque", system-ui, sans-serif; white-space: nowrap; letter-spacing: -.015em; }
+  .after .feed-top .amount small { font-size: 15px; font-weight: 700; margin-right: 3px; opacity: .8; }
+  .after .statusbar.on-slip { color: var(--slipText); }
+
+  .banner { min-height: 48px; display: flex; align-items: center; gap: 10px; border-radius: 12px; font-weight: 600; font-size: 16px; }
+  .before .banner { border: 1px solid var(--warning); margin: 0 -16px; padding: 0 16px; }
+  .after .banner { background: var(--brassFill); color: var(--brass); padding: 0 14px; box-shadow: inset 0 0 0 1px var(--brassRing); }
+  .after .coin { width: 10px; height: 10px; border-radius: 5px; box-shadow: 0 0 0 4px var(--brassRing); background: var(--brass); flex: none; }
+  .after .banner .go { margin-left: auto; font-size: 20px; }
+
+  .list .month { display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px; }
+  .after .list .month .title { font-size: 18px; }
+  .list .item { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; }
+  .list .item .day { color: var(--tmuted); font-size: 15px; }
+  .list .item small { display: block; color: var(--tmuted); font-size: 14px; }
+  .after .list .item + .item { border-top: 1px dashed var(--border); }
+  .after .list .item .amt { font-weight: 600; white-space: nowrap; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 4px; margin-right: 6px; background: currentColor; }
+  .fab { position: absolute; right: 22px; bottom: 74px; width: 60px; height: 60px; border-radius: 30px; background: var(--primary); color: var(--onPrimary); display: grid; place-items: center; font-size: 32px; font-weight: 300; }
+  .before .fab { box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+  .tabs { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid var(--border); background: var(--bg); }
+  .tabs span { display: grid; place-items: center; font-size: 14px; color: var(--tmuted); height: 40px; }
+  .tabs span.on { color: var(--primary); font-weight: 600; }
+  .feedscreen { min-height: 610px; padding-bottom: 80px; }
+  .after .feedscreen { padding-bottom: 110px; }
+
+  .duo { position: absolute; left: 12px; right: 12px; bottom: 16px; display: flex; gap: 8px; align-items: center; z-index: 3; }
+  .duo .capsule { flex: 1; height: 60px; border-radius: 30px; display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 8px;
+    background: color-mix(in srgb, var(--surface) 72%, transparent); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 80%, transparent), inset 0 1px 0 rgba(255,255,255,.55), 0 12px 28px -10px rgba(22,32,28,.35); }
+  .scheme-dark .duo .capsule { box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), inset 0 1px 0 rgba(255,255,255,.06), 0 12px 28px -10px rgba(0,0,0,.9); }
+  .duo .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 24px; color: var(--tmuted); min-width: 0; padding: 0 4px; }
+  .duo .tab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .duo .tab i { font-style: normal; font-size: 10px; line-height: 13px; font-weight: 600; white-space: nowrap; letter-spacing: -.01em; }
+  .duo .tab.on { color: var(--primary); background: var(--tonal); }
+  .duo .plus { width: 56px; height: 56px; flex: none; border-radius: 28px; display: grid; place-items: center; background: var(--primary); color: var(--onPrimary); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), var(--raised); }
+  .duo .plus svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+
+  /* ================= NEW: slip stats ================= */
+  .slip-pace { margin-top: 10px; font-size: 14px; line-height: 20px; color: var(--slipMuted); }
+  .slip-pace b { color: var(--slipText); font-weight: 700; white-space: nowrap; }
+  .stack-bar { display: flex; gap: 2px; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 12px; }
+  .stack-bar i { display: block; height: 100%; min-width: 3px; background: var(--slipText); }
+  .s1 { opacity: 1; } .s2 { opacity: .72; } .s3 { opacity: .48; } .s4 { opacity: .28; }
+  .slip-legend { display: flex; flex-wrap: wrap; gap: 2px 16px; margin-top: 8px; font-size: 12px; line-height: 18px; color: var(--slipText); }
+  .slip-legend span { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .slip-legend i { width: 8px; height: 8px; border-radius: 2px; background: var(--slipText); flex: none; }
+  .slip-legend em { font-style: normal; color: var(--slipMuted); }
+  .slip-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; min-height: 44px; padding-top: 2px;
+    border-top: 1px dashed color-mix(in srgb, var(--slipMuted) 50%, transparent); font-size: 14px; line-height: 20px; }
+  .slip-foot .unconv { display: flex; align-items: center; gap: 10px; padding-left: 4px; color: var(--slipText); white-space: nowrap; }
+  .after .slip-foot .coin { background: var(--coin, #E9CF8E); box-shadow: 0 0 0 4px color-mix(in srgb, #E9CF8E 30%, transparent); }
+  .slip-foot .more { display: flex; align-items: center; gap: 2px; font-weight: 600; color: var(--slipText); white-space: nowrap; }
+  .slip-foot .more svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ================= NEW: Statistik screen ================= */
+  .statscreen { padding: 0 16px 40px; gap: 0; }
+  .topbar { display: flex; align-items: center; gap: 2px; margin-left: -14px; min-height: 48px; }
+  .back { width: 48px; height: 48px; display: grid; place-items: center; color: var(--primary); flex: none; }
+  .back svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 16px; background: var(--tonal); margin-top: 10px; }
+  .seg span { min-height: 48px; display: grid; place-items: center; border-radius: 12px; font-size: 16px; color: var(--tmuted); font-weight: 500; }
+  .seg span.on { background: var(--surface); color: var(--primary); font-weight: 600; box-shadow: var(--lift), inset 0 0 0 1px var(--border); }
+
+  .period { margin-top: 20px; }
+  .plabel { font-size: 16px; line-height: 22px; font-weight: 600; }
+  .plabel span { font-weight: 400; color: var(--tmuted); font-size: 14px; margin-left: 8px; white-space: nowrap; }
+  .pamount { font: 800 36px/44px "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -.02em; white-space: nowrap; margin-top: 2px; }
+  .pamount small { font-size: 20px; font-weight: 700; margin-right: 4px; color: var(--tmuted); }
+  .ppace { font-size: 14px; line-height: 20px; color: var(--tmuted); margin-top: 2px; }
+  .ppace b { color: var(--text); font-weight: 700; white-space: nowrap; }
+  .ppace span { white-space: nowrap; }
+  .pcount { font-size: 14px; line-height: 20px; color: var(--tmuted); }
+
+  .statscreen .h3 { font-size: 18px; line-height: 24px; margin: 28px 0 8px; }
+  .panel { background: var(--surface); border-radius: 14px; padding: 14px 14px 12px; box-shadow: inset 0 0 0 1px var(--border), var(--lift); }
+  .pnote { font-size: 12px; line-height: 16px; color: var(--tmuted); margin-top: 10px; }
+
+  .bars { display: flex; gap: 8px; align-items: flex-start; }
+  .bcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; text-align: center; }
+  .barea { height: 126px; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; border-bottom: 1px solid var(--border); }
+  .bval { font-size: 12px; line-height: 16px; color: var(--tmuted); white-space: nowrap; margin-bottom: 4px; }
+  .bar { display: block; background: var(--bar); border-radius: 5px 5px 0 0; }
+  .bar.low { border-radius: 0; margin-top: 2px; }
+  .stub { display: block; height: 0; }
+  .bcol.cur .bar { background: var(--primary); }
+  .bcol.cur .bval { color: var(--text); font-weight: 700; }
+  .blab { font-size: 12px; line-height: 16px; color: var(--tmuted); margin-top: 6px; }
+  .bcol.cur .blab { color: var(--text); font-weight: 700; }
+  .bsub { font-size: 12px; line-height: 14px; color: var(--tmuted); white-space: nowrap; }
+  .bars.year { gap: 4px; }
+  .bars.year .bval, .bars.year .blab { font-size: 11px; }
+  .bars.year .bar { border-radius: 3px 3px 0 0; }
+
+  .cats { display: flex; flex-direction: column; }
+  .crow { min-height: 48px; padding: 9px 0 11px; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+  .crow + .crow { border-top: 1px dashed var(--border); }
+  .cline { display: grid; grid-template-columns: 1fr auto 38px; gap: 10px; align-items: baseline; font-size: 15px; line-height: 20px; }
+  .cname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .camt { font-weight: 600; white-space: nowrap; }
+  .cpct { color: var(--tmuted); text-align: right; white-space: nowrap; font-size: 14px; }
+  .ctrack { height: 6px; border-radius: 3px; background: var(--tonal); overflow: hidden; }
+  .ctrack i { display: block; height: 100%; border-radius: 3px; background: var(--primary); }
+
+  .statscreen .list .item { min-height: 48px; }
+  .list.folders .item { grid-template-columns: 1fr auto; }
+
+  .brasscard { display: flex; gap: 14px; align-items: flex-start; padding: 14px 14px 4px 18px; border-radius: 14px; background: var(--brassFill); color: var(--brass); box-shadow: inset 0 0 0 1px var(--brassRing); }
+  .brasscard .coin { margin-top: 6px; }
+  .brasscard .bt { font-size: 16px; line-height: 22px; font-weight: 600; }
+  .brasscard .bs { font-size: 14px; line-height: 20px; margin-top: 2px; }
+  .brasscard .blink { min-height: 48px; display: inline-flex; align-items: center; font-size: 16px; font-weight: 600; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px;
+    text-decoration-color: color-mix(in srgb, var(--brass) 45%, transparent); }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <div>
+      <h1>Spending stats</h1>
+      <p>Stats in the Ledger slip language. The slip on Struk gains a pace line, a category strip and a way in; a new Statistik screen opens from it. Everything is bars made of plain rectangles. No budgets, forecasts or guesses.</p>
+    </div>
+    <div class="controls" role="group" aria-label="App colour scheme">
+      <button id="light" aria-pressed="true">Light app</button>
+      <button id="dark" aria-pressed="false">Dark app</button>
+    </div>
+  </div>
+
+  <div class="system">
+    <div><b>The slip stays the loud part</b><p>Stats on the slip print in one ink, like a till receipt: white at four strengths for the category strip, pale green for supporting words. Statistik itself is quiet, on the normal background.</p></div>
+    <div><b>Up is not bad, down is not good</b><p>The pace figure is white and bold with a plain triangle. No red, no celebration green. It always says which days it compares.</p></div>
+    <div><b>Rectangles only</b><p>Every chart is a row or column of Views with a height or flex value. No SVG, no chart library. The only icons are two chevrons.</p></div>
+    <div><b>Contrast</b><p>Every text pair is 4.5:1 or more in light and dark (lowest 4.7:1). Pairs are listed in a comment at the top of this file.</p></div>
+  </div>
+
+  <main id="root">
+  <section class="pair">
+    <h2>Home slip</h2>
+    <p>Both totals stay where they are. Below them: this month against last month at the same day, a strip of the top three categories plus Lainnya, and a foot row with the unconverted count and the way into Statistik. The whole slip is one touch target. Banner, list and floating bar are unchanged.</p>
+    <div class="row">
+      <div class="col before"><span class="tag">Now</span>
+        <div class="phone"><div class="statusbar"><span>6:08</span><span>43%</span></div>
+          <div class="screen feedscreen">
+            <div class="totals">
+              <div class="cell"><div class="body muted">Bulan ini</div><div class="headline amount">Rp 12.053.899</div></div>
+              <div class="cell"><div class="body muted">Tahun pajak 2026</div><div class="headline amount">Rp 198.238.841</div></div>
+            </div>
+            <div class="banner">Lanjutkan memeriksa (2)</div>
+            <div class="list">
+              <div class="month"><span class="title">November 2026</span><span class="muted">Rp 12.053.899</span></div>
+              <div class="item"><span class="day">16</span><span>Harbor Hotel Fictional<small><span class="dot"></span>Belanja Harian</small></span><span>Rp 844.020</span></div>
+              <div class="item"><span class="day">16</span><span>Demo Toko 20</span><span>Rp 20.000</span></div>
+              <div class="item"><span class="day">15</span><span>Bluebird Demo Cab<small><span class="dot"></span>Kantor</small></span><span>Rp 765.450</span></div>
+            </div>
+          </div>
+          <div class="fab">+</div>
+          <div class="tabs"><span class="on">Struk</span><span>Cari</span><span>Folder</span><span>Pengaturan</span></div>
+        </div>
+      </div>
+      <div class="col after"><span class="tag">Ledger slip + stats</span>
+        <div class="phone"><div class="statusbar on-slip"><span>6:08</span><span>43%</span></div>
+          <div class="screen feedscreen">
+            <div class="feed-top" role="button" aria-label="Buka statistik">
+              <div class="totals">
+                <div class="cell"><div class="label">Bulan ini</div><div class="amount"><small>Rp</small>12.053.899</div></div>
+                <div class="cell"><div class="label">Tahun pajak 2026</div><div class="amount"><small>Rp</small>198.238.841</div></div>
+              </div>
+              <div class="slip-pace"><b>▲ 12%</b> dibanding Oktober (s.d. tgl 16)</div>
+              <div class="stack-bar" role="img" aria-label="Akomodasi 28%, Makanan dan Minuman 23%, Transportasi 17%, Lainnya 32%"><i class="s1" style="flex:3412600"></i><i class="s2" style="flex:2731450"></i><i class="s3" style="flex:2104300"></i><i class="s4" style="flex:3805549"></i></div>
+              <div class="slip-legend" aria-hidden="true"><span><i class="s1"></i>Akomodasi<em>28%</em></span><span><i class="s2"></i>Makanan &amp; Minuman<em>23%</em></span><span><i class="s3"></i>Transportasi<em>17%</em></span><span><i class="s4"></i>Lainnya<em>32%</em></span></div>
+              <div class="slip-foot"><span class="unconv"><span class="coin" aria-hidden="true"></span>3 belum dikonversi</span><span class="more">Lihat statistik<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span></div>
+            </div>
+            <div class="banner"><span class="coin" aria-hidden="true"></span>Lanjutkan memeriksa (2)<span class="go">›</span></div>
+            <div class="list">
+              <div class="month"><span class="title">November 2026</span><span class="muted">Rp 12.053.899</span></div>
+              <div class="item"><span class="day">16</span><span>Harbor Hotel Fictional<small><span class="dot" style="color:#8A6BB8"></span>Belanja Harian</small></span><span class="amt">Rp 844.020</span></div><div class="item"><span class="day">16</span><span>Demo Toko 20</span><span class="amt">Rp 20.000</span></div><div class="item"><span class="day">15</span><span>Bluebird Demo Cab<small><span class="dot" style="color:#3B7FB0"></span>Kantor</small></span><span class="amt">Rp 765.450</span></div><div class="item"><span class="day">14</span><span>Pasar Mini Imajiner<small><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</small></span><span class="amt">Rp 103.194</span></div><div class="item"><span class="day">12</span><span>Warung Kopi Contoh<small><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</small></span><span class="amt">Rp 48.500</span></div><div class="item"><span class="day">10</span><span>Acme Office Supply<small><span class="dot" style="color:#3B7FB0"></span>Kantor</small></span><span class="amt">Rp 410.085</span></div>
+            </div>
+          </div>
+          <nav class="duo" aria-label="Tab">
+            <div class="capsule" role="tablist">
+              <span class="tab on" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><i>Struk</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><i>Cari</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><i>Folder</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><i>Pengaturan</i></span>
+            </div>
+            <span class="plus" role="button" aria-label="Tambah struk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pair">
+    <h2>Statistik, Bulan</h2>
+    <p>Pushed from the slip, so it has a back button and no tab bar. Shown at full scroll length. The current month's bar is solid green and labelled "s.d. 16"; October's bar has a gap at its day-16 level, which is the number the pace line compares against.</p>
+    <div class="row">
+      <div class="col after"><span class="tag">Ledger slip</span>
+        <div class="phone"><div class="statusbar"><span>6:08</span><span>43%</span></div>
+          <div class="screen statscreen">
+            <div class="topbar"><span class="back" role="button" aria-label="Kembali"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></span><div class="headline">Statistik</div></div>
+            <div class="seg" role="tablist"><span role="tab" aria-selected="true" class="on">Bulan</span><span role="tab" aria-selected="false" class="">Tahun pajak</span></div>
+            <div class="period">
+              <div class="plabel">November 2026<span>berjalan, s.d. tgl 16</span></div>
+              <div class="pamount"><small>Rp</small>12.053.899</div>
+              <div class="ppace"><b>▲ 12%</b> dibanding Oktober s.d. tgl 16 <span>(Rp 10.762.410)</span></div>
+              <div class="pcount">41 struk</div>
+            </div>
+            <div class="h3 title">6 bulan terakhir</div>
+            <div class="panel"><div class="bars"><div class="bcol"><div class="barea"><span class="bval">17,8 jt</span><i class="bar" style="height:59px"></i></div><span class="blab">Jun</span></div><div class="bcol"><div class="barea"><span class="bval">31,3 jt</span><i class="bar" style="height:104px"></i></div><span class="blab">Jul</span></div><div class="bcol"><div class="barea"><span class="bval">24,1 jt</span><i class="bar" style="height:80px"></i></div><span class="blab">Agu</span></div><div class="bcol"><div class="barea"><span class="bval">21,4 jt</span><i class="bar" style="height:71px"></i></div><span class="blab">Sep</span></div><div class="bcol"><div class="barea"><span class="bval">22,4 jt</span><i class="bar top" style="height:36px"></i><i class="bar low" style="height:36px"></i></div><span class="blab">Okt</span></div><div class="bcol cur"><div class="barea"><span class="bval">12,1 jt</span><i class="bar" style="height:40px"></i></div><span class="blab">Nov</span><span class="bsub">s.d. 16</span></div></div><div class="pnote">November masih berjalan. Garis pada Okt menandai posisi tgl 16.</div></div>
+            <div class="h3 title">Kategori</div>
+            <div class="cats"><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#C28A2B"></span>Akomodasi</span><span class="camt">Rp 3.412.600</span><span class="cpct">28%</span></div><div class="ctrack"><i style="width:100.0%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</span><span class="camt">Rp 2.731.450</span><span class="cpct">23%</span></div><div class="ctrack"><i style="width:80.0%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#2F8F9D"></span>Transportasi</span><span class="camt">Rp 2.104.300</span><span class="cpct">17%</span></div><div class="ctrack"><i style="width:61.7%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#3B7FB0"></span>Kantor</span><span class="camt">Rp 1.286.085</span><span class="cpct">11%</span></div><div class="ctrack"><i style="width:37.7%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#8A6BB8"></span>Belanja Harian</span><span class="camt">Rp 962.214</span><span class="cpct">8%</span></div><div class="ctrack"><i style="width:28.2%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#6B7FB8"></span>Tagihan &amp; Utilitas</span><span class="camt">Rp 705.000</span><span class="cpct">6%</span></div><div class="ctrack"><i style="width:20.7%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#3BA07A"></span>Kesehatan</span><span class="camt">Rp 412.583</span><span class="cpct">3%</span></div><div class="ctrack"><i style="width:12.1%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#C2557A"></span>Belanja</span><span class="camt">Rp 268.900</span><span class="cpct">2%</span></div><div class="ctrack"><i style="width:7.9%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#D0704A"></span>Hiburan</span><span class="camt">Rp 120.000</span><span class="cpct">1%</span></div><div class="ctrack"><i style="width:3.5%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#9AA6A0"></span>Lainnya</span><span class="camt">Rp 50.767</span><span class="cpct">&lt;1%</span></div><div class="ctrack"><i style="width:1.5%"></i></div></div></div>
+            <div class="h3 title">Merchant teratas</div>
+            <div class="list"><div class="item"><span class="day">1</span><span>Harbor Hotel Fictional<small>4 struk</small></span><span class="amt">Rp 3.412.600</span></div><div class="item"><span class="day">2</span><span>Bluebird Demo Cab<small>6 struk</small></span><span class="amt">Rp 1.530.900</span></div><div class="item"><span class="day">3</span><span>Acme Office Supply<small>3 struk</small></span><span class="amt">Rp 1.286.085</span></div><div class="item"><span class="day">4</span><span>Pasar Mini Imajiner<small>5 struk</small></span><span class="amt">Rp 918.340</span></div><div class="item"><span class="day">5</span><span>Warung Kopi Contoh<small>9 struk</small></span><span class="amt">Rp 742.500</span></div></div>
+            <div class="h3 title">Perjalanan &amp; proyek</div><div class="list folders"><div class="item"><span>Demo Trip Bali<small>Perjalanan, 9 struk</small></span><span class="amt">Rp 4.957.300</span></div><div class="item"><span>Demo Project Beta<small>Proyek, 6 struk</small></span><span class="amt">Rp 2.310.085</span></div></div>
+            <div class="h3 title">Belum dikonversi</div>
+            <div class="brasscard"><span class="coin" aria-hidden="true"></span>
+              <div><div class="bt">3 struk belum dikonversi</div>
+              <div class="bs">Mata uang asing tanpa kurs. Belum masuk total bulan ini.</div>
+              <div class="blink" role="link">Tambahkan kurs</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col notes">
+        <b>How it is built</b>
+        <ul>
+          <li>Switch: two Pressables of 48 dp in a tonal track.</li>
+          <li>Month bars: six columns, each a View with a pixel height. October is two Views with a 2 dp gap.</li>
+          <li>Category bars: a tonal track with a green fill, width as a share of the largest category. The percentage is the share of the period total.</li>
+          <li>Merchants and folders reuse the feed row with its dashed tear line.</li>
+          <li>Folders list only those with receipts in the period, with the amount for that period.</li>
+          <li>Belum dikonversi uses brass, the colour for things waiting on you, and is hidden when the count is zero.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="pair">
+    <h2>Statistik, Tahun pajak</h2>
+    <p>Same screen, other segment. The chart shows all twelve months of the tax year so the year's shape is visible; December is an empty slot, not a prediction. The pace line compares with 2025 up to the same date, and the full 2025 total is printed beside it.</p>
+    <div class="row">
+      <div class="col after"><span class="tag">Ledger slip</span>
+        <div class="phone"><div class="statusbar"><span>6:08</span><span>43%</span></div>
+          <div class="screen statscreen">
+            <div class="topbar"><span class="back" role="button" aria-label="Kembali"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></span><div class="headline">Statistik</div></div>
+            <div class="seg" role="tablist"><span role="tab" aria-selected="false" class="">Bulan</span><span role="tab" aria-selected="true" class="on">Tahun pajak</span></div>
+            <div class="period">
+              <div class="plabel">Tahun pajak 2026<span>berjalan, s.d. 16 Nov</span></div>
+              <div class="pamount"><small>Rp</small>198.238.841</div>
+              <div class="ppace"><b>▲ 56%</b> dibanding 2025 s.d. 16 Nov <span>(Rp 127.076.180)</span></div>
+              <div class="pcount">309 struk. 2025 setahun penuh: Rp 145.728.874</div>
+            </div>
+            <div class="h3 title">Per bulan</div>
+            <div class="panel"><div class="bars year"><div class="bcol"><div class="barea"><span class="bval">12</span><i class="bar" style="height:41px"></i></div><span class="blab">Jan</span></div><div class="bcol"><div class="barea"><span class="bval">11</span><i class="bar" style="height:36px"></i></div><span class="blab">Feb</span></div><div class="bcol"><div class="barea"><span class="bval">15</span><i class="bar" style="height:51px"></i></div><span class="blab">Mar</span></div><div class="bcol"><div class="barea"><span class="bval">14</span><i class="bar" style="height:45px"></i></div><span class="blab">Apr</span></div><div class="bcol"><div class="barea"><span class="bval">17</span><i class="bar" style="height:56px"></i></div><span class="blab">Mei</span></div><div class="bcol"><div class="barea"><span class="bval">18</span><i class="bar" style="height:59px"></i></div><span class="blab">Jun</span></div><div class="bcol"><div class="barea"><span class="bval">31</span><i class="bar" style="height:104px"></i></div><span class="blab">Jul</span></div><div class="bcol"><div class="barea"><span class="bval">24</span><i class="bar" style="height:80px"></i></div><span class="blab">Agu</span></div><div class="bcol"><div class="barea"><span class="bval">21</span><i class="bar" style="height:71px"></i></div><span class="blab">Sep</span></div><div class="bcol"><div class="barea"><span class="bval">22</span><i class="bar" style="height:74px"></i></div><span class="blab">Okt</span></div><div class="bcol cur"><div class="barea"><span class="bval">12</span><i class="bar" style="height:40px"></i></div><span class="blab">Nov</span></div><div class="bcol none"><div class="barea"><i class="stub"></i></div><span class="blab">Des</span></div></div><div class="pnote">Dalam juta rupiah, dibulatkan. November masih berjalan.</div></div>
+            <div class="h3 title">Kategori</div>
+            <div class="cats"><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#C28A2B"></span>Akomodasi</span><span class="camt">Rp 52.318.400</span><span class="cpct">26%</span></div><div class="ctrack"><i style="width:100.0%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</span><span class="camt">Rp 41.207.650</span><span class="cpct">21%</span></div><div class="ctrack"><i style="width:78.8%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#2F8F9D"></span>Transportasi</span><span class="camt">Rp 33.964.120</span><span class="cpct">17%</span></div><div class="ctrack"><i style="width:64.9%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#3B7FB0"></span>Kantor</span><span class="camt">Rp 21.480.300</span><span class="cpct">11%</span></div><div class="ctrack"><i style="width:41.1%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#8A6BB8"></span>Belanja Harian</span><span class="camt">Rp 15.732.900</span><span class="cpct">8%</span></div><div class="ctrack"><i style="width:30.1%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#6B7FB8"></span>Tagihan &amp; Utilitas</span><span class="camt">Rp 11.905.000</span><span class="cpct">6%</span></div><div class="ctrack"><i style="width:22.8%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#C2557A"></span>Belanja</span><span class="camt">Rp 8.416.250</span><span class="cpct">4%</span></div><div class="ctrack"><i style="width:16.1%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#3BA07A"></span>Kesehatan</span><span class="camt">Rp 5.983.471</span><span class="cpct">3%</span></div><div class="ctrack"><i style="width:11.4%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#D0704A"></span>Hiburan</span><span class="camt">Rp 4.120.750</span><span class="cpct">2%</span></div><div class="ctrack"><i style="width:7.9%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#7A8A84"></span>Transfer</span><span class="camt">Rp 2.000.000</span><span class="cpct">1%</span></div><div class="ctrack"><i style="width:3.8%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#9AA6A0"></span>Lainnya</span><span class="camt">Rp 1.110.000</span><span class="cpct">1%</span></div><div class="ctrack"><i style="width:2.1%"></i></div></div></div>
+            <div class="h3 title">Merchant teratas</div>
+            <div class="list"><div class="item"><span class="day">1</span><span>Harbor Hotel Fictional<small>31 struk</small></span><span class="amt">Rp 38.450.200</span></div><div class="item"><span class="day">2</span><span>Bluebird Demo Cab<small>58 struk</small></span><span class="amt">Rp 19.874.350</span></div><div class="item"><span class="day">3</span><span>Acme Office Supply<small>22 struk</small></span><span class="amt">Rp 14.206.900</span></div><div class="item"><span class="day">4</span><span>Pasar Mini Imajiner<small>47 struk</small></span><span class="amt">Rp 9.318.640</span></div><div class="item"><span class="day">5</span><span>Toko Sinar Fiktif<small>19 struk</small></span><span class="amt">Rp 6.742.115</span></div></div>
+            <div class="h3 title">Perjalanan &amp; proyek</div><div class="list folders"><div class="item"><span>Demo Trip Bali<small>Perjalanan, 77 struk</small></span><span class="amt">Rp 56.839.554</span></div><div class="item"><span>Demo Project Beta<small>Proyek, 75 struk</small></span><span class="amt">Rp 54.977.220</span></div><div class="item"><span>Demo Project Alpha<small>Proyek, 53 struk</small></span><span class="amt">Rp 33.307.581</span></div></div>
+            <div class="h3 title">Belum dikonversi</div>
+            <div class="brasscard"><span class="coin" aria-hidden="true"></span>
+              <div><div class="bt">3 struk belum dikonversi</div>
+              <div class="bs">Mata uang asing tanpa kurs. Belum masuk total tahun ini.</div>
+              <div class="blink" role="link">Tambahkan kurs</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col notes">
+        <b>Differences from Bulan</b>
+        <ul>
+          <li>Twelve narrow bars instead of six. Values are whole millions so they fit above each bar at 360 dp.</li>
+          <li>Categories, merchants and folders cover the tax year.</li>
+          <li>Month names follow the tax-year start set in Pengaturan.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="pair">
+    <h2>Sparse state</h2>
+    <p>First week: three receipts and no October. The pace line says so and makes no comparison. The strip shows only the categories that exist. Months without receipts are empty slots. Sections with nothing in them (folders, unconverted) are left out.</p>
+    <div class="row">
+      <div class="col after"><span class="tag">Home slip</span>
+        <div class="phone"><div class="statusbar on-slip"><span>6:08</span><span>43%</span></div>
+          <div class="screen feedscreen">
+            <div class="feed-top" role="button" aria-label="Buka statistik">
+              <div class="totals">
+                <div class="cell"><div class="label">Bulan ini</div><div class="amount"><small>Rp</small>386.500</div></div>
+                <div class="cell"><div class="label">Tahun pajak 2026</div><div class="amount"><small>Rp</small>386.500</div></div>
+              </div>
+              <div class="slip-pace">Belum ada struk Oktober untuk dibandingkan.</div>
+              <div class="stack-bar" role="img" aria-label="Belanja Harian 55%, Transportasi 33%, Makanan dan Minuman 13%"><i class="s1" style="flex:212000"></i><i class="s2" style="flex:126000"></i><i class="s3" style="flex:48500"></i></div>
+              <div class="slip-legend" aria-hidden="true"><span><i class="s1"></i>Belanja Harian<em>55%</em></span><span><i class="s2"></i>Transportasi<em>33%</em></span><span><i class="s3"></i>Makanan &amp; Minuman<em>13%</em></span></div>
+              <div class="slip-foot"><span></span><span class="more">Lihat statistik<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span></div>
+            </div>
+            <div class="list">
+              <div class="month"><span class="title">November 2026</span><span class="muted">Rp 386.500</span></div>
+              <div class="item"><span class="day">16</span><span>Indomaret Sample<small><span class="dot" style="color:#8A6BB8"></span>Belanja Harian</small></span><span class="amt">Rp 212.000</span></div><div class="item"><span class="day">15</span><span>Bluebird Demo Cab<small><span class="dot" style="color:#2F8F9D"></span>Transportasi</small></span><span class="amt">Rp 126.000</span></div><div class="item"><span class="day">14</span><span>Warung Kopi Contoh<small><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</small></span><span class="amt">Rp 48.500</span></div>
+            </div>
+          </div>
+          <nav class="duo" aria-label="Tab">
+            <div class="capsule" role="tablist">
+              <span class="tab on" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><i>Struk</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><i>Cari</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><i>Folder</i></span>
+              <span class="tab" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><i>Pengaturan</i></span>
+            </div>
+            <span class="plus" role="button" aria-label="Tambah struk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </nav>
+        </div>
+      </div>
+      <div class="col after"><span class="tag">Statistik, Bulan</span>
+        <div class="phone"><div class="statusbar"><span>6:08</span><span>43%</span></div>
+          <div class="screen statscreen">
+            <div class="topbar"><span class="back" role="button" aria-label="Kembali"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></span><div class="headline">Statistik</div></div>
+            <div class="seg" role="tablist"><span role="tab" aria-selected="true" class="on">Bulan</span><span role="tab" aria-selected="false" class="">Tahun pajak</span></div>
+            <div class="period">
+              <div class="plabel">November 2026<span>berjalan, s.d. tgl 16</span></div>
+              <div class="pamount"><small>Rp</small>386.500</div>
+              <div class="ppace">Belum ada struk Oktober untuk dibandingkan.</div>
+              <div class="pcount">3 struk, sejak 14 Nov</div>
+            </div>
+            <div class="h3 title">6 bulan terakhir</div>
+            <div class="panel"><div class="bars"><div class="bcol none"><div class="barea"><span class="bval">–</span><i class="stub"></i></div><span class="blab">Jun</span></div><div class="bcol none"><div class="barea"><span class="bval">–</span><i class="stub"></i></div><span class="blab">Jul</span></div><div class="bcol none"><div class="barea"><span class="bval">–</span><i class="stub"></i></div><span class="blab">Agu</span></div><div class="bcol none"><div class="barea"><span class="bval">–</span><i class="stub"></i></div><span class="blab">Sep</span></div><div class="bcol none"><div class="barea"><span class="bval">–</span><i class="stub"></i></div><span class="blab">Okt</span></div><div class="bcol cur"><div class="barea"><span class="bval">0,4 jt</span><i class="bar" style="height:104px"></i></div><span class="blab">Nov</span><span class="bsub">s.d. 16</span></div></div><div class="pnote">Bulan lain terisi setelah ada struknya.</div></div>
+            <div class="h3 title">Kategori</div>
+            <div class="cats"><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#8A6BB8"></span>Belanja Harian</span><span class="camt">Rp 212.000</span><span class="cpct">55%</span></div><div class="ctrack"><i style="width:100.0%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#2F8F9D"></span>Transportasi</span><span class="camt">Rp 126.000</span><span class="cpct">33%</span></div><div class="ctrack"><i style="width:59.4%"></i></div></div><div class="crow"><div class="cline"><span class="cname"><span class="dot" style="color:#B0603B"></span>Makanan &amp; Minuman</span><span class="camt">Rp 48.500</span><span class="cpct">13%</span></div><div class="ctrack"><i style="width:22.9%"></i></div></div></div>
+            <div class="h3 title">Merchant teratas</div>
+            <div class="list"><div class="item"><span class="day">1</span><span>Indomaret Sample<small>1 struk</small></span><span class="amt">Rp 212.000</span></div><div class="item"><span class="day">2</span><span>Bluebird Demo Cab<small>1 struk</small></span><span class="amt">Rp 126.000</span></div><div class="item"><span class="day">3</span><span>Warung Kopi Contoh<small>1 struk</small></span><span class="amt">Rp 48.500</span></div></div>
+            
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </main>
+</div>
+<script>
+  const root = document.getElementById('root');
+  const set = (dark) => {
+    root.classList.toggle('scheme-dark', dark);
+    document.getElementById('light').setAttribute('aria-pressed', String(!dark));
+    document.getElementById('dark').setAttribute('aria-pressed', String(dark));
+  };
+  document.getElementById('light').onclick = () => set(false);
+  document.getElementById('dark').onclick = () => set(true);
+  if (location.search.includes('dark')) set(true);
+</script>
+</body>
+</html>
