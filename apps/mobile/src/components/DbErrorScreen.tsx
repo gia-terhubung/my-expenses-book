@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const CONFIRM_WORD = "RESET";
@@ -27,7 +28,7 @@ export function DbErrorScreen({ onReset }: { onReset: () => void | Promise<void>
       <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>
         {t("dbError.resetWarning", { word: CONFIRM_WORD })}
       </Text>
-      <TextInput
+      <Input
         value={typed}
         onChangeText={setTyped}
         autoCapitalize="characters"
@@ -35,12 +36,9 @@ export function DbErrorScreen({ onReset }: { onReset: () => void | Promise<void>
         placeholder={CONFIRM_WORD}
         placeholderTextColor={theme.colors.textMuted}
         style={{
-          borderWidth: 1,
-          borderRadius: theme.radius.md,
           padding: theme.spacing.md,
           color: theme.colors.text,
           backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
         }}
       />
       <Button

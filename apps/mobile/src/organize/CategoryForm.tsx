@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { CATEGORY_COLOR_NAMES, CATEGORY_COLORS } from "./categoryColors";
@@ -62,7 +63,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
           </Text>
           <Button variant="quiet" label={t("common.cancel")} onPress={onClose} />
         </View>
-        <TextInput
+        <Input
           value={name}
           onChangeText={setName}
           accessibilityLabel={t("categoryManage.name")}
@@ -76,9 +77,6 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
             {
               minHeight: 48,
               paddingHorizontal: theme.spacing.lg,
-              borderRadius: theme.radius.md,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
               backgroundColor: theme.colors.surface,
               color: theme.colors.text,
             },

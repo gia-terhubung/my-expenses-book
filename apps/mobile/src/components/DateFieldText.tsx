@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { useTheme } from "@/theme/ThemeProvider";
+import { Input } from "@/components/Input";
 
 export type DateFieldProps = {
   label: string;
@@ -41,8 +42,9 @@ export function DateFieldText({ label, value, onChange, error, hint, testID, dis
   const theme = useTheme();
   return (
     <DateFieldShell label={label} hint={hint} error={error}>
-      <TextInput
+      <Input
         testID={testID}
+        flagColor={error ? theme.colors.danger : hint ? theme.colors.warning : undefined}
         accessibilityLabel={label}
         accessibilityHint={error}
         value={value}
@@ -58,9 +60,8 @@ export function DateFieldText({ label, value, onChange, error, hint, testID, dis
             minHeight: 48,
             paddingHorizontal: theme.spacing.md,
             paddingVertical: theme.spacing.sm,
-            borderRadius: theme.radius.md,
-            borderWidth: hint || error ? 2 : 1,
-            borderColor: error ? theme.colors.danger : hint ? theme.colors.warning : theme.colors.border,
+            
+            
             backgroundColor: theme.colors.surface,
             color: theme.colors.text,
           },

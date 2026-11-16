@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
 import { OptionRow } from "@/components/OptionRow";
+import { Input } from "@/components/Input";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import { createFolder, listFolders } from "@/db/repositories/folders";
@@ -67,7 +68,7 @@ export function FolderPicker({ visible, value, onChange, onClose }: Props) {
             </View>
             {creating ? (
               <View style={{ gap: theme.spacing.sm, paddingTop: theme.spacing.sm }}>
-                <TextInput
+                <Input
                   value={name}
                   onChangeText={setName}
                   accessibilityLabel={t("folders.name")}
@@ -81,9 +82,6 @@ export function FolderPicker({ visible, value, onChange, onClose }: Props) {
                     {
                       minHeight: 48,
                       paddingHorizontal: theme.spacing.lg,
-                      borderRadius: theme.radius.md,
-                      borderWidth: 1,
-                      borderColor: theme.colors.border,
                       backgroundColor: theme.colors.surface,
                       color: theme.colors.text,
                     },

@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Pressable, Text, TextInput, View, type TextInputProps } from "react-native";
+import { Pressable, Text, View, type TextInputProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
@@ -7,6 +7,7 @@ import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
 import { DateField } from "@/components/DateField";
 import { CurrencyPicker, currencyName } from "@/components/CurrencyPicker";
+import { Input } from "@/components/Input";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import { listFolders } from "@/db/repositories/folders";
@@ -88,8 +89,9 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
 
   const input = (name: ReviewField, label: string, props: TextInputProps = {}) => (
     <FieldShell label={label} hint={isLow(name)} error={errors[name]}>
-      <TextInput
+      <Input
         accessibilityLabel={label}
+        flagColor={errors[name] || isLow(name) ? borderFor(name) : undefined}
         // Screen readers hear the error and the "Check this" flag with the field, not only nearby.
         accessibilityHint={[errors[name] ? t(errors[name]) : null, isLow(name) ? t("review.checkThis") : null].filter(Boolean).join(". ") || undefined}
         value={(values[name] as string) ?? ""}
@@ -103,9 +105,8 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
             minHeight: 48,
             paddingHorizontal: theme.spacing.md,
             paddingVertical: theme.spacing.sm,
-            borderRadius: theme.radius.md,
-            borderWidth: isLow(name) || errors[name] ? 2 : 1,
-            borderColor: borderFor(name),
+            
+            
             backgroundColor: theme.colors.surface,
             color: theme.colors.text,
           },

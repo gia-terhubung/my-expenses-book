@@ -6,7 +6,6 @@ import {
   Alert,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/Button";
 import { dateToLocalString } from "@/components/dateString";
 import { ErrorPanel } from "@/components/ErrorPanel";
+import { Input } from "@/components/Input";
 import { useDb } from "@/db/DatabaseProvider";
 import { getReceipt } from "@/db/repositories/receipts";
 import { formatMoney } from "@/money/money";
@@ -420,7 +420,7 @@ export function BackupScreen({
     value: string,
     onChange: (v: string) => void,
   ) => (
-    <TextInput
+    <Input
       accessibilityLabel={label}
       placeholder={label}
       placeholderTextColor={theme.colors.textMuted}
@@ -435,9 +435,7 @@ export function BackupScreen({
         {
           minHeight: 48,
           paddingHorizontal: theme.spacing.md,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
-          borderRadius: theme.radius.md,
+          backgroundColor: theme.colors.surface,
           color: theme.colors.text,
         },
       ]}

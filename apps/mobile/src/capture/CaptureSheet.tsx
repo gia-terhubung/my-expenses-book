@@ -69,20 +69,23 @@ export function CaptureSheet({
     if (Platform.OS !== "ios") flush();
   };
 
-  const option = (mode: CaptureChoice, label: string) => (
+  const option = (mode: CaptureChoice, label: string, primary = false) => (
     <Pressable
       accessibilityRole="button"
       onPress={() => choose(mode)}
       style={({ pressed }) => [
         styles.option,
         {
-          borderRadius: theme.radius.md,
-          backgroundColor: pressed ? theme.colors.border : theme.colors.background,
+          borderRadius: theme.radius.control,
+          borderCurve: "continuous",
+          backgroundColor: primary
+            ? pressed ? theme.colors.primaryPressed : theme.colors.primary
+            : pressed ? theme.colors.tonalPressed : theme.colors.tonal,
           paddingHorizontal: theme.spacing.lg,
         },
       ]}
     >
-      <Text style={[theme.type.body, { color: theme.colors.text, fontWeight: "600" }]}>{label}</Text>
+      <Text style={[theme.type.body, { color: primary ? theme.colors.onPrimary : theme.colors.primary, fontWeight: "600" }]}>{label}</Text>
     </Pressable>
   );
 
@@ -98,19 +101,26 @@ export function CaptureSheet({
     >
       <Pressable accessibilityRole="button" accessibilityLabel={t("common.cancel")} style={styles.backdrop} onPress={onClose} />
       <View
+        testID="capture-sheet"
         style={{
           backgroundColor: theme.colors.surface,
-          borderTopLeftRadius: theme.radius.lg,
-          borderTopRightRadius: theme.radius.lg,
+          borderTopLeftRadius: theme.radius.sheet,
+          borderTopRightRadius: theme.radius.sheet,
+          borderCurve: "continuous",
+          boxShadow: theme.elevation.sheet,
           padding: theme.spacing.lg,
           paddingBottom: insets.bottom + theme.spacing.lg,
           gap: theme.spacing.sm,
         }}
       >
+        <View
+          testID="capture-grab-handle"
+          style={{ alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: theme.colors.border }}
+        />
         <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>
           {t("capture.title")}
         </Text>
-        {option("scan", t("capture.scan"))}
+        {option("scan", t("capture.scan"), true)}
         {option("photos", t("capture.import"))}
         {option("manual", t("capture.manual"))}
         <Pressable accessibilityRole="button" onPress={onClose} style={[styles.option, { paddingHorizontal: theme.spacing.lg }]}>

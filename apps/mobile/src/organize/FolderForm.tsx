@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
 import { OptionRow } from "@/components/OptionRow";
+import { Input } from "@/components/Input";
 import type { FolderKind } from "@/db/schema";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -80,7 +81,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
             </Text>
             <Button variant="quiet" label={t("common.cancel")} onPress={onClose} />
           </View>
-          <TextInput
+          <Input
             value={name}
             onChangeText={setName}
             accessibilityLabel={t("folders.name")}
@@ -94,9 +95,6 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
               {
                 minHeight: 48,
                 paddingHorizontal: theme.spacing.lg,
-                borderRadius: theme.radius.md,
-                borderWidth: 1,
-                borderColor: theme.colors.border,
                 backgroundColor: theme.colors.surface,
                 color: theme.colors.text,
               },

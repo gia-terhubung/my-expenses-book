@@ -1,6 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams, type Href } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { BackupReminder } from "@/backup/BackupReminder";
@@ -72,17 +72,23 @@ export default function ReceiptsScreen() {
                 onPress={() => openReview(drafts)}
                 style={({ pressed }) => ({
                   minHeight: 48,
-                  justifyContent: "center",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: theme.spacing.md,
+                  marginHorizontal: theme.spacing.sm,
                   paddingHorizontal: theme.spacing.lg,
-                  borderRadius: theme.radius.md,
-                  borderWidth: 1,
-                  borderColor: theme.colors.warning,
-                  backgroundColor: pressed ? theme.colors.border : theme.colors.surface,
+                  borderRadius: theme.radius.control,
+                  borderCurve: "continuous",
+                  backgroundColor: theme.colors.brassFill,
+                  boxShadow: `inset 0 0 0 1px ${theme.colors.brassRing}`,
+                  opacity: pressed ? 0.85 : 1,
                 })}
               >
-                <Text style={[theme.type.body, { color: theme.colors.text, fontWeight: "600" }]}>
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: theme.colors.warning }} />
+                <Text style={[theme.type.body, { flex: 1, color: theme.colors.warning, fontWeight: "600" }]}>
                   {t("review.continue", { n: drafts.length })}
                 </Text>
+                <Text style={[theme.type.body, { color: theme.colors.warning }]}>›</Text>
               </Pressable>
             ) : null}
             <BackupReminder />

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { deviceTimeZone, formatLocal } from "@/capture/localTime";
@@ -9,6 +9,7 @@ import { listCategories } from "@/db/repositories/categories";
 import { listFolders } from "@/db/repositories/folders";
 import { sumHome, type ReceiptFilter } from "@/db/repositories/receiptQueries";
 import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
 import { EmptyState } from "@/layout/EmptyState";
 import { usePref } from "@/prefs/PrefsProvider";
 import { totalLine } from "@/receipts/format";
@@ -112,7 +113,7 @@ export function SearchScreen() {
         ListHeaderComponent={
           <View style={{ paddingTop: theme.spacing.sm, paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.md, gap: theme.spacing.sm }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.sm }}>
-              <TextInput
+              <Input
                 accessibilityLabel={t("search.label")}
                 placeholder={t("search.placeholder")}
                 placeholderTextColor={theme.colors.textMuted}
@@ -127,9 +128,6 @@ export function SearchScreen() {
                     minHeight: 48,
                     color: theme.colors.text,
                     backgroundColor: theme.colors.surface,
-                    borderColor: theme.colors.border,
-                    borderWidth: 1,
-                    borderRadius: theme.radius.md,
                     paddingHorizontal: theme.spacing.md,
                   },
                 ]}

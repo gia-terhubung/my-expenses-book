@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { FlatList, TextInput, View } from "react-native";
+import { FlatList, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { CURRENCIES } from "@/money/currencies";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { OptionRow } from "./OptionRow";
+import { Input } from "@/components/Input";
 
 /** Localized currency name; Hermes may lack Intl.DisplayNames (or the locale), so fall back to the code. */
 const ROW = 48;
@@ -53,7 +54,7 @@ export function CurrencyPicker({
 
   return (
     <View style={{ flex: 1, gap: theme.spacing.md }}>
-      <TextInput
+      <Input
         value={query}
         onChangeText={setQuery}
         placeholder={t("common.search")}
@@ -66,9 +67,6 @@ export function CurrencyPicker({
           {
             minHeight: 48,
             paddingHorizontal: theme.spacing.lg,
-            borderRadius: theme.radius.md,
-            borderWidth: 1,
-            borderColor: theme.colors.border,
             backgroundColor: theme.colors.surface,
             color: theme.colors.text,
           },
