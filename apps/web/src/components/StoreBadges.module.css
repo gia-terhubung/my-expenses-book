@@ -1,0 +1,46 @@
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: 0;
+  list-style: none;
+  margin-top: var(--space-5);
+}
+
+.badge {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 56px;
+  min-width: 168px;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-control);
+  text-decoration: none;
+}
+
+.top {
+  font-size: var(--text-small);
+  line-height: 1.2;
+}
+
+.name {
+  font-family: var(--font-display), var(--font-body);
+  font-weight: 800;
+  font-size: 1.125rem;
+  line-height: 1.2;
+}
+
+.soon {
+  border: 1.5px dashed var(--color-slip-muted);
+  color: var(--color-slip-muted);
+  cursor: default;
+}
+
+a.live {
+  background: var(--color-slip-text);
+  color: var(--color-slip);
+}
+
+a.live:hover {
+  background: var(--color-slip-muted);
+}
