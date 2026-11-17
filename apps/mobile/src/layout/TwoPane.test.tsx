@@ -14,13 +14,73 @@ jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
   default: jest.fn(),
 }));
 
+const mockInsets = { top: 0, bottom: 0, left: 0, right: 0 };
+jest.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => mockInsets }));
+
 const mockDims = useWindowDimensions as jest.Mock;
-const setWidth = (width: number) => mockDims.mockReturnValue({ width, height: 800, scale: 2, fontScale: 1 });
+const setDims = (width: number, height: number) => mockDims.mockReturnValue({ width, height, scale: 2, fontScale: 1 });
+const setWidth = (width: number) => setDims(width, 800);
+const flatOf = (id: string) => StyleSheet.flatten(screen.getByTestId(id).props.style);
+
+beforeEach(() => {
+  Object.assign(mockInsets, { top: 0, bottom: 0, left: 0, right: 0 });
+});
 
 const primary = <Text>list</Text>;
 const secondary = <Text>detail</Text>;
 
 describe("TwoPane", () => {
+  it("open landscape (951 x 669, right 84): list pane is exactly 280 wide by flexBasis, no flex/maxWidth", async () => {
+    setDims(951, 669);
+    mockInsets.right = 84;
+    await render(<TwoPane primary={primary} secondary={secondary} />);
+    const s = flatOf("pane-primary");
+    expect(s).toMatchObject({ flexGrow: 0, flexShrink: 0, flexBasis: 280, borderEndWidth: StyleSheet.hairlineWidth });
+    expect(s.flex).toBeUndefined();
+    expect(s.maxWidth).toBeUndefined();
+  });
+
+  it("not split: list pane carries the same keys with single-pane values", async () => {
+    setDims(669, 951);
+    const view = await render(<TwoPane primary={primary} secondary={null} />);
+    const single = flatOf("pane-primary");
+    expect(single).toMatchObject({ flexGrow: 1, flexShrink: 0, flexBasis: 0, borderEndWidth: 0 });
+    await view.unmount();
+    setDims(951, 669);
+    mockInsets.right = 84;
+    await render(<TwoPane primary={primary} secondary={null} />);
+    expect(Object.keys(flatOf("pane-primary")).sort()).toEqual(Object.keys(single).sort());
+  });
+
+  it("detail pane is always { flexGrow 1, flexShrink 1, flexBasis 0, minWidth 0 }", async () => {
+    for (const [w, h] of [
+      [951, 669],
+      [400, 800],
+    ]) {
+      setDims(w, h);
+      const view = await render(<TwoPane primary={primary} secondary={secondary} />);
+      expect(flatOf("pane-secondary")).toMatchObject({ flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 });
+      await view.unmount();
+    }
+  });
+
+  it("open portrait (669 x 951): one pane; a selection replaces the list", async () => {
+    setDims(669, 951);
+    await render(<TwoPane primary={primary} secondary={secondary} />);
+    expect(screen.queryByTestId("pane-primary")).toBeNull();
+    expect(screen.getByText("detail")).toBeTruthy();
+    expect(screen.queryByTestId("pane-placeholder")).toBeNull();
+  });
+
+  it.each([
+    [1024, 346],
+    [1600, 420],
+  ])("width %i: list %i", async (w, list) => {
+    setWidth(w);
+    await render(<TwoPane primary={primary} secondary={secondary} />);
+    expect(flatOf("pane-primary").flexBasis).toBe(list);
+  });
+
   it("compact: shows only secondary when given", async () => {
     setWidth(400);
     await render(<TwoPane primary={primary} secondary={secondary} />);

@@ -3,9 +3,9 @@ import { useCallback } from "react";
 import { BackHandler } from "react-native";
 
 import type { ReceiptFilter } from "@/db/repositories/receiptQueries";
-import { TwoPane } from "@/layout/TwoPane";
-import { useWindowClass } from "@/layout/useWindowClass";
 import { StatusBarInset } from "@/layout/StatusBarInset";
+import { TwoPane } from "@/layout/TwoPane";
+import { useLayout } from "@/layout/useLayout";
 
 import { ReceiptDetail } from "./ReceiptDetail";
 import { ReceiptList } from "./ReceiptList";
@@ -21,35 +21,34 @@ type Props = {
 const openEdit = (id: string) => router.push({ pathname: "/edit/[id]", params: { id } } as unknown as Href);
 
 /**
- * Shared list screen body: receipt list plus detail. Compact pushes /document/[id]; medium and
- * expanded show the detail beside the list. The selection lives in the `selected` route param, so
- * folding to compact keeps the open receipt (with a back control) and unfolding keeps the row
+ * Shared list screen body: receipt list plus detail. When not split a row pushes
+ * /document/[id]; when split the detail shows beside the list. The selection lives in the
+ * `selected` route param, so folding to a single pane keeps the open receipt (with a back control) and unfolding keeps the row
  * selected.
  */
 export function ReceiptListDetail({ filter, ListHeaderComponent, empty, topInsetColor }: Props) {
-  const windowClass = useWindowClass();
-  const compact = windowClass === "compact";
+  const { split } = useLayout();
   const { selected } = useLocalSearchParams<{ selected?: string }>();
   const clear = useCallback(() => router.setParams({ selected: undefined }), []);
 
   // Focus-scoped: a background tab or a screen under a pushed one must not swallow back.
   useFocusEffect(
     useCallback(() => {
-      if (!compact || !selected) return;
+      if (split || !selected) return;
       const sub = BackHandler.addEventListener("hardwareBackPress", () => {
         clear();
         return true;
       });
       return () => sub.remove();
-    }, [compact, selected, clear]),
+    }, [split, selected, clear]),
   );
 
   const onSelect = useCallback(
     (id: string) => {
-      if (compact) router.push({ pathname: "/document/[id]", params: { id } } as unknown as Href);
+      if (!split) router.push({ pathname: "/document/[id]", params: { id } } as unknown as Href);
       else router.setParams({ selected: id });
     },
-    [compact],
+    [split],
   );
 
   return (
@@ -69,7 +68,7 @@ export function ReceiptListDetail({ filter, ListHeaderComponent, empty, topInset
         selected ? (
           // This screen has no header, so the pane takes the status-bar inset itself.
           <StatusBarInset>
-            <ReceiptDetail id={selected} onEdit={openEdit} onDeleted={clear} onBack={compact ? clear : undefined} />
+            <ReceiptDetail id={selected} onEdit={openEdit} onDeleted={clear} onBack={!split ? clear : undefined} />
           </StatusBarInset>
         ) : null
       }

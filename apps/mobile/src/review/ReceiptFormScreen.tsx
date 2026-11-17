@@ -8,7 +8,7 @@ import { Button } from "@/components/Button";
 import { useDb } from "@/db/DatabaseProvider";
 import { listCategories } from "@/db/repositories/categories";
 import { TwoPane } from "@/layout/TwoPane";
-import { useWindowClass } from "@/layout/useWindowClass";
+import { useLayout } from "@/layout/useLayout";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { DuplicateBanner } from "./DuplicateBanner";
@@ -29,7 +29,7 @@ const hiddenView = {
  *   `failed`/`total` = photos the capture run couldn't save (shown once).
  * - `edit`: change a confirmed receipt; Cancel / Save, nothing written before Save.
  *
- * The tree is the same for every window class (fold/rotate): the fields and both page viewers
+ * The tree is the same for every layout (fold/rotate): the fields and both page viewers
  * keep their positions and only change style, so typed values, focus and decrypted views survive.
  * With pages, TwoPane holds a full-height viewer (shown side by side) and the form; compact hides
  * the viewer pane and shows an inline viewer inside the form instead.
@@ -39,7 +39,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const db = useDb();
-  const windowClass = useWindowClass();
+  const { split } = useLayout();
   const params = useLocalSearchParams<{ id: string; queue?: string; failed?: string; total?: string }>();
   const editing = mode === "edit";
   const queue = useMemo(
@@ -95,7 +95,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
     ]);
 
   const hasPages = form.pages.length > 0;
-  const sideBySide = windowClass !== "compact";
+  const sideBySide = split;
   const errorCount = Object.values(form.errors).filter(Boolean).length;
 
   const header = (

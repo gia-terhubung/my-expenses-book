@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { useWindowClass } from "./useWindowClass";
+import { useLayout } from "./useLayout";
 
 type Props = { primary: ReactNode; secondary: ReactNode | null };
 
@@ -15,25 +15,26 @@ const hiddenPane = {
 };
 
 /**
- * List-detail layout. Compact shows `secondary` when non-null, else `primary`; medium/expanded
- * show both side by side. Both panes keep the same tree position for every window class (the
- * compact-hidden one gets display:none), so fold/unfold never remounts them: scroll offsets,
- * loaded windows and in-progress edits survive.
+ * List-detail layout. When the pane area allows it (`layout.split`) both panes show side by side,
+ * the list at a fixed `listWidth`; otherwise one pane shows: `secondary` when non-null, else
+ * `primary`. Both panes keep the same tree position and the same style keys in every layout (the
+ * hidden one gets display:none), so fold/unfold never remounts them or re-resolves their widths:
+ * scroll offsets, loaded windows and in-progress edits survive.
  */
 export function TwoPane({ primary, secondary }: Props) {
-  const windowClass = useWindowClass();
+  const { split, listWidth } = useLayout();
   const theme = useTheme();
   const { t } = useTranslation();
-  const compact = windowClass === "compact";
-  const showPrimary = !compact || secondary == null;
-  const showSecondary = !compact || secondary != null;
+  const showPrimary = split || secondary == null;
+  const showSecondary = split || secondary != null;
 
-  const primaryStyle = compact
-    ? styles.fill
-    : [
-        windowClass === "expanded" ? { flexBasis: "40%" as const, maxWidth: 420 } : styles.fill,
-        { borderEndWidth: StyleSheet.hairlineWidth, borderColor: theme.colors.border },
-      ];
+  const primaryStyle = {
+    flexGrow: split ? 0 : 1,
+    flexShrink: 0,
+    flexBasis: split ? listWidth : 0,
+    borderEndWidth: split ? StyleSheet.hairlineWidth : 0,
+    borderColor: theme.colors.border,
+  };
 
   return (
     <View style={styles.row}>
@@ -45,12 +46,12 @@ export function TwoPane({ primary, secondary }: Props) {
         {primary}
       </View>
       <View
-        style={[styles.fill, !showSecondary && styles.hidden]}
+        style={[styles.detail, !showSecondary && styles.hidden]}
         testID="pane-secondary"
         {...(showSecondary ? null : hiddenPane)}
       >
         {secondary ??
-          (compact ? null : (
+          (!split ? null : (
             <View style={[styles.placeholder, { backgroundColor: theme.colors.background }]} testID="pane-placeholder">
               <Text style={{ color: theme.colors.textMuted, ...theme.type.body }}>{t("empty.document")}</Text>
             </View>
@@ -61,7 +62,7 @@ export function TwoPane({ primary, secondary }: Props) {
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
+  detail: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
   row: { flex: 1, flexDirection: "row" },
   hidden: { display: "none" },
   placeholder: { flex: 1, alignItems: "center", justifyContent: "center" },

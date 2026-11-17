@@ -5,12 +5,13 @@ import { createReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb } from "@/db/types";
 import { initI18n } from "@/i18n";
-import type { WindowClass } from "@/layout/windowClass";
+import { LAYOUTS } from "@/layout/testing/layouts";
+import type { Layout } from "@/layout/layout";
 
 import { ReceiptListDetail } from "./ReceiptListDetail";
 
 let mockDb: AppDb;
-let mockClass: WindowClass = "compact";
+let mockLayout: Layout = LAYOUTS.phone;
 let mockParams: { selected?: string } = {};
 const mockRouter = { push: jest.fn(), setParams: jest.fn(), back: jest.fn() };
 const mockImages = {
@@ -21,7 +22,7 @@ const mockImages = {
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 jest.mock("@/images/ImageStoreProvider", () => ({ useImageStore: () => mockImages }));
 jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
-jest.mock("@/layout/useWindowClass", () => ({ useWindowClass: () => mockClass }));
+jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
@@ -91,7 +92,7 @@ beforeAll(() => initI18n("en"));
 beforeEach(() => {
   mockDb = testDb();
   mockParams = {};
-  mockClass = "compact";
+  mockLayout = LAYOUTS.phone;
   mockFocused = true;
   mockMounts.list = 0;
   mockMounts.detail = 0;
@@ -99,7 +100,7 @@ beforeEach(() => {
 });
 
 describe("ReceiptListDetail", () => {
-  it("compact: row press pushes the document route", async () => {
+  it("not split: row press pushes the document route", async () => {
     const a = seed("Alpha", "2026-11-03T10:00:00");
     await render(ui());
     await fireEvent.press(screen.getByText("Alpha"));
@@ -107,8 +108,35 @@ describe("ReceiptListDetail", () => {
     expect(mockRouter.setParams).not.toHaveBeenCalled();
   });
 
-  it("expanded: row press sets `selected` and the detail renders in the secondary pane", async () => {
-    mockClass = "expanded";
+  it.each([["phone"], ["duoPortrait"]] as const)("not split (%s): row press pushes the document route", async (name) => {
+    mockLayout = LAYOUTS[name];
+    const a = seed("Alpha", "2026-11-03T10:00:00");
+    await render(ui());
+    await fireEvent.press(screen.getByText("Alpha"));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: "/document/[id]", params: { id: a.id } });
+    expect(mockRouter.setParams).not.toHaveBeenCalled();
+  });
+
+  it("split -> open portrait with a selection: detail with a back control; Android back clears", async () => {
+    mockLayout = LAYOUTS.duoLandscape;
+    const a = seed("Alpha", "2026-11-03T10:00:00");
+    mockParams = { selected: a.id };
+    let handler: (() => boolean | null | undefined) | undefined;
+    const spy = jest.spyOn(BackHandler, "addEventListener").mockImplementation((_e, h) => {
+      handler = h as unknown as () => boolean;
+      return { remove: jest.fn() };
+    });
+    const view = await render(ui());
+    mockLayout = LAYOUTS.duoPortrait;
+    await view.rerender(ui());
+    expect(within(screen.getByTestId("pane-secondary")).getByRole("button", { name: "Back" })).toBeTruthy();
+    expect(handler?.()).toBe(true);
+    expect(mockRouter.setParams).toHaveBeenCalledWith({ selected: undefined });
+    spy.mockRestore();
+  });
+
+  it("split: row press sets `selected` and the detail renders in the secondary pane", async () => {
+    mockLayout = LAYOUTS.duoLandscape;
     const a = seed("Alpha", "2026-11-03T10:00:00");
     const view = await render(ui());
     expect(screen.getByTestId("pane-placeholder")).toBeTruthy();
@@ -125,14 +153,14 @@ describe("ReceiptListDetail", () => {
     expect(within(secondary).queryByRole("button", { name: "Back" })).toBeNull();
   });
 
-  it("fold continuity: expanded -> compact keeps the detail with a back control; compact -> expanded keeps the row selected", async () => {
-    mockClass = "expanded";
+  it("fold continuity: split -> not split keeps the detail with a back control; not split -> split keeps the row selected", async () => {
+    mockLayout = LAYOUTS.duoLandscape;
     const a = seed("Alpha", "2026-11-03T10:00:00");
     seed("Beta", "2026-11-02T10:00:00");
     mockParams = { selected: a.id };
     const view = await render(ui());
 
-    mockClass = "compact";
+    mockLayout = LAYOUTS.phone;
     await view.rerender(ui());
     expect(screen.queryByTestId("pane-primary")).toBeNull();
     const secondary = screen.getByTestId("pane-secondary");
@@ -140,13 +168,13 @@ describe("ReceiptListDetail", () => {
     await fireEvent.press(within(secondary).getByRole("button", { name: "Back" }));
     expect(mockRouter.setParams).toHaveBeenCalledWith({ selected: undefined });
 
-    mockClass = "expanded";
+    mockLayout = LAYOUTS.duoLandscape;
     await view.rerender(ui());
     expect(screen.getByTestId(`receipt-row-${a.id}`).props.accessibilityState.selected).toBe(true);
     expect(within(screen.getByTestId("pane-secondary")).getByText("Alpha")).toBeTruthy();
   });
 
-  it("compact with `selected`: Android back clears the param", async () => {
+  it("not split with `selected`: Android back clears the param", async () => {
     const a = seed("Alpha", "2026-11-03T10:00:00");
     let handler: (() => boolean | null | undefined) | undefined;
     const remove = jest.fn();
@@ -159,16 +187,16 @@ describe("ReceiptListDetail", () => {
     expect(handler?.()).toBe(true);
     expect(mockRouter.setParams).toHaveBeenCalledWith({ selected: undefined });
 
-    // Expanded: back is not intercepted.
+    // Split: back is not intercepted.
     handler = undefined;
-    mockClass = "expanded";
+    mockLayout = LAYOUTS.duoLandscape;
     await view.rerender(ui());
     expect(remove).toHaveBeenCalled();
     expect(handler).toBeUndefined();
     spy.mockRestore();
   });
 
-  it("compact with `selected` but unfocused: Android back is not intercepted", async () => {
+  it("not split with `selected` but unfocused: Android back is not intercepted", async () => {
     const a = seed("Alpha", "2026-11-03T10:00:00");
     const spy = jest.spyOn(BackHandler, "addEventListener");
     mockFocused = false;
@@ -179,7 +207,7 @@ describe("ReceiptListDetail", () => {
   });
 
   it("Edit pushes the edit route", async () => {
-    mockClass = "expanded";
+    mockLayout = LAYOUTS.duoLandscape;
     const a = seed("Alpha", "2026-11-03T10:00:00");
     mockParams = { selected: a.id };
     await render(ui());
@@ -188,7 +216,7 @@ describe("ReceiptListDetail", () => {
   });
 
   it("deleting from the pane clears `selected`", async () => {
-    mockClass = "expanded";
+    mockLayout = LAYOUTS.duoLandscape;
     const a = seed("Alpha", "2026-11-03T10:00:00");
     mockParams = { selected: a.id };
     const alert = jest.spyOn(Alert, "alert").mockImplementation((_t, _m, buttons?: AlertButton[]) => {
@@ -201,15 +229,15 @@ describe("ReceiptListDetail", () => {
   });
 
   it("fold/unfold keeps the same list and detail instances (no remount)", async () => {
-    mockClass = "expanded";
+    mockLayout = LAYOUTS.duoLandscape;
     const a = seed("Alpha", "2026-11-03T10:00:00");
     mockParams = { selected: a.id };
     const view = await render(ui());
-    mockClass = "compact";
+    mockLayout = LAYOUTS.phone;
     await view.rerender(ui());
-    mockClass = "expanded";
+    mockLayout = LAYOUTS.duoLandscape;
     await view.rerender(ui());
-    mockClass = "compact";
+    mockLayout = LAYOUTS.phone;
     await view.rerender(ui());
     // Back from the folded detail shows the list again.
     mockParams = {};

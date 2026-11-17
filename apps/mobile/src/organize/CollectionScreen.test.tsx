@@ -7,6 +7,7 @@ import { createReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb } from "@/db/types";
 import { initI18n } from "@/i18n";
+import { LAYOUTS } from "@/layout/testing/layouts";
 
 import { CollectionScreen } from "./CollectionScreen";
 
@@ -17,9 +18,8 @@ jest.mock("@/images/ImageStoreProvider", () => ({ useImageStore: () => ({}) }));
 jest.mock("@/prefs/PrefsProvider", () => ({
   usePref: (k: string) => (k === "taxYearStartMonth" ? 4 : "IDR"),
 }));
-jest.mock("@/layout/useWindowClass", () => ({
-  useWindowClass: () => "compact",
-}));
+const mockLayout = LAYOUTS.phone;
+jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));

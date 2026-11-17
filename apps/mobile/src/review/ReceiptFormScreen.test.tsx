@@ -6,14 +6,15 @@ import { createReceipt, getReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb } from "@/db/types";
 import { initI18n } from "@/i18n";
-import type { WindowClass } from "@/layout/windowClass";
+import { LAYOUTS } from "@/layout/testing/layouts";
+import type { Layout } from "@/layout/layout";
 import { createPrefs, type PrefsStore } from "@/prefs/prefs";
 
 import { ReceiptFormScreen } from "./ReceiptFormScreen";
 
 let mockDb: AppDb;
 let mockPrefs: PrefsStore;
-let mockClass: WindowClass = "compact";
+let mockLayout: Layout = LAYOUTS.phone;
 let mockParams: { id: string; queue?: string } = { id: "" };
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() };
 const mockImages = {
@@ -27,7 +28,7 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePrefs: () => mockPrefs,
   usePref: (k: "homeCurrency") => mockPrefs.get(k),
 }));
-jest.mock("@/layout/useWindowClass", () => ({ useWindowClass: () => mockClass }));
+jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
@@ -98,14 +99,14 @@ beforeEach(() => {
   mockDb = testDb();
   mockPrefs = memoryPrefs();
   mockPrefs.set("homeCurrency", "IDR");
-  mockClass = "compact";
+  mockLayout = LAYOUTS.phone;
   mockMounts.fields = 0;
   mockMounts.pages = 0;
   jest.clearAllMocks();
 });
 
 describe("ReceiptFormScreen", () => {
-  it("edit: typed values, fields and page viewer survive compact -> expanded -> compact", async () => {
+  it("edit: typed values, fields and page viewer survive not split -> split -> not split", async () => {
     const r = seed("confirmed");
     mockParams = { id: r.id };
     const view = await render(<ReceiptFormScreen mode="edit" />);
@@ -113,18 +114,27 @@ describe("ReceiptFormScreen", () => {
     const mounts = { ...mockMounts };
     expect(mounts.fields).toBe(1);
 
-    mockClass = "expanded";
+    mockLayout = LAYOUTS.duoLandscape;
     await view.rerender(<ReceiptFormScreen mode="edit" />);
     expect(screen.getByLabelText("Merchant").props.value).toBe("Warung Sari");
     expect(screen.getAllByRole("imagebutton")).toHaveLength(1);
 
-    mockClass = "compact";
+    mockLayout = LAYOUTS.phone;
     await view.rerender(<ReceiptFormScreen mode="edit" />);
     expect(screen.getByLabelText("Merchant").props.value).toBe("Warung Sari");
     expect(screen.getAllByRole("imagebutton")).toHaveLength(1);
     expect(mockMounts).toEqual(mounts);
     // Edit mode writes nothing before Save.
     expect(getReceipt(mockDb, r.id)?.merchant).toBe("Toko Maju");
+  });
+
+  it("open portrait (icon rail, not split): one column with the inline viewer", async () => {
+    mockLayout = LAYOUTS.duoPortrait;
+    const r = seed("confirmed");
+    mockParams = { id: r.id };
+    await render(<ReceiptFormScreen mode="edit" />);
+    expect(screen.getAllByRole("imagebutton")).toHaveLength(1);
+    expect(screen.getByLabelText("Merchant")).toBeTruthy();
   });
 
   it("edit: Cancel and Save, no Discard / Review later; Save writes and goes back", async () => {
