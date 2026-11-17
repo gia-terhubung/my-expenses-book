@@ -17,7 +17,7 @@ The original `My Expenses Book Master Plan.md` (project root) has a solid stack 
 4. Backup via user-owned export/import archive.
 5. iOS + Android simultaneously. Languages: EN (default/fallback), ID, ES, PT-BR.
 
-**Non-goals (v1)** — cloud sync, accounts, Pro unlock purchase, multi-device, OCR of non-receipt docs as a feature focus, budgets/analytics charts, bank integrations, web app.
+**Non-goals (v1)** — cloud sync, accounts, Pro unlock purchase, multi-device, OCR of non-receipt docs as a feature focus, budgets (charts limited to on-device spending summaries, see 2026-11-16-home-stats-design.md), bank integrations, web app.
 
 **Anti-goals (failure even if it works)**
 - Any network call carrying user data. Only allowed outbound calls: FX rate table download, store IAP.

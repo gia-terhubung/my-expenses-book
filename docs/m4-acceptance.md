@@ -78,4 +78,6 @@ Host checks PASS (100 suites, 736 tests, tsc, check:pii, expo-doctor, Android pr
 
 Rows R1-R3, R5-R7, R9, R10 run over wireless adb. R4 (needs the owner's biometric), R8 (needs the Z Flip), R11 (proxy) remain OWNER-PENDING. Z Flip rows F1-F5 deferred by the owner to before ship.
 Fixes found on device (branch fix/device-findings): PLN read as Polish zloty on PLN electricity receipts; "IDR IDR" home currency label; Export content scrolled under the status bar; Rupiah shown with sen; OptionRow label clipped ("Spreadsheet CSV").
-Same scroll-under-status-bar pattern still in Settings, Categories, Folders, Collection and Onboarding (not fixed).
+Same scroll-under-status-bar pattern in Settings, Categories, Folders, Collection and Onboarding: fixed later the same day (75cd660, StatusBarInset).
+
+Note 2026-11-17: the Ledger slip redesign (docs/redesign-acceptance.md) restyled the export/backup screens these rows covered; behaviour is unchanged, re-run R1–R11 visually on the next build.
