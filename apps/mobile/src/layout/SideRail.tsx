@@ -22,8 +22,9 @@ export function SideRail({ state, navigateToTab }: BottomTabBarProps) {
         {
           backgroundColor: theme.colors.surface,
           borderEndColor: theme.colors.border,
-          paddingTop: insets.top + theme.spacing.lg,
-          paddingStart: insets.left,
+          // Clear of the status area like the system clock on the far side (iPhone Duo open: top
+          // inset 0, clock ~40 pt down). The left inset is already reserved by SideSafeArea.
+          paddingTop: insets.top + theme.spacing.xxl,
           gap: theme.spacing.sm,
         },
       ]}
@@ -42,7 +43,7 @@ export function SideRail({ state, navigateToTab }: BottomTabBarProps) {
                 backgroundColor: focused ? theme.colors.tonal : pressed ? theme.colors.surfacePressed : "transparent",
                 borderRadius: theme.radius.pill,
                 padding: theme.spacing.md,
-                marginHorizontal: theme.spacing.sm,
+                marginHorizontal: theme.spacing.lg,
               },
             ]}
           >

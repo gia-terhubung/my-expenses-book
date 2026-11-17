@@ -1,3 +1,4 @@
+import { StyleSheet } from "react-native";
 import { act, fireEvent, screen, within } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
 import { setStatusBarStyle } from "expo-status-bar";
@@ -146,5 +147,16 @@ describe("tabs layout", () => {
     await renderApp();
     await screen.findByTestId("side-rail");
     expect(setStatusBarStyle).not.toHaveBeenCalledWith("light");
+  });
+
+  it("side rail has breathing room: top padding like the status area, 16 dp side margin, no double left inset", async () => {
+    setClass("expanded");
+    await renderApp();
+    const rail = await screen.findByTestId("side-rail");
+    const flat = StyleSheet.flatten(rail.props.style);
+    expect(flat.paddingTop).toBe(32);
+    expect(flat.paddingStart).toBeUndefined();
+    const tab = within(rail).getAllByRole("tab")[0];
+    expect(StyleSheet.flatten(tab.props.style).marginHorizontal).toBe(16);
   });
 });
