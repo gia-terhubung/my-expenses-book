@@ -4,6 +4,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import { SHEET_CARD_MIN_CONTENT, SHEET_CARD_WIDTH } from "@/layout/layout";
+import { useSideInsets } from "@/layout/SideSafeArea";
+import { useLayout } from "@/layout/useLayout";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export type CaptureMode = "scan" | "photos";
@@ -40,7 +43,8 @@ export async function pickPhotos(): Promise<string[]> {
 }
 
 /**
- * Bottom sheet behind the + button. The choice is reported only after the sheet has fully
+ * Bottom sheet behind the + button: full width on a phone, a centred 480 card from 600 of content
+ * width, always inside the side insets. The choice is reported only after the sheet has fully
  * closed (iOS `onDismiss`), so the scanner / picker is never presented over a dismissing modal.
  */
 export function CaptureSheet({
@@ -55,6 +59,8 @@ export function CaptureSheet({
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const side = useSideInsets();
+  const layout = useLayout();
   const pending = useRef<CaptureChoice | null>(null);
 
   const flush = () => {
@@ -100,32 +106,37 @@ export function CaptureSheet({
       navigationBarTranslucent
     >
       <Pressable accessibilityRole="button" accessibilityLabel={t("common.cancel")} style={styles.backdrop} onPress={onClose} />
-      <View
-        testID="capture-sheet"
-        style={{
-          backgroundColor: theme.colors.surface,
-          borderTopLeftRadius: theme.radius.sheet,
-          borderTopRightRadius: theme.radius.sheet,
-          borderCurve: "continuous",
-          boxShadow: theme.elevation.sheet,
-          padding: theme.spacing.lg,
-          paddingBottom: insets.bottom + theme.spacing.lg,
-          gap: theme.spacing.sm,
-        }}
-      >
+      <View testID="capture-sheet-frame" style={{ paddingLeft: side.left, paddingRight: side.right }}>
         <View
-          testID="capture-grab-handle"
-          style={{ alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: theme.colors.border }}
-        />
-        <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>
-          {t("capture.title")}
-        </Text>
-        {option("scan", t("capture.scan"), true)}
-        {option("photos", t("capture.import"))}
-        {option("manual", t("capture.manual"))}
-        <Pressable accessibilityRole="button" onPress={onClose} style={[styles.option, { paddingHorizontal: theme.spacing.lg }]}>
-          <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("common.cancel")}</Text>
-        </Pressable>
+          testID="capture-sheet"
+          style={{
+            width: "100%",
+            maxWidth: layout.content >= SHEET_CARD_MIN_CONTENT ? SHEET_CARD_WIDTH : "100%",
+            alignSelf: "center",
+            backgroundColor: theme.colors.surface,
+            borderTopLeftRadius: theme.radius.sheet,
+            borderTopRightRadius: theme.radius.sheet,
+            borderCurve: "continuous",
+            boxShadow: theme.elevation.sheet,
+            padding: theme.spacing.lg,
+            paddingBottom: insets.bottom + theme.spacing.lg,
+            gap: theme.spacing.sm,
+          }}
+        >
+          <View
+            testID="capture-grab-handle"
+            style={{ alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: theme.colors.border }}
+          />
+          <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>
+            {t("capture.title")}
+          </Text>
+          {option("scan", t("capture.scan"), true)}
+          {option("photos", t("capture.import"))}
+          {option("manual", t("capture.manual"))}
+          <Pressable accessibilityRole="button" onPress={onClose} style={[styles.option, { paddingHorizontal: theme.spacing.lg }]}>
+            <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("common.cancel")}</Text>
+          </Pressable>
+        </View>
       </View>
     </AppModal>
   );

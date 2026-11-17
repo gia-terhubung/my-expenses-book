@@ -87,7 +87,7 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
   return (
     <View style={[{ gap: theme.spacing.sm }, fill && { flex: 1 }]}>
       {pages.map(page)}
-      <AppModal visible={full !== null} animationType="fade" onRequestClose={() => setFull(null)} statusBarTranslucent>
+      <AppModal visible={full !== null} sideInset={false} animationType="fade" onRequestClose={() => setFull(null)} statusBarTranslucent>
         <View style={{ flex: 1, backgroundColor: "#000" }}>
           <ScrollView
             maximumZoomScale={4}
