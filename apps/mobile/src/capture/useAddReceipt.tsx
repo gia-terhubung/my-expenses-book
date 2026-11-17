@@ -18,8 +18,9 @@ export const openReview = (ids: string[]) => {
 };
 
 /**
- * The one add-receipt flow: the floating tab bar's + (compact) and Home's FAB (wide) both open
- * `sheet`; `start` runs a choice directly (the empty feed's buttons).
+ * The one add-receipt flow: `open` shows `sheet`; `start` runs a choice directly (the empty feed's
+ * buttons). The tabs share one instance through `AddReceiptProvider`; pushed screens such as
+ * Statistik call it directly.
  */
 export function useAddReceipt(): { open(): void; start(mode: CaptureChoice): Promise<void>; sheet: React.ReactElement } {
   const { t } = useTranslation();

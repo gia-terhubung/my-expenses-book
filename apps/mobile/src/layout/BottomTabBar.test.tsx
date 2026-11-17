@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react-native
 import { BottomTabBarHeightContext, type BottomTabBarProps } from "expo-router/js-tabs";
 import { StyleSheet, Text } from "react-native";
 
+import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
 import { initI18n } from "@/i18n";
 import { tokens } from "@/theme/tokens";
 
@@ -34,9 +35,16 @@ function flat(node: { props: { style?: unknown } }) {
 
 beforeAll(() => initI18n("id"));
 
+const renderBar = (index = 0) =>
+  render(
+    <AddReceiptProvider>
+      <BottomTabs {...props(index)} />
+    </AddReceiptProvider>,
+  );
+
 describe("BottomTabs (floating duo)", () => {
   it("renders a tablist with 4 tabs and a separate add button labelled Tambah struk", async () => {
-    await render(<BottomTabs {...props()} />);
+    await renderBar();
     // A plain container View is not an accessibility element, so find it by testID and check its role.
     const tablist = screen.getByTestId("tab-capsule");
     expect(tablist.props.accessibilityRole).toBe("tablist");
@@ -47,12 +55,12 @@ describe("BottomTabs (floating duo)", () => {
   });
 
   it("bar sits insets.bottom + 12 above the screen bottom", async () => {
-    await render(<BottomTabs {...props()} />);
+    await renderBar();
     expect(flat(screen.getByTestId("tab-bar"))).toMatchObject({ position: "absolute", bottom: 59, left: 12, right: 12 });
   });
 
   it("each tab's accessible name is its label only, icon hidden from a11y", async () => {
-    await render(<BottomTabs {...props()} />);
+    await renderBar();
     const tabs = screen.getAllByRole("tab");
     expect(tabs.map((tab) => tab.props.accessibilityLabel)).toEqual(["Struk", "Cari", "Folder", "Pengaturan"]);
     for (const tab of tabs) {
@@ -63,14 +71,14 @@ describe("BottomTabs (floating duo)", () => {
   });
 
   it("tab labels cap font scaling at 1.3", async () => {
-    await render(<BottomTabs {...props()} />);
+    await renderBar();
     for (const label of ["Struk", "Cari", "Folder", "Pengaturan"]) {
       expect(screen.getByText(label).props.maxFontSizeMultiplier).toBe(1.3);
     }
   });
 
   it("tab labels shrink to fit on one line instead of ellipsizing", async () => {
-    await render(<BottomTabs {...props()} />);
+    await renderBar();
     for (const label of ["Struk", "Cari", "Folder", "Pengaturan"]) {
       expect(screen.getByText(label).props).toMatchObject({
         numberOfLines: 1,
@@ -81,7 +89,7 @@ describe("BottomTabs (floating duo)", () => {
   });
 
   it("focused tab has the tonal pill", async () => {
-    await render(<BottomTabs {...props(1)} />);
+    await renderBar(1);
     const tabs = screen.getAllByRole("tab");
     expect(tabs[1].props.accessibilityState).toMatchObject({ selected: true });
     expect(flat(tabs[1]).backgroundColor).toBe(light.colors.tonal);
@@ -90,8 +98,15 @@ describe("BottomTabs (floating duo)", () => {
     expect(flat(screen.getByText("Struk")).color).toBe(light.colors.textMuted);
   });
 
+  it("pressing + opens the provider's sheet; the bar renders no sheet of its own", async () => {
+    await renderBar();
+    expect(screen.queryByTestId("capture-sheet")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Tambah struk" }));
+    expect(screen.getAllByTestId("capture-sheet")).toHaveLength(1);
+  });
+
   it("add button opens the add sheet", async () => {
-    await render(<BottomTabs {...props()} />);
+    await renderBar();
     expect(screen.queryByTestId("capture-sheet")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Tambah struk" }));
     expect(screen.getByTestId("capture-sheet")).toBeTruthy();

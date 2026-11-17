@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
-import { useAddReceipt } from "@/capture/useAddReceipt";
+import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { TAB_ICONS, TAB_LABEL_KEYS, type TabRoute } from "./tabs";
@@ -19,7 +19,7 @@ export function BottomTabs({ state, navigateToTab }: BottomTabBarProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const add = useAddReceipt();
+  const add = useAddReceiptContext();
   const highlight = theme.scheme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)";
 
   return (
@@ -89,7 +89,6 @@ export function BottomTabs({ state, navigateToTab }: BottomTabBarProps) {
       >
         <Ionicons name="add" size={26} color={theme.colors.onPrimary} />
       </Pressable>
-      {add.sheet}
     </View>
   );
 }

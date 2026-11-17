@@ -6,7 +6,9 @@ import { useSyncExternalStore } from "react";
 
 import { testDb } from "@/db/testing/testDb";
 import { initI18n } from "@/i18n";
-import { useWindowClass } from "@/layout/useWindowClass";
+import type { Layout } from "@/layout/layout";
+import { LAYOUTS } from "@/layout/testing/layouts";
+import { useLayout } from "@/layout/useLayout";
 
 import TabsLayout from "@/app/(tabs)/_layout";
 import Folders from "@/app/(tabs)/folders";
@@ -38,16 +40,15 @@ jest.mock("expo-local-authentication", () => ({
 
 jest.mock("expo-status-bar", () => ({ ...jest.requireActual("expo-status-bar"), setStatusBarStyle: jest.fn() }));
 
-// Mutable window class that re-renders subscribers, like a real resize would.
-type WC = "compact" | "medium" | "expanded";
-let current: WC = "compact";
+// Mutable layout that re-renders subscribers, like a real resize would.
+let current: Layout = LAYOUTS.phone;
 const listeners = new Set<() => void>();
-const setClass = (c: WC) => {
-  current = c;
-  listeners.forEach((l) => l());
+const setLayout = (l: Layout) => {
+  current = l;
+  listeners.forEach((fn) => fn());
 };
-jest.mock("@/layout/useWindowClass");
-(useWindowClass as jest.Mock).mockImplementation(() =>
+jest.mock("@/layout/useLayout");
+(useLayout as jest.Mock).mockImplementation(() =>
   useSyncExternalStore((l) => (listeners.add(l), () => listeners.delete(l)), () => current),
 );
 
@@ -78,38 +79,50 @@ beforeEach(() => {
 
 describe("tabs layout", () => {
   it("compact: bottom tab bar, no side rail, 4 labels", async () => {
-    setClass("compact");
+    setLayout(LAYOUTS.phone);
     await renderApp();
     expect(await screen.findByTestId("tab-bar")).toBeTruthy();
     expect(screen.queryByTestId("side-rail")).toBeNull();
     for (const l of LABELS) expect(within(screen.getByTestId("tab-bar")).getByText(l)).toBeTruthy();
   });
 
-  it.each(["medium", "expanded"])("%s: side rail, no tab bar, 4 labels", async (cls) => {
-    setClass(cls as WC);
+  it.each(["duoPortrait", "duoLandscape"] as const)("%s: side rail, no tab bar, 4 labels", async (name) => {
+    setLayout(LAYOUTS[name]);
     await renderApp();
     expect(await screen.findByTestId("side-rail")).toBeTruthy();
     expect(screen.queryByTestId("tab-bar")).toBeNull();
     for (const l of LABELS) expect(within(screen.getByTestId("side-rail")).getByText(l)).toBeTruthy();
   });
 
-  it("switching window class keeps the selected tab and rail/bar swap", async () => {
-    setClass("compact");
+  it("one add sheet survives bar <-> rail (fold and unfold with the sheet up)", async () => {
+    setLayout(LAYOUTS.phone);
+    await renderApp("/search");
+    await act(async () => fireEvent.press(within(await screen.findByTestId("tab-bar")).getByRole("button", { name: "Add receipt" })));
+    expect(screen.getAllByTestId("capture-sheet")).toHaveLength(1);
+    await act(async () => setLayout(LAYOUTS.duoLandscape));
+    expect(screen.getByTestId("side-rail")).toBeTruthy();
+    expect(screen.getAllByTestId("capture-sheet")).toHaveLength(1);
+    await act(async () => setLayout(LAYOUTS.phone));
+    expect(screen.getAllByTestId("capture-sheet")).toHaveLength(1);
+  });
+
+  it("switching layout keeps the selected tab and rail/bar swap", async () => {
+    setLayout(LAYOUTS.phone);
     await renderApp();
     const bar = await screen.findByTestId("tab-bar");
     await act(async () => fireEvent.press(within(bar).getByText("Settings")));
     expect(screen).toHavePathname("/settings");
-    await act(async () => setClass("expanded"));
+    await act(async () => setLayout(LAYOUTS.duoLandscape));
     expect(screen.getByTestId("side-rail")).toBeTruthy();
     expect(screen.queryByTestId("tab-bar")).toBeNull();
     expect(screen).toHavePathname("/settings");
-    await act(async () => setClass("compact"));
+    await act(async () => setLayout(LAYOUTS.phone));
     expect(screen.getByTestId("tab-bar")).toBeTruthy();
     expect(screen).toHavePathname("/settings");
   });
 
   it("Receipts: 'Continue reviewing (N)' opens the oldest draft with the rest queued", async () => {
-    setClass("compact");
+    setLayout(LAYOUTS.phone);
     mockDrafts = ["d1", "d2", "d3"];
     await renderApp();
     const banner = await screen.findByText("Continue reviewing (3)");
@@ -119,7 +132,7 @@ describe("tabs layout", () => {
   });
 
   it("Receipts: the draft banner is announced as its visible text only (no dot, no chevron)", async () => {
-    setClass("compact");
+    setLayout(LAYOUTS.phone);
     mockDrafts = ["d1", "d2"];
     await renderApp();
     const banner = await screen.findByRole("button", { name: "Continue reviewing (2)" });
@@ -127,7 +140,7 @@ describe("tabs layout", () => {
   });
 
   it("Receipts: light status-bar icons over the green slip while focused, themed again on blur", async () => {
-    setClass("compact");
+    setLayout(LAYOUTS.phone);
     await renderApp();
     await screen.findByTestId("tab-bar");
     expect(setStatusBarStyle).toHaveBeenLastCalledWith("light");
@@ -136,21 +149,21 @@ describe("tabs layout", () => {
   });
 
   it("Receipts on compact with a receipt open keeps the themed icons (the detail pane is not green)", async () => {
-    setClass("compact");
+    setLayout(LAYOUTS.phone);
     await renderApp("/?selected=r1");
     await screen.findByTestId("tab-bar");
     expect(setStatusBarStyle).not.toHaveBeenCalledWith("light");
   });
 
   it("Receipts on wide layouts keeps the themed icons (the rail and detail pane are not green)", async () => {
-    setClass("expanded");
+    setLayout(LAYOUTS.duoLandscape);
     await renderApp();
     await screen.findByTestId("side-rail");
     expect(setStatusBarStyle).not.toHaveBeenCalledWith("light");
   });
 
   it("side rail has breathing room: top padding like the status area, 16 dp side margin, no double left inset", async () => {
-    setClass("expanded");
+    setLayout(LAYOUTS.duoLandscape);
     await renderApp();
     const rail = await screen.findByTestId("side-rail");
     const flat = StyleSheet.flatten(rail.props.style);

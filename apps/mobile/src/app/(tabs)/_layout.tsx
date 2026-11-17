@@ -1,26 +1,29 @@
 import { Tabs } from "expo-router/js-tabs";
 
+import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
 import { BottomTabs } from "@/layout/BottomTabBar";
 import { SideRail } from "@/layout/SideRail";
-import { useWindowClass } from "@/layout/useWindowClass";
+import { useLayout } from "@/layout/useLayout";
 
 /**
- * One Tabs navigator for every window class, so fold/unfold or rotation only swaps the bar
- * (bottom <-> left rail) and never remounts screens or loses the selected tab.
+ * One Tabs navigator for every layout, so fold/unfold or rotation only swaps the bar
+ * (bottom <-> left rail) and never remounts screens or loses the selected tab. The add sheet is
+ * owned here, above both bars.
  */
 export default function TabsLayout() {
-  const windowClass = useWindowClass();
-  const compact = windowClass === "compact";
+  const bar = useLayout().nav === "bar";
 
   return (
-    <Tabs
-      tabBar={(props) => (compact ? <BottomTabs {...props} /> : <SideRail {...props} />)}
-      screenOptions={{ headerShown: false, tabBarPosition: compact ? "bottom" : "left" }}
-    >
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="search" />
-      <Tabs.Screen name="folders" />
-      <Tabs.Screen name="settings" />
-    </Tabs>
+    <AddReceiptProvider>
+      <Tabs
+        tabBar={(props) => (bar ? <BottomTabs {...props} /> : <SideRail {...props} />)}
+        screenOptions={{ headerShown: false, tabBarPosition: bar ? "bottom" : "left" }}
+      >
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="search" />
+        <Tabs.Screen name="folders" />
+        <Tabs.Screen name="settings" />
+      </Tabs>
+    </AddReceiptProvider>
   );
 }

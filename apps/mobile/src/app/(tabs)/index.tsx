@@ -5,9 +5,11 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { BackupReminder } from "@/backup/BackupReminder";
-import { openReview, useAddReceipt } from "@/capture/useAddReceipt";
+import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
+import { openReview } from "@/capture/useAddReceipt";
 import { useDb } from "@/db/DatabaseProvider";
 import { listDraftIds } from "@/db/repositories/receipts";
+import { useLayout } from "@/layout/useLayout";
 import { useWindowClass } from "@/layout/useWindowClass";
 import { FeedEmpty } from "@/receipts/FeedEmpty";
 import { feedFabVisible } from "@/receipts/feedFab";
@@ -22,16 +24,16 @@ export default function ReceiptsScreen() {
   const db = useDb();
   const feedFilter = useMemo(() => ({}), []);
   const windowClass = useWindowClass();
+  const layout = useLayout();
   const { selected } = useLocalSearchParams<{ selected?: string }>();
-  // Wide layouts: the FAB opens the shared add sheet. Compact: the tab bar's + does.
-  const add = useAddReceipt();
+  const add = useAddReceiptContext();
   // Drafts left unreviewed (closed with "Review later", app killed mid-run) stay reachable.
   const [drafts, setDrafts] = useState<string[]>([]);
   useFocusEffect(useCallback(() => setDrafts(listDraftIds(db)), [db]));
   // Compact: the strip above the list is slip green, so its icons go light while Home is focused.
   // Wide layouts keep the themed icons: the rail and the detail pane under the bar are not green.
   // So does compact with a receipt open: the detail pane covers the list and the slip.
-  const greenTop = windowClass === "compact" && !selected;
+  const greenTop = layout.nav === "bar" && !selected;
   useFocusEffect(
     useCallback(() => {
       if (!greenTop) return;
@@ -101,7 +103,6 @@ export default function ReceiptsScreen() {
           <Text style={[styles.plus, { color: theme.colors.onPrimary }]}>+</Text>
         </Pressable>
       ) : null}
-      {add.sheet}
     </>
   );
 }
