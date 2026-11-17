@@ -5,6 +5,7 @@ import { PageSlip } from "@/components/PageSlip";
 import { PhoneShot } from "@/components/PhoneShot";
 import { PrivacyReceipt } from "@/components/PrivacyReceipt";
 import { StoreBadges } from "@/components/StoreBadges";
+import { TipJar } from "@/components/TipJar";
 import { hero } from "@/content/landing";
 import styles from "./page.module.css";
 
@@ -19,6 +20,7 @@ export default function HomePage() {
       <PrivacyReceipt />
       <Features />
       <Audiences />
+      <TipJar />
     </>
   );
 }
