@@ -1,3 +1,5 @@
+import { Audiences } from "@/components/Audiences";
+import { Features } from "@/components/Features";
 import { HowItWorks } from "@/components/HowItWorks";
 import { PageSlip } from "@/components/PageSlip";
 import { PhoneShot } from "@/components/PhoneShot";
@@ -15,6 +17,8 @@ export default function HomePage() {
       </PageSlip>
       <HowItWorks />
       <PrivacyReceipt />
+      <Features />
+      <Audiences />
     </>
   );
 }
