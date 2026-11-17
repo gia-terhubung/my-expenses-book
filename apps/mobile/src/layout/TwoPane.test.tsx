@@ -30,12 +30,12 @@ const primary = <Text>list</Text>;
 const secondary = <Text>detail</Text>;
 
 describe("TwoPane", () => {
-  it("open landscape (951 x 669, right 84): list pane is exactly 280 wide by flexBasis, no flex/maxWidth", async () => {
+  it("open landscape (951 x 669, right 84): list pane is exactly 280 wide by width (not flexBasis: RN 0.88 ignores a runtime flexBasis change, F1)", async () => {
     setDims(951, 669);
     mockInsets.right = 84;
     await render(<TwoPane primary={primary} secondary={secondary} />);
     const s = flatOf("pane-primary");
-    expect(s).toMatchObject({ flexGrow: 0, flexShrink: 0, flexBasis: 280, borderEndWidth: StyleSheet.hairlineWidth });
+    expect(s).toMatchObject({ flexGrow: 0, flexShrink: 0, flexBasis: "auto", width: 280, borderEndWidth: StyleSheet.hairlineWidth });
     expect(s.flex).toBeUndefined();
     expect(s.maxWidth).toBeUndefined();
   });
@@ -44,7 +44,7 @@ describe("TwoPane", () => {
     setDims(669, 951);
     const view = await render(<TwoPane primary={primary} secondary={null} />);
     const single = flatOf("pane-primary");
-    expect(single).toMatchObject({ flexGrow: 1, flexShrink: 0, flexBasis: 0, borderEndWidth: 0 });
+    expect(single).toMatchObject({ flexGrow: 0, flexShrink: 0, flexBasis: "auto", width: "100%", borderEndWidth: 0 });
     await view.unmount();
     setDims(951, 669);
     mockInsets.right = 84;
@@ -78,7 +78,7 @@ describe("TwoPane", () => {
   ])("width %i: list %i", async (w, list) => {
     setWidth(w);
     await render(<TwoPane primary={primary} secondary={secondary} />);
-    expect(flatOf("pane-primary").flexBasis).toBe(list);
+    expect(flatOf("pane-primary").width).toBe(list);
   });
 
   it("compact: shows only secondary when given", async () => {

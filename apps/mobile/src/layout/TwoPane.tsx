@@ -29,9 +29,12 @@ export function TwoPane({ primary, secondary }: Props) {
   const showSecondary = split || secondary != null;
 
   const primaryStyle = {
-    flexGrow: split ? 0 : 1,
+    // Width, not flexBasis: on RN 0.88 Fabric a runtime flexBasis change (0 -> listWidth on unfold)
+    // is not re-laid out and the list pane stays 0 wide (F1, seen on the iPhone Duo).
+    flexGrow: 0,
     flexShrink: 0,
-    flexBasis: split ? listWidth : 0,
+    flexBasis: "auto" as const,
+    width: split ? listWidth : ("100%" as const),
     borderEndWidth: split ? StyleSheet.hairlineWidth : 0,
     borderColor: theme.colors.border,
   };
