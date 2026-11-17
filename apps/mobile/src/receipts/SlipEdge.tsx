@@ -1,21 +1,21 @@
-import { useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 
 const TOOTH = 10;
 
 /**
  * Torn bottom edge of the slip: a row of page-coloured circles centred on the slip's bottom edge,
  * so each one bites a half circle out of it. Place it as the last child of the slip.
+ * The row is sized from the window width and clipped, not measured: on a rotation or unfold
+ * Fabric does not resend onLayout here, which left the edge half-drawn on the iPhone Duo.
  */
 export function SlipEdge({ color }: { color: string }) {
-  const [width, setWidth] = useState(0);
+  const { width } = useWindowDimensions();
   return (
     <View
       testID="slip-edge"
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
       pointerEvents="none"
-      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
       style={{
         position: "absolute",
         left: 0,
