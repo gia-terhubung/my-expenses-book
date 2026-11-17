@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, useWindowDimensions, Vi
 import { useReducedMotion } from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
-import type { TipId, TipJar, TipProduct } from "@/payments/types";
+import { TIP_IDS, type TipId, type TipJar } from "@/payments/types";
 import { FONTS } from "@/theme/fonts";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -28,16 +28,32 @@ const STACK_WIDTH = 340;
  * One cup on the counter. The whole column is the button: cup, counter segment, name, price, note.
  * Side by side the segments join into one counter line; stacked, each cup stands on its own shelf.
  */
-function Tier({ product, disabled, stacked, onPress }: { product: TipProduct; disabled: boolean; stacked: boolean; onPress: () => void }) {
+/** Shown in place of a price while the store is still answering. */
+const PRICE_PLACEHOLDER = "…";
+
+type TierProps = {
+  id: TipId;
+  /** The store's price text. Without one the tier is shown but can never be bought. */
+  price: string | null;
+  connecting: boolean;
+  busy: boolean;
+  stacked: boolean;
+  onPress: () => void;
+};
+
+function Tier({ id, price, connecting, busy, stacked, onPress }: TierProps) {
   const { t } = useTranslation();
   const theme = useTheme();
   const { colors, spacing, state } = theme;
   const art = TIP_ART[theme.scheme];
   const reduced = useReducedMotion();
   const [pressed, setPressed] = useState(false);
-  const tier = TIERS[product.id];
+  const tier = TIERS[id];
+  const disabled = busy || !price;
   const label = t(tier.label);
-  const tagged = product.id === "tip_coffee_generous";
+  // The yellow tag is for a real price only: never an empty or placeholder tag.
+  const tagged = id === "tip_coffee_generous" && !!price;
+  const priceText = price ?? (connecting ? PRICE_PLACEHOLDER : null);
   const down = pressed && !disabled;
   const align = stacked ? "flex-start" : "center";
   const textAlign = stacked ? "left" : "center";
@@ -45,7 +61,7 @@ function Tier({ product, disabled, stacked, onPress }: { product: TipProduct; di
   const stage = (
     <View style={stacked ? { width: 104 } : { alignSelf: "stretch" }}>
       <View style={{ height: CUP_STAGE_HEIGHT, justifyContent: "flex-end", alignItems: "center" }}>
-        <Cup id={product.id} lifted={down} still={reduced} />
+        <Cup id={id} lifted={down} still={reduced} />
       </View>
       <View style={{ height: 2, backgroundColor: art.line }} />
     </View>
@@ -62,24 +78,31 @@ function Tier({ product, disabled, stacked, onPress }: { product: TipProduct; di
       >
         {label}
       </Text>
-      <View
-        testID={`tip-price-${product.id}`}
-        style={[
-          { maxWidth: "100%" },
-          tagged
-            ? { backgroundColor: colors.highlight, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: theme.radius.sm, transform: [{ rotate: "-2deg" }] }
-            : null,
-        ]}
-      >
-        <Text
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.5}
-          style={[theme.type.label, theme.type.money, { color: tagged ? colors.onHighlight : colors.primary, fontWeight: "700", textAlign }]}
+      {priceText ? (
+        // Stretched, so the price has a definite width to shrink into (a wrap-content box can collapse it).
+        <View
+          testID={`tip-price-${id}`}
+          style={[
+            { alignSelf: "stretch" },
+            tagged
+              ? { maxWidth: 140, backgroundColor: colors.highlight, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: theme.radius.sm, transform: [{ rotate: "-2deg" }] }
+              : null,
+          ]}
         >
-          {product.displayPrice}
-        </Text>
-      </View>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+            style={[
+              theme.type.label,
+              theme.type.money,
+              { color: tagged ? colors.onHighlight : price ? colors.primary : colors.textMuted, fontWeight: "700", textAlign: tagged ? "center" : textAlign },
+            ]}
+          >
+            {priceText}
+          </Text>
+        </View>
+      ) : null}
       <Text style={[theme.type.caption, { color: colors.textMuted, textAlign }]}>{t(tier.note)}</Text>
     </View>
   );
@@ -87,7 +110,7 @@ function Tier({ product, disabled, stacked, onPress }: { product: TipProduct; di
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${label}, ${product.displayPrice}`}
+      accessibilityLabel={price ? `${label}, ${price}` : label}
       accessibilityHint={t(tier.note)}
       accessibilityState={{ disabled }}
       disabled={disabled}
@@ -149,6 +172,11 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
   const { colors, spacing } = theme;
   const { state, products, thanked, notice, buy, retry } = useTipJar(jar);
   const busy = state === "buying";
+  const connecting = state === "loading";
+  // Only a product the store priced is buyable. A store that answers with no products, or with products
+  // that carry no price text (sideloaded build, items not yet approved), counts as unavailable.
+  const prices = new Map(products.filter((p) => p.displayPrice?.trim()).map((p) => [p.id, p.displayPrice]));
+  const unavailable = state === "unavailable" || (state === "ready" && prices.size === 0);
   const { width, fontScale } = useWindowDimensions();
   const stacked = fontScale >= STACK_FONT_SCALE || width < STACK_WIDTH;
 
@@ -164,9 +192,9 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
             <Text style={[theme.type.body, { color: colors.text }]}>{t("tips.intro")}</Text>
           </View>
 
-          {state === "loading" ? <ActivityIndicator accessibilityLabel={t("tips.loading")} color={colors.primary} /> : null}
+          {connecting ? <ActivityIndicator accessibilityLabel={t("tips.loading")} color={colors.primary} /> : null}
 
-          {state === "unavailable" ? (
+          {unavailable ? (
             <View style={{ gap: spacing.md }}>
               <Text accessibilityLiveRegion="polite" style={[theme.type.body, { color: colors.textMuted }]}>
                 {t("tips.unavailable")}
@@ -175,13 +203,12 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
             </View>
           ) : null}
 
-          {state === "ready" || busy ? (
-            <View testID="tip-counter" style={stacked ? { flexDirection: "column", gap: spacing.xl } : { flexDirection: "row", alignItems: "flex-start" }}>
-              {products.map((p) => (
-                <Tier key={p.id} product={p} disabled={busy} stacked={stacked} onPress={() => buy(p.id)} />
-              ))}
-            </View>
-          ) : null}
+          {/* The cups always stand on the counter; what changes is whether they carry a price. */}
+          <View testID="tip-counter" style={stacked ? { flexDirection: "column", gap: spacing.xl } : { flexDirection: "row", alignItems: "flex-start" }}>
+            {TIP_IDS.map((id) => (
+              <Tier key={id} id={id} price={prices.get(id) ?? null} connecting={connecting} busy={busy} stacked={stacked} onPress={() => buy(id)} />
+            ))}
+          </View>
 
           <View accessibilityLiveRegion="polite" style={{ gap: spacing.md }}>
             {thanked ? <Notice kind="thanks" text={t("tips.thanks")} /> : null}

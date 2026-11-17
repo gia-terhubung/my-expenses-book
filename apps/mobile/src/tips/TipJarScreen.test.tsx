@@ -4,6 +4,7 @@ import { useReducedMotion } from "react-native-reanimated";
 
 import { initI18n } from "@/i18n";
 import { createFakeTipJar } from "@/payments/fakeTipJar";
+import type { TipProduct } from "@/payments/types";
 
 import { tokens } from "@/theme/tokens";
 
@@ -239,5 +240,74 @@ describe("TipJarScreen café counter", () => {
     await ready();
     expect(flat(screen.getByTestId("tip-counter")).flexDirection).toBe("column");
     expect(screen.getByText("Cappuccino").props.numberOfLines).toBeUndefined();
+  });
+});
+
+describe("TipJarScreen without store prices", () => {
+  const product = (id: (typeof IDS)[number], displayPrice: string) => ({ id, displayPrice, title: id }) as TipProduct;
+  const prices = () => screen.queryAllByTestId(/^tip-price-/);
+  const cups = () => IDS.map((id) => screen.getByTestId(`tip-cup-${id}`, hidden));
+  const NAMES = ["Espresso", "Black coffee", "Cappuccino"];
+
+  it.each([
+    ["no products", []],
+    ["products with blank prices", IDS.map((id) => product(id, " "))],
+  ])("%s: unavailable notice, cups shown but not buyable, no price tag at all", async (_name, products) => {
+    const jar = createFakeTipJar({ products });
+    await render(<TipJarScreen jar={jar} />);
+    expect(await screen.findByText(/Tips aren't available right now/)).toBeTruthy();
+    expect(screen.getByText("Try again")).toBeTruthy();
+    expect(cups()).toHaveLength(3);
+    expect(prices()).toHaveLength(0);
+    for (const n of NAMES) {
+      const tier = screen.getByRole("button", { name: n });
+      expect(tier.props.accessibilityLabel).toBe(n);
+      expect(tier.props.accessibilityState).toMatchObject({ disabled: true });
+      await fireEvent.press(tier);
+    }
+    expect(jar.bought).toEqual([]);
+  });
+
+  it("Try again reconnects from the blank-price state", async () => {
+    const jar = createFakeTipJar({ products: IDS.map((id) => product(id, "")) });
+    await render(<TipJarScreen jar={jar} />);
+    await fireEvent.press(await screen.findByText("Try again"));
+    expect(jar.connects).toBe(2);
+  });
+
+  it("a single tier the store did not price is shown without a price and cannot be bought", async () => {
+    const jar = createFakeTipJar({ products: [product("tip_coffee_small", "$2.99"), product("tip_coffee_generous", "")] });
+    await render(<TipJarScreen jar={jar} />);
+    await screen.findByLabelText("Espresso, $2.99");
+    expect(screen.queryByText(/Tips aren't available right now/)).toBeNull();
+    expect(prices()).toHaveLength(1);
+    expect(screen.queryByTestId("tip-price-tip_coffee_generous")).toBeNull();
+    for (const n of ["Black coffee", "Cappuccino"]) {
+      await fireEvent.press(screen.getByRole("button", { name: n }));
+      expect(screen.getByRole("button", { name: n }).props.accessibilityState).toMatchObject({ disabled: true });
+    }
+    expect(jar.bought).toEqual([]);
+  });
+
+  it("while connecting: cups with a muted placeholder price, no yellow tag, nothing buyable", async () => {
+    const jar = createFakeTipJar({ hangConnect: true });
+    await render(<TipJarScreen jar={jar} />);
+    expect(screen.getByLabelText("Loading tips…")).toBeTruthy();
+    expect(cups()).toHaveLength(3);
+    const placeholders = screen.getAllByText("…");
+    expect(placeholders).toHaveLength(3);
+    for (const p of placeholders) expect(flat(p).color).toBe(light.textMuted);
+    for (const id of IDS) expect(flat(screen.getByTestId(`tip-price-${id}`)).backgroundColor).toBeUndefined();
+    for (const n of NAMES) {
+      await fireEvent.press(screen.getByRole("button", { name: n }));
+      expect(screen.getByRole("button", { name: n }).props.accessibilityState).toMatchObject({ disabled: true });
+    }
+    expect(jar.bought).toEqual([]);
+  });
+
+  it("a price always has a definite width to shrink into", async () => {
+    await render(<TipJarScreen jar={createFakeTipJar()} />);
+    await screen.findByLabelText("Black coffee, $4.99");
+    for (const id of IDS) expect(flat(screen.getByTestId(`tip-price-${id}`)).alignSelf).toBe("stretch");
   });
 });
