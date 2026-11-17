@@ -47,6 +47,10 @@ Wait until the Domains page shows "Valid Configuration". Vercel then issues the 
 1. Terms reviewed (they are a draft).
 2. In `src/config/site.ts`, replace `COMPANY_ADDRESS` (registered address) and `COMPANY_CITY` (city of the registered domicile, for the District Court) with the real values.
 3. Screenshots captured, `npm run screenshots`, `ready: true` in `src/content/screenshots.ts`.
+   Five are done (2026-11-17). `tip-jar` waits for the real store: capture it from a TestFlight build
+   with sandbox prices once the three tips exist in App Store Connect (local StoreKit testing did not
+   load prices in the Xcode-launched dev build), save it as `screenshots-src/tip-jar.png`, run
+   `npm run screenshots` and set its `ready: true`.
 4. `STORE_LINKS` filled in `src/config/site.ts`. The official badge files are in `public/badges/` (`app-store.svg`, `google-play.png`); do not alter or grey them out.
 5. `npm run check:launch` passes. It fails while a placeholder, a "Coming soon" line, a null store link or a missing badge file remains.
 6. In the app, set `PRIVACY_POLICY_URL` in `apps/mobile/src/about/links.ts` to `https://meb.terhubung.app/privacy` and use the same URL in App Store Connect and Play Console (mobile work, not part of the website). `site/privacy/index.html` is superseded and stays in the repo.
