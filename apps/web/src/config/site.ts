@@ -10,6 +10,13 @@ export const SITE = {
 } as const;
 
 /**
+ * Placeholders the owner must replace before launch with the registered address and the city of
+ * the company's registered domicile. `npm run check:launch` fails while either is still here.
+ */
+export const COMPANY_ADDRESS = "COMPANY_ADDRESS";
+export const COMPANY_CITY = "COMPANY_CITY";
+
+/**
  * Store listing URLs. `null` means "not launched yet": the site then shows a
  * plain "Coming soon" text line and no badge (the official badges may not be
  * greyed out or altered). At launch, replace each `null` with the listing URL
@@ -23,5 +30,5 @@ export const STORE_LINKS: { appStore: string | null; googlePlay: string | null }
 /** Official badge artwork, supplied by the owner. Required once the matching STORE_LINKS entry is set. */
 export const STORE_BADGE_FILES = {
   appStore: "/badges/app-store.svg",
-  googlePlay: "/badges/google-play.svg",
+  googlePlay: "/badges/google-play.png",
 } as const;

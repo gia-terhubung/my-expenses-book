@@ -1,4 +1,4 @@
-import { SITE } from "@/config/site";
+import { COMPANY_ADDRESS, COMPANY_CITY, SITE } from "@/config/site";
 import type { LegalDoc } from "./legal-types";
 
 /**
@@ -108,6 +108,7 @@ export const terms: LegalDoc = {
         {
           type: "ul",
           items: [
+            `**Who we are.** The developer of the app is ${SITE.legalEntity}, ${COMPANY_ADDRESS}, ${SITE.country}.`,
             "**Who the agreement is with.** These terms are between you and us only, not Apple. We, not Apple, are solely responsible for the app and its content.",
             "**Scope of the licence.** Your licence is limited to using the app on Apple-branded products that you own or control, as permitted by the Usage Rules in the Apple Media Services Terms and Conditions. The app may also be used by other accounts linked to yours through Family Sharing or volume purchasing.",
             "**Maintenance and support.** We are solely responsible for any maintenance and support of the app. Apple has no obligation to provide maintenance or support for it.",
@@ -140,7 +141,7 @@ export const terms: LegalDoc = {
         },
         {
           type: "p",
-          text: "As far as the law allows, our total liability to you for all claims about the app is limited to the larger of two amounts: the total of the tips you gave in the 12 months before the claim, or IDR 100,000.",
+          text: "To the extent permitted by applicable law, our total liability to you for all claims about the app is limited to the larger of two amounts: the total of the tips you gave in the 12 months before the claim, or IDR 100,000.",
         },
         {
           type: "p",
@@ -174,7 +175,7 @@ export const terms: LegalDoc = {
       blocks: [
         {
           type: "p",
-          text: "These terms are governed by the laws of the Republic of Indonesia. We will first try to settle any dispute with you by talking it through in good faith. If that fails, the dispute goes to the competent courts of the Republic of Indonesia. Consumer protection rules of the country where you live that cannot be waived still apply to you.",
+          text: `These terms are governed by the laws of the Republic of Indonesia. We will first try to settle any dispute with you by talking it through in good faith. If that fails, the dispute is handled by the courts of the Republic of Indonesia, specifically the District Court (Pengadilan Negeri) of the place where the company is registered: ${COMPANY_CITY}. Consumer protection rules of the country where you live that cannot be waived still apply to you.`,
         },
         {
           type: "p",
@@ -188,7 +189,7 @@ export const terms: LegalDoc = {
       blocks: [
         {
           type: "p",
-          text: `${SITE.legalEntity}, ${SITE.country}. Questions, complaints and claims about the app: [${SITE.contactEmail}](mailto:${SITE.contactEmail}).`,
+          text: `${SITE.legalEntity}, ${COMPANY_ADDRESS}, ${SITE.country}. Questions, complaints and claims about the app: [${SITE.contactEmail}](mailto:${SITE.contactEmail}).`,
         },
       ],
     },
