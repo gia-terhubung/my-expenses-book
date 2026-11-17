@@ -9,6 +9,8 @@ import styles from "./PageSlip.module.css";
  * - `lead`: optional paragraph under the title.
  * - `children`: optional extra content inside the slip, below the lead
  *   (the landing page puts the store badges here).
+ * - `overhang`: when true the `aside` hangs below the torn edge and plays the
+ *   one-time "print" animation.
  * - `aside`: optional second column on wide screens (the landing page puts
  *   the hero screenshot here). Below 900px it stacks under the text.
  */
@@ -17,14 +19,16 @@ export function PageSlip({
   lead,
   children,
   aside,
+  overhang = false,
 }: {
   title: string;
   lead?: string;
   children?: ReactNode;
   aside?: ReactNode;
+  overhang?: boolean;
 }) {
   return (
-    <section className={`slip slip-torn ${styles.slip}`}>
+    <section className={`slip slip-torn ${styles.slip}${overhang ? ` ${styles.overhang}` : ""}`}>
       <div className={`container ${aside ? styles.split : ""}`}>
         <div className={styles.text}>
           <h1>{title}</h1>

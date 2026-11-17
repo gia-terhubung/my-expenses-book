@@ -1,7 +1,14 @@
 import { PageSlip } from "@/components/PageSlip";
+import { PhoneShot } from "@/components/PhoneShot";
+import { StoreBadges } from "@/components/StoreBadges";
 import { hero } from "@/content/landing";
+import styles from "./page.module.css";
 
-/** Scaffold stub: the hero slip only. Plan tasks 2 to 8 add the store badges, screenshot and sections. */
 export default function HomePage() {
-  return <PageSlip title={hero.title} lead={hero.lead} />;
+  return (
+    <PageSlip title={hero.title} lead={hero.lead} overhang aside={<PhoneShot id={hero.shot} eager />}>
+      <StoreBadges />
+      <p className={`small slip-muted ${styles.note}`}>{hero.note}</p>
+    </PageSlip>
+  );
 }
