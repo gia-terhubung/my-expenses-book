@@ -4,7 +4,7 @@ import { createFolder } from "@/db/repositories/folders";
 import { createReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb, NewReceiptInput } from "@/db/types";
-import { initI18n } from "@/i18n";
+import { i18n, initI18n } from "@/i18n";
 import { formatMoney } from "@/money/money";
 
 import { StatsScreen } from "./StatsScreen";
@@ -138,6 +138,36 @@ describe("StatsScreen", () => {
     seed("Only Shop", "2026-11-02", 50000);
     await render(<StatsScreen now={now} />);
     expect(screen.getByTestId("stats-count")).toHaveTextContent("1 receipt");
+  });
+
+  it("bar labels are compact on a runtime that ignores Intl compact notation (Hermes)", async () => {
+    seed("Big Month", "2026-11-02", 1205389900);
+    seed("Big Year", "2026-04-02", 1205389900);
+    const Real = Intl.NumberFormat;
+    // Hermes accepts `notation: "compact"`, echoes it in resolvedOptions, and prints the full amount.
+    const spy = jest.spyOn(Intl, "NumberFormat").mockImplementation(((locale: string, opts?: Intl.NumberFormatOptions) => {
+      if (!opts?.notation) return new Real(locale, opts);
+      const full = new Real(locale, { ...opts, notation: undefined });
+      return {
+        format: (n: number) => full.format(n),
+        formatToParts: (n: number) => full.formatToParts(n),
+        resolvedOptions: () => ({ ...full.resolvedOptions(), notation: opts.notation }),
+      };
+    }) as unknown as typeof Intl.NumberFormat);
+    i18n.changeLanguage("id");
+    try {
+      await render(<StatsScreen now={now} />);
+      const month = screen.getByTestId("month-bar-2026-11");
+      expect(month).toHaveTextContent(/Rp 12,1 jt/);
+      expect(month).not.toHaveTextContent(/12\.053\.899|,6/);
+      await fireEvent.press(screen.getByRole("tab", { name: "Tahun pajak" }));
+      const year = screen.getByTestId("month-bar-2026-04");
+      expect(year).toHaveTextContent(/^12,1 jt/);
+      expect(year).not.toHaveTextContent(/Rp|12\.053\.899|,6/);
+    } finally {
+      i18n.changeLanguage("en");
+      spy.mockRestore();
+    }
   });
 
   it("pace line hidden when last month has no converted total", async () => {

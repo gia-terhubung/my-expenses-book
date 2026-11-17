@@ -28,7 +28,7 @@ import { slipAmountText } from "@/receipts/slipAmount";
 import { taxYearLabel, taxYearOf, taxYearRange } from "@/taxYear/taxYear";
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { compactAmount } from "./compactAmount";
+import { compactAmount, currencySymbol } from "./compactAmount";
 import { MonthBars, type MonthBar } from "./MonthBars";
 import { lastMonths, pacePercent, pacePeriods, taxYearMonths, taxYearPacePeriods } from "./stats";
 
@@ -49,9 +49,7 @@ function formatDate(local: string, locale: string, opts: Intl.DateTimeFormatOpti
 
 /** Compact amount without the currency symbol, for the narrow 12-month columns ("31,3 jt"). */
 function bareCompact(minor: number, currency: string, locale: string): string {
-  const symbol =
-    new Intl.NumberFormat(locale, { style: "currency", currency }).formatToParts(0).find((p) => p.type === "currency")?.value ?? currency;
-  return compactAmount(minor, currency, locale).replace(symbol, "").trim();
+  return compactAmount(minor, currency, locale).replace(currencySymbol(locale, currency), "").trim();
 }
 
 /**

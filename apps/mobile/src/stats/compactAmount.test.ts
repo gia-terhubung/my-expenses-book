@@ -34,4 +34,25 @@ describe("compactAmount", () => {
       spy.mockRestore();
     }
   });
+
+  it("falls back when Intl accepts compact notation but prints the full amount (Hermes)", () => {
+    const Real = Intl.NumberFormat;
+    const spy = jest.spyOn(Intl, "NumberFormat").mockImplementation(((locale: string, opts?: Intl.NumberFormatOptions) => {
+      if (!opts?.notation) return new Real(locale, opts);
+      const full = new Real(locale, { ...opts, notation: undefined });
+      return {
+        format: (n: number) => full.format(n),
+        formatToParts: (n: number) => full.formatToParts(n),
+        resolvedOptions: () => ({ ...full.resolvedOptions(), notation: opts.notation }),
+      };
+    }) as unknown as typeof Intl.NumberFormat);
+    try {
+      jest.isolateModules(() => {
+        const { compactAmount: fresh } = jest.requireActual<typeof import("./compactAmount")>("./compactAmount");
+        expect(fresh(1_205_389_900, "IDR", "id")).toBe("Rp 12,1 jt");
+      });
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });

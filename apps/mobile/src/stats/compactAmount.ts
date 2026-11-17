@@ -20,8 +20,9 @@ function compactFormat(locale: string, currency: string): Intl.NumberFormat | nu
   let fmt: Intl.NumberFormat | null;
   try {
     fmt = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1, style: "currency", currency });
-    // Some engines accept the option but ignore it and print the full amount.
-    if (fmt.resolvedOptions().notation !== "compact") fmt = null;
+    // Some engines (Hermes) accept the option, may even echo it in resolvedOptions, and still print
+    // the full amount: probe the output too. The full 1,234,567 has 7 digits; compact has far fewer.
+    if (fmt.resolvedOptions().notation !== "compact" || fmt.format(1234567).replace(/\D/g, "").length >= 7) fmt = null;
   } catch {
     fmt = null;
   }
@@ -29,9 +30,18 @@ function compactFormat(locale: string, currency: string): Intl.NumberFormat | nu
   return fmt;
 }
 
-function currencySymbol(locale: string, currency: string): string {
-  const part = new Intl.NumberFormat(locale, { style: "currency", currency }).formatToParts(0).find((p) => p.type === "currency");
-  return part?.value ?? currency;
+const symbols = new Map<string, string>();
+
+/** The currency's symbol in this locale ("Rp", "$", "R$"), cached per locale and currency. */
+export function currencySymbol(locale: string, currency: string): string {
+  const key = `${locale}|${currency}`;
+  let symbol = symbols.get(key);
+  if (symbol === undefined) {
+    const part = new Intl.NumberFormat(locale, { style: "currency", currency }).formatToParts(0).find((p) => p.type === "currency");
+    symbol = part?.value ?? currency;
+    symbols.set(key, symbol);
+  }
+  return symbol;
 }
 
 /** Hand-rolled compact form for runtimes without Intl compact notation: "Rp 31,3 jt", "$ 12.4 K". */
