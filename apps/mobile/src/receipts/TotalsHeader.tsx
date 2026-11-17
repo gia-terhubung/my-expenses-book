@@ -8,6 +8,7 @@ import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import { listCategories } from "@/db/repositories/categories";
 import { sumHome, totalsByCategory, type HomeTotal } from "@/db/repositories/receiptQueries";
+import { useLayout } from "@/layout/useLayout";
 import { categoryLabel } from "@/organize/categoryLabel";
 import { categoryStrip, pacePercent, pacePeriods } from "@/stats/stats";
 import { usePref } from "@/prefs/PrefsProvider";
@@ -38,12 +39,14 @@ function splitPrefix(text: string): [string, string, string] | null {
 
 /**
  * The Ledger slip: "This month" and "Tax year" home-currency totals, by the device's local date,
- * on a green till slip with a torn bottom edge.
+ * on a green till slip with a torn bottom edge. In a short window (height < 480, the closed Duo
+ * sideways) it is one row: "This month" and "See statistics ›".
  */
 export function TotalsHeader() {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
+  const { short } = useLayout();
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
@@ -159,9 +162,18 @@ export function TotalsHeader() {
     >
       <View style={{ flexDirection: "row", gap: spacing.lg }}>
         {cell("month", t("totals.thisMonth"), month, true)}
-        {cell("year", t("totals.taxYear", { label: taxYearLabel(ty, startMonth) }), year, false)}
+        {short ? (
+          <View testID="slip-short-stats" style={{ alignItems: "flex-end", justifyContent: "flex-end", flexShrink: 1, gap: spacing.xs }}>
+            {stats.unconverted > 0 ? (
+              <Text style={[type.body, { color: colors.slipText }]}>{notConverted(stats.unconverted)}</Text>
+            ) : null}
+            <Text style={[type.body, { color: colors.highlight, fontFamily: FONTS.bold }]}>{`${t("stats.openStats")} ›`}</Text>
+          </View>
+        ) : (
+          cell("year", t("totals.taxYear", { label: taxYearLabel(ty, startMonth) }), year, false)
+        )}
       </View>
-      {pct !== null ? (
+      {short ? null : pct !== null ? (
         <Text testID="slip-pace" style={[type.body, { color: colors.slipMuted, marginTop: spacing.sm }]}>
           <Text testID="slip-pace-pct" style={{ color: colors.highlight, fontFamily: FONTS.bold }}>
             {paceHead}
@@ -169,7 +181,7 @@ export function TotalsHeader() {
           {paceText.startsWith(paceHead) ? paceText.slice(paceHead.length) : ` ${paceText}`}
         </Text>
       ) : null}
-      {segments.length > 0 ? (
+      {!short && segments.length > 0 ? (
         <>
           <View
             style={{ flexDirection: "row", gap: 2, height: 8, borderRadius: 4, overflow: "hidden", marginTop: spacing.md }}
@@ -196,25 +208,27 @@ export function TotalsHeader() {
           </View>
         </>
       ) : null}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: spacing.md,
-          marginTop: spacing.md,
-          minHeight: 44,
-          borderTopWidth: 1,
-          borderStyle: "dashed",
-          borderColor: colors.slipMuted,
-        }}
-      >
-        {/* The only visible "not converted" note on the slip (owner, check-in 4); totals keep it in their labels. */}
-        {stats.unconverted > 0 ? (
-          <Text style={[type.body, { color: colors.slipText, flexShrink: 1 }]}>{notConverted(stats.unconverted)}</Text>
-        ) : null}
-        <Text style={[type.body, { color: colors.highlight, fontFamily: FONTS.bold, marginLeft: "auto" }]}>{`${t("stats.openStats")} ›`}</Text>
-      </View>
+      {short ? null : (
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: spacing.md,
+            marginTop: spacing.md,
+            minHeight: 44,
+            borderTopWidth: 1,
+            borderStyle: "dashed",
+            borderColor: colors.slipMuted,
+          }}
+        >
+          {/* The only visible "not converted" note on the slip (owner, check-in 4); totals keep it in their labels. */}
+          {stats.unconverted > 0 ? (
+            <Text style={[type.body, { color: colors.slipText, flexShrink: 1 }]}>{notConverted(stats.unconverted)}</Text>
+          ) : null}
+          <Text style={[type.body, { color: colors.highlight, fontFamily: FONTS.bold, marginLeft: "auto" }]}>{`${t("stats.openStats")} ›`}</Text>
+        </View>
+      )}
       <SlipEdge color={colors.background} />
     </Pressable>
   );

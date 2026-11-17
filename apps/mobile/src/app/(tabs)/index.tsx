@@ -21,16 +21,16 @@ export default function ReceiptsScreen() {
   const theme = useTheme();
   const db = useDb();
   const feedFilter = useMemo(() => ({}), []);
-  const layout = useLayout();
+  const { split } = useLayout();
   const { selected } = useLocalSearchParams<{ selected?: string }>();
   const add = useAddReceiptContext();
   // Drafts left unreviewed (closed with "Review later", app killed mid-run) stay reachable.
   const [drafts, setDrafts] = useState<string[]>([]);
   useFocusEffect(useCallback(() => setDrafts(listDraftIds(db)), [db]));
-  // Compact: the strip above the list is slip green, so its icons go light while Home is focused.
-  // Wide layouts keep the themed icons: the rail and the detail pane under the bar are not green.
-  // So does compact with a receipt open: the detail pane covers the list and the slip.
-  const greenTop = layout.nav === "bar" && !selected;
+  // The strip above the list is slip green (bar, or a single pane beside a rail), so its icons go
+  // light while Home is focused. Split layouts keep the themed icons: the rail and the detail pane
+  // under the bar are not green. So does a single pane with a receipt open: the detail covers the slip.
+  const greenTop = !split && !selected;
   useFocusEffect(
     useCallback(() => {
       if (!greenTop) return;

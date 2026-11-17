@@ -5,6 +5,9 @@ import { createReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb } from "@/db/types";
 import { initI18n, setLanguage } from "@/i18n";
+import { listCategories } from "@/db/repositories/categories";
+import { layoutFor, type Layout } from "@/layout/layout";
+import { LAYOUTS } from "@/layout/testing/layouts";
 import { formatMoney } from "@/money/money";
 import { lightColors } from "@/theme/tokens";
 
@@ -18,6 +21,9 @@ jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 jest.mock("@/prefs/PrefsProvider", () => ({
   usePref: (k: string) => ({ homeCurrency: "IDR", taxYearStartMonth: 1 })[k],
 }));
+
+let mockLayout: Layout = LAYOUTS.phone;
+jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
 
 function seed(totalMinor: number, currency: string, amountHomeMinor: number | null) {
   const local = formatLocal(new Date(), deviceTimeZone());
@@ -42,6 +48,7 @@ beforeAll(() => initI18n("en"));
 beforeEach(() => {
   mockDb = testDb();
   mockPush.mockClear();
+  mockLayout = LAYOUTS.phone;
 });
 
 /** A receipt on a fixed local day, optionally in a category; home amount in IDR. */
@@ -197,5 +204,55 @@ describe("TotalsHeader (Ledger slip)", () => {
     expect(screen.getByTestId("slip-total-bar")).toHaveStyle({ height: 4, backgroundColor: lightColors.highlight });
     expect(screen.getAllByTestId("slip-total-bar")).toHaveLength(1);
     expect(screen.getByTestId("slip-edge", { includeHiddenElements: true })).toBeTruthy();
+  });
+});
+
+describe("TotalsHeader short window (height < 480)", () => {
+  /** Data that makes the full slip show pace, strip and legend. */
+  function seedFull() {
+    fixToday("2026-11-16T05:00:00Z");
+    const cat = listCategories(mockDb)[0].id;
+    seedOn("2026-10-10", 1_000_000, cat);
+    seedOn("2026-11-05", 1_120_000, cat);
+  }
+
+  it("one row: this month and See statistics; no tax year, pace, strip, legend or foot row", async () => {
+    seedFull();
+    mockLayout = LAYOUTS.duoSideways;
+    await render(<TotalsHeader />);
+    expect(screen.getByTestId("slip-cell-month")).toBeTruthy();
+    const amount = screen.getByTestId("slip-amount-month");
+    expect(amount.props.numberOfLines).toBe(1);
+    expect(amount.props.adjustsFontSizeToFit).toBe(true);
+    expect(within(screen.getByTestId("slip-short-stats")).getByText("See statistics ›")).toBeTruthy();
+    for (const id of ["slip-cell-year", "slip-pace", "slip-strip-seg-0", "slip-legend"]) {
+      expect(screen.queryByTestId(id)).toBeNull();
+    }
+    expect(screen.getAllByText("See statistics ›")).toHaveLength(1);
+  });
+
+  it("short window keeps the not-converted note visible", async () => {
+    seedOn(formatLocal(new Date(), deviceTimeZone()).slice(0, 10), 400);
+    seed(1_000, "USD", null);
+    mockLayout = LAYOUTS.duoSideways;
+    await render(<TotalsHeader />);
+    expect(within(screen.getByTestId("slip-short-stats")).getByText("1 not converted")).toBeTruthy();
+  });
+
+  it("short window keeps the full accessibility label", async () => {
+    seedFull();
+    await render(<TotalsHeader />);
+    const full = screen.getByTestId("totals-slip").props.accessibilityLabel;
+    await screen.unmount();
+    mockLayout = LAYOUTS.duoSideways;
+    await render(<TotalsHeader />);
+    expect(screen.getByTestId("totals-slip").props.accessibilityLabel).toBe(full);
+  });
+
+  it("height 480 is the full slip", async () => {
+    mockLayout = layoutFor({ width: 360, height: 480, left: 0, right: 0 });
+    await render(<TotalsHeader />);
+    expect(screen.getByTestId("slip-cell-year")).toBeTruthy();
+    expect(screen.queryByTestId("slip-short-stats")).toBeNull();
   });
 });

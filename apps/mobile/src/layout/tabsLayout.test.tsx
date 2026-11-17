@@ -6,6 +6,7 @@ import { useSyncExternalStore } from "react";
 
 import { testDb } from "@/db/testing/testDb";
 import { initI18n } from "@/i18n";
+import { tokens } from "@/theme/tokens";
 import type { Layout } from "@/layout/layout";
 import { LAYOUTS } from "@/layout/testing/layouts";
 import { useLayout } from "@/layout/useLayout";
@@ -178,6 +179,23 @@ describe("tabs layout", () => {
   it("Receipts on wide layouts keeps the themed icons (the rail and detail pane are not green)", async () => {
     setLayout(LAYOUTS.duoLandscape);
     await renderApp();
+    await screen.findByTestId("side-rail");
+    expect(setStatusBarStyle).not.toHaveBeenCalledWith("light");
+  });
+
+  it("open portrait (icon rail, one pane): light status icons over the green band", async () => {
+    setLayout(LAYOUTS.duoPortrait);
+    await renderApp();
+    await screen.findByTestId("side-rail");
+    expect(setStatusBarStyle).toHaveBeenLastCalledWith("light");
+    expect(StyleSheet.flatten(screen.getAllByTestId("status-bar-inset")[0].props.style).backgroundColor).toBe(
+      tokens.light.colors.slip,
+    );
+  });
+
+  it("open portrait with a receipt open keeps the themed icons", async () => {
+    setLayout(LAYOUTS.duoPortrait);
+    await renderApp("/?selected=r1");
     await screen.findByTestId("side-rail");
     expect(setStatusBarStyle).not.toHaveBeenCalledWith("light");
   });
