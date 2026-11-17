@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Raw simulator captures (4 MB each); the committed webp files are generated from them.
+/screenshots-src/

@@ -5,7 +5,9 @@ import { PhoneShot } from "./PhoneShot";
 
 describe("PhoneShot", () => {
   it("draws a marked placeholder while the screenshot is not ready", () => {
-    const { container } = render(<PhoneShot id="home-slip" />);
+    // Explicit shots table: the real one marks home-slip ready once its screenshot is committed.
+    const shots = { ...SHOTS, "home-slip": { ...SHOTS["home-slip"], ready: false } };
+    const { container } = render(<PhoneShot id="home-slip" shots={shots} />);
     const placeholder = screen.getByRole("img", { name: "Screenshot placeholder: Home" });
     expect(placeholder).toHaveAttribute("data-placeholder", "home-slip");
     expect(placeholder).toHaveTextContent("Screenshot placeholder");
