@@ -82,6 +82,11 @@ describe("SideRail", () => {
     expect(flat(tab.children[0] as never).fontSize).toBe(22);
   });
 
+  it("labels: each tab meets the 48 dp touch target", async () => {
+    await renderRail("labels");
+    for (const tab of screen.getAllByRole("tab")) expect(flat(tab).minHeight).toBeGreaterThanOrEqual(48);
+  });
+
   it.each(["icons", "labels"] as const)("%s: round + (56) labelled Tambah struk opens the add sheet", async (variant) => {
     await renderRail(variant);
     const add = screen.getByTestId("rail-add");

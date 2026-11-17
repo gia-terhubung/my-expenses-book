@@ -62,7 +62,7 @@ export function SideRail({ state, navigateToTab, variant }: BottomTabBarProps & 
                 marginHorizontal: icons ? theme.spacing.sm : theme.spacing.lg,
                 ...(icons
                   ? { paddingHorizontal: theme.spacing.xs, paddingVertical: theme.spacing.sm }
-                  : { padding: theme.spacing.md, gap: theme.spacing.md }),
+                  : { padding: theme.spacing.md, gap: theme.spacing.md, minHeight: theme.size.touch }),
               },
             ]}
           >
