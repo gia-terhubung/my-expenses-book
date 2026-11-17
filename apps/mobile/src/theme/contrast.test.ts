@@ -41,6 +41,10 @@ const PAIRS: [keyof ColorTokens, keyof ColorTokens, number][] = [
   ["onHighlight", "highlight", 4.5],
   // Yellow is a foreground on the green slip (pace line, "see statistics", total bar).
   ["highlight", "slip", 4.5],
+  // Tip jar: soft yellow backdrop discs drift behind the intro, the unavailable copy and "Try again".
+  ["text", "brassFill", 4.5],
+  ["textMuted", "brassFill", 4.5],
+  ["primary", "brassFill", 4.5],
 ];
 
 describe.each([

@@ -127,6 +127,9 @@ Rules: never yellow text or yellow icons on light backgrounds (1.26:1 on #F2F5F1
 light background (fails 3:1 for non-text); actions stay green; yellow means "the number that matters" (on the slip)
 or "waiting on you" (drafts, unconverted). Contrast: yellow on slip 5.63:1 light, 8.45:1 dark.
 
+Rule change (owner, 2026-11-17): a yellow FILL with ink text (`onHighlight`, 12.07:1) is also allowed for one
+"support the app" accent: the Kotak tip row in Settings and the tip screen's cup marks. Still never yellow text.
+
 App icon: generate from `meb-long-page.svg`: Android adaptive (foreground inside the 66% safe zone, yellow
 background layer, monochrome themed icon from the mono SVG), iOS 1024 opaque (art scaled up, not cropped), splash
 icon and favicon-free (no web build). Wire through `app.config.ts` (`icon`, `android.adaptiveIcon`, iOS icon).

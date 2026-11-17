@@ -53,4 +53,19 @@ describe("Card", () => {
     await fireEvent(screen.getByRole("button", { name: "Open" }), "responderGrant", { nativeEvent: { touches: [] }, persist() {} });
     expect(flat(screen.getByRole("button", { name: "Open" })).backgroundColor).toBe(light.surfacePressed);
   });
+
+  it("highlight tone: yellow fill and ring, dims instead of going grey when pressed", async () => {
+    await render(
+      <Card testID="card" tone="highlight" onPress={() => {}}>
+        <Text>Hi</Text>
+      </Card>,
+    );
+    const node = screen.getByTestId("card");
+    expect(flat(node)).toMatchObject({ backgroundColor: light.highlight, borderColor: light.highlight });
+    await fireEvent(node, "responderGrant", { nativeEvent: { touches: [] }, persist() {} });
+    const pressed = flat(screen.getByTestId("card"));
+    expect(pressed.backgroundColor).toBe(light.highlight);
+    expect(pressed.opacity).toBeLessThan(1);
+  });
 });
+

@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { getLocales } from "expo-localization";
 import Constants from "expo-constants";
 import { Link, router, useFocusEffect, type Href } from "expo-router";
@@ -50,6 +51,23 @@ function Row({ label, value, onPress }: { label: string; value: string; onPress:
           ›
         </Text>
       )}
+    </Card>
+  );
+}
+
+/** The one highlighted row: yellow fill with ink text (12:1), never yellow text. */
+function TipRow({ label, onPress }: { label: string; onPress: () => void }) {
+  const theme = useTheme();
+  const ink = theme.colors.onHighlight;
+  return (
+    <Card tone="highlight" accessibilityLabel={label} onPress={onPress}>
+      <View testID="settings-tip-icon" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <Ionicons name="cafe" size={22} color={ink} />
+      </View>
+      <Text style={[theme.type.label, { color: ink, flex: 1 }]}>{label}</Text>
+      <Text accessibilityElementsHidden importantForAccessibility="no" style={[theme.type.body, { color: ink }]}>
+        ›
+      </Text>
     </Card>
   );
 }
@@ -172,7 +190,7 @@ export default function SettingsScreen() {
           />
 
           <GroupTitle title={t("settings.support")} />
-          <Row label={t("settings.tipJar")} value="" onPress={() => router.push("/tip-jar" as unknown as Href)} />
+          <TipRow label={t("settings.tipJar")} onPress={() => router.push("/tip-jar" as unknown as Href)} />
           <Row label={t("settings.errorLog")} value="" onPress={() => router.push("/error-log" as unknown as Href)} />
 
           <GroupTitle title={t("about.title")} />
