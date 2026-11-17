@@ -105,7 +105,16 @@ export function CaptureSheet({
       statusBarTranslucent
       navigationBarTranslucent
     >
-      <Pressable accessibilityRole="button" accessibilityLabel={t("common.cancel")} style={styles.backdrop} onPress={onClose} />
+      {/* Backdrop fills the window behind the sheet: with the centred card on wide screens the
+          strips beside it must dim too, not only the area above it. */}
+      <View testID="capture-sheet-root" style={styles.root}>
+      <Pressable
+        testID="capture-backdrop"
+        accessibilityRole="button"
+        accessibilityLabel={t("common.cancel")}
+        style={styles.backdrop}
+        onPress={onClose}
+      />
       <View testID="capture-sheet-frame" style={{ paddingLeft: side.left, paddingRight: side.right }}>
         <View
           testID="capture-sheet"
@@ -138,11 +147,13 @@ export function CaptureSheet({
           </Pressable>
         </View>
       </View>
+      </View>
     </AppModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)" },
+  root: { flex: 1, justifyContent: "flex-end" },
+  backdrop: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)" },
   option: { minHeight: 52, justifyContent: "center" },
 });

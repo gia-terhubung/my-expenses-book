@@ -72,4 +72,11 @@ describe("CaptureSheet", () => {
     await renderSheet(600, 800);
     expect(flat(screen.getByTestId("capture-sheet")).maxWidth).toBe(480);
   });
+
+  it("backdrop dims the whole window behind the card, not only the strip above it", async () => {
+    await renderSheet(951, 669, 84);
+    const backdrop = screen.getByTestId("capture-backdrop");
+    expect(flat(backdrop)).toMatchObject({ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 });
+    expect(flat(screen.getByTestId("capture-sheet-root"))).toMatchObject({ flex: 1, justifyContent: "flex-end" });
+  });
 });
