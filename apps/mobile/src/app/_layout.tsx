@@ -11,6 +11,7 @@ import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { ImageStoreProvider } from "@/images/ImageStoreProvider";
 import { initI18n } from "@/i18n";
 import { resolveLanguage } from "@/i18n/resolve";
+import { SideSafeArea } from "@/layout/SideSafeArea";
 import { rootStackOptions } from "@/layout/stackOptions";
 import { useFx } from "@/fx/useFx";
 import { LockGate } from "@/lock/LockGate";
@@ -70,15 +71,17 @@ export default function RootLayout() {
             <ThemedStatusBar />
             <FxSync />
             <LockGate>
-              <Stack screenOptions={rootStackOptions(t)}>
-                <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
-                {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
-                <Stack.Screen name="(modals)" options={{ presentation: "modal" }} />
-                <Stack.Screen
-                  name="lock"
-                  options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }}
-                />
-              </Stack>
+              <SideSafeArea>
+                <Stack screenOptions={rootStackOptions(t)}>
+                  <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
+                  {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
+                  <Stack.Screen name="(modals)" options={{ presentation: "modal" }} />
+                  <Stack.Screen
+                    name="lock"
+                    options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }}
+                  />
+                </Stack>
+              </SideSafeArea>
               <OnboardingRedirect />
             </LockGate>
           </PrefsProvider>
