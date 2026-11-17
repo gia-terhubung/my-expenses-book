@@ -145,7 +145,6 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
       value: minor > 0 ? (mode === "month" ? compactAmount(minor, home, locale) : bareCompact(minor, home, locale)) : mode === "month" ? "–" : " ",
       accessibilityLabel: `${monthLabel(m, locale)}, ${money(minor)}`,
       current: m === curMonth,
-      sub: m === curMonth ? t("stats.toDay", { day: dayNum }) : undefined,
       gapAtMinor: mode === "month" && m === data.pace.previousMonth ? data.pacePrev : undefined,
     };
   });

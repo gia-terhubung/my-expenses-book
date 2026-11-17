@@ -87,9 +87,10 @@ describe("StatsScreen", () => {
     expect(bars).toEqual(["2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11"].map((m) => `month-bar-${m}`));
     // The gap on October marks the compared day.
     expect(screen.getByTestId("month-bar-gap-2026-10")).toBeTruthy();
-    // Only the running month is marked "to <day>".
-    expect(screen.getAllByText("to 16")).toHaveLength(1);
-    expect(screen.getByTestId("month-bar-2026-11")).toHaveTextContent(/to 16/);
+    // Bars carry only the month name (owner: a "to 16" line lifted the running bar off the row);
+    // the period heading above already says "in progress, to day 16".
+    expect(screen.queryByText("to 16")).toBeNull();
+    expect(screen.getByTestId("month-bar-2026-11")).toHaveTextContent("Nov", { exact: false });
     expect(screen.getByTestId("stats-count")).toHaveTextContent("2 receipts");
 
     expect(screen.getByText("Categories")).toBeTruthy();
