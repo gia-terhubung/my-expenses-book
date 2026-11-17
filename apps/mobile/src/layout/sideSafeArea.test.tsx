@@ -45,6 +45,6 @@ describe("SideSafeArea", () => {
 
   it("wraps the root stack, so every screen gets it", () => {
     const src = readFileSync(join(__dirname, "..", "app", "_layout.tsx"), "utf8");
-    expect(src).toMatch(/<SideSafeArea>\s*<Stack /);
+    expect(src).toMatch(/<SideSafeArea>\s*<AppStack \/>/);
   });
 });

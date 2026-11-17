@@ -16,7 +16,7 @@ import { rootStackOptions } from "@/layout/stackOptions";
 import { useFx } from "@/fx/useFx";
 import { LockGate } from "@/lock/LockGate";
 import { PrefsProvider, usePref } from "@/prefs/PrefsProvider";
-import { ThemeProvider } from "@/theme/ThemeProvider";
+import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
 import { ThemedStatusBar } from "@/theme/ThemedStatusBar";
 import { useAppFonts } from "@/theme/useAppFonts";
 
@@ -55,13 +55,26 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
   );
 }
 
+/** The root stack; inside ThemeProvider so native headers can take the theme's colours. */
+function AppStack() {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  return (
+    <Stack screenOptions={rootStackOptions(t, theme.colors)}>
+      <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
+      {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
+      <Stack.Screen name="(modals)" options={{ presentation: "modal" }} />
+      <Stack.Screen name="lock" options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }} />
+    </Stack>
+  );
+}
+
 export default function RootLayout() {
   // In render (not module scope) so a failure reaches the exported ErrorBoundary rather than
   // letting ids fall back to Math.random.
   assertSecureRandom();
   // Hold the first frame until the display font is ready (or failed: system font fallback).
   const fontsReady = useAppFonts();
-  const { t } = useTranslation();
   if (!fontsReady) return null;
   return (
     <ThemeProvider>
@@ -72,15 +85,7 @@ export default function RootLayout() {
             <FxSync />
             <LockGate>
               <SideSafeArea>
-                <Stack screenOptions={rootStackOptions(t)}>
-                  <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
-                  {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
-                  <Stack.Screen name="(modals)" options={{ presentation: "modal" }} />
-                  <Stack.Screen
-                    name="lock"
-                    options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }}
-                  />
-                </Stack>
+                <AppStack />
               </SideSafeArea>
               <OnboardingRedirect />
             </LockGate>
