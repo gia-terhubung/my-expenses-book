@@ -1,13 +1,16 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, within } from "@testing-library/react-native";
 import type { BottomTabBarProps } from "expo-router/js-tabs";
 import { StyleSheet } from "react-native";
 
 import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
 import { initI18n } from "@/i18n";
+import { LAYOUTS } from "@/layout/testing/layouts";
 import { tokens } from "@/theme/tokens";
 
 import { SideRail, type RailVariant } from "./SideRail";
 
+let mockLayout: (typeof LAYOUTS)[keyof typeof LAYOUTS] = LAYOUTS.phone;
+jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
 }));
@@ -37,6 +40,9 @@ const renderRail = (variant: RailVariant, index = 0) =>
   );
 
 beforeAll(() => initI18n("id"));
+beforeEach(() => {
+  mockLayout = LAYOUTS.phone;
+});
 
 describe("SideRail", () => {
   it.each([
@@ -85,6 +91,21 @@ describe("SideRail", () => {
   it("labels: each tab meets the 48 dp touch target", async () => {
     await renderRail("labels");
     for (const tab of screen.getAllByRole("tab")) expect(flat(tab).minHeight).toBeGreaterThanOrEqual(48);
+  });
+
+  it("the tabs scroll and the + sits outside the scroll container, pinned at the bottom", async () => {
+    await renderRail("icons");
+    const scroll = screen.getByTestId("rail-scroll");
+    expect(within(scroll).getAllByRole("tab")).toHaveLength(4);
+    expect(within(scroll).queryByTestId("rail-add")).toBeNull();
+    expect(within(screen.getByTestId("side-rail")).getByTestId("rail-add")).toBeTruthy();
+  });
+
+  it("short window: smaller top padding (insets.top + 16); otherwise 32", async () => {
+    mockLayout = LAYOUTS.duoSideways;
+    expect(mockLayout.short).toBe(true);
+    await renderRail("icons");
+    expect(flat(screen.getByTestId("side-rail")).paddingTop).toBe(16);
   });
 
   it.each(["icons", "labels"] as const)("%s: round + (56) labelled Tambah struk opens the add sheet", async (variant) => {

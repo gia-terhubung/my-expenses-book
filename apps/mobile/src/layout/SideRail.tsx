@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { BottomTabBarProps } from "expo-router/js-tabs";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
@@ -8,6 +8,7 @@ import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { RAIL_WIDTH } from "./layout";
+import { useLayout } from "./useLayout";
 import { TAB_ICONS, TAB_LABEL_KEYS, type TabRoute } from "./tabs";
 
 export type RailVariant = "icons" | "labels";
@@ -23,6 +24,7 @@ export function SideRail({ state, navigateToTab, variant }: BottomTabBarProps & 
   const insets = useSafeAreaInsets();
   const add = useAddReceiptContext();
   const icons = variant === "icons";
+  const { short } = useLayout();
 
   return (
     <View
@@ -36,12 +38,14 @@ export function SideRail({ state, navigateToTab, variant }: BottomTabBarProps & 
           borderEndColor: theme.colors.border,
           // Clear of the status area like the system clock on the far side (iPhone Duo open: top
           // inset 0, clock ~40 pt down). The left inset is already reserved by SideSafeArea.
-          paddingTop: insets.top + theme.spacing.xxl,
+          // Short window (landscape phone): less air above the first tab so the rest fit.
+          paddingTop: insets.top + (short ? theme.spacing.lg : theme.spacing.xxl),
           paddingBottom: insets.bottom + theme.spacing.lg,
-          gap: theme.spacing.sm,
         },
       ]}
     >
+      {/* The tabs scroll (large text on a short window); the + below stays pinned and reachable. */}
+      <ScrollView testID="rail-scroll" style={styles.scroll} contentContainerStyle={{ gap: theme.spacing.sm }}>
       {state.routes.map((route, index) => {
         const focused = state.index === index;
         const name = route.name as TabRoute;
@@ -92,7 +96,7 @@ export function SideRail({ state, navigateToTab, variant }: BottomTabBarProps & 
           </Pressable>
         );
       })}
-      <View style={styles.spacer} />
+      </ScrollView>
       <Pressable
         testID="rail-add"
         accessibilityRole="button"
@@ -101,6 +105,7 @@ export function SideRail({ state, navigateToTab, variant }: BottomTabBarProps & 
         style={({ pressed }) => [
           styles.plus,
           {
+            marginTop: theme.spacing.sm,
             width: theme.size.plus,
             height: theme.size.plus,
             borderRadius: theme.size.plus / 2,
@@ -120,6 +125,6 @@ const styles = StyleSheet.create({
   itemIcons: { minHeight: 56, alignItems: "center", justifyContent: "center", gap: 2 },
   itemLabels: { flexDirection: "row", alignItems: "center" },
   caption: { fontSize: 10, lineHeight: 13, fontWeight: "600" },
-  spacer: { flex: 1 },
+  scroll: { flex: 1 },
   plus: { alignSelf: "center", alignItems: "center", justifyContent: "center" },
 });
