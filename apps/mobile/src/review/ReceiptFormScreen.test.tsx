@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, Platform, StyleSheet } from "react-native";
 
 import { createPage } from "@/db/repositories/pages";
 import { createReceipt, getReceipt } from "@/db/repositories/receipts";
@@ -29,8 +29,10 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePref: (k: "homeCurrency") => mockPrefs.get(k),
 }));
 jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
+let mockTop = 0;
 jest.mock("react-native-safe-area-context", () => ({
-  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  useSafeAreaInsets: () => ({ top: mockTop, bottom: 0, left: 0, right: 0 }),
+  initialWindowMetrics: null,
 }));
 jest.mock("expo-router", () => ({
   get router() {
@@ -178,5 +180,23 @@ describe("ReceiptFormScreen", () => {
     expect(screen.getByText("Review receipt")).toBeTruthy();
     expect(screen.getByText("Discard")).toBeTruthy();
     expect(screen.getByText("Review later")).toBeTruthy();
+  });
+
+  it("Android: the header clears the status bar (the modal is full screen under it); iOS page sheet: no extra", async () => {
+    const original = Platform.OS;
+    try {
+      mockParams = { id: seed("confirmed").id };
+      mockTop = 32;
+      Platform.OS = "android";
+      const view = await render(<ReceiptFormScreen mode="edit" />);
+      expect(StyleSheet.flatten((await screen.findByTestId("form-header")).props.style).paddingTop).toBe(32 + 16);
+      await view.unmount();
+      Platform.OS = "ios";
+      await render(<ReceiptFormScreen mode="edit" />);
+      expect(StyleSheet.flatten((await screen.findByTestId("form-header")).props.style).paddingTop).toBe(16);
+    } finally {
+      Platform.OS = original;
+      mockTop = 0;
+    }
   });
 });

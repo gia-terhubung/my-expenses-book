@@ -9,6 +9,7 @@ import { useDb } from "@/db/DatabaseProvider";
 import { listCategories } from "@/db/repositories/categories";
 import { TwoPane } from "@/layout/TwoPane";
 import { useLayout } from "@/layout/useLayout";
+import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { DuplicateBanner } from "./DuplicateBanner";
@@ -38,6 +39,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const sheetTop = useSheetTopInset();
   const db = useDb();
   const { split } = useLayout();
   const params = useLocalSearchParams<{ id: string; queue?: string; failed?: string; total?: string }>();
@@ -176,7 +178,10 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={{ flex: 1, backgroundColor: theme.colors.background }}
     >
-      <View style={{ paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.lg }}>{header}</View>
+      {/* Android shows (modals) full screen under the transparent status bar; iOS uses a page sheet. */}
+      <View testID="form-header" style={{ paddingHorizontal: theme.spacing.lg, paddingTop: sheetTop + theme.spacing.lg }}>
+        {header}
+      </View>
       <View style={{ flex: 1 }}>
         {/* `pages` is read once per screen, so this branch never flips on a fold. */}
         {hasPages ? (
