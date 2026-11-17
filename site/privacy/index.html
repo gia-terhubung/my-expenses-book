@@ -3,27 +3,66 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>My Expenses Book: Privacy Policy</title>
+<!-- No web fonts, scripts or trackers: this page makes no third-party request, like the app. -->
 <style>
-  :root { --bg: #F7F7F5; --fg: #1C1C1E; --muted: #6B6B70; --accent: #2F6F5E; --line: #E0E0DC; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #101112; --fg: #F2F2F0; --muted: #9A9AA0; --accent: #6CC4A8; --line: #2E2F32; } }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 680px; margin: 0 auto; padding: 32px 16px 64px; }
-  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 4px; }
-  h2 { font-size: 20px; margin: 32px 0 8px; }
+  :root {
+    --bg: #F2F5F1; --surface: #FFFFFF; --text: #16201C; --muted: #56635D; --border: #DCE5DF;
+    --primary: #1F5C4C; --slip: #1F5C4C; --slip-text: #FFFFFF; --slip-muted: #BFD9CF; --highlight: #FFD84A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0E1513; --surface: #17211E; --text: #EEF3F0; --muted: #93A39C; --border: #26332E;
+      --primary: #74C9AE; --slip: #163F34; --slip-text: #EEF3F0;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header.slip { background: var(--slip); color: var(--slip-text); padding: 28px 16px 36px; position: relative; }
+  header.slip::after { /* torn till-slip edge, as on the app's home screen */
+    content: ""; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px;
+    background: radial-gradient(circle at 8px 0, var(--slip) 6px, transparent 6.5px) repeat-x;
+    background-size: 16px 8px; }
+  .wrap { max-width: 680px; margin: 0 auto; }
+  header .name { font-weight: 800; font-size: 15px; color: var(--slip-muted); margin: 0 0 6px; }
+  header .lead { font-size: 22px; line-height: 1.3; font-weight: 700; margin: 0; }
+  header .bar { display: block; width: 36px; height: 4px; border-radius: 2px; background: var(--highlight); margin-top: 8px; }
+  nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  nav a { color: var(--slip-text); text-decoration: none; border: 1px solid var(--slip-muted);
+          border-radius: 999px; padding: 6px 14px; min-height: 36px; display: inline-flex; align-items: center; font-size: 14px; }
+  nav a:focus-visible, a:focus-visible { outline: 3px solid var(--highlight); outline-offset: 2px; }
+  main { padding: 40px 16px 64px; }
+  section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px 20px; }
+  section + section { margin-top: 24px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 8px; }
   p, li { margin: 0 0 12px; }
-  .muted { color: var(--muted); }
-  nav a, a { color: var(--accent); }
-  section + section { border-top: 1px solid var(--line); margin-top: 48px; padding-top: 16px; }
+  ul, ol { padding-left: 22px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  a { color: var(--primary); }
+  code { font-size: 14px; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
-<main>
-<nav><a href="#en">English</a> · <a href="#id">Bahasa Indonesia</a></nav>
-
+<header class="slip">
+  <div class="wrap">
+    <p class="name">My Expenses Book</p>
+    <p class="lead">Privacy policy</p>
+    <span class="bar" aria-hidden="true"></span>
+    <nav aria-label="Language">
+      <a href="#en" hreflang="en">English</a>
+      <a href="#id" hreflang="id">Bahasa Indonesia</a>
+      <a href="#es" hreflang="es">Español</a>
+      <a href="#pt-BR" hreflang="pt-BR">Português (Brasil)</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
 <section id="en" lang="en">
 <h1>Privacy Policy</h1>
-<p class="muted">My Expenses Book · Effective 2026-11-16</p>
+<p class="muted">My Expenses Book · Effective 2026-11-17</p>
 
 <p>My Expenses Book keeps your receipts on your device. We built it so that we never see your data.</p>
 
@@ -56,7 +95,7 @@
 
 <section id="id" lang="id">
 <h1>Kebijakan Privasi</h1>
-<p class="muted">My Expenses Book · Berlaku sejak 16-11-2026</p>
+<p class="muted">My Expenses Book · Berlaku sejak 17-11-2026</p>
 
 <p>My Expenses Book menyimpan struk Anda di perangkat Anda. Kami membuatnya agar kami tidak pernah melihat data Anda.</p>
 
@@ -85,6 +124,72 @@
 
 <h2>Perubahan dan kontak</h2>
 <p>Jika kebijakan ini berubah, versi barunya akan dimuat di halaman ini dengan tanggal berlaku yang baru. Pertanyaan: <a href="mailto:CONTACT_EMAIL">CONTACT_EMAIL</a></p>
+</section>
+
+<section id="es" lang="es">
+<h1>Política de privacidad</h1>
+<p class="muted">My Expenses Book · Vigente desde el 17-11-2026</p>
+
+<p>My Expenses Book guarda tus recibos en tu dispositivo. Lo hicimos para no ver nunca tus datos.</p>
+
+<h2>Lo que se queda en tu dispositivo</h2>
+<ul>
+  <li>Las fotos de los recibos, el texto leído de ellas y cada importe, fecha, nota, categoría y carpeta se guardan solo en tu dispositivo.</li>
+  <li>La base de datos y las imágenes están cifradas. También puedes bloquear la app con Face ID, huella dactilar o el código de tu dispositivo.</li>
+  <li>No hay cuenta. La app en sí no tiene anuncios, analítica ni informes de fallos (para Android, consulta Google ML Kit más abajo).</li>
+</ul>
+
+<h2>Conexiones de red</h2>
+<ol>
+  <li><strong>Tipos de cambio.</strong> Para convertir recibos extranjeros a tu moneda principal, la app descarga tablas públicas de tipos de cambio de <code>cdn.jsdelivr.net</code> (el conjunto de datos abierto <code>@fawazahmed0/currency-api</code>). La solicitud contiene solo un código de moneda y una fecha, sin datos de recibos.</li>
+  <li><strong>Propinas.</strong> Cuando abres el bote de propinas, la app pide los precios al App Store o a Google Play y procesa la propina que elijas dar. Apple o Google gestionan el pago. La app no guarda información de pago.</li>
+  <li><strong>Solo Android: Google ML Kit.</strong> En Android, el reconocimiento de texto, el escaneo de documentos y la IA en el dispositivo se ejecutan en tu teléfono con Google ML Kit. ML Kit puede descargar sus modelos de Google y envía a Google datos de diagnóstico: modelo del dispositivo y versión del sistema, nombre del paquete y versión de la app, un identificador por instalación y métricas de rendimiento como latencia y códigos de error. Nunca envía las imágenes ni el texto de tus recibos. Según Google, estos datos no se comparten con terceros y se cifran en tránsito. En iPhone, el reconocimiento de texto usa el framework Vision de Apple en el dispositivo y no envía nada.</li>
+</ol>
+
+<h2>Copias de seguridad y exportaciones</h2>
+<p>Las copias de seguridad, los archivos CSV y los informes PDF son archivos que tú creas y guardas donde quieras. Una copia protegida con frase de contraseña está cifrada. Una copia sin ella no lo está. Nunca recibimos estos archivos. Si olvidas la frase de contraseña de una copia, nadie puede recuperarla.</p>
+
+<h2>Borrar tus datos</h2>
+<p>Al eliminar la app se borran todos sus datos de tu dispositivo. Las copias de seguridad que guardaste en otro lugar se quedan allí hasta que las borres.</p>
+
+<h2>Menores</h2>
+<p>La app no está dirigida a menores y no recoge información personal de nadie.</p>
+
+<h2>Cambios y contacto</h2>
+<p>Si esta política cambia, la nueva versión se publicará en esta página con una nueva fecha de vigencia. Preguntas: <a href="mailto:CONTACT_EMAIL">CONTACT_EMAIL</a></p>
+</section>
+
+<section id="pt-BR" lang="pt-BR">
+<h1>Política de privacidade</h1>
+<p class="muted">My Expenses Book · Em vigor desde 17/11/2026</p>
+
+<p>O My Expenses Book guarda seus recibos no seu aparelho. Nós o criamos para nunca vermos seus dados.</p>
+
+<h2>O que fica no seu aparelho</h2>
+<ul>
+  <li>As fotos dos recibos, o texto lido delas e cada valor, data, nota, categoria e pasta ficam guardados somente no seu aparelho.</li>
+  <li>O banco de dados e as imagens são criptografados. Você também pode bloquear o app com Face ID, impressão digital ou o código do aparelho.</li>
+  <li>Não há conta. O app em si não tem anúncios, análises nem relatórios de falhas (no Android, veja Google ML Kit abaixo).</li>
+</ul>
+
+<h2>Conexões de rede</h2>
+<ol>
+  <li><strong>Câmbio.</strong> Para converter recibos estrangeiros para sua moeda principal, o app baixa tabelas públicas de câmbio de <code>cdn.jsdelivr.net</code> (o conjunto de dados aberto <code>@fawazahmed0/currency-api</code>). A solicitação contém apenas um código de moeda e uma data, sem dados de recibos.</li>
+  <li><strong>Gorjetas.</strong> Quando você abre o pote de gorjetas, o app pede os preços à App Store ou ao Google Play e processa a gorjeta que você escolher dar. A Apple ou o Google cuidam do pagamento. O app não guarda informações de pagamento.</li>
+  <li><strong>Somente Android: Google ML Kit.</strong> No Android, o reconhecimento de texto, a digitalização de documentos e a IA no aparelho rodam no seu celular com o Google ML Kit. O ML Kit pode baixar seus modelos do Google e envia ao Google dados de diagnóstico: modelo do aparelho e versão do sistema, nome do pacote e versão do app, um identificador por instalação e métricas de desempenho como latência e códigos de erro. Ele nunca envia as imagens nem o texto dos seus recibos. Segundo o Google, esses dados não são compartilhados com terceiros e são criptografados em trânsito. No iPhone, o reconhecimento de texto usa o framework Vision da Apple no aparelho e não envia nada.</li>
+</ol>
+
+<h2>Backups e exportações</h2>
+<p>Backups, arquivos CSV e relatórios em PDF são arquivos que você cria e salva onde quiser. Um backup protegido por frase-senha é criptografado. Um backup sem ela não é. Nunca recebemos esses arquivos. Se você esquecer a frase-senha de um backup, ninguém consegue recuperá-lo.</p>
+
+<h2>Apagar seus dados</h2>
+<p>Excluir o app apaga todos os dados dele do seu aparelho. Backups que você salvou em outro lugar ficam lá até você apagá-los.</p>
+
+<h2>Crianças</h2>
+<p>O app não é direcionado a crianças e não coleta informações pessoais de ninguém.</p>
+
+<h2>Mudanças e contato</h2>
+<p>Se esta política mudar, a nova versão será publicada nesta página com uma nova data de vigência. Dúvidas: <a href="mailto:CONTACT_EMAIL">CONTACT_EMAIL</a></p>
 </section>
 </main>
 </body>

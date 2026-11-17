@@ -1,0 +1,77 @@
+{
+  "identifier": "1FAA8FA0-BEF9-47F4-8456-9315006D2098",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "29000",
+      "familyShareable": false,
+      "internalID": "3386546458",
+      "localizations": [
+        {
+          "description": "A quick thank-you.",
+          "displayName": "Espresso",
+          "locale": "en_US"
+        },
+        {
+          "description": "A quick thank-you.",
+          "displayName": "Espresso",
+          "locale": "id"
+        }
+      ],
+      "productID": "tip_coffee_small",
+      "referenceName": "Tip – Espresso",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "49000",
+      "familyShareable": false,
+      "internalID": "2362395057",
+      "localizations": [
+        {
+          "description": "Fuel for a late-night bug fix.",
+          "displayName": "Black coffee",
+          "locale": "en_US"
+        },
+        {
+          "description": "Fuel for a late-night bug fix.",
+          "displayName": "Black coffee",
+          "locale": "id"
+        }
+      ],
+      "productID": "tip_coffee_standard",
+      "referenceName": "Tip – Black coffee",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "99000",
+      "familyShareable": false,
+      "internalID": "1817150813",
+      "localizations": [
+        {
+          "description": "Extra energy for the next update.",
+          "displayName": "Cappuccino",
+          "locale": "en_US"
+        },
+        {
+          "description": "Extra energy for the next update.",
+          "displayName": "Cappuccino",
+          "locale": "id"
+        }
+      ],
+      "productID": "tip_coffee_generous",
+      "referenceName": "Tip – Cappuccino",
+      "type": "Consumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "id",
+    "_storefront": "IDN",
+    "_storeKitErrors": []
+  },
+  "subscriptionGroups": [],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

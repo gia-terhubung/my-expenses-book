@@ -37,6 +37,8 @@ const config: ExpoConfig = {
     ["expo-local-authentication", { faceIDPermission: "Allow $(PRODUCT_NAME) to unlock your receipts with Face ID." }],
     ["expo-sqlite", { useSQLCipher: true }],
     "expo-iap",
+    // Local StoreKit test prices for Xcode Debug runs (release builds use the real store).
+    "./plugins/withStoreKitConfig",
     // Ruling V: the picker only reads the library; capture uses the document scanner, which needs
     // the iOS camera string. Listed first: the picker's `cameraPermission: false` would otherwise
     // strip NSCameraUsageDescription (the first plugin's Info.plist mod has the final say).
