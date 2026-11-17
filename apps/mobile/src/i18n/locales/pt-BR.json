@@ -421,6 +421,11 @@
     "seeReceipts": "Ver recibos",
     "uncategorized": "Sem categoria",
     "openStats": "Ver estatísticas",
-    "empty": "As estatísticas aparecem depois de alguns recibos."
+    "empty": "As estatísticas aparecem depois de alguns recibos.",
+    "receiptCount_one": "{{count}} recibo",
+    "receiptCount_other": "{{count}} recibos",
+    "toDay": "até {{day}}",
+    "byMonth": "Por mês",
+    "paceDate": "{{arrow}} {{pct}}% vs {{period}} até {{date}}"
   }
 }

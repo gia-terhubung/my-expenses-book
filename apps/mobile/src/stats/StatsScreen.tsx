@@ -5,6 +5,8 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { useAddReceipt } from "@/capture/useAddReceipt";
+import { Button } from "@/components/Button";
 import { dateToLocalString } from "@/components/dateString";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
@@ -68,6 +70,7 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
   const startMonth = usePref("taxYearStartMonth") ?? 1;
   const today = dateToLocalString(now());
   const [mode, setMode] = useState<Mode>("month");
+  const add = useAddReceipt();
 
   const data = useMemo(() => {
     const ty = taxYearOf(today, startMonth);
@@ -117,15 +120,19 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
   const paceText =
     pct === null
       ? ""
-      : t("stats.pace", {
-          arrow,
-          pct: Math.abs(pct),
-          period:
-            mode === "month"
-              ? formatDate(`${data.pace.previousMonth}-01`, locale, { month: "long" })
-              : taxYearLabel(data.ty - 1, startMonth),
-          day: mode === "month" ? String(Number(data.pace.previous.to.slice(8, 10))) : shortDate(data.pace.previous.to),
-        });
+      : mode === "month"
+        ? t("stats.pace", {
+            arrow,
+            pct: Math.abs(pct),
+            period: formatDate(`${data.pace.previousMonth}-01`, locale, { month: "long" }),
+            day: String(Number(data.pace.previous.to.slice(8, 10))),
+          })
+        : t("stats.paceDate", {
+            arrow,
+            pct: Math.abs(pct),
+            period: taxYearLabel(data.ty - 1, startMonth),
+            date: shortDate(data.pace.previous.to),
+          });
   const amount = slipAmountText(data.total.homeMinor, home, locale);
 
   const bars: MonthBar[] = data.months.map((m) => {
@@ -137,6 +144,7 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
       value: minor > 0 ? (mode === "month" ? compactAmount(minor, home, locale) : bareCompact(minor, home, locale)) : mode === "month" ? "–" : " ",
       accessibilityLabel: `${monthLabel(m, locale)}, ${money(minor)}`,
       current: m === curMonth,
+      sub: m === curMonth ? t("stats.toDay", { day: dayNum }) : undefined,
       gapAtMinor: mode === "month" && m === data.pace.previousMonth ? data.pacePrev : undefined,
     };
   });
@@ -242,7 +250,10 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
           </View>
 
           {!data.any ? (
-            <Text style={[type.body, muted, { marginTop: spacing.xl }]}>{t("stats.empty")}</Text>
+            <View style={{ marginTop: spacing.xl, gap: spacing.lg, alignItems: "flex-start" }}>
+              <Text style={[type.body, muted]}>{t("stats.empty")}</Text>
+              <Button variant="primary" label={t("capture.scan")} onPress={() => void add.start("scan")} />
+            </View>
           ) : (
             <>
               <View
@@ -289,9 +300,12 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
                     ({money(data.pacePrev)})
                   </Text>
                 ) : null}
+                <Text testID="stats-count" style={[small, muted]}>
+                  {t("stats.receiptCount", { count: data.total.count })}
+                </Text>
               </View>
 
-              {section(mode === "month" ? t("stats.lastMonths") : periodLabel)}
+              {section(mode === "month" ? t("stats.lastMonths") : t("stats.byMonth"))}
               <View
                 style={{
                   backgroundColor: colors.surface,

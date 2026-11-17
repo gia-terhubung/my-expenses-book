@@ -19,6 +19,10 @@ jest.mock("@/prefs/PrefsProvider", () => ({
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
+const mockStart = jest.fn();
+jest.mock("@/capture/useAddReceipt", () => ({
+  useAddReceipt: () => ({ open: jest.fn(), start: (...a: unknown[]) => mockStart(...a), sheet: null }),
+}));
 jest.mock("expo-router", () => ({
   router: { back: () => mockRouter.back(), push: (...a: unknown[]) => mockRouter.push(...a) },
 }));
@@ -77,6 +81,10 @@ describe("StatsScreen", () => {
     expect(bars).toEqual(["2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11"].map((m) => `month-bar-${m}`));
     // The gap on October marks the compared day.
     expect(screen.getByTestId("month-bar-gap-2026-10")).toBeTruthy();
+    // Only the running month is marked "to <day>".
+    expect(screen.getAllByText("to 16")).toHaveLength(1);
+    expect(screen.getByTestId("month-bar-2026-11")).toHaveTextContent(/to 16/);
+    expect(screen.getByTestId("stats-count")).toHaveTextContent("2 receipts");
 
     expect(screen.getByText("Categories")).toBeTruthy();
     expect(screen.getByText("Lodging")).toBeTruthy();
@@ -108,9 +116,28 @@ describe("StatsScreen", () => {
     expect(bars).toHaveLength(12);
     expect(bars[0]).toBe("month-bar-2026-04");
     expect(bars[11]).toBe("month-bar-2027-03");
+    expect(screen.getByText("By month")).toBeTruthy();
+    expect(screen.queryByText("Last 6 months")).toBeNull();
+    expect(screen.getByTestId("stats-count")).toHaveTextContent("2 receipts");
     expect(screen.getByTestId("stats-total").props.children).toBe(money(150000));
     expect(screen.queryByText("Before Year")).toBeNull();
     expect(screen.getByText("Spring Shop")).toBeTruthy();
+  });
+
+  it("Tahun pajak pace line compares with the previous tax year to the same date", async () => {
+    seed("Last Year", "2025-02-10", 100000);
+    seed("Last Year Late", "2025-12-01", 900000);
+    seed("This Year", "2026-03-01", 150000);
+    await render(<StatsScreen now={now} />);
+    await fireEvent.press(screen.getByRole("tab", { name: "Tax year" }));
+    expect(screen.getByTestId("stats-pace")).toHaveTextContent(/^▲ 50% vs 2025 to Nov 16 \(/);
+    expect(screen.getByTestId("stats-pace")).not.toHaveTextContent(/to day/);
+  });
+
+  it("receipt count uses the singular for one receipt", async () => {
+    seed("Only Shop", "2026-11-02", 50000);
+    await render(<StatsScreen now={now} />);
+    expect(screen.getByTestId("stats-count")).toHaveTextContent("1 receipt");
   });
 
   it("pace line hidden when last month has no converted total", async () => {
@@ -155,10 +182,12 @@ describe("StatsScreen", () => {
     expect(screen.getByText("70%")).toBeTruthy();
   });
 
-  it("shows the empty message when there are no receipts, and goes back", async () => {
+  it("shows the empty message with a scan button when there are no receipts, and goes back", async () => {
     await render(<StatsScreen now={now} />);
     expect(screen.getByText("Statistics appear after a few receipts.")).toBeTruthy();
     expect(screen.queryByText("Categories")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Scan receipt" }));
+    expect(mockStart).toHaveBeenCalledWith("scan");
     await fireEvent.press(screen.getByRole("button", { name: "Back" }));
     expect(mockRouter.back).toHaveBeenCalled();
   });

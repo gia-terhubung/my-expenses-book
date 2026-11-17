@@ -13,6 +13,8 @@ export type MonthBar = {
   value: string;
   accessibilityLabel: string;
   current?: boolean;
+  /** Small line under the label, e.g. "to 16" on the running month. */
+  sub?: string;
   /** Amount up to the compared day: drawn as a 2 dp gap across the bar at that level. */
   gapAtMinor?: number;
 };
@@ -71,6 +73,11 @@ export function MonthBars({ bars, dense = false }: { bars: MonthBar[]; dense?: b
             <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={[small, strong, { textAlign: "center", marginTop: 6 }]}>
               {b.label}
             </Text>
+            {b.sub ? (
+              <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={[small, { color: colors.textMuted, textAlign: "center" }]}>
+                {b.sub}
+              </Text>
+            ) : null}
           </View>
         );
       })}

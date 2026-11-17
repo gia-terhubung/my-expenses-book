@@ -421,6 +421,11 @@
     "seeReceipts": "Lihat struk",
     "uncategorized": "Tanpa kategori",
     "openStats": "Lihat statistik",
-    "empty": "Statistik muncul setelah beberapa struk."
+    "empty": "Statistik muncul setelah beberapa struk.",
+    "receiptCount_one": "{{count}} struk",
+    "receiptCount_other": "{{count}} struk",
+    "toDay": "s.d. {{day}}",
+    "byMonth": "Per bulan",
+    "paceDate": "{{arrow}} {{pct}}% dibanding {{period}} s.d. {{date}}"
   }
 }
