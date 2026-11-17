@@ -123,6 +123,21 @@ describe("TotalsHeader slip stats", () => {
     }
   });
 
+  it("not-converted note shows once, in the foot row, and stays in the button label", async () => {
+    seedOn(formatLocal(new Date(), deviceTimeZone()).slice(0, 10), 400);
+    seed(1_000, "USD", null);
+    await render(<TotalsHeader />);
+    expect(screen.getAllByText("1 not converted")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: /See statistics/ }).props.accessibilityLabel).toContain("1 not converted");
+  });
+
+  it("with nothing unconverted the stats link is still there", async () => {
+    seed(50_000, "IDR", 50_000);
+    await render(<TotalsHeader />);
+    expect(screen.queryByText(/not converted/)).toBeNull();
+    expect(screen.getByText("See statistics ›")).toBeTruthy();
+  });
+
   it("no pace line and no strip in the first month", async () => {
     fixToday("2026-11-16T05:00:00Z");
     seedOn("2026-11-02", 400, "default:food");
@@ -155,7 +170,7 @@ describe("TotalsHeader (Ledger slip)", () => {
     const money = formatMoney(50_000, "IDR", "en");
     expect(screen.getByTestId("slip-cell-month").props.accessibilityLabel).toBe(`This month, ${money} · 1 not converted`);
     expect(screen.getByTestId("slip-cell-month").props.accessible).toBe(true);
-    expect(within(screen.getByTestId("slip-cell-month")).getByText("1 not converted")).toBeTruthy();
+    expect(within(screen.getByTestId("slip-cell-month")).queryByText("1 not converted")).toBeNull();
   });
 
   it("a compact amount keeps the exact amount in the accessibility label", async () => {

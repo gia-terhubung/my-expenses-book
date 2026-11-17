@@ -101,9 +101,6 @@ export function TotalsHeader() {
             style={{ height: 4, width: spacing.xxl, borderRadius: 2, marginTop: spacing.xs, backgroundColor: colors.highlight }}
           />
         ) : null}
-        {tot.unconverted > 0 ? (
-          <Text style={[type.caption, { color: colors.slipMuted, marginTop: spacing.xs }]}>{notConverted(tot.unconverted)}</Text>
-        ) : null}
       </View>
     );
   };
@@ -205,10 +202,11 @@ export function TotalsHeader() {
           borderColor: colors.slipMuted,
         }}
       >
-        <Text style={[type.body, { color: colors.slipText, flexShrink: 1 }]}>
-          {stats.unconverted > 0 ? notConverted(stats.unconverted) : ""}
-        </Text>
-        <Text style={[type.body, { color: colors.highlight, fontFamily: FONTS.bold }]}>{`${t("stats.openStats")} ›`}</Text>
+        {/* The only visible "not converted" note on the slip (owner, check-in 4); totals keep it in their labels. */}
+        {stats.unconverted > 0 ? (
+          <Text style={[type.body, { color: colors.slipText, flexShrink: 1 }]}>{notConverted(stats.unconverted)}</Text>
+        ) : null}
+        <Text style={[type.body, { color: colors.highlight, fontFamily: FONTS.bold, marginLeft: "auto" }]}>{`${t("stats.openStats")} ›`}</Text>
       </View>
       <SlipEdge color={colors.background} />
     </Pressable>
