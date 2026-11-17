@@ -12,6 +12,7 @@ export default function DocumentScreen() {
       <Stack.Screen options={{ title: t("document.title") }} />
       <ReceiptDetail
         id={id}
+        underHeader
         onEdit={(rid) => router.push({ pathname: "/edit/[id]", params: { id: rid } } as unknown as Href)}
         onDeleted={() => router.back()}
       />

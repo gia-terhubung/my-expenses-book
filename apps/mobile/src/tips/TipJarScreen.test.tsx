@@ -368,4 +368,9 @@ describe("TipJarScreen price buttons", () => {
     mockWindow.fontScale = 1;
     for (const id of IDS) expect(flat(screen.getByTestId(`tip-price-${id}`)).alignSelf).toBe("stretch");
   });
+
+  it("iOS: content insets below the native header", async () => {
+    await render(<TipJarScreen jar={createFakeTipJar()} />);
+    expect(screen.getByTestId("tip-jar-scroll").props.contentInsetAdjustmentBehavior).toBe("automatic");
+  });
 });

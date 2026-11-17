@@ -453,6 +453,8 @@ export function BackupScreen({
 
   return (
     <ScrollView
+      testID="backup-scroll"
+      contentInsetAdjustmentBehavior="automatic"
       style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={{
         padding: theme.spacing.xl,

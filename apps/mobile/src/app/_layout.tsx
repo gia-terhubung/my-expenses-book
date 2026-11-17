@@ -11,6 +11,7 @@ import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { ImageStoreProvider } from "@/images/ImageStoreProvider";
 import { initI18n } from "@/i18n";
 import { resolveLanguage } from "@/i18n/resolve";
+import { rootStackOptions } from "@/layout/stackOptions";
 import { useFx } from "@/fx/useFx";
 import { LockGate } from "@/lock/LockGate";
 import { PrefsProvider, usePref } from "@/prefs/PrefsProvider";
@@ -59,6 +60,7 @@ export default function RootLayout() {
   assertSecureRandom();
   // Hold the first frame until the display font is ready (or failed: system font fallback).
   const fontsReady = useAppFonts();
+  const { t } = useTranslation();
   if (!fontsReady) return null;
   return (
     <ThemeProvider>
@@ -68,7 +70,7 @@ export default function RootLayout() {
             <ThemedStatusBar />
             <FxSync />
             <LockGate>
-              <Stack screenOptions={{ headerShown: false }}>
+              <Stack screenOptions={rootStackOptions(t)}>
                 <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
                 {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
                 <Stack.Screen name="(modals)" options={{ presentation: "modal" }} />

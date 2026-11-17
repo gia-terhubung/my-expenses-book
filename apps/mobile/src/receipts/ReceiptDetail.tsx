@@ -22,7 +22,14 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 import { homeLine } from "./format";
 
-type Props = { id: string; onEdit(id: string): void; onDeleted(): void; onBack?: () => void };
+type Props = {
+  id: string;
+  onEdit(id: string): void;
+  onDeleted(): void;
+  onBack?: () => void;
+  /** Pushed under a native stack header (iOS insets the content below it). */
+  underHeader?: boolean;
+};
 
 /** Wall-clock purchase time as recorded ("2026-11-03T10:15:00"), locale-formatted, no zone shift. */
 function localDateTime(local: string, locale: string): string {
@@ -59,7 +66,7 @@ export function fxRateText(r: Receipt, locale: string, t: (k: string, o?: Record
   return parts.join(" · ");
 }
 
-export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
+export function ReceiptDetail({ id, onEdit, onDeleted, onBack, underHeader = false }: Props) {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
@@ -145,6 +152,8 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
   return (
     <>
       <ScrollView
+        testID="receipt-detail-scroll"
+        contentInsetAdjustmentBehavior={underHeader ? "automatic" : "never"}
         style={{ flex: 1, backgroundColor: theme.colors.background }}
         contentContainerStyle={{ padding: theme.spacing.xl, paddingBottom: tabBarSpace || theme.spacing.xl, gap: theme.spacing.lg }}
       >

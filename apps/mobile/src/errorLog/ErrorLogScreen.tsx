@@ -59,6 +59,8 @@ export function ErrorLogScreen({
 
   return (
     <FlatList
+      testID="error-log-list"
+      contentInsetAdjustmentBehavior="automatic"
       style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={{ padding: theme.spacing.xl, gap: theme.spacing.md, width: "100%", maxWidth: 560, alignSelf: "center" }}
       data={entries}

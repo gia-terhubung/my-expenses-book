@@ -173,4 +173,12 @@ describe("ReceiptDetail", () => {
     await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
     expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
   });
+
+  it("insets below the native header only when it sits under one", async () => {
+    const r = seed();
+    const { rerender } = await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} underHeader />);
+    expect(screen.getByTestId("receipt-detail-scroll").props.contentInsetAdjustmentBehavior).toBe("automatic");
+    await rerender(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
+    expect(screen.getByTestId("receipt-detail-scroll").props.contentInsetAdjustmentBehavior).toBe("never");
+  });
 });

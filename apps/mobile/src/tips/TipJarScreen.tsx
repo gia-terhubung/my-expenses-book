@@ -182,7 +182,8 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BeanBackdrop paused={paused} />
-      <ScrollView contentContainerStyle={{ padding: spacing.xl, paddingBottom: spacing.xxl }}>
+      {/* iOS: pushed under a native header, which content would otherwise slide beneath. */}
+      <ScrollView testID="tip-jar-scroll" contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: spacing.xl, paddingBottom: spacing.xxl }}>
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: spacing.lg }}>
           <View style={{ gap: spacing.md }}>
             <Text accessibilityRole="header" style={[theme.type.display, { color: colors.text }]}>

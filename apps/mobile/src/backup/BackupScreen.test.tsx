@@ -407,4 +407,9 @@ describe("restore", () => {
       spy.mockRestore();
     }
   });
+
+  it("iOS: content insets below the native header", async () => {
+    await render(<BackupScreen fs={fs} now={now} />);
+    expect(screen.getByTestId("backup-scroll").props.contentInsetAdjustmentBehavior).toBe("automatic");
+  });
 });
