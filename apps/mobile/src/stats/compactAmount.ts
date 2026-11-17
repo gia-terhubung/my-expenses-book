@@ -37,8 +37,14 @@ export function currencySymbol(locale: string, currency: string): string {
   const key = `${locale}|${currency}`;
   let symbol = symbols.get(key);
   if (symbol === undefined) {
-    const part = new Intl.NumberFormat(locale, { style: "currency", currency }).formatToParts(0).find((p) => p.type === "currency");
-    symbol = part?.value ?? currency;
+    const fmt = new Intl.NumberFormat(locale, { style: "currency", currency });
+    // iOS Hermes has no NumberFormat.formatToParts (Statistik crashed there): strip the number from
+    // a formatted zero instead ("Rp 0" -> "Rp", "R$ 0,00" -> "R$").
+    symbol =
+      typeof fmt.formatToParts === "function"
+        ? fmt.formatToParts(0).find((p) => p.type === "currency")?.value
+        : fmt.format(0).replace(/[\d.,\s\u00A0\u202F-]/g, "");
+    if (!symbol) symbol = currency;
     symbols.set(key, symbol);
   }
   return symbol;

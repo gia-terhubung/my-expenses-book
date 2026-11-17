@@ -58,3 +58,26 @@ describe("compactAmount", () => {
     }
   });
 });
+
+describe("currencySymbol without NumberFormat.formatToParts (iOS Hermes)", () => {
+  const original = Intl.NumberFormat.prototype.formatToParts;
+  beforeEach(() => {
+    jest.resetModules();
+    // @ts-expect-error simulate the runtime gap
+    Intl.NumberFormat.prototype.formatToParts = undefined;
+  });
+  afterEach(() => {
+    Intl.NumberFormat.prototype.formatToParts = original;
+  });
+
+  it.each([
+    ["id-ID", "IDR", "Rp"],
+    ["en-US", "USD", "$"],
+    ["pt-BR", "BRL", "R$"],
+    ["en-US", "EUR", "€"],
+  ])("%s %s -> %s, no crash", (locale, currency, symbol) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { currencySymbol } = require("./compactAmount");
+    expect(currencySymbol(locale, currency)).toBe(symbol);
+  });
+});
