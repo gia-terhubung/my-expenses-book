@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LegalDocument } from "@/components/legal/LegalDocument";
 import { PageSlip } from "@/components/PageSlip";
 import { terms } from "@/content/terms";
 
@@ -8,7 +9,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-/** Scaffold stub: the slip only. Plan task 9 renders the document body with `LegalDocument`. */
 export default function Page() {
-  return <PageSlip title={terms.title} lead={terms.summary} />;
+  return (
+    <>
+      <PageSlip title={terms.title} lead={terms.summary} />
+      <LegalDocument doc={terms} />
+    </>
+  );
 }
