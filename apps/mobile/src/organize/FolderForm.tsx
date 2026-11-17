@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { OptionRow } from "@/components/OptionRow";
 import { Input } from "@/components/Input";
 import type { FolderKind } from "@/db/schema";
+import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { useTheme } from "@/theme/ThemeProvider";
 
 type Props = {
@@ -38,6 +39,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const sheetTop = useSheetTopInset();
   const [name, setName] = useState(initialName);
   const [kind, setKind] = useState<FolderKind>("project");
 
@@ -54,6 +56,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
           flex: 1,
           backgroundColor: theme.colors.background,
           padding: theme.spacing.xl,
+          paddingTop: sheetTop + theme.spacing.xl,
           paddingBottom: insets.bottom + theme.spacing.xl,
         }}
       >

@@ -24,6 +24,7 @@ import { useTabBarSpace } from "@/layout/useTabBarSpace";
 import { resolveHomeCurrency, resolveLanguage } from "@/i18n/resolve";
 import type { LockTimeout } from "@/prefs/prefs";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
+import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const TIMEOUTS: LockTimeout[] = [0, 60, 300, 900];
@@ -76,9 +77,10 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
   const theme = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const sheetTop = useSheetTopInset();
   return (
     <AppModal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingBottom: insets.bottom + theme.spacing.xl, gap: theme.spacing.lg }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingTop: sheetTop + theme.spacing.xl, paddingBottom: insets.bottom + theme.spacing.xl, gap: theme.spacing.lg }}>
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", flex: 1, gap: theme.spacing.lg }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>

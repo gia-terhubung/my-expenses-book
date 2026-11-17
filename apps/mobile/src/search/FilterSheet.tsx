@@ -12,6 +12,7 @@ import { listCategories } from "@/db/repositories/categories";
 import { listFolders } from "@/db/repositories/folders";
 import { listCurrenciesInUse } from "@/db/repositories/receiptQueries";
 import { categoryLabel } from "@/review/ReviewFields";
+import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import type { DatePreset, SearchState } from "./filterState";
@@ -44,6 +45,7 @@ function SheetBody({ value, onApply, onClose }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const sheetTop = useSheetTopInset();
   const db = useDb();
   const [draft, setDraft] = useState(value);
   const categories = useMemo(() => listCategories(db), [db]);
@@ -68,7 +70,7 @@ function SheetBody({ value, onApply, onClose }: Props) {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background, paddingTop: theme.spacing.md }}>
+    <View testID="filter-sheet" style={{ flex: 1, backgroundColor: theme.colors.background, paddingTop: sheetTop + theme.spacing.lg }}>
       <View
         style={{
           flexDirection: "row",

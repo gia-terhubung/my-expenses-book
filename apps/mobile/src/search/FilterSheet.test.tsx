@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { Platform } from "react-native";
 
 import { createFolder } from "@/db/repositories/folders";
 import { createReceipt } from "@/db/repositories/receipts";
@@ -13,7 +14,7 @@ let mockDb: AppDb;
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
 jest.mock("react-native-safe-area-context", () => ({
-  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  useSafeAreaInsets: () => ({ top: 30, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock("@expo/ui/swift-ui", () => ({ DatePicker: () => null }));
 jest.mock("@expo/ui", () => {
@@ -47,6 +48,18 @@ beforeEach(() => {
 const press = (name: string) => fireEvent.press(screen.getByRole(/button|radio|checkbox/, { name }));
 
 describe("FilterSheet", () => {
+  it("keeps its header below the status bar on android, with 16 dp of air", async () => {
+    const original = Platform.OS;
+    Platform.OS = "android";
+    try {
+      await render(<FilterSheet visible value={EMPTY_SEARCH} onApply={jest.fn()} onClose={jest.fn()} />);
+      const flat = Object.assign({}, ...[screen.getByTestId("filter-sheet").props.style].flat());
+      expect(flat.paddingTop).toBe(30 + 16);
+    } finally {
+      Platform.OS = original;
+    }
+  });
+
   it("Apply commits the chosen filters", async () => {
     seed("EUR");
     seed("IDR");

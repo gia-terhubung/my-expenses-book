@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, within } from "@testing-library/react-native";
 
 import { createFolder } from "@/db/repositories/folders";
 import { createReceipt } from "@/db/repositories/receipts";
@@ -212,6 +212,18 @@ describe("StatsScreen", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Back" }));
     expect(mockRouter.replace).toHaveBeenCalledWith("/");
     expect(mockRouter.back).not.toHaveBeenCalled();
+  });
+
+  it("both segment labels fit one line and shrink instead of clipping", async () => {
+    seed("Now Shop", "2026-11-02", 50000);
+    await render(<StatsScreen now={now} />);
+    for (const name of ["Month", "Tax year"]) {
+      const label = screen.getByRole("tab", { name });
+      const text = within(label).getByText(name);
+      expect(text.props.numberOfLines).toBe(1);
+      expect(text.props.adjustsFontSizeToFit).toBe(true);
+      expect(text.props.minimumFontScale).toBe(0.75);
+    }
   });
 
   it("dense 12-bar value labels shrink to fit and cap font scaling", async () => {

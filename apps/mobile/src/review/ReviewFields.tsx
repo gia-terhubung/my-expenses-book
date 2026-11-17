@@ -16,6 +16,7 @@ import { formatMoney } from "@/money/money";
 import { categoryLabel } from "@/organize/categoryLabel";
 import { FolderPicker } from "@/organize/FolderPicker";
 import type { FieldConfidence } from "@/parsing/types";
+import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { CONFIDENCE_OF, type ReviewField } from "./form";
@@ -64,6 +65,7 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const sheetTop = useSheetTopInset();
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [folderOpen, setFolderOpen] = useState(false);
   const { values, setField, errors, lowConfidence, fx, home } = form;
@@ -263,6 +265,7 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
               flex: 1,
               backgroundColor: theme.colors.background,
               padding: theme.spacing.xl,
+              paddingTop: sheetTop + theme.spacing.xl,
               paddingBottom: insets.bottom + theme.spacing.xl,
               gap: theme.spacing.lg,
             }}

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { CATEGORY_COLOR_NAMES, CATEGORY_COLORS } from "./categoryColors";
@@ -38,6 +39,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const sheetTop = useSheetTopInset();
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState<string>(CATEGORY_COLORS[0]);
 
@@ -53,6 +55,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
         flex: 1,
         backgroundColor: theme.colors.background,
         padding: theme.spacing.xl,
+        paddingTop: sheetTop + theme.spacing.xl,
         paddingBottom: insets.bottom + theme.spacing.xl,
       }}
     >

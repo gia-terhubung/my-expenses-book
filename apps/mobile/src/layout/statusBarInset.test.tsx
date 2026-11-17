@@ -53,6 +53,7 @@ describe("StatusBarInset", () => {
   it("is the only place screens take the top inset (fixed, non-scrolling chrome excepted)", () => {
     const allowed = new Set([
       "src/layout/StatusBarInset.tsx",
+      "src/layout/useSheetTopInset.ts", // page-sheet modal inset, not screen content
       "src/layout/SideRail.tsx", // fixed rail, not scrolled
       "src/layout/EmptyState.tsx", // fixed placeholder body
       "src/review/PageViewer.tsx", // absolutely positioned close button

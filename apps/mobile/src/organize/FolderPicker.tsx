@@ -11,6 +11,7 @@ import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import { createFolder, listFolders } from "@/db/repositories/folders";
 import type { FolderKind } from "@/db/schema";
+import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { useTheme } from "@/theme/ThemeProvider";
 
 type Props = {
@@ -25,6 +26,7 @@ export function FolderPicker({ visible, value, onChange, onClose }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const sheetTop = useSheetTopInset();
   const db = useDb();
   const version = useDataVersion();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,7 +53,7 @@ export function FolderPicker({ visible, value, onChange, onClose }: Props) {
 
   return (
     <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
-      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingBottom: insets.bottom + theme.spacing.xl }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingTop: sheetTop + theme.spacing.xl, paddingBottom: insets.bottom + theme.spacing.xl }}>
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", flex: 1, gap: theme.spacing.lg }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>

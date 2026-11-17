@@ -217,7 +217,14 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
           borderColor: on ? colors.border : "transparent",
         })}
       >
-        <Text style={[type.body, { color: on ? colors.primary : colors.textMuted, fontWeight: on ? "600" : "500" }]}>{label}</Text>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+          style={[type.body, { alignSelf: "stretch", textAlign: "center", color: on ? colors.primary : colors.textMuted, fontWeight: on ? "600" : "500" }]}
+        >
+          {label}
+        </Text>
       </Pressable>
     );
   };
