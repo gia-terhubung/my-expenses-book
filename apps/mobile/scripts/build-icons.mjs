@@ -52,8 +52,10 @@ const rgbPng = (svg, width) => {
   return Buffer.concat([sig, chunk("IHDR", ihdr), chunk("IDAT", deflateSync(raw, { level: 9 })), chunk("IEND", Buffer.alloc(0))]);
 };
 const solid = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" width="1" height="1">${bg.replace(/width="1024" height="1024"/, 'width="1" height="1"')}</svg>`;
-// Splash image is 228x213: same art on a wider viewBox so it stays centred.
-const splash = art.replace(/viewBox="[^"]*" width="1024" height="1024"/, 'viewBox="-36 0 1096 1024"');
+// Splash image is cropped to the art (its bbox is about 252,264 504x473 in the 1024 canvas, plus
+// a little air) so `imageWidth` in app.config.ts is the logo's real width, not mostly padding.
+const SPLASH_VIEWBOX = "244 256 520 489";
+const splash = art.replace(/viewBox="[^"]*" width="1024" height="1024"/, `viewBox="${SPLASH_VIEWBOX}"`);
 
 mkdirSync(iconDir, { recursive: true });
 const out = {
@@ -61,7 +63,7 @@ const out = {
   [join(images, "android-icon-foreground.png")]: png(art, 512),
   [join(images, "android-icon-background.png")]: png(solid, 512),
   [join(images, "android-icon-monochrome.png")]: png(mono.replace(/fill="#[0-9A-Fa-f]{6}"/g, 'fill="#FFFFFF"'), 432),
-  [join(images, "splash-icon.png")]: png(splash, 228),
+  [join(images, "splash-icon.png")]: png(splash, 420), // 140 dp at 3x
 };
 for (const [p, buf] of Object.entries(out)) writeFileSync(p, buf);
 writeFileSync(join(iconDir, "meb-long-page.svg"), art);
