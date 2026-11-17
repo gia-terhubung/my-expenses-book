@@ -7,6 +7,7 @@ import { StatusBarInset } from "@/layout/StatusBarInset";
 import { TwoPane } from "@/layout/TwoPane";
 import { useLayout } from "@/layout/useLayout";
 
+import { takePendingSelection } from "./pendingSelection";
 import { ReceiptDetail } from "./ReceiptDetail";
 import { ReceiptList } from "./ReceiptList";
 
@@ -41,6 +42,15 @@ export function ReceiptListDetail({ filter, ListHeaderComponent, empty, topInset
       });
       return () => sub.remove();
     }, [split, selected, clear]),
+  );
+
+  // A receipt popped back from the pushed screen after an unfold becomes this screen's selection.
+  // Whichever list gains focus next takes it; folded again before that, it shows in the single pane.
+  useFocusEffect(
+    useCallback(() => {
+      const id = takePendingSelection();
+      if (id) router.setParams({ selected: id });
+    }, []),
   );
 
   const onSelect = useCallback(

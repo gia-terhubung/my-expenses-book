@@ -1,12 +1,18 @@
 import { router, Stack, useLocalSearchParams, type Href } from "expo-router";
 import { useTranslation } from "react-i18next";
 
+import { useLayout } from "@/layout/useLayout";
+import { usePopToSelection } from "@/receipts/pendingSelection";
 import { ReceiptDetail } from "@/receipts/ReceiptDetail";
 
-/** Compact receipt detail; the native stack header is the only back control here. */
+/**
+ * Receipt detail when not split; the native stack header is the only back control here. After an
+ * unfold it hands the receipt to the list's selection and pops.
+ */
 export default function DocumentScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  usePopToSelection(id, useLayout().split);
   return (
     <>
       <Stack.Screen options={{ title: t("document.title") }} />

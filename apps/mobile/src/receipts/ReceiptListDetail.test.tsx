@@ -8,6 +8,7 @@ import { initI18n } from "@/i18n";
 import { LAYOUTS } from "@/layout/testing/layouts";
 import type { Layout } from "@/layout/layout";
 
+import { setPendingSelection, takePendingSelection } from "./pendingSelection";
 import { ReceiptListDetail } from "./ReceiptListDetail";
 
 let mockDb: AppDb;
@@ -94,6 +95,7 @@ beforeEach(() => {
   mockParams = {};
   mockLayout = LAYOUTS.phone;
   mockFocused = true;
+  takePendingSelection();
   mockMounts.list = 0;
   mockMounts.detail = 0;
   jest.clearAllMocks();
@@ -133,6 +135,25 @@ describe("ReceiptListDetail", () => {
     expect(handler?.()).toBe(true);
     expect(mockRouter.setParams).toHaveBeenCalledWith({ selected: undefined });
     spy.mockRestore();
+  });
+
+  it("a pending selection from a popped document becomes `selected` on focus, once", async () => {
+    mockLayout = LAYOUTS.duoLandscape;
+    const a = seed("Alpha", "2026-11-03T10:00:00");
+    setPendingSelection(a.id);
+    await render(ui());
+    expect(mockRouter.setParams).toHaveBeenCalledWith({ selected: a.id });
+    expect(takePendingSelection()).toBeNull();
+  });
+
+  it("unfocused screens leave the pending selection alone", async () => {
+    mockLayout = LAYOUTS.duoLandscape;
+    const a = seed("Alpha", "2026-11-03T10:00:00");
+    setPendingSelection(a.id);
+    mockFocused = false;
+    await render(ui());
+    expect(mockRouter.setParams).not.toHaveBeenCalled();
+    expect(takePendingSelection()).toBe(a.id);
   });
 
   it("split: row press sets `selected` and the detail renders in the secondary pane", async () => {

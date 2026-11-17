@@ -155,7 +155,14 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack, underHeader = fal
         testID="receipt-detail-scroll"
         contentInsetAdjustmentBehavior={underHeader ? "automatic" : "never"}
         style={{ flex: 1, backgroundColor: theme.colors.background }}
-        contentContainerStyle={{ padding: theme.spacing.xl, paddingBottom: tabBarSpace || theme.spacing.xl, gap: theme.spacing.lg }}
+        contentContainerStyle={{
+          width: "100%",
+          maxWidth: 640,
+          alignSelf: "center",
+          padding: theme.spacing.xl,
+          paddingBottom: tabBarSpace || theme.spacing.xl,
+          gap: theme.spacing.lg,
+        }}
       >
         {back}
         <View style={{ gap: theme.spacing.xs }}>
@@ -173,7 +180,7 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack, underHeader = fal
             </Text>
           ) : null}
         </View>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
+        <View testID="receipt-detail-actions" style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
           {action(t("receipts.detail.edit"), () => onEdit(receipt.id))}
           {action(t("receipts.detail.move"), () => setPicking(true))}
           {action(t("common.delete"), confirmDelete, "danger", deleting)}

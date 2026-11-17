@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
-import { Alert, type AlertButton } from "react-native";
+import { Alert, StyleSheet, type AlertButton } from "react-native";
 
 import { listCategories } from "@/db/repositories/categories";
 import { createFolder } from "@/db/repositories/folders";
@@ -57,6 +57,20 @@ beforeEach(() => {
 const noop = () => {};
 
 describe("ReceiptDetail", () => {
+  it("content is a centred column at most 640 wide (deep-linked on a wide screen)", async () => {
+    const r = seed();
+    await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
+    const style = StyleSheet.flatten(screen.getByTestId("receipt-detail-scroll").props.contentContainerStyle);
+    expect(style).toMatchObject({ width: "100%", maxWidth: 640, alignSelf: "center" });
+  });
+
+  it("action row wraps in a narrow detail pane (320)", async () => {
+    const r = seed();
+    await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
+    const style = StyleSheet.flatten(screen.getByTestId("receipt-detail-actions").props.style);
+    expect(style).toMatchObject({ flexDirection: "row", flexWrap: "wrap", gap: 8 });
+  });
+
   it("shows merchant, local date/time, totals, FX line, category, folder and notes", async () => {
     const cat = listCategories(mockDb)[0];
     const folder = createFolder(mockDb, { name: "Bali 2026", kind: "trip" });
