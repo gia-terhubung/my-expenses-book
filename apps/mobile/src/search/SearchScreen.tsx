@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { deviceTimeZone, formatLocal } from "@/capture/localTime";
@@ -36,7 +37,15 @@ export function SearchScreen() {
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
   const version = useDataVersion();
-  const [state, setState] = useState<SearchState>(EMPTY_SEARCH);
+  // Statistik opens Search with ?unconverted=1.
+  const params = useLocalSearchParams<{ unconverted?: string }>();
+  const [state, setState] = useState<SearchState>(() => ({ ...EMPTY_SEARCH, unconverted: params.unconverted === "1" }));
+  // The tab stays mounted: a later push with the param must apply too.
+  const [seenParam, setSeenParam] = useState(params.unconverted);
+  if (params.unconverted !== seenParam) {
+    setSeenParam(params.unconverted);
+    if (params.unconverted === "1") setState((s) => ({ ...s, unconverted: true }));
+  }
   const [queryText, setQueryText] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -54,14 +63,14 @@ export function SearchScreen() {
   }, [state, categories]);
 
   const today = formatLocal(new Date(), deviceTimeZone()).slice(0, 10);
-  const { preset, from, to, categoryIds, folderId, currency } = effective;
+  const { preset, from, to, categoryIds, folderId, currency, unconverted } = effective;
   const active = queryText.trim() !== "" || activeFilterCount(effective) > 0;
   const filter = useMemo<ReceiptFilter>(
     () =>
       active
-        ? toFilter({ text: queryText, preset, from, to, categoryIds, folderId, currency }, today, startMonth)
+        ? toFilter({ text: queryText, preset, from, to, categoryIds, folderId, currency, unconverted }, today, startMonth, home)
         : MATCH_NOTHING,
-    [active, queryText, preset, from, to, categoryIds, folderId, currency, today, startMonth],
+    [active, queryText, preset, from, to, categoryIds, folderId, currency, unconverted, today, startMonth, home],
   );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const total = useMemo(() => (active ? sumHome(db, filter, home) : null), [db, active, filter, home, version]);
@@ -100,6 +109,7 @@ export function SearchScreen() {
     });
   }
   if (currency) chips.push({ key: "currency", label: currency, remove: () => patch({ currency: undefined }) });
+  if (unconverted) chips.push({ key: "unconverted", label: t("search.unconverted"), remove: () => patch({ unconverted: false }) });
 
   const filterCount = activeFilterCount(effective);
   const link = (label: string, onPress: () => void) => (

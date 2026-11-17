@@ -13,6 +13,8 @@ export type SearchState = {
   /** undefined = any folder, null = no folder. */
   folderId: string | null | undefined;
   currency: string | undefined;
+  /** Only receipts whose total is not in the home currency total. */
+  unconverted: boolean;
 };
 
 export const EMPTY_SEARCH: SearchState = {
@@ -23,6 +25,7 @@ export const EMPTY_SEARCH: SearchState = {
   categoryIds: [],
   folderId: undefined,
   currency: undefined,
+  unconverted: false,
 };
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -56,12 +59,13 @@ function dateBounds(
 }
 
 /** Query filter for `s`; `today` is the local YYYY-MM-DD. Blank text applies no text filter. */
-export function toFilter(s: SearchState, today: string, taxStartMonth: number): ReceiptFilter {
+export function toFilter(s: SearchState, today: string, taxStartMonth: number, home: string): ReceiptFilter {
   const f: ReceiptFilter = { ...dateBounds(s, today, taxStartMonth) };
   if (s.text.trim()) f.text = s.text;
   if (s.categoryIds.length > 0) f.categoryIds = s.categoryIds;
   if (s.folderId !== undefined) f.folderId = s.folderId;
   if (s.currency) f.currency = s.currency;
+  if (s.unconverted) f.unconvertedFor = home;
   return f;
 }
 
@@ -71,6 +75,7 @@ export function activeFilterCount(s: SearchState): number {
     (s.preset !== "all" ? 1 : 0) +
     (s.categoryIds.length > 0 ? 1 : 0) +
     (s.folderId !== undefined ? 1 : 0) +
-    (s.currency ? 1 : 0)
+    (s.currency ? 1 : 0) +
+    (s.unconverted ? 1 : 0)
   );
 }

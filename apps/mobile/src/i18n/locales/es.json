@@ -269,7 +269,8 @@
       "thisTaxYear": "Este año fiscal",
       "lastTaxYear": "Año fiscal pasado",
       "custom": "Rango personalizado"
-    }
+    },
+    "unconverted": "Sin convertir"
   },
   "export": {
     "report": {
@@ -426,6 +427,7 @@
     "receiptCount_other": "{{count}} recibos",
     "toDay": "hasta el {{day}}",
     "byMonth": "Por mes",
-    "paceDate": "{{arrow}} {{pct}}% vs {{period}} hasta el {{date}}"
+    "paceDate": "{{arrow}} {{pct}}% vs {{period}} hasta el {{date}}",
+    "paceSlip": "{{arrow}} {{pct}}% vs {{period}} (hasta el día {{day}})"
   }
 }

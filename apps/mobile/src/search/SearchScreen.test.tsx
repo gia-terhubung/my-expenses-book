@@ -5,11 +5,12 @@ import { createFolder } from "@/db/repositories/folders";
 import { createReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb } from "@/db/types";
-import { initI18n } from "@/i18n";
+import { initI18n, setLanguage } from "@/i18n";
 
 import { SearchScreen } from "./SearchScreen";
 
 let mockDb: AppDb;
+let mockParams: Record<string, string> = {};
 const mockRouter = { push: jest.fn(), back: jest.fn(), setParams: jest.fn() };
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 jest.mock("@/images/ImageStoreProvider", () => ({ useImageStore: () => ({}) }));
@@ -24,7 +25,7 @@ jest.mock("expo-router", () => ({
   get router() {
     return mockRouter;
   },
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: () => mockParams,
   useFocusEffect: () => undefined,
 }));
 jest.mock("@expo/ui/swift-ui", () => ({ DatePicker: () => null }));
@@ -56,6 +57,7 @@ beforeAll(() => initI18n("en"));
 beforeEach(() => {
   mockDb = testDb();
   jest.clearAllMocks();
+  mockParams = {};
   jest.useFakeTimers();
 });
 afterEach(() => jest.useRealTimers());
@@ -114,6 +116,35 @@ describe("SearchScreen", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Clear all" }));
     expect(screen.queryByText("Indomaret")).toBeNull();
     expect(screen.getByText(/Search your receipts/)).toBeTruthy();
+  });
+
+  it("param unconverted=1 shows the Belum dikonversi chip and only unconverted receipts", async () => {
+    await act(async () => void setLanguage("id"));
+    try {
+      seed("Indomaret", null);
+      createReceipt(mockDb, {
+        status: "confirmed",
+        merchant: "Warung Asing",
+        purchasedAtLocal: "2026-05-11T10:00:00",
+        purchasedTz: "UTC",
+        purchasedAtUtc: Date.UTC(2026, 4, 11),
+        scannedAtUtc: Date.UTC(2026, 4, 11),
+        scannedTz: "UTC",
+        currency: "USD",
+        totalMinor: 1000,
+        taxMinor: null,
+        homeCurrencyAtSave: null,
+        amountHomeMinor: null,
+        parseSource: "manual",
+      });
+      mockParams = { unconverted: "1" };
+      await render(<SearchScreen />);
+      expect(screen.getByRole("button", { name: "Hapus filter Belum dikonversi" })).toBeTruthy();
+      expect(screen.getByText("Warung Asing")).toBeTruthy();
+      expect(screen.queryByText("Indomaret")).toBeNull();
+    } finally {
+      await act(async () => void setLanguage("en"));
+    }
   });
 
   it("ignores a filtered category once it is deleted: no hidden filter, no chip", async () => {

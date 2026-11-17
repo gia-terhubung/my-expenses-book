@@ -1,14 +1,17 @@
-import { render, screen, within } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, within } from "@testing-library/react-native";
 
 import { deviceTimeZone, formatLocal } from "@/capture/localTime";
 import { createReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb } from "@/db/types";
-import { initI18n } from "@/i18n";
+import { initI18n, setLanguage } from "@/i18n";
 import { formatMoney } from "@/money/money";
 import { lightColors } from "@/theme/tokens";
 
 import { TotalsHeader } from "./TotalsHeader";
+
+const mockPush = jest.fn();
+jest.mock("expo-router", () => ({ router: { push: (...a: unknown[]) => mockPush(...a) } }));
 
 let mockDb: AppDb;
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
@@ -38,6 +41,96 @@ function seed(totalMinor: number, currency: string, amountHomeMinor: number | nu
 beforeAll(() => initI18n("en"));
 beforeEach(() => {
   mockDb = testDb();
+  mockPush.mockClear();
+});
+
+/** A receipt on a fixed local day, optionally in a category; home amount in IDR. */
+function seedOn(day: string, amount: number, categoryId: string | null = null) {
+  return createReceipt(mockDb, {
+    status: "confirmed",
+    merchant: "Demo",
+    purchasedAtLocal: `${day}T10:00:00`,
+    purchasedTz: deviceTimeZone(),
+    purchasedAtUtc: Date.now(),
+    scannedAtUtc: Date.now(),
+    scannedTz: deviceTimeZone(),
+    currency: "IDR",
+    totalMinor: amount,
+    taxMinor: null,
+    homeCurrencyAtSave: "IDR",
+    amountHomeMinor: amount,
+    parseSource: "manual",
+    categoryId,
+  });
+}
+
+/** Freeze only Date, so async rendering still runs on real timers. */
+function fixToday(iso: string) {
+  jest.useFakeTimers({
+    now: new Date(iso),
+    doNotFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "setImmediate", "clearImmediate", "nextTick", "queueMicrotask", "requestAnimationFrame", "cancelAnimationFrame", "performance"],
+  });
+}
+afterEach(() => jest.useRealTimers());
+
+describe("TotalsHeader slip stats", () => {
+  it("pace line shows ▲ 12% dibanding Oktober (s.d. tgl 16)", async () => {
+    fixToday("2026-11-16T05:00:00Z");
+    seedOn("2026-10-10", 1_000_000);
+    seedOn("2026-10-20", 5_000_000); // after day 16: not in the comparison
+    seedOn("2026-11-05", 1_120_000);
+    await act(async () => void setLanguage("id"));
+    try {
+      await render(<TotalsHeader />);
+      expect(screen.getByTestId("slip-pace")).toHaveTextContent("▲ 12% dibanding Oktober (s.d. tgl 16)");
+      expect(screen.getByTestId("slip-pace-pct")).toHaveStyle({ color: lightColors.highlight });
+    } finally {
+      await act(async () => void setLanguage("en"));
+    }
+  });
+
+  it("strip has top-3 + Lainnya segments and a legend", async () => {
+    fixToday("2026-11-16T05:00:00Z");
+    seedOn("2026-11-02", 400, "default:lodging");
+    seedOn("2026-11-03", 300, "default:food");
+    seedOn("2026-11-04", 200, "default:transport");
+    seedOn("2026-11-05", 100, "default:health");
+    await act(async () => void setLanguage("id"));
+    try {
+      await render(<TotalsHeader />);
+      expect(screen.getAllByTestId(/^slip-strip-seg-/)).toHaveLength(4);
+      const legend = screen.getByTestId("slip-legend");
+      expect(within(legend).getByText("Lainnya")).toBeTruthy();
+      expect(within(legend).getByText("40%")).toBeTruthy();
+      expect(within(legend).getByText("10%")).toBeTruthy();
+    } finally {
+      await act(async () => void setLanguage("en"));
+    }
+  });
+
+  it("whole slip is one button that opens /stats, label Lihat statistik", async () => {
+    fixToday("2026-11-16T05:00:00Z");
+    seedOn("2026-11-02", 400);
+    await act(async () => void setLanguage("id"));
+    try {
+      await render(<TotalsHeader />);
+      const slip = screen.getByRole("button", { name: /Lihat statistik/ });
+      expect(slip.props.accessibilityLabel).toContain("Bulan ini");
+      await fireEvent.press(slip);
+      expect(mockPush).toHaveBeenCalledWith("/stats");
+    } finally {
+      await act(async () => void setLanguage("en"));
+    }
+  });
+
+  it("no pace line and no strip in the first month", async () => {
+    fixToday("2026-11-16T05:00:00Z");
+    seedOn("2026-11-02", 400, "default:food");
+    await render(<TotalsHeader />);
+    expect(screen.queryByTestId("slip-pace")).toBeNull();
+    expect(screen.queryByTestId("slip-legend")).toBeNull();
+    expect(screen.queryByTestId(/^slip-strip-seg-/)).toBeNull();
+  });
 });
 
 describe("TotalsHeader (Ledger slip)", () => {

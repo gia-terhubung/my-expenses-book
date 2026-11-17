@@ -122,6 +122,13 @@ function SheetBody({ value, onApply, onClose }: Props) {
         {currencies.map((c) => (
           <OptionRow key={c} label={c} selected={draft.currency === c} onPress={() => patch({ currency: c })} />
         ))}
+
+        <OptionRow
+          role="checkbox"
+          label={t("search.unconverted")}
+          selected={draft.unconverted}
+          onPress={() => patch({ unconverted: !draft.unconverted })}
+        />
       </ScrollView>
     </View>
   );

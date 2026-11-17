@@ -269,7 +269,8 @@
       "thisTaxYear": "This tax year",
       "lastTaxYear": "Last tax year",
       "custom": "Custom range"
-    }
+    },
+    "unconverted": "Not converted"
   },
   "export": {
     "report": {
@@ -426,6 +427,7 @@
     "receiptCount_other": "{{count}} receipts",
     "toDay": "to {{day}}",
     "byMonth": "By month",
-    "paceDate": "{{arrow}} {{pct}}% vs {{period}} to {{date}}"
+    "paceDate": "{{arrow}} {{pct}}% vs {{period}} to {{date}}",
+    "paceSlip": "{{arrow}} {{pct}}% vs {{period}} (to day {{day}})"
   }
 }

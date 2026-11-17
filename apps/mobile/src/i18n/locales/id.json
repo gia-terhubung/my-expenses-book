@@ -269,7 +269,8 @@
       "thisTaxYear": "Tahun pajak ini",
       "lastTaxYear": "Tahun pajak lalu",
       "custom": "Rentang kustom"
-    }
+    },
+    "unconverted": "Belum dikonversi"
   },
   "export": {
     "report": {
@@ -426,6 +427,7 @@
     "receiptCount_other": "{{count}} struk",
     "toDay": "s.d. {{day}}",
     "byMonth": "Per bulan",
-    "paceDate": "{{arrow}} {{pct}}% dibanding {{period}} s.d. {{date}}"
+    "paceDate": "{{arrow}} {{pct}}% dibanding {{period}} s.d. {{date}}",
+    "paceSlip": "{{arrow}} {{pct}}% dibanding {{period}} (s.d. tgl {{day}})"
   }
 }
