@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import { deviceTimeZone, formatLocal } from "@/capture/localTime";
 import { createReceipt } from "@/db/repositories/receipts";
@@ -247,6 +248,26 @@ describe("TotalsHeader short window (height < 480)", () => {
     mockLayout = LAYOUTS.duoSideways;
     await render(<TotalsHeader />);
     expect(screen.getByTestId("totals-slip").props.accessibilityLabel).toBe(full);
+  });
+
+  it("280 wide with the unconverted note: the money cell has priority and the column texts are capped", async () => {
+    seedOn(formatLocal(new Date(), deviceTimeZone()).slice(0, 10), 12_345_678);
+    seed(1_000, "USD", null);
+    mockLayout = layoutFor({ width: 280, height: 400, left: 0, right: 0 });
+    await render(<TotalsHeader />);
+    const cell = StyleSheet.flatten(screen.getByTestId("slip-cell-month").props.style);
+    expect(cell).toMatchObject({ flexGrow: 3, flexBasis: 0, minWidth: 0 });
+    const stats = StyleSheet.flatten(screen.getByTestId("slip-short-stats").props.style);
+    expect(stats).toMatchObject({ flexGrow: 2, flexBasis: 0, minWidth: 0 });
+    const amount = screen.getByTestId("slip-amount-month");
+    expect(amount.props.numberOfLines).toBe(1);
+    expect(amount.props.adjustsFontSizeToFit).toBe(true);
+    expect(amount.props.minimumFontScale).toBe(0.6);
+    for (const text of [within(screen.getByTestId("slip-short-stats")).getByText("1 not converted"), within(screen.getByTestId("slip-short-stats")).getByText("See statistics ›")]) {
+      expect(text.props.numberOfLines).toBe(2);
+      expect(text.props.adjustsFontSizeToFit).toBe(true);
+      expect(text.props.maxFontSizeMultiplier).toBe(1.3);
+    }
   });
 
   it("height 480 is the full slip", async () => {

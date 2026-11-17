@@ -80,12 +80,15 @@ export function TotalsHeader() {
 
   const notConverted = (n: number) => t("totals.notConverted", { count: n });
   const { colors, type, spacing } = theme;
+  const statsText = { numberOfLines: 2, adjustsFontSizeToFit: true, minimumFontScale: 0.8, maxFontSizeMultiplier: 1.3 } as const;
+  // Short slip: the money cell outranks the stats column (3:2 from a zero basis), so a long total is
+  // squeezed last; money is never ellipsized or wrapped.
   const cell = (key: string, label: string, tot: HomeTotal, totalBar: boolean) => {
     const amount = slipAmountText(tot.homeMinor, home, locale);
     const parts = splitPrefix(amount.text);
     return (
       // Not a separate screen-reader stop: the slip button's label carries the label and the exact total.
-      <View testID={`slip-cell-${key}`} style={{ flex: 1, minWidth: 0 }}>
+      <View testID={`slip-cell-${key}`} style={short ? { flexGrow: 3, flexBasis: 0, flexShrink: 1, minWidth: 0 } : { flex: 1, minWidth: 0 }}>
         <Text style={[type.body, { color: colors.slipMuted }]}>{label}</Text>
         <Text
           testID={`slip-amount-${key}`}
@@ -163,11 +166,13 @@ export function TotalsHeader() {
       <View style={{ flexDirection: "row", gap: spacing.lg }}>
         {cell("month", t("totals.thisMonth"), month, true)}
         {short ? (
-          <View testID="slip-short-stats" style={{ alignItems: "flex-end", justifyContent: "flex-end", flexShrink: 1, gap: spacing.xs }}>
+          <View testID="slip-short-stats" style={{ alignItems: "flex-end", justifyContent: "flex-end", flexGrow: 2, flexBasis: 0, flexShrink: 1, minWidth: 0, gap: spacing.xs }}>
             {stats.unconverted > 0 ? (
-              <Text style={[type.body, { color: colors.slipText }]}>{notConverted(stats.unconverted)}</Text>
+              <Text {...statsText} style={[type.body, { color: colors.slipText, textAlign: "right" }]}>
+                {notConverted(stats.unconverted)}
+              </Text>
             ) : null}
-            <Text style={[type.body, { color: colors.highlight, fontFamily: FONTS.bold }]}>{`${t("stats.openStats")} ›`}</Text>
+            <Text {...statsText} style={[type.body, { color: colors.highlight, fontFamily: FONTS.bold, textAlign: "right" }]}>{`${t("stats.openStats")} ›`}</Text>
           </View>
         ) : (
           cell("year", t("totals.taxYear", { label: taxYearLabel(ty, startMonth) }), year, false)
