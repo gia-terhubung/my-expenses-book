@@ -1,0 +1,37 @@
+.slip {
+  padding-block: var(--space-6) var(--space-7);
+}
+
+.text {
+  max-width: 40rem;
+}
+
+.bar {
+  margin-top: var(--space-4);
+}
+
+.lead {
+  margin-top: var(--space-5);
+  max-width: 34rem;
+}
+
+.aside {
+  margin-top: var(--space-6);
+}
+
+@media (min-width: 900px) {
+  .slip {
+    padding-block: var(--space-7) var(--space-8);
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-7);
+  }
+
+  .aside {
+    margin-top: 0;
+  }
+}
