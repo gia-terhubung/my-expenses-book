@@ -8,7 +8,9 @@
     "start": "npx --yes serve out",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "brand-images": "node scripts/make-brand-images.mjs",
+    "screenshots": "node scripts/prepare-screenshots.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
@@ -25,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "jsdom": "^31.0.1",
+    "sharp": "^0.35.5",
     "typescript": "^5",
     "vitest": "^5.1.0"
   },
