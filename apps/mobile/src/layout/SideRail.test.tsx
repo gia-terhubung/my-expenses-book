@@ -1,0 +1,93 @@
+import { fireEvent, render, screen } from "@testing-library/react-native";
+import type { BottomTabBarProps } from "expo-router/js-tabs";
+import { StyleSheet } from "react-native";
+
+import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
+import { initI18n } from "@/i18n";
+import { tokens } from "@/theme/tokens";
+
+import { SideRail, type RailVariant } from "./SideRail";
+
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
+}));
+// The add sheet's capture flow reads the DB and prefs; the real providers need native modules.
+jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => null }));
+jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
+
+const light = tokens.light;
+const ROUTES = ["index", "search", "folders", "settings"];
+
+const props = (index = 0) =>
+  ({
+    state: { index, routes: ROUTES.map((name) => ({ key: `${name}-key`, name })) },
+    navigateToTab: jest.fn(),
+  }) as unknown as BottomTabBarProps;
+
+function flat(node: { props: { style?: unknown } }) {
+  const s = node.props.style;
+  return StyleSheet.flatten(typeof s === "function" ? s({ pressed: false }) : (s as object));
+}
+
+const renderRail = (variant: RailVariant, index = 0) =>
+  render(
+    <AddReceiptProvider>
+      <SideRail {...props(index)} variant={variant} />
+    </AddReceiptProvider>,
+  );
+
+beforeAll(() => initI18n("id"));
+
+describe("SideRail", () => {
+  it.each([
+    ["icons", 72],
+    ["labels", 200],
+  ] as const)("%s rail is %i wide, hairline end border, top padding 32", async (variant, width) => {
+    await renderRail(variant);
+    expect(flat(screen.getByTestId("side-rail"))).toMatchObject({
+      width,
+      borderEndWidth: StyleSheet.hairlineWidth,
+      paddingTop: 32,
+      paddingBottom: 34 + 16,
+    });
+  });
+
+  it("icons: each tab is icon over a caption label, 56 high, 8 side margin, a11y name = label", async () => {
+    await renderRail("icons");
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.map((t) => t.props.accessibilityLabel)).toEqual(["Struk", "Cari", "Folder", "Pengaturan"]);
+    expect(flat(tabs[0])).toMatchObject({ minHeight: 56, marginHorizontal: 8, backgroundColor: light.colors.tonal });
+    const icon = tabs[0].children[0] as { props: Record<string, unknown> };
+    // Ionicons renders its size and colour as text style.
+    expect(icon.props.accessible).toBe(false);
+    expect(flat(icon as never)).toMatchObject({ fontSize: 22, color: light.colors.primary });
+    expect(flat(tabs[1].children[0] as never).color).toBe(light.colors.textMuted);
+  });
+
+  it("icons: labels shrink, never wrap (Pengaturan at 1.3x)", async () => {
+    await renderRail("icons");
+    expect(screen.getByText("Pengaturan").props).toMatchObject({
+      numberOfLines: 1,
+      adjustsFontSizeToFit: true,
+      minimumFontScale: 0.75,
+      maxFontSizeMultiplier: 1.3,
+    });
+    expect(flat(screen.getByText("Pengaturan"))).toMatchObject({ fontSize: 10, lineHeight: 13, fontWeight: "600" });
+  });
+
+  it("labels: icon before the label, 16 side margin kept", async () => {
+    await renderRail("labels");
+    const tab = screen.getAllByRole("tab")[0];
+    expect(flat(tab)).toMatchObject({ marginHorizontal: 16, flexDirection: "row" });
+    expect(flat(tab.children[0] as never).fontSize).toBe(22);
+  });
+
+  it.each(["icons", "labels"] as const)("%s: round + (56) labelled Tambah struk opens the add sheet", async (variant) => {
+    await renderRail(variant);
+    const add = screen.getByTestId("rail-add");
+    expect(add.props.accessibilityLabel).toBe("Tambah struk");
+    expect(flat(add)).toMatchObject({ width: 56, height: 56, borderRadius: 28, backgroundColor: light.colors.primary });
+    await fireEvent.press(add);
+    expect(screen.getByTestId("capture-sheet")).toBeTruthy();
+  });
+});

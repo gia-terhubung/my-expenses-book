@@ -4,11 +4,12 @@ import { StyleSheet, Text } from "react-native";
 
 import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
 import { initI18n } from "@/i18n";
+import type { Layout } from "@/layout/layout";
+import { LAYOUTS } from "@/layout/testing/layouts";
 import { tokens } from "@/theme/tokens";
 
 import { BottomTabs } from "./BottomTabBar";
 import { useTabBarSpace } from "./useTabBarSpace";
-import { useWindowClass } from "./useWindowClass";
 
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 47, left: 0, right: 0 }),
@@ -17,7 +18,8 @@ jest.mock("react-native-safe-area-context", () => ({
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => null }));
 jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
 
-jest.mock("./useWindowClass", () => ({ useWindowClass: jest.fn(() => "compact") }));
+let mockLayout: Layout = LAYOUTS.phone;
+jest.mock("./useLayout", () => ({ useLayout: () => mockLayout }));
 
 const light = tokens.light;
 const ROUTES = ["index", "search", "folders", "settings"];
@@ -122,10 +124,21 @@ describe("useTabBarSpace", () => {
     expect(screen.getByTestId("space")).toHaveTextContent(String(47 + 12 + light.size.capsule + 24));
   });
 
+  beforeEach(() => {
+    mockLayout = LAYOUTS.phone;
+  });
+
+  it("closed Duo sideways (bar, 594 content) still clears the bar", async () => {
+    mockLayout = LAYOUTS.duoSideways;
+    await render(inTabs);
+    expect(screen.getByTestId("space")).toHaveTextContent(String(47 + 12 + light.size.capsule + 24));
+  });
+
   it("is 0 on wide layouts and outside the tabs navigator", async () => {
-    (useWindowClass as jest.Mock).mockReturnValueOnce("expanded");
+    mockLayout = LAYOUTS.duoPortrait;
     await render(inTabs);
     expect(screen.getByTestId("space")).toHaveTextContent("0");
+    mockLayout = LAYOUTS.phone;
     await render(<Probe />);
     expect(screen.getByTestId("space")).toHaveTextContent("0");
   });

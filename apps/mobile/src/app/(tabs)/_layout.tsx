@@ -11,12 +11,13 @@ import { useLayout } from "@/layout/useLayout";
  * owned here, above both bars.
  */
 export default function TabsLayout() {
-  const bar = useLayout().nav === "bar";
+  const { nav } = useLayout();
+  const bar = nav === "bar";
 
   return (
     <AddReceiptProvider>
       <Tabs
-        tabBar={(props) => (bar ? <BottomTabs {...props} /> : <SideRail {...props} />)}
+        tabBar={(props) => (bar ? <BottomTabs {...props} /> : <SideRail {...props} variant={nav === "iconRail" ? "icons" : "labels"} />)}
         screenOptions={{ headerShown: false, tabBarPosition: bar ? "bottom" : "left" }}
       >
         <Tabs.Screen name="index" />

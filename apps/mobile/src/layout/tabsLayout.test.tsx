@@ -86,12 +86,32 @@ describe("tabs layout", () => {
     for (const l of LABELS) expect(within(screen.getByTestId("tab-bar")).getByText(l)).toBeTruthy();
   });
 
-  it.each(["duoPortrait", "duoLandscape"] as const)("%s: side rail, no tab bar, 4 labels", async (name) => {
+  it.each([
+    ["duoPortrait", 72],
+    ["duoLandscape", 200],
+  ] as const)("%s: side rail %i wide, no tab bar, 4 labels", async (name, width) => {
     setLayout(LAYOUTS[name]);
     await renderApp();
     expect(await screen.findByTestId("side-rail")).toBeTruthy();
+    expect(StyleSheet.flatten(screen.getByTestId("side-rail").props.style).width).toBe(width);
     expect(screen.queryByTestId("tab-bar")).toBeNull();
     for (const l of LABELS) expect(within(screen.getByTestId("side-rail")).getByText(l)).toBeTruthy();
+  });
+
+  it.each(["/", "/search", "/folders", "/settings"])("rail + opens the add sheet on %s", async (route) => {
+    setLayout(LAYOUTS.duoLandscape);
+    await renderApp(route);
+    await act(async () => fireEvent.press(await screen.findByTestId("rail-add")));
+    expect(screen.getAllByTestId("capture-sheet")).toHaveLength(1);
+  });
+
+  it("wide layouts: exactly one Add receipt button (no Home FAB)", async () => {
+    setLayout(LAYOUTS.duoLandscape);
+    await renderApp("/");
+    await screen.findByTestId("side-rail");
+    const buttons = screen.getAllByRole("button", { name: "Add receipt" });
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].props.testID).toBe("rail-add");
   });
 
   it("one add sheet survives bar <-> rail (fold and unfold with the sheet up)", async () => {

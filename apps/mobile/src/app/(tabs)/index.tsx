@@ -1,7 +1,7 @@
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { setStatusBarStyle } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { BackupReminder } from "@/backup/BackupReminder";
@@ -10,9 +10,7 @@ import { openReview } from "@/capture/useAddReceipt";
 import { useDb } from "@/db/DatabaseProvider";
 import { listDraftIds } from "@/db/repositories/receipts";
 import { useLayout } from "@/layout/useLayout";
-import { useWindowClass } from "@/layout/useWindowClass";
 import { FeedEmpty } from "@/receipts/FeedEmpty";
-import { feedFabVisible } from "@/receipts/feedFab";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { TotalsHeader } from "@/receipts/TotalsHeader";
 import { themedStatusBarStyle } from "@/theme/ThemedStatusBar";
@@ -23,7 +21,6 @@ export default function ReceiptsScreen() {
   const theme = useTheme();
   const db = useDb();
   const feedFilter = useMemo(() => ({}), []);
-  const windowClass = useWindowClass();
   const layout = useLayout();
   const { selected } = useLocalSearchParams<{ selected?: string }>();
   const add = useAddReceiptContext();
@@ -82,38 +79,6 @@ export default function ReceiptsScreen() {
         }
         empty={<FeedEmpty onStart={(m) => void add.start(m)} />}
       />
-      {feedFabVisible(windowClass, selected) ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("capture.add")}
-          onPress={add.open}
-          style={({ pressed }) => [
-            styles.fab,
-            {
-              width: theme.size.fab,
-              height: theme.size.fab,
-              backgroundColor: theme.colors.primary,
-              boxShadow: theme.elevation.raised,
-              right: theme.spacing.xl,
-              bottom: theme.spacing.xl,
-              opacity: pressed ? 0.85 : 1,
-            },
-          ]}
-        >
-          <Text style={[styles.plus, { color: theme.colors.onPrimary }]}>+</Text>
-        </Pressable>
-      ) : null}
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  fab: {
-    position: "absolute",
-    borderRadius: 20,
-    borderCurve: "continuous",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  plus: { fontSize: 32, lineHeight: 34, fontWeight: "400" },
-});
