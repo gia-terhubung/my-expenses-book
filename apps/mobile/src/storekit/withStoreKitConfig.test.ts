@@ -29,6 +29,6 @@ describe("addStoreKitReference", () => {
   });
 
   it("points at the copy inside the app folder", () => {
-    expect(STOREKIT_IDENTIFIER).toBe("../../MyExpensesBook/Tips.storekit");
+    expect(STOREKIT_IDENTIFIER).toBe("../MyExpensesBook/Tips.storekit");
   });
 });

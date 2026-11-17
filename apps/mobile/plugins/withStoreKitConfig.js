@@ -11,8 +11,8 @@ const { withDangerousMod } = require("@expo/config-plugins");
 
 const APP_FOLDER = "MyExpensesBook";
 const FILE = "Tips.storekit";
-// Relative to the scheme container, the form Xcode itself writes for a file in the app folder.
-const STOREKIT_IDENTIFIER = `../../${APP_FOLDER}/${FILE}`;
+// Xcode resolves this relative to the .xcodeproj bundle (verified: "../../" landed in apps/mobile).
+const STOREKIT_IDENTIFIER = `../${APP_FOLDER}/${FILE}`;
 
 function addStoreKitReference(xml) {
   if (xml.includes("<StoreKitConfigurationFileReference")) return xml;
