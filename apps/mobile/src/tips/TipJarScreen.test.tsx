@@ -171,16 +171,17 @@ describe("TipJarScreen café counter", () => {
     expect(screen.getAllByTestId("tip-cocoa", hidden).length).toBeGreaterThanOrEqual(3);
   });
 
-  it("the cappuccino price sits on a yellow tag with ink text; the others are plain", async () => {
+  it("the cappuccino price pill is yellow with ink text; the others are green", async () => {
     await ready();
     expect(flat(screen.getByTestId("tip-price-tip_coffee_generous")).backgroundColor).toBe(light.highlight);
     expect(flat(screen.getByText("$9.99")).color).toBe(light.onHighlight);
-    expect(flat(screen.getByTestId("tip-price-tip_coffee_small")).backgroundColor).toBeUndefined();
+    expect(flat(screen.getByTestId("tip-price-tip_coffee_small")).backgroundColor).toBe(light.primary);
+    expect(flat(screen.getByText("$2.99")).color).toBe(light.onPrimary);
   });
 
   it("shows what each tier is for, and says tips are optional", async () => {
     await ready();
-    expect(screen.getByText("A quick thank-you.")).toBeTruthy();
+    expect(screen.getByText("A quick thank-you.", hidden)).toBeTruthy();
     expect(screen.getByText(/Tips are entirely optional/)).toBeTruthy();
     expect(screen.getByRole("header", { name: "Buy the developer a coffee?" })).toBeTruthy();
   });
@@ -226,7 +227,7 @@ describe("TipJarScreen café counter", () => {
 
   it("stands the cups side by side on the counter, each a 48 dp target", async () => {
     await ready();
-    expect(screen.getByText("Cappuccino").props).toMatchObject({ numberOfLines: 1, adjustsFontSizeToFit: true });
+    expect(screen.getByText("Cappuccino", hidden).props).toMatchObject({ numberOfLines: 1, adjustsFontSizeToFit: true });
     expect(flat(screen.getByTestId("tip-counter")).flexDirection).toBe("row");
     for (const l of LABELS) {
       const s = flat(screen.getByLabelText(l));
@@ -239,7 +240,7 @@ describe("TipJarScreen café counter", () => {
     mockWindow.fontScale = 2;
     await ready();
     expect(flat(screen.getByTestId("tip-counter")).flexDirection).toBe("column");
-    expect(screen.getByText("Cappuccino").props.numberOfLines).toBeUndefined();
+    expect(screen.getByText("Cappuccino", hidden).props.numberOfLines).toBeUndefined();
   });
 });
 
@@ -258,7 +259,11 @@ describe("TipJarScreen without store prices", () => {
     expect(await screen.findByText(/Tips aren't available right now/)).toBeTruthy();
     expect(screen.getByText("Try again")).toBeTruthy();
     expect(cups()).toHaveLength(3);
-    expect(prices()).toHaveLength(0);
+    // Pills stay as disabled placeholders: never yellow, never a price.
+    expect(prices()).toHaveLength(3);
+    for (const pill of prices()) expect(flat(pill).backgroundColor).toBe(light.tonal);
+    expect(screen.getAllByText("–")).toHaveLength(3);
+    expect(screen.queryByText(/\$/)).toBeNull();
     for (const n of NAMES) {
       const tier = screen.getByRole("button", { name: n });
       expect(tier.props.accessibilityLabel).toBe(n);
@@ -280,8 +285,8 @@ describe("TipJarScreen without store prices", () => {
     await render(<TipJarScreen jar={jar} />);
     await screen.findByLabelText("Espresso, $2.99");
     expect(screen.queryByText(/Tips aren't available right now/)).toBeNull();
-    expect(prices()).toHaveLength(1);
-    expect(screen.queryByTestId("tip-price-tip_coffee_generous")).toBeNull();
+    expect(flat(screen.getByTestId("tip-price-tip_coffee_generous")).backgroundColor).toBe(light.tonal);
+    expect(screen.getAllByText("–")).toHaveLength(2);
     for (const n of ["Black coffee", "Cappuccino"]) {
       await fireEvent.press(screen.getByRole("button", { name: n }));
       expect(screen.getByRole("button", { name: n }).props.accessibilityState).toMatchObject({ disabled: true });
@@ -297,7 +302,7 @@ describe("TipJarScreen without store prices", () => {
     const placeholders = screen.getAllByText("…");
     expect(placeholders).toHaveLength(3);
     for (const p of placeholders) expect(flat(p).color).toBe(light.textMuted);
-    for (const id of IDS) expect(flat(screen.getByTestId(`tip-price-${id}`)).backgroundColor).toBeUndefined();
+    for (const id of IDS) expect(flat(screen.getByTestId(`tip-price-${id}`)).backgroundColor).toBe(light.tonal);
     for (const n of NAMES) {
       await fireEvent.press(screen.getByRole("button", { name: n }));
       expect(screen.getByRole("button", { name: n }).props.accessibilityState).toMatchObject({ disabled: true });
@@ -308,6 +313,59 @@ describe("TipJarScreen without store prices", () => {
   it("a price always has a definite width to shrink into", async () => {
     await render(<TipJarScreen jar={createFakeTipJar()} />);
     await screen.findByLabelText("Black coffee, $4.99");
+    for (const price of ["$2.99", "$4.99", "$9.99"]) expect(flat(screen.getByText(price)).alignSelf).toBe("stretch");
+  });
+});
+
+describe("TipJarScreen price buttons", () => {
+  const ready = async (jar = createFakeTipJar()) => {
+    await render(<TipJarScreen jar={jar} />);
+    await screen.findByLabelText("Black coffee, $4.99");
+    return jar;
+  };
+
+  it("each tier has exactly one button: the price pill, labelled name and price", async () => {
+    await ready();
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.map((b) => b.props.accessibilityLabel)).toEqual(LABELS);
+    expect(buttons.map((b) => b.props.testID)).toEqual(IDS.map((id) => `tip-price-${id}`));
+    // The name and note are spoken by the button (label and hint), not as extra stops.
+    expect(screen.queryByText("Espresso")).toBeNull();
+    expect(screen.getByText("Espresso", hidden)).toBeTruthy();
+    expect(screen.getByLabelText("Espresso, $2.99").props.accessibilityHint).toBe("A quick thank-you.");
+  });
+
+  it("the pill is a 48 dp filled pill", async () => {
+    await ready();
+    for (const id of IDS) {
+      const s = flat(screen.getByTestId(`tip-price-${id}`));
+      expect(Number(s.minHeight)).toBeGreaterThanOrEqual(48);
+      expect(s.borderRadius).toBe(tokens.light.radius.pill);
+    }
+  });
+
+  it("tapping the cup buys too, without being a second button", async () => {
+    const jar = await ready();
+    const column = screen.getByTestId("tip-tier-tip_coffee_small");
+    expect(column.props.accessible).toBe(false);
+    expect(column.props.accessibilityRole).toBe("none");
+    await fireEvent.press(column);
+    expect(jar.bought).toEqual(["tip_coffee_small"]);
+  });
+
+  it("while buying, the tapped pill is busy and the others are disabled", async () => {
+    await ready();
+    await fireEvent.press(screen.getByLabelText("Black coffee, $4.99"));
+    expect(screen.getByLabelText("Black coffee, $4.99").props.accessibilityState).toMatchObject({ busy: true, disabled: true });
+    for (const l of ["Espresso, $2.99", "Cappuccino, $9.99"]) {
+      expect(screen.getByLabelText(l).props.accessibilityState).toMatchObject({ busy: false, disabled: true });
+    }
+  });
+
+  it("stacked: pills run the full width of the text column", async () => {
+    mockWindow.fontScale = 2;
+    await ready();
+    mockWindow.fontScale = 1;
     for (const id of IDS) expect(flat(screen.getByTestId(`tip-price-${id}`)).alignSelf).toBe("stretch");
   });
 });

@@ -28,35 +28,42 @@ const STACK_WIDTH = 340;
  * One cup on the counter. The whole column is the button: cup, counter segment, name, price, note.
  * Side by side the segments join into one counter line; stacked, each cup stands on its own shelf.
  */
-/** Shown in place of a price while the store is still answering. */
+/** Pill text while the store is still answering, and when it has no price for a tier. */
 const PRICE_PLACEHOLDER = "…";
+const NO_PRICE = "–";
 
 type TierProps = {
   id: TipId;
   /** The store's price text. Without one the tier is shown but can never be bought. */
   price: string | null;
   connecting: boolean;
+  /** A purchase is in flight; `buying` says whether it is this tier's. */
   busy: boolean;
+  buying: boolean;
   stacked: boolean;
   onPress: () => void;
 };
 
-function Tier({ id, price, connecting, busy, stacked, onPress }: TierProps) {
+/**
+ * One cup on the counter with its price pill. The pill is the tier's only button for screen readers
+ * ("<name>, <price>", the note as its hint); the rest of the column is a plain tap area that buys too.
+ * Side by side the counter segments join into one line; stacked, each cup stands on its own shelf.
+ */
+function Tier({ id, price, connecting, busy, buying, stacked, onPress }: TierProps) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { colors, spacing, state } = theme;
+  const { colors, spacing } = theme;
   const art = TIP_ART[theme.scheme];
   const reduced = useReducedMotion();
   const [pressed, setPressed] = useState(false);
   const tier = TIERS[id];
-  const disabled = busy || !price;
   const label = t(tier.label);
-  // The yellow tag is for a real price only: never an empty or placeholder tag.
-  const tagged = id === "tip_coffee_generous" && !!price;
-  const priceText = price ?? (connecting ? PRICE_PLACEHOLDER : null);
+  const note = t(tier.note);
+  const disabled = busy || !price;
   const down = pressed && !disabled;
-  const align = stacked ? "flex-start" : "center";
   const textAlign = stacked ? "left" : "center";
+  const pressIn = () => setPressed(true);
+  const pressOut = () => setPressed(false);
 
   const stage = (
     <View style={stacked ? { width: 104 } : { alignSelf: "stretch" }}>
@@ -68,60 +75,51 @@ function Tier({ id, price, connecting, busy, stacked, onPress }: TierProps) {
   );
 
   const words = (
-    <View style={[{ alignItems: align, gap: spacing.xs, opacity: down ? state.pressedOpacity : 1 }, stacked ? { flex: 1 } : { alignSelf: "stretch", paddingHorizontal: spacing.xs }]}>
-      <Text
-        // Side by side a one-word name cannot wrap, so it shrinks; stacked it has the full line.
-        numberOfLines={stacked ? undefined : 1}
-        adjustsFontSizeToFit={!stacked}
-        minimumFontScale={0.7}
-        style={{ fontFamily: FONTS.bold, fontSize: 16, lineHeight: 21, color: colors.text, textAlign }}
-      >
-        {label}
-      </Text>
-      {priceText ? (
-        // Stretched, so the price has a definite width to shrink into (a wrap-content box can collapse it).
-        <View
-          testID={`tip-price-${id}`}
-          style={[
-            { alignSelf: "stretch" },
-            tagged
-              ? { maxWidth: 140, backgroundColor: colors.highlight, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: theme.radius.sm, transform: [{ rotate: "-2deg" }] }
-              : null,
-          ]}
+    <View style={[{ gap: spacing.sm }, stacked ? { flex: 1 } : { flex: 1, alignSelf: "stretch", paddingHorizontal: spacing.xs }]}>
+      {/* Spoken by the pill, so hidden here. */}
+      <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ gap: spacing.xs }}>
+        <Text
+          // Side by side a one-word name cannot wrap, so it shrinks; stacked it has the full line.
+          numberOfLines={stacked ? undefined : 1}
+          adjustsFontSizeToFit={!stacked}
+          minimumFontScale={0.7}
+          style={{ fontFamily: FONTS.bold, fontSize: 16, lineHeight: 21, color: colors.text, textAlign }}
         >
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-            style={[
-              theme.type.label,
-              theme.type.money,
-              { color: tagged ? colors.onHighlight : price ? colors.primary : colors.textMuted, fontWeight: "700", textAlign: tagged ? "center" : textAlign },
-            ]}
-          >
-            {priceText}
-          </Text>
-        </View>
-      ) : null}
-      <Text style={[theme.type.caption, { color: colors.textMuted, textAlign }]}>{t(tier.note)}</Text>
+          {label}
+        </Text>
+        <Text style={[theme.type.caption, { color: colors.textMuted, textAlign }]}>{note}</Text>
+      </View>
+      <Button
+        testID={`tip-price-${id}`}
+        // The yellow pill is for a real price only: never an empty or placeholder one.
+        variant={id === "tip_coffee_generous" ? "highlight" : "primary"}
+        label={price ?? (connecting ? PRICE_PLACEHOLDER : NO_PRICE)}
+        accessibilityLabel={price ? `${label}, ${price}` : label}
+        accessibilityHint={note}
+        shrinkLabel
+        disabled={disabled && !buying}
+        busy={buying}
+        onPress={onPress}
+        onPressIn={pressIn}
+        onPressOut={pressOut}
+        // Notes differ in length; `marginTop: auto` keeps the three pills on one line.
+        style={{ alignSelf: "stretch", marginTop: "auto", borderRadius: theme.radius.pill, paddingHorizontal: spacing.sm }}
+      />
     </View>
   );
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={price ? `${label}, ${price}` : label}
-      accessibilityHint={t(tier.note)}
-      accessibilityState={{ disabled }}
+      testID={`tip-tier-${id}`}
+      // A plain tap area, not a second button: the pill inside is the tier's one accessible button.
+      accessible={false}
+      accessibilityRole="none"
       disabled={disabled}
       onPress={onPress}
-      onPressIn={() => setPressed(true)}
-      onPressOut={() => setPressed(false)}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
       pressRetentionOffset={12}
-      style={[
-        { minHeight: theme.size.touch, minWidth: theme.size.touch, opacity: disabled ? state.disabledOpacity : 1 },
-        stacked ? { flexDirection: "row", alignItems: "flex-end", gap: spacing.lg } : { flex: 1, alignItems: "center", gap: spacing.md },
-      ]}
+      style={stacked ? { flexDirection: "row", alignItems: "flex-end", gap: spacing.lg } : { flex: 1, alignItems: "center", gap: spacing.md }}
     >
       {stage}
       {words}
@@ -173,6 +171,7 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
   const { state, products, thanked, notice, buy, retry } = useTipJar(jar);
   const busy = state === "buying";
   const connecting = state === "loading";
+  const [tapped, setTapped] = useState<TipId | null>(null);
   // Only a product the store priced is buyable. A store that answers with no products, or with products
   // that carry no price text (sideloaded build, items not yet approved), counts as unavailable.
   const prices = new Map(products.filter((p) => p.displayPrice?.trim()).map((p) => [p.id, p.displayPrice]));
@@ -204,9 +203,21 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
           ) : null}
 
           {/* The cups always stand on the counter; what changes is whether they carry a price. */}
-          <View testID="tip-counter" style={stacked ? { flexDirection: "column", gap: spacing.xl } : { flexDirection: "row", alignItems: "flex-start" }}>
+          <View testID="tip-counter" style={stacked ? { flexDirection: "column", gap: spacing.xl } : { flexDirection: "row", alignItems: "stretch" }}>
             {TIP_IDS.map((id) => (
-              <Tier key={id} id={id} price={prices.get(id) ?? null} connecting={connecting} busy={busy} stacked={stacked} onPress={() => buy(id)} />
+              <Tier
+                key={id}
+                id={id}
+                price={prices.get(id) ?? null}
+                connecting={connecting}
+                busy={busy}
+                buying={busy && tapped === id}
+                stacked={stacked}
+                onPress={() => {
+                  setTapped(id);
+                  buy(id);
+                }}
+              />
             ))}
           </View>
 

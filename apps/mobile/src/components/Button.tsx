@@ -5,13 +5,16 @@ import { useTheme } from "@/theme/ThemeProvider";
 export type ButtonProps = {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "quiet"; // default "secondary"
+  variant?: "primary" | "secondary" | "quiet" | "highlight"; // default "secondary"; "highlight" is the yellow fill with ink text
   tone?: "default" | "danger" | "muted"; // "muted" is for quiet only
   align?: "center" | "start"; // default: "start" for quiet, else "center"
   detail?: string;
   disabled?: boolean;
   busy?: boolean; // implies non-interactive
   busyIndicator?: boolean; // default true; false keeps the label visible
+  shrinkLabel?: boolean; // one line, shrunk to fit: for labels that must never wrap or ellipsize (prices)
+  onPressIn?: () => void;
+  onPressOut?: () => void;
   accessibilityLabel?: string;
   accessibilityHint?: string;
   testID?: string;
@@ -28,6 +31,9 @@ export function Button({
   disabled,
   busy,
   busyIndicator = true,
+  shrinkLabel,
+  onPressIn,
+  onPressOut,
   accessibilityLabel,
   accessibilityHint,
   testID,
@@ -46,6 +52,10 @@ export function Button({
     fill = colors.primary;
     fillPressed = colors.primaryPressed;
     labelColor = colors.onPrimary;
+  } else if (variant === "highlight") {
+    fill = colors.highlight;
+    fillPressed = colors.highlight;
+    labelColor = colors.onHighlight;
   } else if (variant === "secondary") {
     fill = danger ? colors.tonalDanger : colors.tonal;
     fillPressed = danger ? colors.tonalDanger : colors.tonalPressed;
@@ -70,6 +80,8 @@ export function Button({
       accessibilityState={{ disabled: inert, busy: !!busy }}
       disabled={inert}
       onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       testID={testID}
       style={({ pressed }) => [
         {
@@ -88,13 +100,20 @@ export function Button({
           : null,
         variant === "primary" && pressed && !inert ? { transform: [{ translateY: 1 }] } : null,
         variant === "quiet" && pressed && !inert ? { opacity: state.pressedOpacity } : null,
+        // Ink on yellow must stay on yellow: dim instead of changing the fill.
+        variant === "highlight" && pressed && !inert ? { opacity: 0.85 } : null,
         variant === "secondary" && danger && pressed && !inert ? { opacity: 0.85 } : null,
         style,
       ]}
     >
       <Text
+        numberOfLines={shrinkLabel ? 1 : undefined}
+        adjustsFontSizeToFit={shrinkLabel ? true : undefined}
+        minimumFontScale={shrinkLabel ? 0.5 : undefined}
         style={[
           theme.type.label,
+          // Stretched so the text has a definite width to shrink into.
+          shrinkLabel ? { alignSelf: "stretch" } : null,
           {
             color: labelColor,
             textAlign: textAlign === "center" ? "center" : "left",

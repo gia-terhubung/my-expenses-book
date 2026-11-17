@@ -74,6 +74,38 @@ describe("Button", () => {
     expect(later.color).toBe(light.textMuted);
   });
 
+  it("highlight uses the yellow fill with ink text, and stays yellow when pressed", async () => {
+    await render(<Button label="Tip" variant="highlight" onPress={() => {}} />);
+    const btn = () => screen.getByRole("button", { name: "Tip" });
+    expect(flat(btn()).backgroundColor).toBe(light.highlight);
+    expect(flat(screen.getByText("Tip")).color).toBe(light.onHighlight);
+    await fireEvent(btn(), "responderGrant", { nativeEvent: { touches: [] }, persist() {} });
+    expect(flat(btn()).backgroundColor).toBe(light.highlight);
+    expect(flat(btn()).opacity).toBeLessThan(1);
+  });
+
+  it("disabled highlight falls back to the tonal fill", async () => {
+    await render(<Button label="Tip" variant="highlight" disabled onPress={() => {}} />);
+    expect(flat(screen.getByRole("button", { name: "Tip" })).backgroundColor).toBe(light.tonal);
+    expect(flat(screen.getByText("Tip")).color).toBe(light.textMuted);
+  });
+
+  it("shrinkLabel keeps the label on one line and shrinks it to fit", async () => {
+    await render(<Button label="Rp 150.000" shrinkLabel onPress={() => {}} />);
+    const label = screen.getByText("Rp 150.000");
+    expect(label.props).toMatchObject({ numberOfLines: 1, adjustsFontSizeToFit: true });
+    expect(flat(label).alignSelf).toBe("stretch");
+  });
+
+  it("forwards press-in and press-out", async () => {
+    const onPressIn = jest.fn();
+    const onPressOut = jest.fn();
+    await render(<Button label="Save" onPress={() => {}} onPressIn={onPressIn} onPressOut={onPressOut} />);
+    await fireEvent(screen.getByRole("button", { name: "Save" }), "pressIn");
+    await fireEvent(screen.getByRole("button", { name: "Save" }), "pressOut");
+    expect([onPressIn.mock.calls.length, onPressOut.mock.calls.length]).toEqual([1, 1]);
+  });
+
   describe("pressed state", () => {
     async function pressed(props: Partial<React.ComponentProps<typeof Button>>) {
       await render(<Button label="X" onPress={() => {}} {...props} />);
