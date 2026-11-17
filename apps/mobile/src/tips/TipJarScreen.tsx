@@ -1,39 +1,88 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useState, type ComponentProps } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
-import Animated, { cubicBezier, useReducedMotion } from "react-native-reanimated";
+import { ActivityIndicator, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 
 import { Button } from "@/components/Button";
 import type { TipId, TipJar, TipProduct } from "@/payments/types";
 import { FONTS } from "@/theme/fonts";
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { TipBackdrop } from "./TipBackdrop";
+import { BeanBackdrop } from "./BeanBackdrop";
+import { Cup, CUP_STAGE_HEIGHT } from "./Cup";
+import { TIP_ART } from "./palette";
 import { useTipJar, type TipNotice } from "./useTipJar";
 
-type CupIcon = ComponentProps<typeof MaterialCommunityIcons>["name"];
-
-const TIERS: Record<TipId, { label: string; note: string; icon: CupIcon }> = {
-  tip_coffee_small: { label: "tips.small", note: "tips.smallNote", icon: "coffee-outline" },
-  tip_coffee_standard: { label: "tips.standard", note: "tips.standardNote", icon: "coffee" },
-  tip_coffee_generous: { label: "tips.generous", note: "tips.generousNote", icon: "coffee-to-go" },
+const TIERS: Record<TipId, { label: string; note: string }> = {
+  tip_coffee_small: { label: "tips.small", note: "tips.smallNote" },
+  tip_coffee_standard: { label: "tips.standard", note: "tips.standardNote" },
+  tip_coffee_generous: { label: "tips.generous", note: "tips.generousNote" },
 };
 
-const PRESS_EASE = cubicBezier(0.23, 1, 0.32, 1);
-const ICON_CHIP = 44;
+/** Three columns need room: at large text or on a narrow screen the cups stack, one per line. */
+const STACK_FONT_SCALE = 1.3;
+const STACK_WIDTH = 340;
 
-function Tier({ product, disabled, onPress }: { product: TipProduct; disabled: boolean; onPress: () => void }) {
+/**
+ * One cup on the counter. The whole column is the button: cup, counter segment, name, price, note.
+ * Side by side the segments join into one counter line; stacked, each cup stands on its own shelf.
+ */
+function Tier({ product, disabled, stacked, onPress }: { product: TipProduct; disabled: boolean; stacked: boolean; onPress: () => void }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { colors, spacing, radius, state } = theme;
+  const { colors, spacing, state } = theme;
+  const art = TIP_ART[theme.scheme];
   const reduced = useReducedMotion();
   const [pressed, setPressed] = useState(false);
   const tier = TIERS[product.id];
   const label = t(tier.label);
-  const special = product.id === "tip_coffee_generous";
+  const tagged = product.id === "tip_coffee_generous";
   const down = pressed && !disabled;
+  const align = stacked ? "flex-start" : "center";
+  const textAlign = stacked ? "left" : "center";
+
+  const stage = (
+    <View style={stacked ? { width: 104 } : { alignSelf: "stretch" }}>
+      <View style={{ height: CUP_STAGE_HEIGHT, justifyContent: "flex-end", alignItems: "center" }}>
+        <Cup id={product.id} lifted={down} still={reduced} />
+      </View>
+      <View style={{ height: 2, backgroundColor: art.line }} />
+    </View>
+  );
+
+  const words = (
+    <View style={[{ alignItems: align, gap: spacing.xs, opacity: down ? state.pressedOpacity : 1 }, stacked ? { flex: 1 } : { alignSelf: "stretch", paddingHorizontal: spacing.xs }]}>
+      <Text
+        // Side by side a one-word name cannot wrap, so it shrinks; stacked it has the full line.
+        numberOfLines={stacked ? undefined : 1}
+        adjustsFontSizeToFit={!stacked}
+        minimumFontScale={0.7}
+        style={{ fontFamily: FONTS.bold, fontSize: 16, lineHeight: 21, color: colors.text, textAlign }}
+      >
+        {label}
+      </Text>
+      <View
+        testID={`tip-price-${product.id}`}
+        style={[
+          { maxWidth: "100%" },
+          tagged
+            ? { backgroundColor: colors.highlight, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: theme.radius.sm, transform: [{ rotate: "-2deg" }] }
+            : null,
+        ]}
+      >
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.5}
+          style={[theme.type.label, theme.type.money, { color: tagged ? colors.onHighlight : colors.primary, fontWeight: "700", textAlign }]}
+        >
+          {product.displayPrice}
+        </Text>
+      </View>
+      <Text style={[theme.type.caption, { color: colors.textMuted, textAlign }]}>{t(tier.note)}</Text>
+    </View>
+  );
 
   return (
     <Pressable
@@ -46,65 +95,13 @@ function Tier({ product, disabled, onPress }: { product: TipProduct; disabled: b
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
       pressRetentionOffset={12}
+      style={[
+        { minHeight: theme.size.touch, minWidth: theme.size.touch, opacity: disabled ? state.disabledOpacity : 1 },
+        stacked ? { flexDirection: "row", alignItems: "flex-end", gap: spacing.lg } : { flex: 1, alignItems: "center", gap: spacing.md },
+      ]}
     >
-      <Animated.View
-        testID={`tip-tier-${product.id}`}
-        style={[
-          {
-            minHeight: 68,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: spacing.md,
-            paddingHorizontal: spacing.lg,
-            paddingVertical: spacing.md,
-            borderRadius: radius.control,
-            borderCurve: "continuous",
-            borderWidth: 1,
-            borderColor: colors.border,
-            backgroundColor: down ? colors.surfacePressed : colors.surface,
-            opacity: disabled ? state.disabledOpacity : 1,
-          },
-          // Press feedback: a small, quick scale. Under reduce motion only the fill changes.
-          reduced
-            ? null
-            : {
-                transform: [{ scale: down ? 0.97 : 1 }],
-                transitionProperty: "transform",
-                transitionDuration: 120,
-                transitionTimingFunction: PRESS_EASE,
-              },
-        ]}
-      >
-        <View
-          testID={`tip-icon-${product.id}`}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          style={{
-            width: ICON_CHIP,
-            height: ICON_CHIP,
-            borderRadius: ICON_CHIP / 2,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: special ? colors.highlight : colors.tonal,
-          }}
-        >
-          <MaterialCommunityIcons name={tier.icon} size={24} color={special ? colors.onHighlight : colors.primary} />
-        </View>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={{ fontFamily: FONTS.bold, fontSize: 17, lineHeight: 22, color: colors.text }}>{label}</Text>
-          <Text style={[theme.type.caption, { color: colors.textMuted }]}>{t(tier.note)}</Text>
-        </View>
-        <View style={{ maxWidth: "42%", flexShrink: 0 }}>
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-            style={[theme.type.label, theme.type.money, { color: colors.primary, fontWeight: "700", textAlign: "right" }]}
-          >
-            {product.displayPrice}
-          </Text>
-        </View>
-      </Animated.View>
+      {stage}
+      {words}
     </Pressable>
   );
 }
@@ -152,30 +149,15 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
   const { colors, spacing } = theme;
   const { state, products, thanked, notice, buy, retry } = useTipJar(jar);
   const busy = state === "buying";
+  const { width, fontScale } = useWindowDimensions();
+  const stacked = fontScale >= STACK_FONT_SCALE || width < STACK_WIDTH;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TipBackdrop paused={paused} />
+      <BeanBackdrop paused={paused} />
       <ScrollView contentContainerStyle={{ padding: spacing.xl, paddingBottom: spacing.xxl }}>
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: spacing.lg }}>
           <View style={{ gap: spacing.md }}>
-            {/* The app icon's yellow ground, with a cup in ink. */}
-            <View
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 20,
-                borderCurve: "continuous",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: colors.highlight,
-                transform: [{ rotate: "-6deg" }],
-              }}
-            >
-              <MaterialCommunityIcons name="coffee" size={34} color={colors.onHighlight} />
-            </View>
             <Text accessibilityRole="header" style={[theme.type.display, { color: colors.text }]}>
               {t("tips.heading")}
             </Text>
@@ -194,9 +176,9 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
           ) : null}
 
           {state === "ready" || busy ? (
-            <View style={{ gap: spacing.md }}>
+            <View testID="tip-counter" style={stacked ? { flexDirection: "column", gap: spacing.xl } : { flexDirection: "row", alignItems: "flex-start" }}>
               {products.map((p) => (
-                <Tier key={p.id} product={p} disabled={busy} onPress={() => buy(p.id)} />
+                <Tier key={p.id} product={p} disabled={busy} stacked={stacked} onPress={() => buy(p.id)} />
               ))}
             </View>
           ) : null}

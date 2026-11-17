@@ -1,3 +1,5 @@
+import { TIP_ART } from "@/tips/palette";
+
 import { darkColors, lightColors, type ColorTokens } from "./tokens";
 
 /** WCAG 2.1 relative luminance of a #RRGGBB color. */
@@ -41,10 +43,6 @@ const PAIRS: [keyof ColorTokens, keyof ColorTokens, number][] = [
   ["onHighlight", "highlight", 4.5],
   // Yellow is a foreground on the green slip (pace line, "see statistics", total bar).
   ["highlight", "slip", 4.5],
-  // Tip jar: soft yellow backdrop discs drift behind the intro, the unavailable copy and "Try again".
-  ["text", "brassFill", 4.5],
-  ["textMuted", "brassFill", 4.5],
-  ["primary", "brassFill", 4.5],
 ];
 
 describe.each([
@@ -53,6 +51,16 @@ describe.each([
 ])("%s theme contrast", (_name, colors) => {
   it.each(PAIRS)("%s on %s ≥ %s", (fg, bg, min) => {
     expect(contrast(colors[fg], colors[bg])).toBeGreaterThanOrEqual(min);
+  });
+});
+
+// Tip jar: faint coffee beans sit behind the heading, intro, notes, prices, footnote and "Try again".
+describe.each([
+  ["light", lightColors as ColorTokens, TIP_ART.light.bean],
+  ["dark", darkColors, TIP_ART.dark.bean],
+] as const)("%s tip jar bean backdrop", (_name, colors, bean) => {
+  it.each(["text", "textMuted", "primary"] as const)("%s on a bean ≥ 4.5", (fg) => {
+    expect(contrast(colors[fg], bean)).toBeGreaterThanOrEqual(4.5);
   });
 });
 

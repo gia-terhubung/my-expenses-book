@@ -5,7 +5,15 @@ import { useReducedMotion } from "react-native-reanimated";
 import { initI18n } from "@/i18n";
 import { createFakeTipJar } from "@/payments/fakeTipJar";
 
+import { tokens } from "@/theme/tokens";
+
 import { TipJarScreen } from "./TipJarScreen";
+
+const light = tokens.light.colors;
+
+// Jest's default window is 750 wide at font scale 2; the screen lays out by both.
+const mockWindow = { width: 360, height: 800, scale: 2, fontScale: 1 };
+jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({ __esModule: true, default: () => mockWindow }));
 
 const reducedMotion = useReducedMotion as jest.Mock;
 const flat = (node: { props: { style?: unknown } }) => StyleSheet.flatten(node.props.style as object) as Record<string, unknown>;
@@ -14,7 +22,7 @@ const IDS = ["tip_coffee_small", "tip_coffee_standard", "tip_coffee_generous"];
 
 beforeAll(() => initI18n("en"));
 
-const LABELS = ["Espresso, $2.99", "Coffee, $4.99", "Generous coffee, $9.99"];
+const LABELS = ["Espresso, $2.99", "Black coffee, $4.99", "Cappuccino, $9.99"];
 
 describe("TipJarScreen", () => {
   it("connects on mount, lists the three tiers with store prices, disconnects on unmount", async () => {
@@ -43,7 +51,7 @@ describe("TipJarScreen", () => {
   it("buys the tapped tier and disables every tier while buying", async () => {
     const jar = createFakeTipJar();
     await render(<TipJarScreen jar={jar} />);
-    await fireEvent.press(await screen.findByLabelText("Coffee, $4.99"));
+    await fireEvent.press(await screen.findByLabelText("Black coffee, $4.99"));
     expect(jar.bought).toEqual(["tip_coffee_standard"]);
     for (const l of LABELS) expect(screen.getByLabelText(l).props.accessibilityState).toMatchObject({ disabled: true });
   });
@@ -51,9 +59,9 @@ describe("TipJarScreen", () => {
   it("returns to ready with no message when the user cancels", async () => {
     const jar = createFakeTipJar();
     await render(<TipJarScreen jar={jar} />);
-    await fireEvent.press(await screen.findByLabelText("Coffee, $4.99"));
+    await fireEvent.press(await screen.findByLabelText("Black coffee, $4.99"));
     await act(async () => jar.emit({ kind: "cancelled" }));
-    expect(screen.getByLabelText("Coffee, $4.99").props.accessibilityState).toMatchObject({ disabled: false });
+    expect(screen.getByLabelText("Black coffee, $4.99").props.accessibilityState).toMatchObject({ disabled: false });
     expect(screen.queryByText(/didn't go through/)).toBeNull();
   });
 
@@ -68,7 +76,7 @@ describe("TipJarScreen", () => {
   it("thanks the user, also for a purchase replayed before any tap", async () => {
     const jar = createFakeTipJar();
     await render(<TipJarScreen jar={jar} />);
-    await screen.findByLabelText("Coffee, $4.99");
+    await screen.findByLabelText("Black coffee, $4.99");
     await act(async () => jar.emit({ kind: "thanks", id: "tip_coffee_generous" }));
     expect(screen.getAllByText("Thank you so much! Your coffee means a lot and helps keep this app independent.")).toHaveLength(1);
   });
@@ -80,16 +88,16 @@ describe("TipJarScreen final-review fixes", () => {
   it("a buy() rejected with user-cancelled shows no failure text (C1)", async () => {
     const jar = createFakeTipJar({ buyRejects: { code: "user-cancelled" } });
     await render(<TipJarScreen jar={jar} />);
-    await fireEvent.press(await screen.findByLabelText("Coffee, $4.99"));
+    await fireEvent.press(await screen.findByLabelText("Black coffee, $4.99"));
     await act(async () => jar.emit({ kind: "cancelled" }));
     expect(screen.queryByText(/didn't go through/)).toBeNull();
-    expect(screen.getByLabelText("Coffee, $4.99").props.accessibilityState).toMatchObject({ disabled: false });
+    expect(screen.getByLabelText("Black coffee, $4.99").props.accessibilityState).toMatchObject({ disabled: false });
   });
 
   it("a buy() rejected with a real error shows the failure text", async () => {
     const jar = createFakeTipJar({ buyRejects: { code: "E_NETWORK" } });
     await render(<TipJarScreen jar={jar} />);
-    await fireEvent.press(await screen.findByLabelText("Coffee, $4.99"));
+    await fireEvent.press(await screen.findByLabelText("Black coffee, $4.99"));
     expect(await screen.findByText("The purchase didn't go through. You weren't charged.")).toBeTruthy();
   });
 
@@ -106,15 +114,15 @@ describe("TipJarScreen final-review fixes", () => {
     const jar = createFakeTipJar();
     await render(<TipJarScreen jar={jar} />);
     await act(async () => {});
-    await fireEvent.press(screen.getByLabelText("Coffee, $4.99"));
+    await fireEvent.press(screen.getByLabelText("Black coffee, $4.99"));
     await act(async () => jest.advanceTimersByTime(3_000));
-    expect(screen.getByLabelText("Coffee, $4.99").props.accessibilityState).toMatchObject({ disabled: false });
+    expect(screen.getByLabelText("Black coffee, $4.99").props.accessibilityState).toMatchObject({ disabled: false });
   });
 
   it("pending and finishLater events show their own copy, never 'not charged'", async () => {
     const jar = createFakeTipJar();
     await render(<TipJarScreen jar={jar} />);
-    await screen.findByLabelText("Coffee, $4.99");
+    await screen.findByLabelText("Black coffee, $4.99");
     await act(async () => jar.emit({ kind: "pending" }));
     expect(screen.getByText("Your payment is pending. The tip completes once the store confirms it.")).toBeTruthy();
     await act(async () => jar.emit({ kind: "finishLater" }));
@@ -123,75 +131,113 @@ describe("TipJarScreen final-review fixes", () => {
   });
 });
 
-describe("TipJarScreen revamp", () => {
-  afterEach(() => reducedMotion.mockReturnValue(false));
+describe("TipJarScreen café counter", () => {
+  afterEach(() => {
+    reducedMotion.mockReturnValue(false);
+    mockWindow.fontScale = 1;
+  });
 
-  it("gives every tier an icon that screen readers skip", async () => {
-    await render(<TipJarScreen jar={createFakeTipJar()} />);
-    await screen.findByLabelText("Coffee, $4.99");
+  const ready = async (props: { paused?: boolean } = {}) => {
+    await render(<TipJarScreen jar={createFakeTipJar()} {...props} />);
+    return screen.findByLabelText("Black coffee, $4.99");
+  };
+  const beans = () => screen.getAllByTestId(/^tip-bean-\d+$/, hidden);
+  const drifting = () => beans().filter((b) => flat(b).animationName);
+
+  it("draws one cup per tier, hidden from screen readers, with no icon font", async () => {
+    await ready();
     for (const id of IDS) {
-      const icon = screen.getByTestId(`tip-icon-${id}`, hidden);
-      expect(icon.props.accessibilityElementsHidden).toBe(true);
-      expect(icon.props.importantForAccessibility).toBe("no-hide-descendants");
+      const cup = screen.getByTestId(`tip-cup-${id}`, hidden);
+      expect(cup.props).toMatchObject({ accessibilityElementsHidden: true, importantForAccessibility: "no-hide-descendants" });
+      expect(screen.queryByTestId(`tip-cup-${id}`)).toBeNull();
     }
-    expect(screen.queryByTestId("tip-icon-tip_coffee_small")).toBeNull();
+    expect(screen.queryByTestId(/^tip-icon-/, hidden)).toBeNull();
+  });
+
+  it("the espresso is a short pour, the black coffee a full mug", async () => {
+    await ready();
+    const liquid = (id: string) => Number(flat(screen.getByTestId(`tip-liquid-${id}`, hidden)).height);
+    const body = (id: string) => Number(flat(screen.getByTestId(`tip-body-${id}`, hidden)).height);
+    expect(liquid("tip_coffee_small")).toBeLessThan(liquid("tip_coffee_standard"));
+    expect(liquid("tip_coffee_small") / body("tip_coffee_small")).toBeLessThanOrEqual(0.5);
+    expect(liquid("tip_coffee_standard") / body("tip_coffee_standard")).toBeGreaterThanOrEqual(0.8);
+    expect(body("tip_coffee_small")).toBeLessThan(body("tip_coffee_standard"));
+  });
+
+  it("only the cappuccino has foam, with cocoa dots", async () => {
+    await ready();
+    expect(screen.getAllByTestId("tip-foam", hidden)).toHaveLength(1);
+    expect(screen.getAllByTestId("tip-cocoa", hidden).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("the cappuccino price sits on a yellow tag with ink text; the others are plain", async () => {
+    await ready();
+    expect(flat(screen.getByTestId("tip-price-tip_coffee_generous")).backgroundColor).toBe(light.highlight);
+    expect(flat(screen.getByText("$9.99")).color).toBe(light.onHighlight);
+    expect(flat(screen.getByTestId("tip-price-tip_coffee_small")).backgroundColor).toBeUndefined();
   });
 
   it("shows what each tier is for, and says tips are optional", async () => {
-    await render(<TipJarScreen jar={createFakeTipJar()} />);
-    await screen.findByLabelText("Coffee, $4.99");
+    await ready();
     expect(screen.getByText("A quick thank-you.")).toBeTruthy();
     expect(screen.getByText(/Tips are entirely optional/)).toBeTruthy();
     expect(screen.getByRole("header", { name: "Buy the developer a coffee?" })).toBeTruthy();
   });
 
   it("prices shrink to fit instead of ellipsizing", async () => {
-    await render(<TipJarScreen jar={createFakeTipJar()} />);
-    const price = await screen.findByText("$4.99");
-    expect(price.props).toMatchObject({ numberOfLines: 1, adjustsFontSizeToFit: true });
+    await ready();
+    expect(screen.getByText("$4.99").props).toMatchObject({ numberOfLines: 1, adjustsFontSizeToFit: true });
   });
 
-  it("drifts the backdrop shapes, hidden from screen readers", async () => {
-    await render(<TipJarScreen jar={createFakeTipJar()} />);
-    await screen.findByLabelText("Coffee, $4.99");
+  it("scatters 10 to 14 faint beans behind the content; only 2 or 3 drift", async () => {
+    await ready();
     const backdrop = screen.getByTestId("tip-backdrop", hidden);
     expect(backdrop.props).toMatchObject({ accessibilityElementsHidden: true, importantForAccessibility: "no-hide-descendants", pointerEvents: "none" });
-    const shapes = screen.getAllByTestId(/^tip-drift-/, hidden);
-    expect(shapes.length).toBeGreaterThanOrEqual(3);
-    expect(shapes.length).toBeLessThanOrEqual(5);
-    for (const s of shapes) {
-      expect(flat(s).animationName).toBeTruthy();
-      expect(flat(s).animationPlayState).toBe("running");
-    }
+    expect(beans().length).toBeGreaterThanOrEqual(10);
+    expect(beans().length).toBeLessThanOrEqual(14);
+    expect(drifting().length).toBeGreaterThanOrEqual(2);
+    expect(drifting().length).toBeLessThanOrEqual(3);
+    for (const b of drifting()) expect(flat(b).animationPlayState).toBe("running");
+    expect(screen.getAllByTestId("tip-bean-seam", hidden)).toHaveLength(beans().length);
   });
 
   it("pauses the drift when the screen is not focused", async () => {
-    await render(<TipJarScreen jar={createFakeTipJar()} paused />);
-    await screen.findByLabelText("Coffee, $4.99");
-    for (const s of screen.getAllByTestId(/^tip-drift-/, hidden)) expect(flat(s).animationPlayState).toBe("paused");
+    await ready({ paused: true });
+    for (const b of drifting()) expect(flat(b).animationPlayState).toBe("paused");
   });
 
-  it("reduce motion: shapes stay still and a pressed tier does not scale", async () => {
+  it("reduce motion: every bean is still and a pressed cup does not lift", async () => {
     reducedMotion.mockReturnValue(true);
-    await render(<TipJarScreen jar={createFakeTipJar()} />);
-    const tier = await screen.findByLabelText("Coffee, $4.99");
-    for (const s of screen.getAllByTestId(/^tip-drift-/, hidden)) expect(flat(s).animationName).toBeUndefined();
+    const tier = await ready();
+    expect(drifting()).toHaveLength(0);
     await fireEvent(tier, "pressIn");
-    expect(flat(screen.getByTestId("tip-tier-tip_coffee_standard")).transform).toBeUndefined();
+    expect(flat(screen.getByTestId("tip-cup-tip_coffee_standard", hidden)).transform).toBeUndefined();
   });
 
-  it("a pressed tier scales down a touch when motion is allowed", async () => {
-    await render(<TipJarScreen jar={createFakeTipJar()} />);
-    const tier = await screen.findByLabelText("Coffee, $4.99");
+  it("a pressed cup lifts 2 dp when motion is allowed", async () => {
+    const tier = await ready();
+    const lift = () => flat(screen.getByTestId("tip-cup-tip_coffee_standard", hidden)).transform;
     await fireEvent(tier, "pressIn");
-    expect(flat(screen.getByTestId("tip-tier-tip_coffee_standard")).transform).toEqual([{ scale: 0.97 }]);
+    expect(lift()).toEqual([{ translateY: -2 }]);
     await fireEvent(tier, "pressOut");
-    expect(flat(screen.getByTestId("tip-tier-tip_coffee_standard")).transform).toEqual([{ scale: 1 }]);
+    expect(lift()).toEqual([{ translateY: 0 }]);
   });
 
-  it("tiers are at least 48 dp tall", async () => {
-    await render(<TipJarScreen jar={createFakeTipJar()} />);
-    await screen.findByLabelText("Coffee, $4.99");
-    expect(Number(flat(screen.getByTestId("tip-tier-tip_coffee_small")).minHeight)).toBeGreaterThanOrEqual(48);
+  it("stands the cups side by side on the counter, each a 48 dp target", async () => {
+    await ready();
+    expect(screen.getByText("Cappuccino").props).toMatchObject({ numberOfLines: 1, adjustsFontSizeToFit: true });
+    expect(flat(screen.getByTestId("tip-counter")).flexDirection).toBe("row");
+    for (const l of LABELS) {
+      const s = flat(screen.getByLabelText(l));
+      expect(Number(s.minHeight)).toBeGreaterThanOrEqual(48);
+      expect(Number(s.minWidth)).toBeGreaterThanOrEqual(48);
+    }
+  });
+
+  it("at large text sizes the cups stack so names and prices keep their room", async () => {
+    mockWindow.fontScale = 2;
+    await ready();
+    expect(flat(screen.getByTestId("tip-counter")).flexDirection).toBe("column");
+    expect(screen.getByText("Cappuccino").props.numberOfLines).toBeUndefined();
   });
 });

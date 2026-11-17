@@ -16,7 +16,11 @@ describe("tip jar copy", () => {
     }
   });
 
-  it("id keeps Kopi and Kopi istimewa", () => {
-    expect([id.tips.standard, id.tips.generous]).toEqual(["Kopi", "Kopi istimewa"]);
+  it("names the other two tiers after real drinks", () => {
+    const names = (l: typeof en) => [l.tips.standard, l.tips.generous];
+    expect(names(id)).toEqual(["Kopi hitam", "Cappuccino"]);
+    expect(names(en)).toEqual(["Black coffee", "Cappuccino"]);
+    expect(names(es)).toEqual(["Café solo", "Capuchino"]);
+    expect(names(ptBR)).toEqual(["Café preto", "Cappuccino"]);
   });
 });
