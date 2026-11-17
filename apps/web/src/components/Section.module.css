@@ -1,0 +1,18 @@
+.section {
+  padding-block: var(--space-7);
+}
+
+.section h2 {
+  max-width: 20ch;
+  margin-bottom: var(--space-6);
+}
+
+.band {
+  background: var(--color-tonal);
+}
+
+@media (min-width: 900px) {
+  .section {
+    padding-block: var(--space-8);
+  }
+}
