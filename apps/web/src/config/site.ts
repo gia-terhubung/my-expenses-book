@@ -10,11 +10,12 @@ export const SITE = {
 } as const;
 
 /**
- * Placeholders the owner must replace before launch with the registered address and the city of
- * the company's registered domicile. `npm run check:launch` fails while either is still here.
+ * Registered office of PT Terhubung Lebih Lagi (from its NIB); the Terms append ", Indonesia".
+ * COMPANY_CITY names the District Court for disputes.
  */
-export const COMPANY_ADDRESS = "COMPANY_ADDRESS";
-export const COMPANY_CITY = "COMPANY_CITY";
+export const COMPANY_ADDRESS =
+  "Jl. Antapani City Mas IV No. 40, Antapani Kidul, Antapani, Bandung, West Java 40291";
+export const COMPANY_CITY = "Bandung";
 
 /**
  * Store listing URLs. `null` means "not launched yet": the site then shows a

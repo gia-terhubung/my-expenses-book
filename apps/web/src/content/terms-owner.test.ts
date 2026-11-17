@@ -19,8 +19,10 @@ describe("terms: owner decisions", () => {
     expect(section("apple")).toContain(COMPANY_ADDRESS);
     expect(section("contact")).toContain(COMPANY_ADDRESS);
   });
-  it("keeps the placeholders visible until the owner fills them", () => {
-    expect(COMPANY_ADDRESS).toBe("COMPANY_ADDRESS");
-    expect(COMPANY_CITY).toBe("COMPANY_CITY");
+  it("uses the registered office from the NIB", () => {
+    expect(COMPANY_ADDRESS).toBe(
+      "Jl. Antapani City Mas IV No. 40, Antapani Kidul, Antapani, Bandung, West Java 40291",
+    );
+    expect(COMPANY_CITY).toBe("Bandung");
   });
 });
