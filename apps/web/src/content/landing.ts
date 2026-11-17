@@ -10,10 +10,13 @@ export const hero = {
 };
 
 export const storeBadges = {
-  comingSoon: "Coming soon",
-  download: "Download on",
-  appStore: "App Store",
-  googlePlay: "Google Play",
+  /** Shown instead of badges while a store has no listing. Official badges are never greyed out. */
+  comingSoonBoth: "Coming soon to the App Store and Google Play.",
+  comingSoonAppStore: "Coming soon to the App Store.",
+  comingSoonGooglePlay: "Coming soon to Google Play.",
+  /** Alt text of the official badges. */
+  appStoreAlt: "Download on the App Store",
+  googlePlayAlt: "Get it on Google Play",
 };
 
 export const howItWorks = {

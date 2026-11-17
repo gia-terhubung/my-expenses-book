@@ -1,46 +1,41 @@
-.list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  padding: 0;
-  list-style: none;
+.wrap {
   margin-top: var(--space-5);
 }
 
-.badge {
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.link {
   display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 56px;
-  min-width: 168px;
-  padding: var(--space-2) var(--space-5);
-  border-radius: var(--radius-control);
-  text-decoration: none;
+  align-items: center;
+  min-height: 48px;
 }
 
-.top {
-  font-size: var(--text-small);
-  line-height: 1.2;
+/* Apple asks for at least 40px on screen. Google's badge has built-in padding,
+   so it is drawn taller to look the same size next to Apple's. */
+.apple {
+  display: block;
+  height: 48px;
+  width: auto;
 }
 
-.name {
-  font-family: var(--font-display), var(--font-body);
-  font-weight: 800;
-  font-size: 1.125rem;
-  line-height: 1.2;
+.google {
+  display: block;
+  height: 72px;
+  width: auto;
+  margin-block: -12px;
 }
 
 .soon {
-  border: 1.5px dashed var(--color-slip-muted);
-  color: var(--color-slip-muted);
-  cursor: default;
+  max-width: 34rem;
 }
 
-a.live {
-  background: var(--color-slip-text);
-  color: var(--color-slip);
-}
-
-a.live:hover {
-  background: var(--color-slip-muted);
+.list + .soon {
+  margin-top: var(--space-3);
 }
