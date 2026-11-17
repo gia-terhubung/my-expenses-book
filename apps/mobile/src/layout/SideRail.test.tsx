@@ -101,11 +101,17 @@ describe("SideRail", () => {
     expect(within(screen.getByTestId("side-rail")).getByTestId("rail-add")).toBeTruthy();
   });
 
-  it("short window: smaller top padding (insets.top + 16); otherwise 32", async () => {
+  it("short window (phone landscape, ~360 high): all four tabs fit above the + (48 dp tabs, tight gaps)", async () => {
     mockLayout = LAYOUTS.duoSideways;
     expect(mockLayout.short).toBe(true);
     await renderRail("icons");
-    expect(flat(screen.getByTestId("side-rail")).paddingTop).toBe(16);
+    const rail = flat(screen.getByTestId("side-rail"));
+    expect(rail.paddingTop).toBe(8);
+    expect(rail.paddingBottom).toBe(34 + 8);
+    const tabs = screen.getAllByRole("tab");
+    expect(flat(tabs[0]).minHeight).toBe(48);
+    expect(StyleSheet.flatten(screen.getByTestId("rail-scroll").props.contentContainerStyle).gap).toBe(4);
+    // 8 + 4 x 48 + 3 x 4 + (8 + 56) + 8 = 284, plus the bottom inset: fits a 360 dp landscape phone.
   });
 
   it.each(["icons", "labels"] as const)("%s: round + (56) labelled Tambah struk opens the add sheet", async (variant) => {

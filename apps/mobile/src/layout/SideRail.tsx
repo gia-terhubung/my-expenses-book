@@ -38,14 +38,15 @@ export function SideRail({ state, navigateToTab, variant }: BottomTabBarProps & 
           borderEndColor: theme.colors.border,
           // Clear of the status area like the system clock on the far side (iPhone Duo open: top
           // inset 0, clock ~40 pt down). The left inset is already reserved by SideSafeArea.
-          // Short window (landscape phone): less air above the first tab so the rest fit.
-          paddingTop: insets.top + (short ? theme.spacing.lg : theme.spacing.xxl),
-          paddingBottom: insets.bottom + theme.spacing.lg,
+          // Short window (phone landscape, ~360 dp): tighter paddings, gaps and 48 dp tabs so all
+          // four tabs fit above the + (on the Redmi the fourth hid under it).
+          paddingTop: insets.top + (short ? theme.spacing.sm : theme.spacing.xxl),
+          paddingBottom: insets.bottom + (short ? theme.spacing.sm : theme.spacing.lg),
         },
       ]}
     >
       {/* The tabs scroll (large text on a short window); the + below stays pinned and reachable. */}
-      <ScrollView testID="rail-scroll" style={styles.scroll} contentContainerStyle={{ gap: theme.spacing.sm }}>
+      <ScrollView testID="rail-scroll" style={styles.scroll} contentContainerStyle={{ gap: short ? theme.spacing.xs : theme.spacing.sm }}>
       {state.routes.map((route, index) => {
         const focused = state.index === index;
         const name = route.name as TabRoute;
@@ -65,7 +66,7 @@ export function SideRail({ state, navigateToTab, variant }: BottomTabBarProps & 
                 borderRadius: theme.radius.pill,
                 marginHorizontal: icons ? theme.spacing.sm : theme.spacing.lg,
                 ...(icons
-                  ? { paddingHorizontal: theme.spacing.xs, paddingVertical: theme.spacing.sm }
+                  ? { paddingHorizontal: theme.spacing.xs, paddingVertical: short ? theme.spacing.xs : theme.spacing.sm, ...(short ? { minHeight: theme.size.touch } : null) }
                   : { padding: theme.spacing.md, gap: theme.spacing.md, minHeight: theme.size.touch }),
               },
             ]}
