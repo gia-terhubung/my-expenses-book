@@ -55,7 +55,7 @@ export function ReceiptListDetail({ filter, ListHeaderComponent, empty, topInset
 
   const onSelect = useCallback(
     (id: string) => {
-      if (!split) router.push({ pathname: "/document/[id]", params: { id } } as unknown as Href);
+      if (!split) router.push({ pathname: "/document/[id]", params: { id, from: "list" } } as unknown as Href);
       else router.setParams({ selected: id });
     },
     [split],

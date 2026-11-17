@@ -11,8 +11,8 @@ import { ReceiptDetail } from "@/receipts/ReceiptDetail";
  */
 export default function DocumentScreen() {
   const { t } = useTranslation();
-  const { id } = useLocalSearchParams<{ id: string }>();
-  usePopToSelection(id, useLayout().split);
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
+  usePopToSelection(id, useLayout().split, from === "list");
   return (
     <>
       <Stack.Screen options={{ title: t("document.title") }} />

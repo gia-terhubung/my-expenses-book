@@ -106,7 +106,7 @@ describe("ReceiptListDetail", () => {
     const a = seed("Alpha", "2026-11-03T10:00:00");
     await render(ui());
     await fireEvent.press(screen.getByText("Alpha"));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: "/document/[id]", params: { id: a.id } });
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: "/document/[id]", params: { id: a.id, from: "list" } });
     expect(mockRouter.setParams).not.toHaveBeenCalled();
   });
 
@@ -115,7 +115,7 @@ describe("ReceiptListDetail", () => {
     const a = seed("Alpha", "2026-11-03T10:00:00");
     await render(ui());
     await fireEvent.press(screen.getByText("Alpha"));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: "/document/[id]", params: { id: a.id } });
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: "/document/[id]", params: { id: a.id, from: "list" } });
     expect(mockRouter.setParams).not.toHaveBeenCalled();
   });
 
