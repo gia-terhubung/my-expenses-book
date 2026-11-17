@@ -44,13 +44,22 @@ export function currencySymbol(locale: string, currency: string): string {
   return symbol;
 }
 
+const plainFormats = new Map<string, Intl.NumberFormat>();
+
 /** Hand-rolled compact form for runtimes without Intl compact notation: "Rp 31,3 jt", "$ 12.4 K". */
 function fallback(major: number, minor: number, currency: string, locale: string): string {
   const abs = Math.abs(major);
-  const i = THRESHOLDS.findIndex((t) => abs >= t);
+  let i = THRESHOLDS.findIndex((t) => abs >= t);
   if (i < 0) return formatMoney(minor, currency, locale);
+  // 999,950 rounds to "1.000 rb": move up a band so it reads "1 jt".
+  if (i > 0 && Math.round((abs / THRESHOLDS[i]) * 10) / 10 >= 1000) i -= 1;
   const suffixes = SUFFIXES[locale.split("-")[0]] ?? SUFFIXES.en;
-  const n = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(major / THRESHOLDS[i]);
+  let plain = plainFormats.get(locale);
+  if (!plain) {
+    plain = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+    plainFormats.set(locale, plain);
+  }
+  const n = plain.format(major / THRESHOLDS[i]);
   return `${currencySymbol(locale, currency)} ${n} ${suffixes[i]}`;
 }
 

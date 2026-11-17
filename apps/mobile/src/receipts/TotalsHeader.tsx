@@ -19,6 +19,17 @@ import { totalLine } from "./format";
 import { slipAmountText } from "./slipAmount";
 import { SlipEdge } from "./SlipEdge";
 
+// Building Intl formatters is slow on Hermes; the slip re-renders on every data change.
+const monthNames = new Map<string, Intl.DateTimeFormat>();
+function monthNameFormat(locale: string): Intl.DateTimeFormat {
+  let fmt = monthNames.get(locale);
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" });
+    monthNames.set(locale, fmt);
+  }
+  return fmt;
+}
+
 /** Leading currency ("Rp", "$", "R$") and the rest; null when the currency is not in front. */
 function splitPrefix(text: string): [string, string, string] | null {
   const m = /^([^\d\s-]+)(\s*)(.*\d.*)$/.exec(text);
@@ -70,13 +81,8 @@ export function TotalsHeader() {
     const amount = slipAmountText(tot.homeMinor, home, locale);
     const parts = splitPrefix(amount.text);
     return (
-      // One stop for screen readers: the label and the exact total, even when the slip shows the compact form.
-      <View
-        testID={`slip-cell-${key}`}
-        accessible
-        accessibilityLabel={`${label}, ${totalLine(tot, home, locale, notConverted)}`}
-        style={{ flex: 1, minWidth: 0 }}
-      >
+      // Not a separate screen-reader stop: the slip button's label carries the label and the exact total.
+      <View testID={`slip-cell-${key}`} style={{ flex: 1, minWidth: 0 }}>
         <Text style={[type.body, { color: colors.slipMuted }]}>{label}</Text>
         <Text
           testID={`slip-amount-${key}`}
@@ -113,7 +119,7 @@ export function TotalsHeader() {
       : t("stats.paceSlip", {
           arrow,
           pct: Math.abs(pct),
-          period: new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(
+          period: monthNameFormat(locale).format(
             Date.UTC(Number(stats.pace.previousMonth.slice(0, 4)), Number(stats.pace.previousMonth.slice(5, 7)) - 1, 1),
           ),
           day: String(Number(stats.pace.previous.to.slice(8, 10))),
@@ -142,13 +148,14 @@ export function TotalsHeader() {
       accessibilityRole="button"
       accessibilityLabel={slipLabel}
       onPress={() => router.push("/stats" as Href)}
-      style={{
+      style={({ pressed }) => ({
         backgroundColor: colors.slip,
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.sm,
         paddingBottom: spacing.xl,
         marginBottom: spacing.md,
-      }}
+        opacity: pressed ? 0.9 : 1,
+      })}
     >
       <View style={{ flexDirection: "row", gap: spacing.lg }}>
         {cell("month", t("totals.thisMonth"), month, true)}

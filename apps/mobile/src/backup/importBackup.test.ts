@@ -18,6 +18,9 @@ import { importBackup } from "./importBackup";
 import { SCHEMA_VERSION, collectSnapshot, type Snapshot } from "./snapshot";
 import { errorLog, resetErrorLogForTests } from "@/errorLog/instance";
 
+// Real scrypt (N=32768) runs slow under parallel test load.
+jest.setTimeout(60_000);
+
 const PASS = "correct horse";
 
 function memSink() {

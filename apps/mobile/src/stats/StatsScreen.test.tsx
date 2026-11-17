@@ -11,7 +11,7 @@ import { StatsScreen } from "./StatsScreen";
 
 let mockDb: AppDb;
 let mockStartMonth = 1;
-const mockRouter = { back: jest.fn(), push: jest.fn() };
+const mockRouter = { back: jest.fn(), push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) };
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 jest.mock("@/prefs/PrefsProvider", () => ({
   usePref: (k: string) => (k === "taxYearStartMonth" ? mockStartMonth : k === "language" ? "en" : "IDR"),
@@ -24,7 +24,13 @@ jest.mock("@/capture/useAddReceipt", () => ({
   useAddReceipt: () => ({ open: jest.fn(), start: (...a: unknown[]) => mockStart(...a), sheet: null }),
 }));
 jest.mock("expo-router", () => ({
-  router: { back: () => mockRouter.back(), push: (...a: unknown[]) => mockRouter.push(...a) },
+  router: {
+    back: () => mockRouter.back(),
+    push: (...a: unknown[]) => mockRouter.push(...a),
+    navigate: (...a: unknown[]) => mockRouter.navigate(...a),
+    replace: (...a: unknown[]) => mockRouter.replace(...a),
+    canGoBack: () => mockRouter.canGoBack(),
+  },
 }));
 
 function seed(merchant: string, local: string, amount: number, over: Partial<NewReceiptInput> = {}) {
@@ -187,7 +193,39 @@ describe("StatsScreen", () => {
     expect(screen.getByText("Not converted")).toBeTruthy();
     expect(screen.getByText("2 receipts are not in the total.")).toBeTruthy();
     await fireEvent.press(screen.getByRole("link", { name: "See receipts" }));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: "/search", params: { unconverted: "1" } });
+    // navigate, not push: Search is a tab, so the existing tabs instance is reused.
+    expect(mockRouter.navigate).toHaveBeenCalledWith({ pathname: "/search", params: { unconverted: "1" } });
+    expect(mockRouter.push).not.toHaveBeenCalled();
+  });
+
+  it("unconverted card counts all time, like the Search filter it opens", async () => {
+    seed("Now Shop", "2026-11-02", 50000);
+    seedUnconverted("2026-11-04");
+    seedUnconverted("2025-03-05");
+    await render(<StatsScreen now={now} />);
+    expect(screen.getByText("2 receipts are not in the total.")).toBeTruthy();
+  });
+
+  it("back with no history replaces with Home", async () => {
+    mockRouter.canGoBack.mockReturnValueOnce(false);
+    await render(<StatsScreen now={now} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Back" }));
+    expect(mockRouter.replace).toHaveBeenCalledWith("/");
+    expect(mockRouter.back).not.toHaveBeenCalled();
+  });
+
+  it("dense 12-bar value labels shrink to fit and cap font scaling", async () => {
+    seed("Now Shop", "2026-11-02", 50000);
+    await render(<StatsScreen now={now} />);
+    await fireEvent.press(screen.getByRole("tab", { name: "Tax year" }));
+    const values = screen.getAllByTestId(/^month-bar-value-/);
+    expect(values).toHaveLength(12);
+    for (const v of values) {
+      expect(v.props.numberOfLines).toBe(1);
+      expect(v.props.adjustsFontSizeToFit).toBe(true);
+      expect(v.props.minimumFontScale).toBe(0.5);
+      expect(v.props.maxFontSizeMultiplier).toBe(1.2);
+    }
   });
 
   it("sparse state hides folders and unconverted sections", async () => {

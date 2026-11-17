@@ -28,6 +28,8 @@ describe("compactAmount", () => {
         expect(fresh(310_000_000, "BRL", "pt-BR")).toBe("R$ 3,1 mi");
         expect(fresh(1_200_000, "EUR", "es")).toBe("€ 12 mil");
         expect(fresh(99_900, "USD", "en")).toBe("$999.00");
+        // Rounding up to 1000 rolls over to the next band.
+        expect(fresh(99_995_000, "IDR", "id")).toBe("Rp 1 jt");
       });
       expect(spy).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ notation: "compact" }));
     } finally {

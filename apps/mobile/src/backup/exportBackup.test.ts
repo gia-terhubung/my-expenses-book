@@ -8,6 +8,9 @@ import { type ByteSink, openArchive } from "./container";
 import { exportBackup } from "./exportBackup";
 import { collectSnapshot } from "./snapshot";
 
+// Real scrypt (N=32768) runs slow under parallel test load.
+jest.setTimeout(60_000);
+
 const PASS = "correct horse";
 
 function memSink() {

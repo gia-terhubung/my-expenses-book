@@ -8,7 +8,7 @@ export const radius = { sm: 6, md: 12, lg: 20, pill: 999, control: 14, sheet: 26
 export const type = {
   caption: { fontSize: 12, lineHeight: 16 },
   body: { fontSize: 16, lineHeight: 22 },
-  title: { fontFamily: FONTS.bold, fontSize: 20, lineHeight: 26, fontWeight: "600" },
+  title: { fontFamily: FONTS.bold, fontSize: 20, lineHeight: 26 },
   headline: { fontSize: 28, lineHeight: 34, fontWeight: "700" },
   display: { fontFamily: FONTS.extraBold, fontSize: 28, lineHeight: 34 },
   label: { fontSize: 16, lineHeight: 22, fontWeight: "600" },

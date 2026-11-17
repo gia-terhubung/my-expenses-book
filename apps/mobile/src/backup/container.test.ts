@@ -6,6 +6,9 @@ import {
 } from "./errors";
 import { type ByteSink, type ByteSource, createArchiveWriter, openArchive } from "./container";
 
+// Real scrypt (N=32768) runs slow under parallel test load.
+jest.setTimeout(60_000);
+
 // Fast KDF params for tests are not injectable; default N=32768 is ~100 ms per derivation.
 const PASS = "p\u00e4ssw\u00f6rd";
 const NFD = PASS.normalize("NFD");

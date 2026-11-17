@@ -163,14 +163,24 @@ describe("TotalsHeader (Ledger slip)", () => {
     expect(screen.getByTestId("slip-amount-month")).toHaveTextContent(formatMoney(19_823_884_100, "IDR", "en"));
   });
 
-  it("cell accessibility label keeps the combined totalLine text", async () => {
+  it("the slip button label keeps the combined totalLine text; cells are not separate stops", async () => {
     seed(50_000, "IDR", 50_000);
     seed(1_000, "USD", null);
     await render(<TotalsHeader />);
     const money = formatMoney(50_000, "IDR", "en");
-    expect(screen.getByTestId("slip-cell-month").props.accessibilityLabel).toBe(`This month, ${money} · 1 not converted`);
-    expect(screen.getByTestId("slip-cell-month").props.accessible).toBe(true);
+    expect(screen.getByTestId("totals-slip").props.accessibilityLabel).toContain(`This month, ${money} · 1 not converted`);
+    // The button already carries every total: inner cells would make TalkBack read them twice.
+    expect(screen.getByTestId("slip-cell-month").props.accessible).toBeFalsy();
+    expect(screen.getByTestId("slip-cell-month").props.accessibilityLabel).toBeUndefined();
     expect(within(screen.getByTestId("slip-cell-month")).queryByText("1 not converted")).toBeNull();
+  });
+
+  it("dims on press", async () => {
+    await render(<TotalsHeader />);
+    const slip = screen.getByTestId("totals-slip");
+    expect(slip).toHaveStyle({ opacity: 1 });
+    await fireEvent(slip, "responderGrant", { nativeEvent: { touches: [] }, persist() {} });
+    expect(screen.getByTestId("totals-slip")).toHaveStyle({ opacity: 0.9 });
   });
 
   it("a compact amount keeps the exact amount in the accessibility label", async () => {
@@ -178,7 +188,7 @@ describe("TotalsHeader (Ledger slip)", () => {
     await render(<TotalsHeader />);
     const exact = formatMoney(10 ** 14, "IDR", "en");
     expect(screen.getByTestId("slip-amount-month")).not.toHaveTextContent(exact);
-    expect(screen.getByTestId("slip-cell-month").props.accessibilityLabel).toBe(`This month, ${exact}`);
+    expect(screen.getByTestId("totals-slip").props.accessibilityLabel).toContain(`This month, ${exact}.`);
   });
 
   it("is a green slip with a yellow total bar under this month and a torn edge", async () => {

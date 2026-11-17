@@ -54,7 +54,7 @@ const LABELS = ["Receipts", "Search", "Folders", "Settings"];
 
 const ReviewStub = () => null;
 
-function renderApp() {
+function renderApp(initialUrl = "/") {
   return renderRouter(
     {
       "(tabs)/_layout": TabsLayout,
@@ -64,7 +64,7 @@ function renderApp() {
       "(tabs)/settings": Settings,
       "review/[id]": ReviewStub,
     },
-    { initialUrl: "/" },
+    { initialUrl },
   );
 }
 
@@ -132,6 +132,13 @@ describe("tabs layout", () => {
     expect(setStatusBarStyle).toHaveBeenLastCalledWith("light");
     await act(async () => fireEvent.press(within(screen.getByTestId("tab-bar")).getByText("Settings")));
     expect(setStatusBarStyle).toHaveBeenLastCalledWith("dark");
+  });
+
+  it("Receipts on compact with a receipt open keeps the themed icons (the detail pane is not green)", async () => {
+    setClass("compact");
+    await renderApp("/?selected=r1");
+    await screen.findByTestId("tab-bar");
+    expect(setStatusBarStyle).not.toHaveBeenCalledWith("light");
   });
 
   it("Receipts on wide layouts keeps the themed icons (the rail and detail pane are not green)", async () => {

@@ -30,7 +30,8 @@ export default function ReceiptsScreen() {
   useFocusEffect(useCallback(() => setDrafts(listDraftIds(db)), [db]));
   // Compact: the strip above the list is slip green, so its icons go light while Home is focused.
   // Wide layouts keep the themed icons: the rail and the detail pane under the bar are not green.
-  const greenTop = windowClass === "compact";
+  // So does compact with a receipt open: the detail pane covers the list and the slip.
+  const greenTop = windowClass === "compact" && !selected;
   useFocusEffect(
     useCallback(() => {
       if (!greenTop) return;
@@ -77,7 +78,6 @@ export default function ReceiptsScreen() {
             <BackupReminder />
           </>
         }
-        // The header spacer above already applies the top inset.
         empty={<FeedEmpty onStart={(m) => void add.start(m)} />}
       />
       {feedFabVisible(windowClass, selected) ? (

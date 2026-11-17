@@ -80,14 +80,17 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
     const pacePrev = sumHome(db, pace.previous, home).homeMinor;
     const categories = new Map(listCategories(db).map((c) => [c.id, c]));
     const folders = new Map(listFolders(db).map((f) => [f.id, f]));
+    const allTime = sumHome(db, {}, home);
     return {
       ty,
       months,
       pace,
       paceNow,
       pacePrev,
-      any: sumHome(db, {}, home).count > 0,
+      any: allTime.count > 0,
       total: sumHome(db, period, home),
+      // All time, like the Search filter "See receipts" opens, so the card and Search agree.
+      unconverted: allTime.unconverted,
       byMonth: monthTotals(db, { from: `${months[0]}-01`, to: `${months[months.length - 1]}-31` }, home),
       // Rows with nothing converted have no share of the total; the unconverted card counts them.
       categories: totalsByCategory(db, period, home)
@@ -230,7 +233,7 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t("common.back")}
-              onPress={() => router.back()}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
               style={({ pressed }) => ({
                 width: size.touch,
                 height: size.touch,
@@ -407,7 +410,7 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
                 </>
               ) : null}
 
-              {data.total.unconverted > 0 ? (
+              {data.unconverted > 0 ? (
                 <>
                   {section(t("stats.unconverted"))}
                   <View
@@ -428,12 +431,12 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
                     <View style={{ width: 10, height: 10, borderRadius: 5, marginTop: 6, backgroundColor: colors.warning }} />
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <Text style={[type.label, { color: colors.warning }]}>
-                        {t("stats.unconvertedBody", { count: data.total.unconverted })}
+                        {t("stats.unconvertedBody", { count: data.unconverted })}
                       </Text>
                       <Pressable
                         accessibilityRole="link"
                         accessibilityLabel={t("stats.seeReceipts")}
-                        onPress={() => router.push({ pathname: "/search", params: { unconverted: "1" } } as unknown as Href)}
+                        onPress={() => router.navigate({ pathname: "/search", params: { unconverted: "1" } } as unknown as Href)}
                         style={({ pressed }) => ({ minHeight: size.touch, justifyContent: "center", alignSelf: "flex-start", opacity: pressed ? 0.6 : 1 })}
                       >
                         <Text style={[type.label, { color: colors.warning, textDecorationLine: "underline" }]}>{t("stats.seeReceipts")}</Text>

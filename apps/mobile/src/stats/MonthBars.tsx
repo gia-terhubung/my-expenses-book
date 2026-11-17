@@ -52,10 +52,13 @@ export function MonthBars({ bars, dense = false }: { bars: MonthBar[]; dense?: b
             style={{ flex: 1, minWidth: 0 }}
           >
             <View style={{ justifyContent: "flex-end", borderBottomWidth: 1, borderBottomColor: colors.border }}>
+              {/* Dense columns are narrow: cap font scaling so the compact amount shrinks instead of ellipsizing. */}
               <Text
+                testID={`month-bar-value-${b.month}`}
                 numberOfLines={1}
                 adjustsFontSizeToFit
-                minimumFontScale={0.6}
+                minimumFontScale={dense ? 0.5 : 0.6}
+                maxFontSizeMultiplier={dense ? 1.2 : undefined}
                 style={[small, type.money, strong, { textAlign: "center", marginBottom: spacing.xs }]}
               >
                 {b.value}
