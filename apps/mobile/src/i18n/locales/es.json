@@ -405,5 +405,22 @@
     "title": "Acerca de",
     "privacyPolicy": "Política de privacidad",
     "version": "Versión"
+  },
+  "stats": {
+    "title": "Estadísticas",
+    "month": "Mes",
+    "taxYear": "Año fiscal",
+    "running": "en curso, hasta el día {{day}}",
+    "pace": "{{arrow}} {{pct}}% vs {{period}} hasta el día {{day}}",
+    "lastMonths": "Últimos 6 meses",
+    "categories": "Categorías",
+    "merchants": "Comercios principales",
+    "folders": "Viajes y proyectos",
+    "unconverted": "Sin convertir",
+    "unconvertedBody": "{{count}} recibos no están en el total.",
+    "seeReceipts": "Ver recibos",
+    "uncategorized": "Sin categoría",
+    "openStats": "Ver estadísticas",
+    "empty": "Las estadísticas aparecen después de algunos recibos."
   }
 }

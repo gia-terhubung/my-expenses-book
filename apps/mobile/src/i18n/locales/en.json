@@ -405,5 +405,22 @@
     "title": "About",
     "privacyPolicy": "Privacy policy",
     "version": "Version"
+  },
+  "stats": {
+    "title": "Statistics",
+    "month": "Month",
+    "taxYear": "Tax year",
+    "running": "in progress, to day {{day}}",
+    "pace": "{{arrow}} {{pct}}% vs {{period}} to day {{day}}",
+    "lastMonths": "Last 6 months",
+    "categories": "Categories",
+    "merchants": "Top merchants",
+    "folders": "Trips & projects",
+    "unconverted": "Not converted",
+    "unconvertedBody": "{{count}} receipts are not in the total.",
+    "seeReceipts": "See receipts",
+    "uncategorized": "No category",
+    "openStats": "See statistics",
+    "empty": "Statistics appear after a few receipts."
   }
 }

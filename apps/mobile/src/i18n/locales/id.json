@@ -405,5 +405,22 @@
     "title": "Tentang",
     "privacyPolicy": "Kebijakan privasi",
     "version": "Versi"
+  },
+  "stats": {
+    "title": "Statistik",
+    "month": "Bulan",
+    "taxYear": "Tahun pajak",
+    "running": "berjalan, s.d. tgl {{day}}",
+    "pace": "{{arrow}} {{pct}}% dibanding {{period}} s.d. tgl {{day}}",
+    "lastMonths": "6 bulan terakhir",
+    "categories": "Kategori",
+    "merchants": "Toko teratas",
+    "folders": "Perjalanan & proyek",
+    "unconverted": "Belum dikonversi",
+    "unconvertedBody": "{{count}} struk belum masuk total.",
+    "seeReceipts": "Lihat struk",
+    "uncategorized": "Tanpa kategori",
+    "openStats": "Lihat statistik",
+    "empty": "Statistik muncul setelah beberapa struk."
   }
 }
