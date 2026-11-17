@@ -1,19 +1,12 @@
 // Spike (Task 3): on-device LLM availability + receipt parse. Dev-only.
-// Auto-runs availability and all bundled OCR samples on mount; also allows pasting a dump.
+// Auto-runs availability on mount; paste an OCR dump to parse it. (The bundled OCR samples were
+// removed from git: they may hold real receipt text and now stay local and untracked.)
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { Button, ScrollView, Text, TextInput } from "react-native";
 
 import ReceiptAI from "../../../modules/receipt-ai";
-import { OCR_SAMPLES } from "../../../spikes/ocr-samples";
 
-const HINTS: Record<string, { locale: string; homeCurrency: string }> = {
-  "01-indomaret-id": { locale: "id-ID", homeCurrency: "IDR" },
-  "02-starbucks-us": { locale: "en-US", homeCurrency: "USD" },
-  "03-paris-cafe-fr": { locale: "fr-FR", homeCurrency: "EUR" },
-  "04-grab-ride-id": { locale: "id-ID", homeCurrency: "IDR" },
-  "05-tokyo-konbini-ja": { locale: "ja-JP", homeCurrency: "JPY" },
-};
 const DEFAULT_HINTS = { locale: "en-US", homeCurrency: "USD" };
 
 async function parseTimed(text: string, hints: { locale: string; homeCurrency: string }): Promise<string> {
@@ -30,9 +23,6 @@ async function runAll(): Promise<string[]> {
   const out: string[] = [];
   const availability = await ReceiptAI.getAvailability();
   out.push(`availability=${JSON.stringify(availability)}`);
-  for (const s of OCR_SAMPLES) {
-    out.push(`${s.name}: ${await parseTimed(s.text, HINTS[s.name] ?? DEFAULT_HINTS)}`);
-  }
   return out;
 }
 
