@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "brand-images": "node scripts/make-brand-images.mjs",
-    "screenshots": "node scripts/prepare-screenshots.mjs"
+    "screenshots": "node scripts/prepare-screenshots.mjs",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build && node scripts/check-out.mjs",
+    "check:launch": "npm run check && node scripts/check-out.mjs --launch"
   },
   "dependencies": {
     "next": "16.4.6",
