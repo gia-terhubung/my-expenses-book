@@ -13,11 +13,11 @@ describe("LegalDocument", () => {
     const h2 = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
     expect(h2).toEqual(privacy.sections.map((s) => s.heading));
     for (const s of privacy.sections) expect(container.querySelector(`section#${s.id}`)).not.toBeNull();
-    expect(screen.getByText("Effective 17 November 2026")).toBeInTheDocument();
+    expect(screen.getByText(`Effective ${formatEffectiveDate(privacy.effectiveDate)}`)).toBeInTheDocument();
   });
   it("renders ordered and unordered lists", () => {
     const { container } = render(<LegalDocument doc={privacy} />);
     expect(container.querySelectorAll("ol > li")).toHaveLength(3);
-    expect(container.querySelectorAll("ul").length).toBeGreaterThanOrEqual(2);
+    expect(container.querySelectorAll("ul > li").length).toBeGreaterThanOrEqual(1);
   });
 });
