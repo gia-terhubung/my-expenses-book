@@ -20,7 +20,7 @@ Vercel dashboard > Add New > Project > import the Git repository.
 
 ## 3. Production branch
 
-Set it to `main`. Optional: Settings > Git > Ignored Build Step = `git diff --quiet HEAD^ HEAD -- .` so that commits outside `apps/web` do not rebuild.
+Set it to `main`. `vercel.json` sets `ignoreCommand`, so commits that do not touch `apps/web` skip the build. Keep Settings > Git > Ignored Build Step empty (a dashboard value overrides the file).
 
 ## 4. Add the domain
 
