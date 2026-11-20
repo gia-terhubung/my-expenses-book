@@ -1,5 +1,6 @@
 // Pure stats math for the slip pace line and the Statistik screen. Dates are local
 // "YYYY-MM-DD", months "YYYY-MM"; integer/string arithmetic only, no Date.
+import { daysInMonth, pad2 } from "../dates/civil";
 import { payPeriodOf, previousPayPeriod } from "./payPeriod";
 import { taxYearOf, taxYearRange } from "../taxYear/taxYear";
 
@@ -7,13 +8,6 @@ type Range = { from: string; to: string };
 export type PacePeriods = { current: Range; previous: Range; previousMonth: string };
 
 const OTHER_CATEGORY = "default:other";
-
-export const pad2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
-
-export function daysInMonth(year: number, month: number): number {
-  if (month === 2) return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28;
-  return [4, 6, 9, 11].includes(month) ? 30 : 31;
-}
 
 /**
  * This pay period so far vs the previous one up to the same day offset (or its last day if
