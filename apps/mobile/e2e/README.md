@@ -26,13 +26,25 @@ framework, no app dependency: iOS uses [AXe](https://github.com/cameroncooke/AXe
 2. Run a flow with the simulator's UDID (`axe list-simulators`):
 
    ```sh
-   e2e/payday.sh <UDID>
+   E2E_ALLOW_WIPE=1 e2e/payday.sh <UDID>
    ```
 
    Each flow starts from an empty app: it deletes the app's database and prefs
    (`Documents/SQLite`, `Documents/mmkv` in the app container) and goes through onboarding
-   (English, USD, no app lock). **Back up the container first if the simulator holds data you
-   want to keep.** The keychain master key is kept.
+   (English, USD, no app lock). The keychain master key is kept.
+
+   **Wipe guard.** Without `E2E_ALLOW_WIPE=1` a flow refuses to start and changes nothing.
+   With it, the app's whole `Documents/` folder is first copied to
+   `~/MEB-e2e-backups/<UDID>/<timestamp>/` (outside the repo; override the root with
+   `E2E_BACKUP_ROOT`) and the path is printed. Put the data back afterwards with:
+
+   ```sh
+   bash -c 'source e2e/lib.sh; restore_app_data <UDID> ~/MEB-e2e-backups/<UDID>/<timestamp>'
+   ```
+
+   Several flows in a row each make their own backup; restore the **first** one to get back the
+   data from before the runs. Backups hold real data if the simulator had any: delete them when
+   done.
 
 3. Screenshots go to `docs/v1-recurring-evidence/<flow>-<device>-<NN>-<step>.png`
    (override with `E2E_EVIDENCE_DIR`). A failing step saves `...-FAILED.png` and exits 1.

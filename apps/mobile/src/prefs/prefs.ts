@@ -32,8 +32,8 @@ export interface Prefs {
   /** 1-28: the day a pay period (the "month" on Home and Stats) starts; 1 = calendar month. */
   monthStartDay: number;
   /**
-   * Object value: read via store.get() (fresh object per call), never usePref — it would break
-   * useSyncExternalStore's stable-snapshot rule.
+   * Object value. store.get() parses a fresh object per call; usePref is safe (usePrefFrom keeps
+   * the previous snapshot while the JSON is unchanged).
    */
   fxTables: FxCache;
 }

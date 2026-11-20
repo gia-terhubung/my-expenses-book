@@ -38,6 +38,7 @@ e2e_init() {
     *) _unsupported ;;
   esac
   DEVICE_TAG="${DEVICE_TAG:-device}"
+  require_wipe_allowed
   mkdir -p "$EVIDENCE_DIR"
   log "flow $FLOW on $DEVICE_TAG ($UDID)"
 }
@@ -438,16 +439,53 @@ background_foreground() {
   sleep 2
 }
 
+BACKUP_ROOT="${E2E_BACKUP_ROOT:-$HOME/MEB-e2e-backups}"
+
+# Every flow wipes the app's data; stop before touching the device unless E2E_ALLOW_WIPE=1.
+require_wipe_allowed() {
+  if [[ "${E2E_ALLOW_WIPE:-}" != 1 ]]; then
+    echo "Refusing to wipe the app's data on $UDID: the flows delete its database and prefs." >&2
+    echo "Run with E2E_ALLOW_WIPE=1 to allow it (Documents/ is backed up to $BACKUP_ROOT first)." >&2
+    exit 65
+  fi
+}
+
 # Wipes the app's database and prefs (Documents/SQLite, Documents/mmkv on iOS). The keychain
 # master key and the dev client's own state are kept, so the app starts at onboarding.
+# Refuses unless E2E_ALLOW_WIPE=1. Before wiping it copies the whole Documents/ folder to
+# $BACKUP_ROOT/<UDID>/<timestamp>/Documents (outside the repo) and prints that path; put it
+# back with restore_app_data.
 reset_app_data() {
+  require_wipe_allowed
   case "$E2E_PLATFORM" in
     ios)
       _terminate
-      local data
+      local data backup
       data="$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data)"
+      backup="$BACKUP_ROOT/$UDID/$(date +%Y%m%d-%H%M%S)"
+      mkdir -p "$backup"
+      cp -a "$data/Documents" "$backup/" || fail "backup to $backup failed; nothing was wiped"
+      log "backed up app data to $backup"
       rm -rf "${data:?}/Documents/SQLite" "${data:?}/Documents/mmkv"
-      log "app data wiped"
+      log "app data wiped (restore: restore_app_data $UDID $backup)"
+      ;;
+    *) _unsupported ;;
+  esac
+}
+
+# Puts back a backup made by reset_app_data: restore_app_data <UDID> <backup-dir>, where
+# <backup-dir> is the printed $BACKUP_ROOT/<UDID>/<timestamp> folder. Replaces the app's
+# Documents/SQLite and Documents/mmkv with the backup's copies.
+restore_app_data() {
+  local udid="$1" backup="$2" data
+  [[ -n "$udid" && -d "$backup/Documents" ]] || { echo "usage: restore_app_data <UDID> <backup-dir with Documents/>" >&2; return 64; }
+  case "$E2E_PLATFORM" in
+    ios)
+      xcrun simctl terminate "$udid" "$BUNDLE_ID" >/dev/null 2>&1 || true
+      data="$(xcrun simctl get_app_container "$udid" "$BUNDLE_ID" data)"
+      rm -rf "${data:?}/Documents/SQLite" "${data:?}/Documents/mmkv"
+      cp -a "$backup/Documents/." "$data/Documents/"
+      echo "restored $backup into $udid"
       ;;
     *) _unsupported ;;
   esac
