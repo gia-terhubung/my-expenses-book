@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from "@testing-library/react-native";
-import { AccessibilityInfo, Platform, StyleSheet } from "react-native";
+import { act, fireEvent, render, screen, within } from "@testing-library/react-native";
+import { AccessibilityInfo, Keyboard, Platform, StyleSheet } from "react-native";
 
 import { createPage } from "@/db/repositories/pages";
 import { createReceipt, getReceipt, updateReceipt } from "@/db/repositories/receipts";
@@ -197,6 +197,29 @@ describe("ReceiptFormScreen", () => {
     } finally {
       Platform.OS = original;
       mockTop = 0;
+    }
+  });
+
+  it("hides the Discard / Save bar while the keyboard is up, so it never covers a focused field", async () => {
+    const listeners: Record<string, () => void> = {};
+    jest.spyOn(Keyboard, "addListener").mockImplementation(((event: string, cb: () => void) => {
+      listeners[event] = cb;
+      return { remove: jest.fn() };
+    }) as never);
+    try {
+      const r = seed("draft");
+      mockParams = { id: r.id };
+      await render(<ReceiptFormScreen mode="review" />);
+      expect(screen.getByTestId("form-footer")).toBeTruthy();
+      const show = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+      const hide = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+      await act(async () => listeners[show]());
+      expect(screen.queryByTestId("form-footer")).toBeNull();
+      expect(screen.queryByRole("button", { name: "Discard" })).toBeNull();
+      await act(async () => listeners[hide]());
+      expect(screen.getByRole("button", { name: "Discard" })).toBeTruthy();
+    } finally {
+      jest.restoreAllMocks();
     }
   });
 

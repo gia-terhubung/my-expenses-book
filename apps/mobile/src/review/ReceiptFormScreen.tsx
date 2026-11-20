@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { useDb } from "@/db/DatabaseProvider";
 import { listCategories } from "@/db/repositories/categories";
 import { TwoPane } from "@/layout/TwoPane";
+import { useKeyboardVisible } from "@/layout/useKeyboardVisible";
 import { useLayout } from "@/layout/useLayout";
 import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -40,6 +41,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const sheetTop = useSheetTopInset();
+  const keyboardVisible = useKeyboardVisible();
   const db = useDb();
   const { split } = useLayout();
   const params = useLocalSearchParams<{ id: string; queue?: string; failed?: string; total?: string }>();
@@ -124,6 +126,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
 
   const footer = (
     <View
+      testID="form-footer"
       style={{
         flexDirection: "row",
         gap: theme.spacing.md,
@@ -154,7 +157,11 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
   );
 
   const formScroll = (
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.lg }}>
+    <ScrollView
+      keyboardShouldPersistTaps="handled"
+      // The bar is hidden while typing: dragging the form puts the keyboard away and brings it back.
+      keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+      contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.lg }}>
       <View style={{ width: "100%", maxWidth: 640, alignSelf: "center", gap: theme.spacing.lg }}>
         {failed > 0 ? (
           <Text style={[theme.type.body, { color: theme.colors.danger }]}>
@@ -202,7 +209,9 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
           formScroll
         )}
       </View>
-      {footer}
+      {/* Hidden while the keyboard is up: lifted above it, the bar covered the focused field
+          (a tap on Total hit Discard). */}
+      {keyboardVisible ? null : footer}
     </KeyboardAvoidingView>
   );
 }
