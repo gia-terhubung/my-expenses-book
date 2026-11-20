@@ -1,0 +1,36 @@
+[10:39:01 payday] flow payday on iphoneduo (06C208F7-96E7-4012-A374-F81F9722F168)
+[10:39:02 payday] app data wiped
+[10:39:04 payday] launched com.terhubung.myexpensesbook
+[10:39:20 payday] tap "English"
+[10:39:21 payday] tap "Next"
+[10:39:23 payday] tap "Search" at 191 188
+[10:39:25 payday] type "usd"
+[10:39:28 payday] tap "USD"
+[10:39:29 payday] tap "Next"
+[10:39:30 payday] tap "Not now"
+[10:39:31 payday] sees "No receipts yet"
+[10:39:31 payday] tap "Settings"
+[10:39:32 payday] tap containing "Month starts on" at 191 302
+[10:39:34 payday] tap "Day 25"
+[10:39:35 payday] tap "Done"
+[10:39:36 payday] sees "Month starts on, Day 25"
+[10:39:37 payday] screenshot payday-iphoneduo-01-settings-day25.png
+[10:39:37 payday] tap "Receipts"
+[10:39:38 payday] open myexpensesbook://dev/clock?now=2026-10-26T03:00:00Z&tz=Asia/Jakarta
+[10:39:42 payday] tap "Add receipt"
+[10:39:43 payday] tap last "Add manually" at 191 541
+[10:39:55 payday] type "Payday Test Cafe"
+[10:40:01 payday] type "12.50"
+[10:40:04 payday] screenshot payday-iphoneduo-02-receipt-26-oct.png
+[10:40:04 payday] tap "Save receipt"
+[10:40:07 payday] sees "Payday Test Cafe"
+[10:40:08 payday] open myexpensesbook://dev/clock?now=2026-11-20T03:00:00Z&tz=Asia/Jakarta
+[10:40:12 payday] sees "This month, $12.50"
+[10:40:12 payday] sees "Payday Test Cafe"
+[10:40:13 payday] screenshot payday-iphoneduo-03-home-this-period.png
+[10:40:14 payday] tap containing "See statistics" at 191 76
+[10:40:15 payday] sees "25 Oct – 24 Nov"
+[10:40:15 payday] sees "$12.50"
+[10:40:16 payday] screenshot payday-iphoneduo-04-stats-range.png
+[10:40:16 payday] open myexpensesbook://dev/clock?reset=1
+[10:40:19 payday] PASS

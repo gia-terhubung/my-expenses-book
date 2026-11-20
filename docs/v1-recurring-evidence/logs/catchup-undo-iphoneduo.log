@@ -1,0 +1,36 @@
+[10:41:44 catchup-undo] flow catchup-undo on iphoneduo (06C208F7-96E7-4012-A374-F81F9722F168)
+[10:41:44 catchup-undo] app data wiped
+[10:41:44 catchup-undo] launched com.terhubung.myexpensesbook
+[10:42:02 catchup-undo] tap "English"
+[10:42:04 catchup-undo] tap "Next"
+[10:42:06 catchup-undo] tap "Search" at 191 188
+[10:42:08 catchup-undo] type "usd"
+[10:42:11 catchup-undo] tap "USD"
+[10:42:12 catchup-undo] tap "Next"
+[10:42:13 catchup-undo] tap "Not now"
+[10:42:14 catchup-undo] sees "No receipts yet"
+[10:42:15 catchup-undo] open myexpensesbook://dev/clock?now=2026-11-20T03:00:00Z&tz=Asia/Jakarta
+[10:42:19 catchup-undo] tap "Add receipt"
+[10:42:20 catchup-undo] tap last "Add manually" at 191 541
+[10:42:28 catchup-undo] type "Catchup Test Rent"
+[10:42:33 catchup-undo] type "100"
+[10:42:35 catchup-undo] tap "Save receipt"
+[10:42:38 catchup-undo] tap containing "Catchup Test Rent" at 191 227
+[10:42:40 catchup-undo] tap "Repeat this…"
+[10:42:41 catchup-undo] sees "New recurring expense"
+[10:42:47 catchup-undo] tap "Save"
+[10:42:50 catchup-undo] does not see "Repeat this…"
+[10:42:50 catchup-undo] tap "Back"
+[10:42:52 catchup-undo] screenshot catchup-undo-iphoneduo-01-before.png
+[10:42:53 catchup-undo] open myexpensesbook://dev/clock?now=2027-02-20T03:00:00Z&tz=Asia/Jakarta
+[10:43:02 catchup-undo] background -> foreground
+[10:43:05 catchup-undo] sees "Added 3 recurring expenses."
+[10:43:06 catchup-undo] rows: 1 before, 4 after catch-up
+[10:43:07 catchup-undo] screenshot catchup-undo-iphoneduo-02-banner-added-3.png
+[10:43:07 catchup-undo] tap "Undo"
+[10:43:08 catchup-undo] sees "Removed 3 recurring expenses."
+[10:43:09 catchup-undo] does not see "Added 3 recurring expenses."
+[10:43:10 catchup-undo] rows after Undo: 1
+[10:43:10 catchup-undo] screenshot catchup-undo-iphoneduo-03-after-undo.png
+[10:43:11 catchup-undo] open myexpensesbook://dev/clock?reset=1
+[10:43:14 catchup-undo] PASS

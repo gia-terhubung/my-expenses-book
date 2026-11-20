@@ -1,0 +1,44 @@
+[10:43:14 duo-fold] flow duo-fold on iphoneduo (06C208F7-96E7-4012-A374-F81F9722F168)
+[10:43:15 duo-fold] posture closed
+[10:43:17 duo-fold] app data wiped
+[10:43:19 duo-fold] launched com.terhubung.myexpensesbook
+[10:43:31 duo-fold] tap "English"
+[10:43:32 duo-fold] tap "Next"
+[10:43:35 duo-fold] tap "Search" at 191 188
+[10:43:37 duo-fold] type "usd"
+[10:43:39 duo-fold] tap "USD"
+[10:43:41 duo-fold] tap "Next"
+[10:43:42 duo-fold] tap "Not now"
+[10:43:43 duo-fold] sees "No receipts yet"
+[10:43:43 duo-fold] tap "Settings"
+[10:43:44 duo-fold] tap "Recurring"
+[10:43:45 duo-fold] tap "Add a recurring expense"
+[10:43:47 duo-fold] sees "New recurring expense"
+[10:43:53 duo-fold] type "Fold Test Phone"
+[10:43:59 duo-fold] type "45.75"
+[10:44:02 duo-fold] screenshot duo-fold-iphoneduo-01-closed-form-typed.png
+[10:44:04 duo-fold] posture open
+[10:44:08 duo-fold] sees "New recurring expense"
+[10:44:09 duo-fold] A: typed values kept after unfolding; layout: pushed form, full width
+[10:44:10 duo-fold] screenshot duo-fold-iphoneduo-02-open-pushed-form-kept.png
+[10:44:11 duo-fold] tap "Back"
+[10:44:12 duo-fold] sees "Choose a recurring expense to change it, or add a new one."
+[10:44:12 duo-fold] tap "Add a recurring expense"
+[10:44:19 duo-fold] type "Fold Test Phone"
+[10:44:25 duo-fold] type "45.75"
+[10:44:27 duo-fold] sees "No recurring expenses yet"
+[10:44:28 duo-fold] screenshot duo-fold-iphoneduo-03-open-two-panes.png
+[10:44:29 duo-fold] posture closed
+[10:44:32 duo-fold] sees "New recurring expense"
+[10:44:34 duo-fold] does not see "No recurring expenses yet"
+[10:44:37 duo-fold] screenshot duo-fold-iphoneduo-04-closed-form-alone.png
+[10:44:38 duo-fold] posture open
+[10:44:41 duo-fold] sees "No recurring expenses yet"
+[10:44:41 duo-fold] sees "New recurring expense"
+[10:44:42 duo-fold] screenshot duo-fold-iphoneduo-05-open-two-panes-again.png
+[10:44:43 duo-fold] rotate left
+[10:44:46 duo-fold] sees "New recurring expense"
+[10:44:48 duo-fold] screenshot duo-fold-iphoneduo-06-open-portrait.png
+[10:44:52 duo-fold] rotate right
+[10:44:55 duo-fold] posture closed
+[10:44:57 duo-fold] PASS

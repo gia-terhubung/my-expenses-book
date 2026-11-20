@@ -1,0 +1,38 @@
+[10:40:20 recurring] flow recurring on iphoneduo (06C208F7-96E7-4012-A374-F81F9722F168)
+[10:40:20 recurring] app data wiped
+[10:40:22 recurring] launched com.terhubung.myexpensesbook
+[10:40:35 recurring] tap "English"
+[10:40:36 recurring] tap "Next"
+[10:40:38 recurring] tap "Search" at 191 188
+[10:40:41 recurring] type "usd"
+[10:40:43 recurring] tap "USD"
+[10:40:44 recurring] tap "Next"
+[10:40:45 recurring] tap "Not now"
+[10:40:46 recurring] sees "No receipts yet"
+[10:40:47 recurring] open myexpensesbook://dev/clock?now=2026-11-20T03:00:00Z&tz=Asia/Jakarta
+[10:40:51 recurring] tap "Add receipt"
+[10:40:53 recurring] tap last "Add manually" at 191 541
+[10:41:02 recurring] type "Repeat Test Gym"
+[10:41:07 recurring] type "30"
+[10:41:09 recurring] tap "Save receipt"
+[10:41:11 recurring] sees "Repeat Test Gym"
+[10:41:12 recurring] tap containing "Repeat Test Gym" at 191 227
+[10:41:14 recurring] sees "Repeat this…"
+[10:41:15 recurring] screenshot recurring-iphoneduo-01-receipt-detail.png
+[10:41:15 recurring] tap "Repeat this…"
+[10:41:17 recurring] sees "New recurring expense"
+[10:41:18 recurring] sees "Monthly"
+[10:41:18 recurring] screenshot recurring-iphoneduo-02-rule-form.png
+[10:41:25 recurring] tap "Save"
+[10:41:25 recurring] sees "Repeat Test Gym"
+[10:41:28 recurring] does not see "Repeat this…"
+[10:41:28 recurring] tap "Back"
+[10:41:32 recurring] background -> foreground
+[10:41:35 recurring] sees "Repeat Test Gym"
+[10:41:36 recurring] screenshot recurring-iphoneduo-03-home-no-duplicate.png
+[10:41:37 recurring] tap "Settings"
+[10:41:38 recurring] tap "Recurring"
+[10:41:39 recurring] sees "Repeat Test Gym, $30.00, Monthly, next 20 Dec"
+[10:41:40 recurring] screenshot recurring-iphoneduo-04-recurring-list.png
+[10:41:40 recurring] open myexpensesbook://dev/clock?reset=1
+[10:41:44 recurring] PASS
