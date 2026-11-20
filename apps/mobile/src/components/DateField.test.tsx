@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+import { initI18n } from "@/i18n";
+
 import { DateField } from "./DateField";
 import { dateToLocalString } from "./dateString";
 
@@ -19,6 +21,8 @@ jest.mock("@expo/ui", () => {
   return { Host: ({ children }: { children: React.ReactNode }) => <View>{children}</View> };
 });
 
+beforeAll(() => initI18n("en"));
+
 describe("DateField (platform file)", () => {
   it("renders label and error, and maps a picked Date to YYYY-MM-DD", async () => {
     const onChange = jest.fn();
@@ -28,6 +32,13 @@ describe("DateField (platform file)", () => {
     expect(screen.getByText("picker:2026")).toBeTruthy();
     pick?.(new Date(2026, 2, 29, 9, 30));
     expect(onChange).toHaveBeenCalledWith("2026-03-29");
+  });
+
+  it("tells VoiceOver the date, not only the label", async () => {
+    await render(<DateField label="Date" value="2026-11-07" onChange={jest.fn()} testID="date" />);
+    const field = screen.getByTestId("date");
+    expect(field.props.accessibilityLabel).toBe("Date");
+    expect(field.props.accessibilityValue).toEqual({ text: "7 November 2026" });
   });
 
   it("empty value: shows placeholder, no picker; press writes today", async () => {

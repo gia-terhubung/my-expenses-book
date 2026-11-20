@@ -1,5 +1,5 @@
 
-import { dateToLocalString, localStringToDate, utcDateToString, stringToUtcDate } from "./dateString";
+import { dateToLocalString, localStringToDate, spokenDate, utcDateToString, stringToUtcDate } from "./dateString";
 
 describe("dateString", () => {
   it("TZ override took effect (CEST, UTC+2)", () => {
@@ -30,5 +30,17 @@ describe("dateString", () => {
     const d = stringToUtcDate("2026-03-29");
     expect(d.toISOString()).toBe("2026-03-29T00:00:00.000Z");
     expect(utcDateToString(d)).toBe("2026-03-29");
+  });
+});
+
+describe("spokenDate", () => {
+  it("reads a YYYY-MM-DD day in full for the locale, never shifted by the device zone", () => {
+    expect(spokenDate("2026-11-07", "en")).toBe("7 November 2026");
+    expect(spokenDate("2026-01-01", "es")).toBe("1 de enero de 2026");
+  });
+
+  it("passes anything that is not a date through as typed", () => {
+    expect(spokenDate("2026-1", "en")).toBe("2026-1");
+    expect(spokenDate("", "en")).toBe("");
   });
 });

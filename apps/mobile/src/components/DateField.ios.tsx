@@ -2,17 +2,19 @@ import { Host } from "@expo/ui";
 import { DatePicker } from "@expo/ui/swift-ui";
 import { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { DateFieldShell, type DateFieldProps } from "./DateFieldText";
-import { dateToLocalString, localStringToDate } from "./dateString";
+import { dateToLocalString, localStringToDate, spokenDate } from "./dateString";
 
 export type { DateFieldProps } from "./DateFieldText";
 
 /** iOS: native SwiftUI compact DatePicker (tap to open the calendar). */
 export function DateField({ label, value, onChange, error, hint, testID, disabled, placeholder }: DateFieldProps) {
   const theme = useTheme();
+  const { i18n } = useTranslation();
   const selection = useMemo(() => localStringToDate(value), [value]);
   return (
     <DateFieldShell label={label} hint={hint} error={error}>
@@ -21,6 +23,8 @@ export function DateField({ label, value, onChange, error, hint, testID, disable
           testID={testID}
           accessible
           accessibilityLabel={label}
+          // The grouped native picker is not read out: VoiceOver gets the date from here.
+          accessibilityValue={{ text: spokenDate(value, i18n?.language || "en") }}
           accessibilityHint={error}
           pointerEvents={disabled ? "none" : "auto"}
           style={{ minHeight: 48, justifyContent: "center", alignItems: "flex-start" }}
