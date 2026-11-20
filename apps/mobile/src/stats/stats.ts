@@ -1,5 +1,6 @@
 // Pure stats math for the slip pace line and the Statistik screen. Dates are local
 // "YYYY-MM-DD", months "YYYY-MM"; integer/string arithmetic only, no Date.
+import { payPeriodOf, previousPayPeriod } from "./payPeriod";
 import { taxYearOf, taxYearRange } from "../taxYear/taxYear";
 
 type Range = { from: string; to: string };
@@ -7,28 +8,32 @@ export type PacePeriods = { current: Range; previous: Range; previousMonth: stri
 
 const OTHER_CATEGORY = "default:other";
 
-const pad2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+export const pad2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 
-function daysInMonth(year: number, month: number): number {
+export function daysInMonth(year: number, month: number): number {
   if (month === 2) return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28;
   return [4, 6, 9, 11].includes(month) ? 30 : 31;
 }
 
-/** This month so far vs the previous month up to the same day (or its last day if shorter). */
-export function pacePeriods(today: string): PacePeriods {
+/**
+ * This pay period so far vs the previous one up to the same day offset (or its last day if
+ * shorter). `startDay` 1 is the calendar month.
+ */
+export function pacePeriods(today: string, startDay = 1): PacePeriods {
+  const cur = payPeriodOf(today, startDay);
+  const prev = previousPayPeriod(cur, startDay);
+  // Same calendar day one month back (clamped to that month), kept inside the previous period.
   const year = Number(today.slice(0, 4));
   const month = Number(today.slice(5, 7));
   const day = Number(today.slice(8, 10));
   const py = month === 1 ? year - 1 : year;
   const pm = month === 1 ? 12 : month - 1;
-  const previousMonth = `${py}-${pad2(pm)}`;
+  const sameDay = `${py}-${pad2(pm)}-${pad2(Math.min(day, daysInMonth(py, pm)))}`;
+  const to = sameDay > prev.to ? prev.to : sameDay < prev.from ? prev.from : sameDay;
   return {
-    current: { from: `${year}-${pad2(month)}-01`, to: today },
-    previous: {
-      from: `${previousMonth}-01`,
-      to: `${previousMonth}-${pad2(Math.min(day, daysInMonth(py, pm)))}`,
-    },
-    previousMonth,
+    current: { from: cur.from, to: today },
+    previous: { from: prev.from, to },
+    previousMonth: prev.label,
   };
 }
 

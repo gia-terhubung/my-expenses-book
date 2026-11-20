@@ -90,3 +90,13 @@ describe("month lists", () => {
     expect(taxYearMonths(2026, 1)[11]).toBe("2026-12");
   });
 });
+
+describe("pacePeriods with a pay-period start day", () => {
+  it("uses the payday month", () => {
+    expect(pacePeriods("2026-11-20", 25)).toEqual({
+      current: { from: "2026-10-25", to: "2026-11-20" },
+      previous: { from: "2026-09-25", to: "2026-10-20" },
+      previousMonth: "2026-10",
+    });
+  });
+});
