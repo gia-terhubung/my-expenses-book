@@ -25,7 +25,7 @@ Posture was driven from the command line (`axe hinge set closed|open`, `axe rota
 | E4 | Fold, form opened closed: open the form folded, type values, unfold | Values kept. Layout seen: pushed form, full width (accepted for 1.0, ruling T9) | PASS: `v1-recurring-evidence/duo-fold-iphoneduo-01..02*.png` |
 | E5 | Fold, form opened open: open unfolded, fold, unfold, then rotate to portrait (669 pt wide) | List left and form right. Folded: form alone. Unfolded: two panes again. Portrait: one pane. Amount 45.75 kept throughout | PASS: `v1-recurring-evidence/duo-fold-iphoneduo-03..06*.png`, `v1-recurring-evidence/logs/duo-fold-iphoneduo.log` |
 | E6 | UNIQUE error text: `myexpensesbook://db-check` > "UNIQUE error text" | Message matches `/UNIQUE constraint failed/`, not wrapped, transaction still takes writes | PASS: `v1-recurring-evidence/device-checks-iphoneduo-01-unique-error-text.png`. Text: "Error code 19: UNIQUE constraint failed: receipts.recurring_rule_id, receipts.recurring_date" |
-| E7 | Notification prompt, iOS: save the first rule with "Add automatically" on, then the first rule with it off | No prompt for the auto-add rule. The system prompt shows when the first draft-type rule is saved | PASS: `v1-recurring-evidence/device-checks-iphoneduo-02..04*.png` |
+| E7 | Manual (no AXe script). Notification prompt, iOS: save the first rule with "Add automatically" on, then the first rule with it off | No prompt for the auto-add rule. The system prompt shows when the first draft-type rule is saved | PASS (manual): `v1-recurring-evidence/device-checks-iphoneduo-02..04*.png` |
 
 Note for E6: the duplicate path cannot be reached from the normal UI. "Repeat this…" sets the last generated date to the later of the receipt date and today, and catch-up skips existing rows. So it was exercised through the dev check (real index, real driver, rolled back).
 
@@ -35,8 +35,8 @@ Run these on the owner's devices (iPhone, Redmi, foldables). Use a dev or previe
 
 | ID | Steps | Expected | Status |
 |---|---|---|---|
-| R1 | Fresh install, iOS and Android. Save a rule with "Add automatically" on. Then save a rule with it off | No notification prompt after the first. The prompt appears only when the first draft-type rule is saved. (Android 13+ shows its own prompt at that moment.) iOS simulator already PASS (E7); a real iPhone and the Redmi still to run | OWNER-PENDING |
-| R2 | Save a draft-type rule due tomorrow. Leave the app closed. Wait for 09:00 on the due day | One notification arrives at 09:00 device-local time. Tapping it opens the draft receipt | OWNER-PENDING |
+| R1 | Fresh install, iOS and Android. Save a rule with "Add automatically" on. Then save a rule with it off | No prompt when saving the auto-add rule; the prompt appears when the first draft-type rule is saved. (Android 13+ shows its own prompt at that moment.) iOS simulator already PASS (E7); a real iPhone and the Redmi still to run | OWNER-PENDING |
+| R2 | Save a draft-type rule due tomorrow. Leave the app closed. Wait for 09:00 on the due day. Then the cold-launch catch-up: force-quit the app, set the device date forward past the next due date, launch the app | One notification arrives at 09:00 device-local time. Tapping it opens the draft receipt. After the cold launch, the Home banner shows the added draft | OWNER-PENDING |
 | R3 | Rule due on a known date. Set the device timezone to UTC−11, then to UTC+14, across that date. Open the app each time | Exactly one occurrence, dated on the rule-zone date, in both zones. No duplicate and no skipped day | OWNER-PENDING |
 | R4 | Build a dev build with a deliberately failing migration. Install it over a build with data | The "Your receipts are safe" panel shows. Reinstall the good build: the data is intact | OWNER-PENDING |
 | R5 | Fill the device to under 50 MB free. Open the app after an upgrade | The free-space panel shows. After space is freed, the app opens normally | OWNER-PENDING |
