@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react-native";
+import { act, renderHook } from "@testing-library/react-native";
 import * as Notifications from "expo-notifications";
 import type { ReactNode } from "react";
 
@@ -16,7 +16,12 @@ jest.mock("@/capture/useAddReceipt", () => ({ openReview: jest.fn() }));
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 
 const last = Notifications.useLastNotificationResponse as jest.Mock;
-const response = (data: object) => ({ notification: { request: { content: { data } } }, actionIdentifier: "default" });
+// Each response gets its own identifier: "handled" is module-level state shared across tests.
+let seq = 0;
+const response = (data: object, identifier = `n${++seq}`) => ({
+  notification: { date: 1, request: { identifier, content: { data } } },
+  actionIdentifier: "default",
+});
 
 let obscured = false;
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -74,5 +79,36 @@ describe("useNotificationTap", () => {
     last.mockReturnValue(response({ tag: "recurring", ruleId: "r2", date: "2026-03-15" }));
     await renderHook(() => useNotificationTap(jest.fn()), { wrapper });
     expect(openReview).not.toHaveBeenCalled();
+  });
+
+  it("retries when opening throws (navigation not ready) and opens on the next attempt", async () => {
+    jest.useFakeTimers();
+    try {
+      const { ruleId, id } = draftFor("2026-03-15");
+      last.mockReturnValue(response({ tag: "recurring", ruleId, date: "2026-03-15" }));
+      (openReview as jest.Mock).mockImplementationOnce(() => {
+        throw new Error("navigation not ready");
+      });
+      await renderHook(() => useNotificationTap(jest.fn()), { wrapper });
+      expect(openReview).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        jest.advanceTimersByTime(1000);
+      });
+      expect(openReview).toHaveBeenCalledTimes(2);
+      expect(openReview).toHaveBeenLastCalledWith([id]);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("does not reopen the same response after a remount (unlock)", async () => {
+    const { ruleId } = draftFor("2026-03-15");
+    const r = response({ tag: "recurring", ruleId, date: "2026-03-15" });
+    last.mockReturnValue(r);
+    const first = await renderHook(() => useNotificationTap(jest.fn()), { wrapper });
+    expect(openReview).toHaveBeenCalledTimes(1);
+    await first.unmount();
+    await renderHook(() => useNotificationTap(jest.fn()), { wrapper });
+    expect(openReview).toHaveBeenCalledTimes(1);
   });
 });

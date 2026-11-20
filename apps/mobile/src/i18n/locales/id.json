@@ -447,6 +447,7 @@
   "recurring": {
     "notifyTitle": "{{merchant}} jatuh tempo",
     "notifyBody": "Konfirmasi jumlahnya.",
-    "notifyUnnamed": "Pengeluaran berulang"
+    "notifyUnnamed": "Pengeluaran berulang",
+    "channelName": "Pengeluaran berulang"
   }
 }

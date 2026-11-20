@@ -7,6 +7,8 @@ module.exports = {
   scheduleNotificationAsync: jest.fn(async () => "id"),
   getPermissionsAsync: jest.fn(async () => ({ granted: false, canAskAgain: true, status: "undetermined" })),
   requestPermissionsAsync: jest.fn(async () => ({ granted: true, canAskAgain: true, status: "granted" })),
+  AndroidImportance: { DEFAULT: 3 },
+  setNotificationChannelAsync: jest.fn(async () => null),
   useLastNotificationResponse: jest.fn(() => null),
   addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
 };

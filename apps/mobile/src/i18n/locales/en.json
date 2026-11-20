@@ -447,6 +447,7 @@
   "recurring": {
     "notifyTitle": "{{merchant}} is due",
     "notifyBody": "Confirm the amount.",
-    "notifyUnnamed": "Recurring expense"
+    "notifyUnnamed": "Recurring expense",
+    "channelName": "Recurring expenses"
   }
 }

@@ -447,6 +447,7 @@
   "recurring": {
     "notifyTitle": "{{merchant}} vence hoy",
     "notifyBody": "Confirma el importe.",
-    "notifyUnnamed": "Gasto recurrente"
+    "notifyUnnamed": "Gasto recurrente",
+    "channelName": "Gastos recurrentes"
   }
 }
