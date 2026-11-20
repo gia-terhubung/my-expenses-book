@@ -51,7 +51,9 @@ function toError(e: unknown): Error {
  * Puts the pre-upgrade copy back without the DB file ever being absent: the copy is duplicated
  * to `<db>.restoring` first, then the handle is closed, the WAL/SHM sidecars of the failed run
  * are removed (so their pages are not replayed onto the restored file) and `.restoring` is
- * moved over the DB. `.pre-upgrade` is kept. Returns the reopened handle.
+ * moved over the DB. `.pre-upgrade` is kept. Returns the reopened handle. Rejects (copy kept,
+ * `.restoring` dropped) when the copy or the close fails; a failed move also rejects, and the
+ * next launch restores from the kept copy.
  */
 async function restore(opts: {
   db: AppDb;
@@ -62,17 +64,26 @@ async function restore(opts: {
 }): Promise<AppDb> {
   const { dbPath, files } = opts;
   const restoringPath = `${dbPath}.restoring`;
-  try {
-    files.copy(preUpgradePath(dbPath), restoringPath);
-  } catch (e) {
+  const dropRestoring = () => {
     try {
       files.remove(restoringPath);
     } catch {
       // the next launch removes it
     }
+  };
+  try {
+    files.copy(preUpgradePath(dbPath), restoringPath);
+  } catch (e) {
+    dropRestoring();
     throw e;
   }
-  opts.close(opts.db);
+  try {
+    // Must throw when the handle stays open: moving a file under a live connection corrupts it.
+    opts.close(opts.db);
+  } catch (e) {
+    dropRestoring();
+    throw e;
+  }
   files.remove(`${dbPath}-wal`);
   files.remove(`${dbPath}-shm`);
   files.move(restoringPath, dbPath);

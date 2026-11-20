@@ -329,6 +329,94 @@ describe("safeMigrate", () => {
     ).rejects.toBe(reopenError);
     expect(text(DB_PATH)).toBe("v1");
   });
+
+  describe("a failure while putting the copy back rejects and keeps the copy", () => {
+    const failingUpgrade = async () => {
+      throw new Error("migration failed");
+    };
+
+    it("copy to .restoring throws: the DB handle is not closed, .restoring is removed", async () => {
+      const { ops, map, text } = fakeFiles({ [DB_PATH]: "v1" });
+      const enospc = new Error("ENOSPC");
+      const closeSpy = jest.fn(close);
+      const runMigrations = jest.fn(async () => {
+        map.set(DB_PATH, new TextEncoder().encode("v1-half-migrated"));
+        ops.copy.mockImplementationOnce((_from: string, to: string) => {
+          map.set(to, new TextEncoder().encode("partial"));
+          throw enospc;
+        });
+        throw new Error("migration failed");
+      });
+      await expect(
+        safeMigrate({ db: testDb(), dbPath: DB_PATH, files: ops, pendingCount: () => 1, runMigrations, close: closeSpy, reopen: () => testDb() }),
+      ).rejects.toBe(enospc);
+      expect(closeSpy).not.toHaveBeenCalled();
+      expect(ops.move).not.toHaveBeenCalled();
+      expect(map.has(RESTORING_PATH)).toBe(false);
+      expect(text(COPY_PATH)).toBe("v1");
+      expect(text(DB_PATH)).toBe("v1-half-migrated");
+    });
+
+    it("close throws: rejects with it, .restoring is removed, the DB file is untouched", async () => {
+      const { ops, map, text } = fakeFiles({ [DB_PATH]: "v1" });
+      const busy = new Error("unable to close due to unfinalized statements");
+      const reopen = jest.fn(() => testDb());
+      await expect(
+        safeMigrate({
+          db: testDb(),
+          dbPath: DB_PATH,
+          files: ops,
+          pendingCount: () => 1,
+          runMigrations: failingUpgrade,
+          close: () => {
+            throw busy;
+          },
+          reopen,
+        }),
+      ).rejects.toBe(busy);
+      expect(ops.move).not.toHaveBeenCalled();
+      expect(reopen).not.toHaveBeenCalled();
+      expect(map.has(RESTORING_PATH)).toBe(false);
+      expect(text(DB_PATH)).toBe("v1");
+      expect(text(COPY_PATH)).toBe("v1");
+    });
+
+    it("move throws: rejects, the copy stays and the next launch restores from it", async () => {
+      const { ops, map, text } = fakeFiles({ [DB_PATH]: "v1" });
+      const moveError = new Error("EIO");
+      ops.move.mockImplementationOnce(() => {
+        throw moveError;
+      });
+      await expect(
+        safeMigrate({
+          db: testDb(),
+          dbPath: DB_PATH,
+          files: ops,
+          pendingCount: () => 1,
+          runMigrations: async () => {
+            map.set(DB_PATH, new TextEncoder().encode(""));
+            throw new Error("migration failed");
+          },
+          close,
+          reopen: () => testDb(),
+        }),
+      ).rejects.toBe(moveError);
+      expect(text(COPY_PATH)).toBe("v1");
+      // Next launch: the DB looks fresh (0 applied) next to the copy, so it restores.
+      const next = await safeMigrate({
+        db: emptyDb(),
+        dbPath: DB_PATH,
+        files: ops,
+        pendingCount: () => journalEntries(),
+        runMigrations: jest.fn(async () => {}),
+        close,
+        reopen: () => testDb(),
+      });
+      expect(next.status).toBe("restored");
+      expect(text(DB_PATH)).toBe("v1");
+      expect(map.has(RESTORING_PATH)).toBe(false);
+    });
+  });
 });
 
 /** Real files: a WAL-mode db on disk, an upgrade that damages data and then throws. */

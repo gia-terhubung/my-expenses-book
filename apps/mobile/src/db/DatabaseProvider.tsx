@@ -71,7 +71,7 @@ function Migrated({
       pendingCount: pendingMigrationCount(migrations.journal),
       // migrate only needs the drizzle expo-sqlite handle's session/dialect.
       runMigrations: (d) => migrate(d as unknown as Parameters<typeof migrate>[0], migrations),
-      close: closeDb,
+      close: closeForRestore,
       reopen: async () => {
         try {
           return await openWithStore({ store: expoSecretStore });
@@ -142,6 +142,20 @@ function closeDb(db: AppDb): void {
     (db as unknown as { $client: { closeSync(): void } }).$client.closeSync();
   } catch {
     // already closed
+  }
+}
+
+/**
+ * The restore's close: throws unless the handle is closed afterwards, because safeMigrate then
+ * moves the pre-upgrade copy over the file. A handle that was already closed is fine.
+ */
+function closeForRestore(db: AppDb): void {
+  try {
+    (db as unknown as { $client: { closeSync(): void } }).$client.closeSync();
+  } catch (e) {
+    // expo-sqlite's AccessClosedResourceException (iOS and Android).
+    if (/access to closed resource/i.test(errorMessage(e))) return;
+    throw e;
   }
 }
 

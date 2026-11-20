@@ -186,6 +186,24 @@ describe("DatabaseProvider", () => {
       expect(mockOpen).toHaveBeenCalledTimes(3);
     });
 
+    it("the restore's close throws when the handle stays open, and only ignores one already closed", async () => {
+      let close: ((db: unknown) => void) | undefined;
+      mockSafeMigrate.mockImplementationOnce(async (opts: { close: (db: unknown) => void }) => {
+        close = opts.close;
+        return { status: "ok" };
+      });
+      mockOpen.mockResolvedValueOnce(fakeDb);
+      await renderProvider();
+      await screen.findByText("child");
+      const busy = new Error("unable to close due to unfinalized statements or unfinished backups");
+      const throwing = (e: Error) => ({ $client: { closeSync: () => { throw e; } } });
+      expect(() => close!(throwing(busy))).toThrow(busy);
+      expect(() => close!(throwing(new Error("Access to closed resource")))).not.toThrow();
+      const ok = { $client: { closeSync: jest.fn() } };
+      close!(ok);
+      expect(ok.$client.closeSync).toHaveBeenCalledTimes(1);
+    });
+
     it("noSpace: shows the free-space message and never renders children", async () => {
       mockSafeMigrate.mockResolvedValueOnce({ status: "noSpace", error: new Error("ENOSPC") });
       mockOpen.mockResolvedValueOnce(fakeDb);
