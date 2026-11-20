@@ -42,6 +42,12 @@ it("Backup & restore row pushes /backup", async () => {
   expect(mockPush).toHaveBeenCalledWith("/backup");
 });
 
+it("Recurring row pushes /recurring", async () => {
+  await render(<Settings />);
+  await fireEvent.press(screen.getByRole("button", { name: "Recurring" }));
+  expect(mockPush).toHaveBeenCalledWith("/recurring");
+});
+
 it("Tip jar and Error log rows push their routes", async () => {
   await render(<Settings />);
   await fireEvent.press(screen.getByRole("button", { name: "Tip jar" }));

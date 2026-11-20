@@ -195,7 +195,7 @@ describe("undoCatchUp", () => {
       parseSource: "manual",
     });
     const res = runCatchUp(db, { now: at("2026-11-20"), home: "IDR", fx: noFx });
-    undoCatchUp(db, res.createdIds);
+    expect(undoCatchUp(db, res.createdIds)).toBe(res.createdIds.length);
     for (const id of res.createdIds) expect(getReceipt(db, id)).toBeNull();
     expect(getReceipt(db, other.id)).not.toBeNull();
     expect(db.select().from(recurringRules).get()?.lastGeneratedDate).toBe("2026-11-01");
@@ -209,7 +209,7 @@ describe("undoCatchUp", () => {
     const res = runCatchUp(db, { now: at("2026-11-20"), home: "IDR", fx: noFx });
     const [edited, ...untouched] = res.createdIds;
     updateReceipt(db, edited, { status: "confirmed", totalMinor: 190000 });
-    undoCatchUp(db, res.createdIds);
+    expect(undoCatchUp(db, res.createdIds)).toBe(untouched.length);
     expect(getReceipt(db, edited)).toMatchObject({ status: "confirmed", totalMinor: 190000 });
     for (const id of untouched) expect(getReceipt(db, id)).toBeNull();
   });

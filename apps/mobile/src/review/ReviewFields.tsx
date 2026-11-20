@@ -25,7 +25,7 @@ import type { ReviewForm } from "./useReviewForm";
 // Re-exported for existing callers; the pure function lives in organize/categoryLabel.
 export { categoryLabel };
 
-function FieldShell({
+export function FieldShell({
   label,
   hint,
   error,
@@ -64,9 +64,6 @@ function FieldShell({
 export function ReviewFields({ form, categories }: { form: ReviewForm; categories: Category[] }) {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
-  const sheetTop = useSheetTopInset();
-  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [folderOpen, setFolderOpen] = useState(false);
   const { values, setField, errors, lowConfidence, fx, home } = form;
   const db = useDb();
@@ -152,23 +149,13 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
         <View style={{ flexGrow: 2, flexBasis: 160 }}>{input("total", t("review.total"), { keyboardType: "decimal-pad" })}</View>
         <View style={{ flexGrow: 1, flexBasis: 110 }}>
           <FieldShell label={t("review.currency")} hint={isLow("currency")} error={errors.currency}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`${t("review.currency")} ${values.currency ? currencyName(i18n.language, values.currency) : ""}`.trim()}
+            <CurrencyField
+              label={t("review.currency")}
+              value={values.currency}
+              onChange={(c) => setField("currency", c)}
               disabled={form.busy}
-              onPress={() => setCurrencyOpen(true)}
-              style={{
-                minHeight: 48,
-                justifyContent: "center",
-                paddingHorizontal: theme.spacing.md,
-                borderRadius: theme.radius.md,
-                borderWidth: isLow("currency") || errors.currency ? 2 : 1,
-                borderColor: borderFor("currency"),
-                backgroundColor: theme.colors.surface,
-              }}
-            >
-              <Text style={[theme.type.body, { color: theme.colors.text, fontWeight: "600" }]}>{values.currency || "—"}</Text>
-            </Pressable>
+              flagColor={isLow("currency") || errors.currency ? borderFor("currency") : undefined}
+            />
           </FieldShell>
         </View>
       </View>
@@ -195,34 +182,13 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
       {input("tax", t("review.tax"), { keyboardType: "decimal-pad", placeholder: t("review.optional") })}
 
       <FieldShell label={t("review.category")} hint={isLow("categoryId")} error={errors.categoryId}>
-        <View accessibilityRole="radiogroup" style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
-          {[null, ...categories].map((c) => {
-            const id = c?.id ?? null;
-            const selected = values.categoryId === id;
-            const label = c ? categoryLabel(c, t) : t("review.noCategory");
-            return (
-              <Pressable
-                key={id ?? "none"}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: selected }}
-                disabled={form.busy}
-                hitSlop={{ top: 2, bottom: 2 }}
-                onPress={() => setField("categoryId", id)}
-                style={({ pressed }) => ({
-                  minHeight: 44,
-                  justifyContent: "center",
-                  paddingHorizontal: theme.spacing.md,
-                  borderRadius: theme.radius.pill,
-                  borderWidth: selected ? 2 : 1,
-                  borderColor: selected ? theme.colors.primary : isLow("categoryId") ? theme.colors.warning : theme.colors.border,
-                  backgroundColor: selected ? (pressed ? theme.colors.primaryPressed : theme.colors.primary) : pressed ? theme.colors.surfacePressed : theme.colors.surface,
-                })}
-              >
-                <Text style={[theme.type.body, { color: selected ? theme.colors.onPrimary : theme.colors.text }]}>{label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <CategoryChips
+          categories={categories}
+          value={values.categoryId}
+          onChange={(id) => setField("categoryId", id)}
+          disabled={form.busy}
+          flagged={isLow("categoryId")}
+        />
       </FieldShell>
 
       <FieldShell label={t("review.folder")} hint={false}>
@@ -257,9 +223,100 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
       />
 
       {input("notes", t("review.notes"), { multiline: true, placeholder: t("review.optional") })}
+    </View>
+  );
+}
 
-      {currencyOpen ? (
-        <AppModal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setCurrencyOpen(false)}>
+/** Category choice as chips: "None" plus every category (the review form and the rule form). */
+export function CategoryChips({
+  categories,
+  value,
+  onChange,
+  disabled,
+  flagged = false,
+}: {
+  categories: Category[];
+  value: string | null;
+  onChange(id: string | null): void;
+  disabled?: boolean;
+  /** Low-confidence warning border on the unselected chips. */
+  flagged?: boolean;
+}) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  return (
+    <View accessibilityRole="radiogroup" style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
+      {[null, ...categories].map((c) => {
+        const id = c?.id ?? null;
+        const selected = value === id;
+        const label = c ? categoryLabel(c, t) : t("review.noCategory");
+        return (
+          <Pressable
+            key={id ?? "none"}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selected }}
+            disabled={disabled}
+            hitSlop={{ top: 2, bottom: 2 }}
+            onPress={() => onChange(id)}
+            style={({ pressed }) => ({
+              minHeight: 44,
+              justifyContent: "center",
+              paddingHorizontal: theme.spacing.md,
+              borderRadius: theme.radius.pill,
+              borderWidth: selected ? 2 : 1,
+              borderColor: selected ? theme.colors.primary : flagged ? theme.colors.warning : theme.colors.border,
+              backgroundColor: selected ? (pressed ? theme.colors.primaryPressed : theme.colors.primary) : pressed ? theme.colors.surfacePressed : theme.colors.surface,
+            })}
+          >
+            <Text style={[theme.type.body, { color: selected ? theme.colors.onPrimary : theme.colors.text }]}>{label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Currency code button that opens the searchable currency sheet. */
+export function CurrencyField({
+  label,
+  value,
+  onChange,
+  disabled,
+  flagColor,
+}: {
+  label: string;
+  value: string;
+  onChange(code: string): void;
+  disabled?: boolean;
+  /** Warning or error border; thickens the border to 2. */
+  flagColor?: string;
+}) {
+  const { t, i18n } = useTranslation();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const sheetTop = useSheetTopInset();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${label} ${value ? currencyName(i18n.language, value) : ""}`.trim()}
+        disabled={disabled}
+        onPress={() => setOpen(true)}
+        style={{
+          minHeight: 48,
+          justifyContent: "center",
+          paddingHorizontal: theme.spacing.md,
+          borderRadius: theme.radius.md,
+          borderWidth: flagColor ? 2 : 1,
+          borderColor: flagColor ?? theme.colors.border,
+          backgroundColor: theme.colors.surface,
+        }}
+      >
+        <Text style={[theme.type.body, { color: theme.colors.text, fontWeight: "600" }]}>{value || "—"}</Text>
+      </Pressable>
+      {open ? (
+        <AppModal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setOpen(false)}>
           <View
             style={{
               flex: 1,
@@ -272,21 +329,21 @@ export function ReviewFields({ form, categories }: { form: ReviewForm; categorie
           >
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text, flexShrink: 1 }]}>
-                {t("review.currency")}
+                {label}
               </Text>
-              <Button variant="quiet" label={t("common.done")} onPress={() => setCurrencyOpen(false)} />
+              <Button variant="quiet" label={t("common.done")} onPress={() => setOpen(false)} />
             </View>
             <CurrencyPicker
               lang={i18n.language}
-              value={values.currency}
+              value={value}
               onChange={(c) => {
-                setField("currency", c);
-                setCurrencyOpen(false);
+                onChange(c);
+                setOpen(false);
               }}
             />
           </View>
         </AppModal>
       ) : null}
-    </View>
+    </>
   );
 }

@@ -9,7 +9,7 @@ import { deviceTimeZone } from "@/capture/localTime";
 
 import { runCatchUp } from "./catchUp";
 import { rescheduleAll } from "./notify";
-import { useRecurringCatchUp } from "./useRecurringCatchUp";
+import { requestCatchUp, useRecurringCatchUp } from "./useRecurringCatchUp";
 
 const mockDb = {};
 const mockFx = { base: "idr", latestDate: null, fetchedAt: null, byDate: {} };
@@ -74,6 +74,17 @@ describe("useRecurringCatchUp", () => {
     await rerender({});
     expect(run).toHaveBeenCalledTimes(1);
     await unmount();
+  });
+
+  it("requestCatchUp runs through the mounted hook, and does nothing once it unmounts", async () => {
+    obscured = false;
+    const { unmount } = await renderHook(() => useRecurringCatchUp(), { wrapper });
+    expect(run).toHaveBeenCalledTimes(1);
+    await act(async () => requestCatchUp());
+    expect(run).toHaveBeenCalledTimes(2);
+    await unmount();
+    requestCatchUp();
+    expect(run).toHaveBeenCalledTimes(2);
   });
 
   it("runs again when the app returns to the foreground", async () => {

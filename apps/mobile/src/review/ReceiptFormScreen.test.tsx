@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, within } from "@testing-library/react-native";
 import { AccessibilityInfo, Platform, StyleSheet } from "react-native";
 
 import { createPage } from "@/db/repositories/pages";
-import { createReceipt, getReceipt } from "@/db/repositories/receipts";
+import { createReceipt, getReceipt, updateReceipt } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb } from "@/db/types";
 import { initI18n } from "@/i18n";
@@ -198,5 +198,20 @@ describe("ReceiptFormScreen", () => {
       Platform.OS = original;
       mockTop = 0;
     }
+  });
+
+  it("a draft created by a recurring rule is labelled Recurring in the header", async () => {
+    const r = seed("draft");
+    updateReceipt(mockDb, r.id, { recurringRuleId: "rule-1", recurringDate: "2026-11-03" });
+    mockParams = { id: r.id };
+    await render(<ReceiptFormScreen mode="review" />);
+    expect(within(screen.getByTestId("form-header")).getByText("Recurring")).toBeTruthy();
+  });
+
+  it("no Recurring label on an ordinary draft", async () => {
+    const r = seed("draft");
+    mockParams = { id: r.id };
+    await render(<ReceiptFormScreen mode="review" />);
+    expect(screen.queryByTestId("review-recurring-label")).toBeNull();
   });
 });

@@ -176,6 +176,7 @@ export default function SettingsScreen() {
             onPress={() => setSheet("monthStart")}
           />
           <Row label={t("settings.categories")} value="" onPress={() => router.push("/categories" as unknown as Href)} />
+          <Row label={t("recurring.title")} value="" onPress={() => router.push("/recurring" as unknown as Href)} />
           <Row label={t("settings.export")} value="" onPress={() => router.push("/export" as unknown as Href)} />
           {/* /backup is created in the backup task. */}
           <Row label={t("settings.backupRestore")} value="" onPress={() => router.push("/backup" as unknown as Href)} />

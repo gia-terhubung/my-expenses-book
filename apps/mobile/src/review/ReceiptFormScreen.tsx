@@ -106,6 +106,11 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
         <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
           {t(editing ? "review.editTitle" : "review.title")}
         </Text>
+        {form.receipt.recurringRuleId !== null ? (
+          <Text testID="review-recurring-label" style={[theme.type.caption, { color: theme.colors.primary, fontWeight: "600" }]}>
+            {t("recurring.title")}
+          </Text>
+        ) : null}
         {queue.length > 0 ? (
           <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{t("review.queued", { n: queue.length })}</Text>
         ) : null}

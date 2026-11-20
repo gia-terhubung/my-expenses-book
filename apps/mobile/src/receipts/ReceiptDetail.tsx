@@ -1,3 +1,4 @@
+import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -183,6 +184,12 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack, underHeader = fal
         <View testID="receipt-detail-actions" style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
           {action(t("receipts.detail.edit"), () => onEdit(receipt.id))}
           {action(t("receipts.detail.move"), () => setPicking(true))}
+          {/* A receipt a rule already owns is not offered again (it would move to the new rule). */}
+          {receipt.status === "confirmed" && receipt.recurringRuleId === null
+            ? action(t("recurring.repeatThis"), () =>
+                router.push({ pathname: "/recurring/[id]", params: { id: "new", from: receipt.id } } as unknown as Href),
+              )
+            : null}
           {action(t("common.delete"), confirmDelete, "danger", deleting)}
         </View>
         {field(t("receipts.detail.category"), category ? categoryLabel(category, t) : t("review.noCategory"))}

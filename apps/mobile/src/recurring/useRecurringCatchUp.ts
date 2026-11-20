@@ -20,6 +20,8 @@ let running = false;
 let last: CatchUpResult | null = null;
 // Last device zone seen on foreground; a change re-plans notifications (09:00 is device-local).
 let lastTz = deviceTimeZone();
+// The newest mounted hook's run, so screens without the hook can ask for a run (a rule saved).
+let latestAttempt: (() => void) | null = null;
 // Reschedules run one after another so a cancel never lands between another run's schedules.
 let scheduling: Promise<unknown> = Promise.resolve();
 const listeners = new Set<() => void>();
@@ -29,13 +31,21 @@ function setLast(next: CatchUpResult | null): void {
   for (const cb of [...listeners]) cb();
 }
 
+/** Runs catch-up now through the mounted hook (same guards as a foreground run); no-op without one. */
+export function requestCatchUp(): void {
+  latestAttempt?.();
+}
+
 function subscribe(cb: () => void): () => void {
   listeners.add(cb);
   return () => void listeners.delete(cb);
 }
 
-/** Re-plans the due-day notifications for draft-type rules. Never throws. */
-function reschedule(db: AppDb): void {
+/**
+ * Re-plans the due-day notifications for draft-type rules, queued behind any reschedule already
+ * running. Never throws. Call after every rule write.
+ */
+export function rescheduleRecurring(db: AppDb): void {
   scheduling = scheduling
     .then(() => rescheduleAll(db, deviceScheduler, now()))
     .catch((e) => logError("recurring", e));
@@ -68,13 +78,20 @@ export function useRecurringCatchUp(): { last: CatchUpResult | null; dismiss(): 
             : res,
         );
       }
-      reschedule(db);
+      rescheduleRecurring(db);
     } catch (e) {
       logError("recurring", e);
     } finally {
       running = false;
     }
   }, [db, prefs, home]);
+
+  useEffect(() => {
+    latestAttempt = attempt;
+    return () => {
+      if (latestAttempt === attempt) latestAttempt = null;
+    };
+  }, [attempt]);
 
   // Mount, unlock (obscured -> false) and home currency set.
   useEffect(() => {
@@ -87,7 +104,7 @@ export function useRecurringCatchUp(): { last: CatchUpResult | null; dismiss(): 
       const tz = deviceTimeZone();
       if (tz !== lastTz) {
         lastTz = tz;
-        reschedule(db);
+        rescheduleRecurring(db);
       }
       attempt();
     });
@@ -96,7 +113,13 @@ export function useRecurringCatchUp(): { last: CatchUpResult | null; dismiss(): 
 
   useEffect(() => restoreLease.onFree(attempt), [attempt]);
 
+  const { last: current, dismiss } = useCatchUpResult();
+  return { last: current, dismiss, runNow: attempt };
+}
+
+/** What catch-up runs added since the last dismiss, without starting runs (the Home banner). */
+export function useCatchUpResult(): { last: CatchUpResult | null; dismiss(): void } {
   const current = useSyncExternalStore(subscribe, () => last);
   const dismiss = useCallback(() => setLast(null), []);
-  return { last: current, dismiss, runNow: attempt };
+  return { last: current, dismiss };
 }

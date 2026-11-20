@@ -25,6 +25,12 @@ jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
+const mockRouter = { push: jest.fn() };
+jest.mock("expo-router", () => ({
+  get router() {
+    return mockRouter;
+  },
+}));
 
 function seed(over: Partial<NewReceiptInput> = {}) {
   return createReceipt(mockDb, {
@@ -194,5 +200,21 @@ describe("ReceiptDetail", () => {
     expect(screen.getByTestId("receipt-detail-scroll").props.contentInsetAdjustmentBehavior).toBe("automatic");
     await rerender(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
     expect(screen.getByTestId("receipt-detail-scroll").props.contentInsetAdjustmentBehavior).toBe("never");
+  });
+
+  it("'Repeat this…' opens the rule form prefilled from a confirmed receipt", async () => {
+    const r = seed();
+    await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Repeat this…" }));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: "/recurring/[id]", params: { id: "new", from: r.id } });
+  });
+
+  it("no 'Repeat this…' for a draft, or for a receipt a rule already created", async () => {
+    const draft = seed({ status: "draft" });
+    const view = await render(<ReceiptDetail id={draft.id} onEdit={noop} onDeleted={noop} />);
+    expect(screen.queryByRole("button", { name: "Repeat this…" })).toBeNull();
+    const owned = seed({ recurringRuleId: "rule-1", recurringDate: "2026-11-03" });
+    await view.rerender(<ReceiptDetail id={owned.id} onEdit={noop} onDeleted={noop} />);
+    expect(screen.queryByRole("button", { name: "Repeat this…" })).toBeNull();
   });
 });

@@ -125,21 +125,25 @@ export function runCatchUp(db: AppDb, opts: { now: Date; home: string; fx: FxCac
 /**
  * Soft-deletes receipts a catch-up run created, except rows edited since (version > 1: the user
  * confirmed or changed them, and a banner tap must not delete that). lastGeneratedDate is not
- * rewound, so the removed ones stay gone.
+ * rewound, so the removed ones stay gone. Returns how many were removed.
  */
-export function undoCatchUp(db: AppDb, ids: string[]): void {
-  if (ids.length === 0) return;
+export function undoCatchUp(db: AppDb, ids: string[]): number {
+  if (ids.length === 0) return 0;
   const t = nowMs();
-  db.update(receipts)
-    .set({ deletedAt: t, updatedAt: t, version: sql`${receipts.version} + 1` })
-    .where(
-      and(
-        inArray(receipts.id, ids),
-        isNotNull(receipts.recurringRuleId),
-        eq(receipts.version, 1),
-        isNull(receipts.deletedAt),
-      ),
-    )
-    .run();
+  const untouched = and(
+    inArray(receipts.id, ids),
+    isNotNull(receipts.recurringRuleId),
+    eq(receipts.version, 1),
+    isNull(receipts.deletedAt),
+  );
+  const removed = db.transaction((tx) => {
+    const rows = tx.select({ id: receipts.id }).from(receipts).where(untouched).all();
+    tx.update(receipts)
+      .set({ deletedAt: t, updatedAt: t, version: sql`${receipts.version} + 1` })
+      .where(untouched)
+      .run();
+    return rows.length;
+  });
   notifyDataChanged();
+  return removed;
 }

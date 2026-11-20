@@ -13,6 +13,7 @@ import { useLayout } from "@/layout/useLayout";
 import { FeedEmpty } from "@/receipts/FeedEmpty";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { TotalsHeader } from "@/receipts/TotalsHeader";
+import { CatchUpBanner } from "@/recurring/CatchUpBanner";
 import { themedStatusBarStyle } from "@/theme/ThemedStatusBar";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -47,6 +48,7 @@ export default function ReceiptsScreen() {
         ListHeaderComponent={
           <>
             <TotalsHeader />
+            <CatchUpBanner />
             {drafts.length > 0 ? (
               <Pressable
                 accessibilityRole="button"
