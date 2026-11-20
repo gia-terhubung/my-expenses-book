@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { localToUtc } from "@/capture/localTime";
 import { subscribeDataChanged } from "@/db/changes";
@@ -157,6 +157,29 @@ describe("runCatchUp", () => {
     expect(getReceipt(db, res!.createdIds[0])?.recurringDate).toBe("2026-11-01");
     expect(liveRecurring(db).map((r) => r.id).sort()).toEqual([existing.id, res!.createdIds[0]].sort());
     expect(db.select().from(recurringRules).get()?.lastGeneratedDate).toBe("2026-11-01");
+  });
+
+  it("a rule failing with a non-UNIQUE error rolls back alone; the other rule still commits", () => {
+    const db = testDb();
+    const broken = ruleSince(db, "2026-08-01", { merchant: "Broken" });
+    const fine = ruleSince(db, "2026-08-01", { merchant: "Fine" });
+    // The second insert of the broken rule fails mid-transaction (like a disk I/O error).
+    db.run(sql.raw(
+      `CREATE TRIGGER fail_broken BEFORE INSERT ON receipts
+       WHEN NEW.merchant = 'Broken' AND NEW.recurring_date = '2026-10-01'
+       BEGIN SELECT RAISE(ABORT, 'disk I/O error'); END`,
+    ));
+    const res = runCatchUp(db, { now: at("2026-11-20"), home: "IDR", fx: noFx });
+    expect(res.createdIds).toHaveLength(3);
+    const live = liveRecurring(db);
+    expect(live.filter((r) => r.recurringRuleId === fine.id)).toHaveLength(3);
+    // Rolled back: not even the September row stays, and the rule is retried next run.
+    expect(live.filter((r) => r.recurringRuleId === broken.id)).toHaveLength(0);
+    const ruleRow = (id: string) => db.select().from(recurringRules).where(eq(recurringRules.id, id)).get()!;
+    expect(ruleRow(broken.id).lastGeneratedDate).toBe("2026-08-01");
+    expect(ruleRow(fine.id).lastGeneratedDate).toBe("2026-11-01");
+    db.run(sql.raw("DROP TRIGGER fail_broken"));
+    expect(runCatchUp(db, { now: at("2026-11-20"), home: "IDR", fx: noFx }).createdIds).toHaveLength(3);
   });
 
   it("ignores deleted rules", () => {
