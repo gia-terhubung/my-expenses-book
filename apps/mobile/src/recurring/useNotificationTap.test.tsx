@@ -16,6 +16,7 @@ jest.mock("@/capture/useAddReceipt", () => ({ openReview: jest.fn() }));
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 
 const last = Notifications.useLastNotificationResponse as jest.Mock;
+const clear = Notifications.clearLastNotificationResponse as jest.Mock;
 // Each response gets its own identifier: "handled" is module-level state shared across tests.
 let seq = 0;
 const response = (data: object, identifier = `n${++seq}`) => ({
@@ -46,6 +47,7 @@ function draftFor(date: string): { ruleId: string; id: string } {
 beforeEach(() => {
   mockDb = testDb();
   (openReview as jest.Mock).mockClear();
+  clear.mockReset();
   last.mockReturnValue(null);
   obscured = false;
 });
@@ -58,6 +60,42 @@ describe("useNotificationTap", () => {
     await renderHook(() => useNotificationTap(runNow), { wrapper });
     expect(runNow).toHaveBeenCalledTimes(1);
     expect(openReview).toHaveBeenCalledWith([id]);
+  });
+
+  it("clears the handled response, so a later launch never reopens it", async () => {
+    const { ruleId } = draftFor("2026-03-15");
+    last.mockReturnValue(response({ tag: "recurring", ruleId, date: "2026-03-15" }));
+    await renderHook(() => useNotificationTap(jest.fn()), { wrapper });
+    expect(clear).toHaveBeenCalledTimes(1);
+    expect(clear.mock.invocationCallOrder[0]).toBeGreaterThan((openReview as jest.Mock).mock.invocationCallOrder[0]);
+  });
+
+  it("clears other notifications' responses too, and a failing clear is swallowed", async () => {
+    clear.mockImplementation(() => {
+      throw new Error("native module missing");
+    });
+    last.mockReturnValue(response({ tag: "other" }));
+    await renderHook(() => useNotificationTap(jest.fn()), { wrapper });
+    expect(clear).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not clear while a retry is pending", async () => {
+    jest.useFakeTimers();
+    try {
+      const { ruleId } = draftFor("2026-03-15");
+      last.mockReturnValue(response({ tag: "recurring", ruleId, date: "2026-03-15" }));
+      (openReview as jest.Mock).mockImplementationOnce(() => {
+        throw new Error("navigation not ready");
+      });
+      await renderHook(() => useNotificationTap(jest.fn()), { wrapper });
+      expect(clear).not.toHaveBeenCalled();
+      await act(async () => {
+        jest.advanceTimersByTime(1000);
+      });
+      expect(clear).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("waits while locked and opens once unlocked", async () => {

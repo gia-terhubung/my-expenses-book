@@ -10,5 +10,6 @@ module.exports = {
   AndroidImportance: { DEFAULT: 3 },
   setNotificationChannelAsync: jest.fn(async () => null),
   useLastNotificationResponse: jest.fn(() => null),
+  clearLastNotificationResponse: jest.fn(),
   addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
 };

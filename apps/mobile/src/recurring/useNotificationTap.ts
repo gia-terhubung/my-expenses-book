@@ -16,6 +16,16 @@ const MAX_RETRIES = 6;
 
 const keyOf = (r: Notifications.NotificationResponse): string => `${r.notification.request.identifier}@${r.notification.date}`;
 
+/** Handled for good: never again in this run (handledKey) nor on a later launch (cleared natively). */
+function markHandled(key: string): void {
+  handledKey = key;
+  try {
+    Notifications.clearLastNotificationResponse();
+  } catch (e) {
+    logError("recurring", e);
+  }
+}
+
 /**
  * Opens the receipt a due-day notification is about. The response (live tap or the one that
  * launched the app) waits while the app is locked or covered; then `runNow` makes sure the day's
@@ -34,7 +44,7 @@ export function useNotificationTap(runNow: () => void): void {
     const key = keyOf(response);
     const data = response.notification.request.content.data as { tag?: string; ruleId?: string; date?: string } | null;
     if (data?.tag !== "recurring" || !data.ruleId || !data.date) {
-      handledKey = key;
+      markHandled(key);
       return;
     }
     try {
@@ -48,14 +58,14 @@ export function useNotificationTap(runNow: () => void): void {
         if (row.status === "draft") openReview([row.id]);
         else router.push({ pathname: "/document/[id]", params: { id: row.id, from: "list" } } as unknown as Href);
       }
-      handledKey = key;
+      markHandled(key);
     } catch (e) {
       logError("recurring", e);
       if (attempts < MAX_RETRIES) {
         const timer = setTimeout(() => setAttempts((n) => n + 1), RETRY_MS);
         return () => clearTimeout(timer);
       }
-      handledKey = key;
+      markHandled(key);
     }
   }, [obscured, response, db, runNow, attempts]);
 }
