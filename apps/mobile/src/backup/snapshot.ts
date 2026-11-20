@@ -73,6 +73,9 @@ export const receiptShape = z
     parseSource: z.enum(["apple_fm", "gemini_nano", "heuristic", "manual"]),
     parseConfidence: z.string().nullable(),
     status: z.enum(["draft", "confirmed"]),
+    // Optional so backups made before recurring rules (schema < 5) still parse.
+    recurringRuleId: z.string().nullable().default(null),
+    recurringDate: z.string().nullable().default(null),
   })
   .strict();
 

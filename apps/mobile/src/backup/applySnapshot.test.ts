@@ -34,6 +34,8 @@ function receiptRow(id: string, over: Partial<Receipt> = {}): Receipt {
     notes: null,
     refNo: null,
     rawOcrText: null,
+    recurringRuleId: null,
+    recurringDate: null,
     parseSource: "manual",
     parseConfidence: null,
     status: "confirmed",
