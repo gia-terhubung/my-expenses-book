@@ -139,10 +139,13 @@ export async function importBackup(deps: {
   }
   if (mode === "replace") {
     afterCommit("prefs", () => {
-      // C5: home currency and tax year come from the archive; lock settings and language never.
+      // C5: home currency, tax year and month start come from the archive; lock settings and
+      // language never.
       if (snap.prefs.homeCurrency) prefs.set("homeCurrency", snap.prefs.homeCurrency);
       const m = snap.prefs.taxYearStartMonth;
       if (m >= 1 && m <= 12) prefs.set("taxYearStartMonth", m);
+      const d = snap.prefs.monthStartDay;
+      if (d >= 1 && d <= 28) prefs.set("monthStartDay", d);
     });
   }
   afterCommit("reconvert", () => {

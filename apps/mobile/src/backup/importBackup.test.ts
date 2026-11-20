@@ -5,7 +5,7 @@ import { sumHome } from "@/db/repositories/receiptQueries";
 import { createReceipt } from "@/db/repositories/receipts";
 import { eq } from "drizzle-orm";
 
-import { categories, folders, lineItems, receiptPages, receipts } from "@/db/schema";
+import { categories, folders, lineItems, receiptPages, receipts, recurringRules } from "@/db/schema";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb, NewReceiptInput } from "@/db/types";
 import type { ImageStore } from "@/images/store";
@@ -122,6 +122,7 @@ function rows(db: AppDb) {
   return {
     categories: db.select().from(categories).all(),
     folders: db.select().from(folders).all(),
+    recurringRules: db.select().from(recurringRules).all(),
     receipts: db.select().from(receipts).all(),
     receiptPages: db.select().from(receiptPages).all(),
     lineItems: db.select().from(lineItems).all(),
@@ -202,6 +203,35 @@ describe("importBackup", () => {
     expect([...(await b.store.readPlain(pb.imagePath))]).toEqual([1, 2, 3]);
     expect([...(await b.store.readPlain(pb.thumbPath!))]).toEqual([4, 5]);
     expect(b.files.size).toBe(2);
+  });
+
+  it("round trip keeps recurring rules and their linked receipts identical", async () => {
+    const a = seedA();
+    a.db.insert(recurringRules)
+      .values({
+        id: "rule-1",
+        createdAt: 1,
+        updatedAt: 2,
+        merchant: "Netflix",
+        currency: "IDR",
+        totalMinor: 186000,
+        frequency: "monthly",
+        anchorDate: "2026-01-15",
+        monthDay: 15,
+        tz: "Asia/Jakarta",
+        autoAdd: true,
+        lastGeneratedDate: "2026-11-15",
+      })
+      .run();
+    addReceipt(a.db, { merchant: "Netflix", recurringRuleId: "rule-1", recurringDate: "2026-11-15" });
+    const bytes = await exportOf(a.db, a.files);
+    const db = testDb();
+    await importBackup({ db, prefs: prefs(), store: fakeStore().store, source: source(bytes), passphrase: null, mode: "replace" });
+    const sortIds = <T extends { id: string }>(x: T[]) => [...x].sort((p, q) => p.id.localeCompare(q.id));
+    expect(rows(db).recurringRules).toEqual(rows(a.db).recurringRules);
+    expect(rows(db).recurringRules).toHaveLength(1);
+    expect(sortIds(rows(db).receipts)).toEqual(sortIds(rows(a.db).receipts));
+    expect(rows(db).receipts.find((r) => r.recurringRuleId === "rule-1")?.recurringDate).toBe("2026-11-15");
   });
 
   it("wrong passphrase -> WrongPassphraseError, B unchanged, no new files", async () => {
@@ -331,21 +361,25 @@ describe("importBackup", () => {
     expect(out.possibleDuplicates).toEqual([{ receiptId: imported.id, matchId: local.id }]);
   });
 
-  it("replace sets homeCurrency and taxYearStartMonth from the archive; merge leaves them", async () => {
+  it("replace sets homeCurrency, taxYearStartMonth and monthStartDay from the archive; merge leaves them", async () => {
     const a = seedA();
-    const bytes = await exportOf(a.db, a.files, null, prefs("USD", 4));
+    const archivePrefs = prefs("USD", 4);
+    archivePrefs.set("monthStartDay", 25);
+    const bytes = await exportOf(a.db, a.files, null, archivePrefs);
 
     const rep = seedB();
     const prRep = prefs("IDR", 1);
     await importBackup({ db: rep.db, prefs: prRep, store: rep.store, source: source(bytes), passphrase: null, mode: "replace" });
     expect(prRep.get("homeCurrency")).toBe("USD");
     expect(prRep.get("taxYearStartMonth")).toBe(4);
+    expect(prRep.get("monthStartDay")).toBe(25);
 
     const mer = seedB();
     const prMer = prefs("IDR", 1);
     await importBackup({ db: mer.db, prefs: prMer, store: mer.store, source: source(bytes), passphrase: null, mode: "merge" });
     expect(prMer.get("homeCurrency")).toBe("IDR");
     expect(prMer.get("taxYearStartMonth")).toBe(1);
+    expect(prMer.get("monthStartDay")).toBe(1);
   });
 
   it("replace removes the old page files after commit", async () => {

@@ -14,9 +14,10 @@ import {
   lineItemShape,
   receiptPageShape,
   receiptShape,
+  recurringRuleShape,
   snapshotSchema,
 } from "./snapshot";
-import { applyReplace } from "./applySnapshot";
+import { applyMerge, applyReplace } from "./applySnapshot";
 import fixtureV4 from "./fixtures/snapshot-v4.json";
 
 function prefs() {
@@ -55,6 +56,7 @@ describe("collectSnapshot", () => {
     const pairs: [object, object][] = [
       [categoryShape.shape, schema.categories],
       [folderShape.shape, schema.folders],
+      [recurringRuleShape.shape, schema.recurringRules],
       [receiptShape.shape, schema.receipts],
       [receiptPageShape.shape, schema.receiptPages],
       [lineItemShape.shape, schema.lineItems],
@@ -91,5 +93,26 @@ describe("forward compatibility: schema 4 snapshot fixture", () => {
     expect(back.lineItems.map((l) => l.description)).toEqual(["Item A"]);
     expect(listAllPagePaths(db).sort()).toEqual(["pages/fixture-img.enc", "pages/fixture-thumb.enc"]);
     expect(back.categories).toHaveLength(snap.categories.length);
+  });
+
+  it("fills the recurring additions with empty defaults", () => {
+    const snap = snapshotSchema.parse(fixtureV4);
+    expect(snap.recurringRules).toEqual([]);
+    expect(snap.prefs.monthStartDay).toBe(1);
+    expect(snap.receipts.every((r) => r.recurringRuleId === null && r.recurringDate === null)).toBe(true);
+  });
+
+  it("merges into a DB that already holds data", () => {
+    const snap = snapshotSchema.parse(fixtureV4);
+    const db = testDb();
+    const local = seed(db);
+    const res = applyMerge(db, snap);
+    expect(res.inserted).toBe(2);
+    expect(res.kept).toBe(0);
+    const back = collectSnapshot(db, prefs());
+    expect(back.receipts.map((r) => r.merchant).sort()).toEqual(["Deleted Shop", "Sample Store", "Toko"]);
+    expect(back.receipts.find((r) => r.id === local.id)?.recurringRuleId).toBeNull();
+    expect(back.recurringRules).toEqual([]);
+    expect(back.receipts.every((r) => r.recurringDate === null)).toBe(true);
   });
 });

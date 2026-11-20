@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import journal from "@/db/migrations/meta/_journal.json";
 import * as schema from "@/db/schema";
-import type { AppDb, Category, Folder, LineItem, Receipt, ReceiptPage } from "@/db/types";
+import type { AppDb, Category, Folder, LineItem, Receipt, ReceiptPage, RecurringRule } from "@/db/types";
 import type { PrefsStore } from "@/prefs/prefs";
 
 /** One entry per applied migration; bumps automatically with every new migration. */
@@ -10,9 +10,10 @@ export const SCHEMA_VERSION: number = journal.entries.length;
 
 export type Snapshot = {
   schemaVersion: number;
-  prefs: { homeCurrency: string | null; taxYearStartMonth: number };
+  prefs: { homeCurrency: string | null; taxYearStartMonth: number; monthStartDay: number };
   categories: Category[];
   folders: Folder[];
+  recurringRules: RecurringRule[];
   receipts: Receipt[];
   receiptPages: ReceiptPage[];
   lineItems: LineItem[];
@@ -45,6 +46,27 @@ export const folderShape = z
     name: z.string(),
     kind: z.enum(["project", "trip"]),
     defaultCurrency: z.string().nullable(),
+  })
+  .strict();
+
+export const recurringRuleShape = z
+  .object({
+    ...base,
+    merchant: z.string().nullable(),
+    currency: z.string(),
+    totalMinor: int,
+    taxMinor: int.nullable(),
+    categoryId: z.string().nullable(),
+    folderId: z.string().nullable(),
+    notes: z.string().nullable(),
+    frequency: z.enum(["weekly", "monthly", "yearly"]),
+    anchorDate: z.string(),
+    monthDay: int.nullable(),
+    tz: z.string(),
+    autoAdd: z.boolean(),
+    endDate: z.string().nullable(),
+    paused: z.boolean(),
+    lastGeneratedDate: z.string().nullable(),
   })
   .strict();
 
@@ -105,9 +127,18 @@ export const lineItemShape = z
 export const snapshotSchema = z
   .object({
     schemaVersion: int,
-    prefs: z.object({ homeCurrency: z.string().nullable(), taxYearStartMonth: int }).strict(),
+    prefs: z
+      .object({
+        homeCurrency: z.string().nullable(),
+        taxYearStartMonth: int,
+        // Optional so backups made before pay periods (schema < 5) still parse.
+        monthStartDay: int.default(1),
+      })
+      .strict(),
     categories: z.array(categoryShape),
     folders: z.array(folderShape),
+    // Optional so backups made before recurring rules (schema < 5) still parse.
+    recurringRules: z.array(recurringRuleShape).default([]),
     receipts: z.array(receiptShape),
     receiptPages: z.array(receiptPageShape),
     lineItems: z.array(lineItemShape),
@@ -118,9 +149,14 @@ export const snapshotSchema = z
 export function collectSnapshot(db: AppDb, prefs: PrefsStore): Snapshot {
   return {
     schemaVersion: SCHEMA_VERSION,
-    prefs: { homeCurrency: prefs.get("homeCurrency"), taxYearStartMonth: prefs.get("taxYearStartMonth") },
+    prefs: {
+      homeCurrency: prefs.get("homeCurrency"),
+      taxYearStartMonth: prefs.get("taxYearStartMonth"),
+      monthStartDay: prefs.get("monthStartDay"),
+    },
     categories: db.select().from(schema.categories).all(),
     folders: db.select().from(schema.folders).all(),
+    recurringRules: db.select().from(schema.recurringRules).all(),
     receipts: db.select().from(schema.receipts).all(),
     receiptPages: db.select().from(schema.receiptPages).all(),
     lineItems: db.select().from(schema.lineItems).all(),

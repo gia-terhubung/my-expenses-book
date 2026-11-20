@@ -1,7 +1,7 @@
-import { categories, folders, lineItems, receiptPages, receipts } from "@/db/schema";
+import { categories, folders, lineItems, receiptPages, receipts, recurringRules } from "@/db/schema";
 import { searchReceipts } from "@/db/repositories/receipts";
 import { testDb } from "@/db/testing/testDb";
-import type { AppDb, Category, Folder, LineItem, Receipt, ReceiptPage } from "@/db/types";
+import type { AppDb, Category, Folder, LineItem, Receipt, ReceiptPage, RecurringRule } from "@/db/types";
 
 import { applyMerge, applyReplace } from "./applySnapshot";
 import { SCHEMA_VERSION, type Snapshot } from "./snapshot";
@@ -73,6 +73,25 @@ const pageRow = (id: string, receiptId: string, over: Partial<ReceiptPage> = {})
   dhash: null,
   ...over,
 });
+const ruleRow = (id: string, over: Partial<RecurringRule> = {}): RecurringRule => ({
+  ...syncBase(id),
+  merchant: `Rule ${id}`,
+  currency: "IDR",
+  totalMinor: 50000,
+  taxMinor: null,
+  categoryId: null,
+  folderId: null,
+  notes: null,
+  frequency: "monthly",
+  anchorDate: "2026-01-01",
+  monthDay: 1,
+  tz: "Asia/Jakarta",
+  autoAdd: true,
+  endDate: null,
+  paused: false,
+  lastGeneratedDate: null,
+  ...over,
+});
 const lineRow = (id: string, receiptId: string, over: Partial<LineItem> = {}): LineItem => ({
   ...syncBase(id),
   receiptId,
@@ -85,9 +104,10 @@ const lineRow = (id: string, receiptId: string, over: Partial<LineItem> = {}): L
 function snap(over: Partial<Snapshot> = {}): Snapshot {
   return {
     schemaVersion: SCHEMA_VERSION,
-    prefs: { homeCurrency: "IDR", taxYearStartMonth: 1 },
+    prefs: { homeCurrency: "IDR", taxYearStartMonth: 1, monthStartDay: 1 },
     categories: [],
     folders: [],
+    recurringRules: [],
     receipts: [],
     receiptPages: [],
     lineItems: [],
@@ -98,6 +118,7 @@ function snap(over: Partial<Snapshot> = {}): Snapshot {
 function insertLocal(db: AppDb, s: Partial<Snapshot>) {
   if (s.categories?.length) db.insert(categories).values(s.categories).run();
   if (s.folders?.length) db.insert(folders).values(s.folders).run();
+  if (s.recurringRules?.length) db.insert(recurringRules).values(s.recurringRules).run();
   if (s.receipts?.length) db.insert(receipts).values(s.receipts).run();
   if (s.receiptPages?.length) db.insert(receiptPages).values(s.receiptPages).run();
   if (s.lineItems?.length) db.insert(lineItems).values(s.lineItems).run();
@@ -106,6 +127,7 @@ function insertLocal(db: AppDb, s: Partial<Snapshot>) {
 const all = (db: AppDb) => ({
   categories: db.select().from(categories).all(),
   folders: db.select().from(folders).all(),
+  recurringRules: db.select().from(recurringRules).all(),
   receipts: db.select().from(receipts).all(),
   receiptPages: db.select().from(receiptPages).all(),
   lineItems: db.select().from(lineItems).all(),
@@ -123,7 +145,11 @@ describe("applyReplace", () => {
     const s = snap({
       categories: [categoryRow("cat-1")],
       folders: [folderRow("f-1")],
-      receipts: [receiptRow("r-1", { merchant: "Warung Sederhana", folderId: "f-1", categoryId: "cat-1" })],
+      recurringRules: [ruleRow("rule-1", { lastGeneratedDate: "2026-03-01" })],
+      receipts: [
+        receiptRow("r-1", { merchant: "Warung Sederhana", folderId: "f-1", categoryId: "cat-1" }),
+        receiptRow("r-2", { recurringRuleId: "rule-1", recurringDate: "2026-03-01" }),
+      ],
       receiptPages: [pageRow("p-1", "r-1")],
       lineItems: [lineRow("l-1", "r-1")],
     });
@@ -131,7 +157,8 @@ describe("applyReplace", () => {
     const got = all(db);
     expect(byId(got.categories)).toEqual(s.categories); // default categories wiped too
     expect(got.folders).toEqual(s.folders);
-    expect(got.receipts).toEqual(s.receipts);
+    expect(got.recurringRules).toEqual(s.recurringRules);
+    expect(byId(got.receipts)).toEqual(s.receipts);
     expect(got.receiptPages).toEqual(s.receiptPages);
     expect(got.lineItems).toEqual(s.lineItems);
     expect(searchReceipts(db, "Sederhana").map((r) => r.id)).toEqual(["r-1"]);
@@ -235,6 +262,113 @@ describe("applyMerge", () => {
     expect(res.inserted).toBe(450);
     expect(res.insertedReceiptIds).toHaveLength(450);
     expect(all(db).receipts).toHaveLength(450);
+  });
+});
+
+describe("applyMerge recurring rules and occurrences", () => {
+  const OCC = { recurringRuleId: "rule", recurringDate: "2026-11-01" };
+
+  it("skips a backup receipt whose live occurrence already exists locally under another id", () => {
+    const db = testDb();
+    insertLocal(db, {
+      recurringRules: [ruleRow("rule")],
+      receipts: [receiptRow("local-occ", { ...OCC, merchant: "Local occurrence" })],
+    });
+    const res = applyMerge(
+      db,
+      snap({
+        recurringRules: [ruleRow("rule")],
+        receipts: [receiptRow("backup-occ", { ...OCC, merchant: "Backup occurrence" }), receiptRow("plain")],
+        receiptPages: [pageRow("p-backup", "backup-occ"), pageRow("p-plain", "plain")],
+        lineItems: [lineRow("l-backup", "backup-occ")],
+      }),
+    );
+    expect(res).toEqual({ inserted: 1, updated: 0, kept: 1, insertedReceiptIds: ["plain"] });
+    const got = all(db);
+    expect(got.receipts.map((r) => r.id).sort()).toEqual(["local-occ", "plain"]);
+    expect(receiptById(db, "local-occ")?.merchant).toBe("Local occurrence");
+    expect(got.receiptPages.map((p) => p.id)).toEqual(["p-plain"]);
+    expect(got.lineItems).toEqual([]);
+  });
+
+  it("a soft-deleted local occurrence does not block the backup one", () => {
+    const db = testDb();
+    insertLocal(db, { receipts: [receiptRow("local-occ", { ...OCC, deletedAt: T0 })] });
+    const res = applyMerge(db, snap({ receipts: [receiptRow("backup-occ", OCC)] }));
+    expect(res.insertedReceiptIds).toEqual(["backup-occ"]);
+  });
+
+  it("skips a winning update that would move a local row onto another live occurrence", () => {
+    const db = testDb();
+    insertLocal(db, {
+      receipts: [
+        receiptRow("holder", OCC),
+        receiptRow("mover", { recurringRuleId: "rule", recurringDate: "2026-10-01", merchant: "Mover local" }),
+      ],
+    });
+    const res = applyMerge(
+      db,
+      snap({ receipts: [receiptRow("mover", { ...OCC, merchant: "Mover snap", updatedAt: T0 + 5 })] }),
+    );
+    expect(res).toEqual({ inserted: 0, updated: 0, kept: 1, insertedReceiptIds: [] });
+    expect(receiptById(db, "mover")?.merchant).toBe("Mover local");
+    expect(receiptById(db, "mover")?.recurringDate).toBe("2026-10-01");
+  });
+
+  it("a winning update that frees an occurrence lets a later backup row take it", () => {
+    const db = testDb();
+    insertLocal(db, { receipts: [receiptRow("old", OCC)] });
+    const res = applyMerge(
+      db,
+      snap({
+        receipts: [
+          receiptRow("old", { ...OCC, deletedAt: T0 + 5, updatedAt: T0 + 5 }),
+          receiptRow("new", OCC),
+        ],
+      }),
+    );
+    expect(res).toEqual({ inserted: 1, updated: 1, kept: 0, insertedReceiptIds: ["new"] });
+  });
+
+  it("keeps the winning rule's fields with the later lastGeneratedDate of both sides", () => {
+    const db = testDb();
+    insertLocal(db, {
+      recurringRules: [ruleRow("rule", { merchant: "Local rule", updatedAt: T0 + 10, lastGeneratedDate: "2026-10-01" })],
+    });
+    applyMerge(
+      db,
+      snap({ recurringRules: [ruleRow("rule", { merchant: "Backup rule", lastGeneratedDate: "2026-11-01" })] }),
+    );
+    const [rule] = all(db).recurringRules;
+    expect(rule).toEqual(
+      ruleRow("rule", { merchant: "Local rule", updatedAt: T0 + 10, lastGeneratedDate: "2026-11-01" }),
+    );
+  });
+
+  it("a winning backup rule keeps the later local lastGeneratedDate; null loses to any date", () => {
+    const db = testDb();
+    insertLocal(db, {
+      recurringRules: [
+        ruleRow("a", { lastGeneratedDate: "2026-11-01" }),
+        ruleRow("b", { lastGeneratedDate: null }),
+      ],
+    });
+    applyMerge(
+      db,
+      snap({
+        recurringRules: [
+          ruleRow("a", { merchant: "Backup a", updatedAt: T0 + 1, lastGeneratedDate: "2026-09-01" }),
+          ruleRow("b", { lastGeneratedDate: "2026-08-01" }),
+          ruleRow("c", { lastGeneratedDate: null }),
+        ],
+      }),
+    );
+    const got = byId(all(db).recurringRules);
+    expect(got.map((r) => [r.id, r.merchant, r.lastGeneratedDate])).toEqual([
+      ["a", "Backup a", "2026-11-01"],
+      ["b", "Rule b", "2026-08-01"],
+      ["c", "Rule c", null],
+    ]);
   });
 });
 
