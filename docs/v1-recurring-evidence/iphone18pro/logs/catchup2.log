@@ -1,0 +1,37 @@
+[11:34:48 catchup-undo] flow catchup-undo on iphone18pro (CA55DB6E-D05F-4CDF-A3BD-CED5C26CCCA0)
+[11:34:49 catchup-undo] backed up app data to /Users/giaendong/MEB-e2e-backups/CA55DB6E-D05F-4CDF-A3BD-CED5C26CCCA0/20261120-113449
+[11:34:49 catchup-undo] app data wiped (restore: restore_app_data CA55DB6E-D05F-4CDF-A3BD-CED5C26CCCA0 /Users/giaendong/MEB-e2e-backups/CA55DB6E-D05F-4CDF-A3BD-CED5C26CCCA0/20261120-113449)
+[11:34:50 catchup-undo] launched com.terhubung.myexpensesbook
+[11:35:07 catchup-undo] tap "English"
+[11:35:08 catchup-undo] tap "Next"
+[11:35:11 catchup-undo] tap "Search" at 201 250
+[11:35:13 catchup-undo] type "usd"
+[11:35:15 catchup-undo] tap "USD"
+[11:35:16 catchup-undo] tap "Next"
+[11:35:17 catchup-undo] tap "Not now"
+[11:35:19 catchup-undo] sees "No receipts yet"
+[11:35:19 catchup-undo] open myexpensesbook://dev/clock?now=2026-11-20T03:00:00Z&tz=Asia/Jakarta
+[11:35:23 catchup-undo] tap "Add receipt"
+[11:35:25 catchup-undo] tap last "Add manually" at 201 738
+[11:35:35 catchup-undo] type "Catchup Test Rent"
+[11:35:40 catchup-undo] type "100"
+[11:35:43 catchup-undo] tap "Save receipt"
+[11:35:44 catchup-undo] tap containing "Catchup Test Rent" at 201 289
+[11:35:45 catchup-undo] tap "Repeat this…"
+[11:35:46 catchup-undo] sees "New recurring expense"
+[11:35:51 catchup-undo] tap "Save"
+[11:35:54 catchup-undo] does not see "Repeat this…"
+[11:35:54 catchup-undo] tap "Back"
+[11:35:56 catchup-undo] screenshot catchup-undo-iphone18pro-01-before.png
+[11:35:56 catchup-undo] open myexpensesbook://dev/clock?now=2027-02-20T03:00:00Z&tz=Asia/Jakarta
+[11:36:03 catchup-undo] background -> foreground
+[11:36:06 catchup-undo] sees "Added 3 recurring expenses."
+[11:36:06 catchup-undo] rows: 1 before, 4 after catch-up
+[11:36:06 catchup-undo] screenshot catchup-undo-iphone18pro-02-banner-added-3.png
+[11:36:07 catchup-undo] tap "Undo"
+[11:36:08 catchup-undo] sees "Removed 3 recurring expenses."
+[11:36:09 catchup-undo] does not see "Added 3 recurring expenses."
+[11:36:09 catchup-undo] rows after Undo: 1
+[11:36:10 catchup-undo] screenshot catchup-undo-iphone18pro-03-after-undo.png
+[11:36:10 catchup-undo] open myexpensesbook://dev/clock?reset=1
+[11:36:13 catchup-undo] PASS

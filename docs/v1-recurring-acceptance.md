@@ -42,7 +42,8 @@ Run these on the owner's devices (iPhone, Redmi, foldables). Use a dev or previe
 | R5 | Fill the device to under 50 MB free. Open the app after an upgrade | The free-space panel shows. After space is freed, the app opens normally | OWNER-PENDING |
 | R6 | Proxy session (Proxyman or Charles, as in row D5 of `docs/m5-acceptance.md`). Save a draft rule, wait for the notification to be scheduled and delivered | No new hosts compared with the D5 list. On Android, expo-notifications' FCM service stays inert: no `google` hosts come from it (ML Kit hosts from D5 are separate) | OWNER-PENDING |
 | R7 | Redmi: run the flows E1 to E3 in section 2 by hand (payday, recurring, catch-up and undo) | Same results as E1 to E3. The e2e scripts have only an iOS branch; an `android)` adb branch can be added to `apps/mobile/e2e/lib.sh` | OWNER-PENDING |
-| R8 | iPhone 18 Pro: the section 2 flows, with the fold rows skipped | Same results as E1 to E3 and E6 | OWNER-PENDING |
+| R8 | iPhone 18 Pro: the section 2 flows, with the fold rows skipped | Same results as E1 to E3 and E6 | PASS 2026-11-20 (iPhone 18 Pro sim, iOS 27.2): payday, recurring, catchup-undo all PASS. Evidence and logs: `docs/v1-recurring-evidence/iphone18pro/` (`logs/`). Needed two `e2e/lib.sh` timing fixes (fling settle after scroll, wait for the add sheet); one earlier payday run dropped a tap on the still-sliding sheet |
+| R8b | iPhone 18 Pro: review form, tap Total, floating Discard/Save bar | Bar does not cover Total; no "Discard this receipt?" sheet | PARTIAL PASS 2026-11-20: Total focused, bar below it, no discard sheet (`iphone18pro/kbbar-iphone18pro-01-total-focused-keyboard.png`). The headless simulator showed no on-screen keyboard (hardware keyboard), so the keyboard-up layout still needs a real device check |
 | R9 | Android foldable (Z Flip 6 or similar): open the rule form, fold and unfold | No state loss. The form keeps its values | BLOCKED: no device |
 
 ## 4. Found during acceptance

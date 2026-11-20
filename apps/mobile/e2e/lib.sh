@@ -159,7 +159,8 @@ _scroll_down() {
     ios)
       local h; h="$(screen_height)"
       "$AXE" swipe --start-x 190 --start-y $((h * 7 / 10)) --end-x 190 --end-y $((h * 3 / 10)) --udid "$UDID" >/dev/null
-      sleep 0.6
+      # Let the fling settle: a tap that lands on a decelerating list only stops it.
+      sleep 1.5
       ;;
     *) _unsupported ;;
   esac
@@ -524,6 +525,7 @@ e2e_fresh() {
 # Adds a manual receipt from Home (dated by the app clock): add_manual <merchant> <total>.
 add_manual() {
   tap "Add receipt"
+  sleep 1.5 # the sheet is still sliding up: a tap on it now is dropped
   tap_last "Add manually"
   wait_for "Review receipt" || fail "review form did not open"
   fill "Merchant" "$1"
