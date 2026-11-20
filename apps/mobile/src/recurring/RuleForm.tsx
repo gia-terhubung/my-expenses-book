@@ -232,6 +232,13 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
   const [folderOpen, setFolderOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const savedPaused = useRef(initial === "missing" ? false : initial.paused);
+  // Set before a write so a second tap (before the re-render disables the button) never writes
+  // twice: a duplicate rule, a receipt re-linked, onSaved/back() twice. Cleared on failure, and by
+  // an edit after a save (the form stays open in split view).
+  const savingRef = useRef(false);
+  const [saved, setSaved] = useState(false);
+  const deletingRef = useRef(false);
+  const [deleted, setDeleted] = useState(false);
   const categories = useMemo(() => listCategories(db), [db]);
   // version: a folder created in the picker shows its name.
   const folderName = useMemo(
@@ -262,11 +269,14 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
   const set = <K extends keyof RuleFormValues>(k: K, v: RuleFormValues[K]) => {
     setValues((cur) => (cur ? { ...cur, [k]: v } : cur));
     if (k in errors) setErrors((cur) => ({ ...cur, [k]: undefined }));
+    savingRef.current = false;
+    setSaved(false);
   };
   const device = deviceTimeZone();
   const errorCount = Object.values(errors).filter(Boolean).length;
 
   const save = () => {
+    if (savingRef.current) return;
     const errs = validateRuleValues(values);
     setErrors(errs);
     const first = Object.values(errs).find(Boolean);
@@ -276,6 +286,7 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
       return;
     }
     let rule: RecurringRule;
+    savingRef.current = true;
     try {
       const input = ruleInputFrom(values);
       const at = now();
@@ -293,24 +304,29 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
       }
     } catch (e) {
       logError("recurring", e);
+      savingRef.current = false;
       setSaveFailed("recurring.saveFailed");
       return;
     }
+    setSaved(true);
     setSaveFailed(null);
     void afterRuleWrite(db, !values.autoAdd);
     onSaved(rule);
   };
 
   const remove = () => {
-    if (!ruleId) return;
+    if (!ruleId || deletingRef.current) return;
+    deletingRef.current = true;
     try {
       softDeleteRule(db, ruleId);
     } catch (e) {
+      deletingRef.current = false;
       logError("recurring", e);
       setConfirmDelete(false);
       setSaveFailed("recurring.deleteFailed");
       return;
     }
+    setDeleted(true);
     setConfirmDelete(false);
     void afterRuleWrite(db, false);
     onDeleted();
@@ -472,7 +488,7 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
               {t(saveFailed)}
             </Text>
           ) : null}
-          <Button testID="rule-save" variant="primary" label={t("common.save")} onPress={save} />
+          <Button testID="rule-save" variant="primary" label={t("common.save")} onPress={save} disabled={saved} />
           {ruleId ? (
             <View style={{ marginTop: theme.spacing.xl, paddingTop: theme.spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.colors.border }}>
               <Button testID="rule-delete" tone="danger" label={t("recurring.delete")} onPress={() => setConfirmDelete(true)} />
@@ -489,7 +505,7 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
         }}
         onClose={() => setFolderOpen(false)}
       />
-      <ConfirmDeleteSheet visible={confirmDelete} onCancel={() => setConfirmDelete(false)} onConfirm={remove} />
+      <ConfirmDeleteSheet visible={confirmDelete} onCancel={() => setConfirmDelete(false)} onConfirm={remove} disabled={deleted} />
     </KeyboardAvoidingView>
   );
 }
@@ -533,7 +549,17 @@ function FrequencyControl({ value, onChange }: { value: RecurringFrequency; onCh
 }
 
 /** Bottom sheet to confirm deleting a rule (no system alert), laid out like the add sheet. */
-function ConfirmDeleteSheet({ visible, onCancel, onConfirm }: { visible: boolean; onCancel(): void; onConfirm(): void }) {
+function ConfirmDeleteSheet({
+  visible,
+  onCancel,
+  onConfirm,
+  disabled,
+}: {
+  visible: boolean;
+  onCancel(): void;
+  onConfirm(): void;
+  disabled: boolean;
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -570,7 +596,7 @@ function ConfirmDeleteSheet({ visible, onCancel, onConfirm }: { visible: boolean
               {t("recurring.deleteTitle")}
             </Text>
             <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("recurring.deleteMessage")}</Text>
-            <Button testID="rule-delete-confirm" tone="danger" label={t("common.delete")} onPress={onConfirm} />
+            <Button testID="rule-delete-confirm" tone="danger" label={t("common.delete")} onPress={onConfirm} disabled={disabled} />
             <Button variant="quiet" tone="muted" align="center" label={t("common.cancel")} onPress={onCancel} />
           </View>
         </View>

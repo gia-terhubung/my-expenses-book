@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 
 import { createFolder } from "@/db/repositories/folders";
 import { createReceipt, getReceipt } from "@/db/repositories/receipts";
@@ -7,7 +7,7 @@ import type { AppDb, NewRecurringRuleInput } from "@/db/types";
 import { initI18n } from "@/i18n";
 
 import { ensurePermissionForDraftRule, rescheduleAll } from "./notify";
-import { createRule, listRules } from "./rules";
+import { createRule, listRules, softDeleteRule } from "./rules";
 import { RuleForm, validateRuleValues, type RuleFormValues } from "./RuleForm";
 
 let mockDb: AppDb;
@@ -105,6 +105,18 @@ beforeEach(() => {
 });
 
 const noop = () => {};
+
+/**
+ * Two taps before React re-renders, so the second lands before Save is disabled: Pressability's
+ * click handler (an accessibility activation) called twice in one act.
+ */
+async function pressTwice(el: ReturnType<typeof screen.getByTestId>) {
+  const click = el.props.onClick as (e: { nativeEvent: object }) => void;
+  await act(async () => {
+    click({ nativeEvent: {} });
+    click({ nativeEvent: {} });
+  });
+}
 
 describe("RuleForm", () => {
   it("'Repeat this…' prefills merchant, amount, currency, category, folder, notes and the receipt's date", async () => {
@@ -243,6 +255,62 @@ describe("RuleForm", () => {
     expect(screen.queryByTestId("rule-delete")).toBeNull();
     await render(<RuleForm ruleId="gone" onSaved={noop} onDeleted={noop} onBack={noop} />);
     expect(screen.getByText("This recurring expense is no longer available.")).toBeTruthy();
+  });
+
+  it("a double tap on Save creates one rule and calls onSaved once", async () => {
+    const onSaved = jest.fn();
+    await render(<RuleForm ruleId={null} onSaved={onSaved} onDeleted={noop} />);
+    await fireEvent.changeText(screen.getByTestId("rule-amount"), "250.000");
+    const save = screen.getByTestId("rule-save");
+    await pressTwice(save);
+    await fireEvent.press(screen.getByTestId("rule-save"));
+    expect(listRules(mockDb)).toHaveLength(1);
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("rule-save")).toBeDisabled();
+  });
+
+  it("'Repeat this…' double tap: one rule, the receipt linked to it, back once", async () => {
+    const { receipt } = seedReceipt();
+    const onSaved = jest.fn();
+    await render(<RuleForm ruleId={null} fromReceiptId={receipt.id} onSaved={onSaved} onDeleted={noop} />);
+    const save = screen.getByTestId("rule-save");
+    await pressTwice(save);
+    const rules = listRules(mockDb);
+    expect(rules).toHaveLength(1);
+    expect(getReceipt(mockDb, receipt.id)?.recurringRuleId).toBe(rules[0].id);
+    expect(onSaved).toHaveBeenCalledTimes(1);
+  });
+
+  it("a failed save can be retried", async () => {
+    const onSaved = jest.fn();
+    const r = rule();
+    await render(<RuleForm ruleId={r.id} onSaved={onSaved} onDeleted={noop} />);
+    await act(async () => void softDeleteRule(mockDb, r.id));
+    await fireEvent.press(screen.getByTestId("rule-save"));
+    expect(screen.getByText("Couldn't save the recurring expense. Please try again.")).toBeTruthy();
+    expect(screen.getByTestId("rule-save")).not.toBeDisabled();
+  });
+
+  it("editing after a save in the same form (split view) arms Save again", async () => {
+    const r = rule();
+    const onSaved = jest.fn();
+    await render(<RuleForm ruleId={r.id} onSaved={onSaved} onDeleted={noop} />);
+    await fireEvent.press(screen.getByTestId("rule-save"));
+    await fireEvent.press(screen.getByRole("radio", { name: "Last day" }));
+    await fireEvent.press(screen.getByTestId("rule-save"));
+    expect(onSaved).toHaveBeenCalledTimes(2);
+    expect(listRules(mockDb)[0].monthDay).toBe(-1);
+  });
+
+  it("a double tap on Delete confirm deletes once and calls onDeleted once", async () => {
+    const r = rule();
+    const onDeleted = jest.fn();
+    await render(<RuleForm ruleId={r.id} onSaved={noop} onDeleted={onDeleted} />);
+    await fireEvent.press(screen.getByTestId("rule-delete"));
+    const confirm = screen.getByTestId("rule-delete-confirm");
+    await pressTwice(confirm);
+    expect(listRules(mockDb)).toHaveLength(0);
+    expect(onDeleted).toHaveBeenCalledTimes(1);
   });
 
   it("Save is the last control in the scroll view (never pinned over a fold)", async () => {
