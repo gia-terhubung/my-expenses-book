@@ -19,6 +19,7 @@ import {
 } from "./snapshot";
 import { applyMerge, applyReplace } from "./applySnapshot";
 import fixtureV4 from "./fixtures/snapshot-v4.json";
+import fixtureV5 from "./fixtures/snapshot-v5.json";
 
 function prefs() {
   const m = new Map<string, string>();
@@ -161,5 +162,48 @@ describe("forward compatibility: schema 4 snapshot fixture", () => {
     expect(back.receipts.find((r) => r.id === local.id)?.recurringRuleId).toBeNull();
     expect(back.recurringRules).toEqual([]);
     expect(back.receipts.every((r) => r.recurringDate === null)).toBe(true);
+  });
+});
+
+/**
+ * Frozen archive snapshot written by schema 5 (synthetic data): pay-period start day, a recurring
+ * rule and the receipt it created. Never regenerate it; same rules as the schema 4 fixture.
+ */
+describe("forward compatibility: schema 5 snapshot fixture", () => {
+  const RULE_ID = "01a1b6d2-d730-7a11-9c3e-5b0f1e2a7c01";
+  const LINKED_ID = "01a1b6d2-d731-7b22-8d4f-6c1f2f3b8d02";
+
+  it("parses with the current snapshotSchema, pay-period start day and rule kept", () => {
+    expect(fixtureV5.schemaVersion).toBe(5);
+    const snap = snapshotSchema.parse(fixtureV5);
+    expect(snap.prefs.monthStartDay).toBe(25);
+    expect(snap.recurringRules).toHaveLength(1);
+    expect(snap.recurringRules[0]).toMatchObject({ id: RULE_ID, monthDay: -1, lastGeneratedDate: "2026-03-31" });
+  });
+
+  it("restores into a fresh DB (replace) with the rule and the linked receipt", () => {
+    const snap = snapshotSchema.parse(fixtureV5);
+    const db = testDb();
+    applyReplace(db, snap);
+    const back = collectSnapshot(db, prefs());
+    expect(back.recurringRules).toEqual(snap.recurringRules);
+    expect(back.receipts.map((r) => r.merchant).sort()).toEqual(["Deleted Shop", "Sample Rent", "Sample Store"]);
+    expect(back.receipts.find((r) => r.id === LINKED_ID)).toMatchObject({ recurringRuleId: RULE_ID, recurringDate: "2026-03-31" });
+    expect(back.lineItems.map((l) => l.description)).toEqual(["Item A"]);
+    expect(listAllPagePaths(db).sort()).toEqual(["pages/fixture-img.enc", "pages/fixture-thumb.enc"]);
+  });
+
+  it("merges into a DB that already holds data, keeping the rule and its link", () => {
+    const snap = snapshotSchema.parse(fixtureV5);
+    const db = testDb();
+    const local = seed(db);
+    const res = applyMerge(db, snap);
+    expect(res.inserted).toBe(3);
+    expect(res.kept).toBe(0);
+    const back = collectSnapshot(db, prefs());
+    expect(back.receipts.map((r) => r.merchant).sort()).toEqual(["Deleted Shop", "Sample Rent", "Sample Store", "Toko"]);
+    expect(back.recurringRules.map((r) => r.id)).toEqual([RULE_ID]);
+    expect(back.receipts.find((r) => r.id === LINKED_ID)).toMatchObject({ recurringRuleId: RULE_ID, recurringDate: "2026-03-31" });
+    expect(back.receipts.find((r) => r.id === local.id)?.recurringRuleId).toBeNull();
   });
 });
