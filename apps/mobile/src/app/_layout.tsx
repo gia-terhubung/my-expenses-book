@@ -16,6 +16,7 @@ import { rootStackOptions } from "@/layout/stackOptions";
 import { useFx } from "@/fx/useFx";
 import { LockGate } from "@/lock/LockGate";
 import { PrefsProvider, usePref } from "@/prefs/PrefsProvider";
+import { useRecurringCatchUp } from "@/recurring/useRecurringCatchUp";
 import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
 import { ThemedStatusBar } from "@/theme/ThemedStatusBar";
 import { useAppFonts } from "@/theme/useAppFonts";
@@ -37,6 +38,15 @@ function OnboardingRedirect() {
 /** Renders nothing; runs FX refresh + re-convert under PrefsProvider and DatabaseProvider. */
 function FxSync() {
   useFx();
+  return null;
+}
+
+/**
+ * Renders nothing; creates due recurring expenses. Inside LockGate, so it only runs while the app
+ * is unlocked and uncovered. Home reads the result through the same hook (shared module state).
+ */
+function RecurringCatchUp() {
+  useRecurringCatchUp();
   return null;
 }
 
@@ -88,6 +98,7 @@ export default function RootLayout() {
                 <AppStack />
               </SideSafeArea>
               <OnboardingRedirect />
+              <RecurringCatchUp />
             </LockGate>
           </PrefsProvider>
         </ImageStoreProvider>
