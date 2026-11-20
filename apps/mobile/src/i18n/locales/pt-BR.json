@@ -443,5 +443,10 @@
     "byMonth": "Por mês",
     "paceDate": "{{arrow}} {{pct}}% vs {{period}} até {{date}}",
     "paceSlip": "{{arrow}} {{pct}}% vs {{period}} (até o dia {{day}})"
+  },
+  "recurring": {
+    "notifyTitle": "{{merchant}} vence hoje",
+    "notifyBody": "Confirme o valor.",
+    "notifyUnnamed": "Despesa recorrente"
   }
 }

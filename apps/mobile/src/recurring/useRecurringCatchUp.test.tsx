@@ -5,7 +5,10 @@ import { AppState } from "react-native";
 import { restoreLease } from "@/backup/restoreLease";
 import { AppObscuredContext } from "@/lock/appObscured";
 
+import { deviceTimeZone } from "@/capture/localTime";
+
 import { runCatchUp } from "./catchUp";
+import { rescheduleAll } from "./notify";
 import { useRecurringCatchUp } from "./useRecurringCatchUp";
 
 const mockDb = {};
@@ -16,12 +19,18 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePrefs: () => ({ get: () => mockFx }),
 }));
 jest.mock("./catchUp", () => ({ runCatchUp: jest.fn() }));
+jest.mock("./notify", () => ({ rescheduleAll: jest.fn(async () => 0) }));
+jest.mock("@/capture/localTime", () => ({ deviceTimeZone: jest.fn(() => "Asia/Jakarta") }));
 
 const run = runCatchUp as jest.Mock;
+const reschedule = rescheduleAll as jest.Mock;
+const tz = deviceTimeZone as jest.Mock;
 type Listener = (s: string) => void;
 let listener: Listener | null = null;
 
 beforeEach(() => {
+  reschedule.mockClear();
+  tz.mockReturnValue("Asia/Jakarta");
   run.mockReset();
   run.mockReturnValue({ createdIds: [], draftCount: 0 });
   listener = null;
@@ -98,6 +107,32 @@ describe("useRecurringCatchUp", () => {
     const { unmount } = await renderHook(() => useRecurringCatchUp(), { wrapper });
     await act(async () => listener?.("active"));
     expect(run).toHaveBeenCalledTimes(2);
+    await unmount();
+  });
+
+  it("reschedules notifications after every catch-up run", async () => {
+    obscured = false;
+    const { unmount } = await renderHook(() => useRecurringCatchUp(), { wrapper });
+    await act(async () => {});
+    expect(reschedule).toHaveBeenCalledTimes(1);
+    await act(async () => listener?.("active"));
+    await act(async () => {});
+    expect(reschedule).toHaveBeenCalledTimes(2);
+    await unmount();
+  });
+
+  it("reschedules once more on foreground when the device time zone changed", async () => {
+    obscured = false;
+    const { unmount } = await renderHook(() => useRecurringCatchUp(), { wrapper });
+    await act(async () => {});
+    reschedule.mockClear();
+    tz.mockReturnValue("America/New_York");
+    // Catch-up skipped (restore in progress): only the time zone change reschedules.
+    const release = restoreLease.acquire();
+    await act(async () => listener?.("active"));
+    await act(async () => {});
+    expect(reschedule).toHaveBeenCalledTimes(1);
+    release();
     await unmount();
   });
 });

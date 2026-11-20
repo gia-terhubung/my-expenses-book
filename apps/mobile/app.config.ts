@@ -37,6 +37,9 @@ const config: ExpoConfig = {
     ["expo-local-authentication", { faceIDPermission: "Allow $(PRODUCT_NAME) to unlock your receipts with Face ID." }],
     ["expo-sqlite", { useSQLCipher: true }],
     "expo-iap",
+    // Local notifications only (due-day reminders). No APNs: enableRemoteNotifications false keeps
+    // the aps-environment entitlement out of the iOS build; nothing leaves the device.
+    ["expo-notifications", { enableRemoteNotifications: false }],
     // Local StoreKit test prices for Xcode Debug runs (release builds use the real store).
     "./plugins/withStoreKitConfig",
     // Ruling V: the picker only reads the library; capture uses the document scanner, which needs

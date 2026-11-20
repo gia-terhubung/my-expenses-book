@@ -443,5 +443,10 @@
     "byMonth": "By month",
     "paceDate": "{{arrow}} {{pct}}% vs {{period}} to {{date}}",
     "paceSlip": "{{arrow}} {{pct}}% vs {{period}} (to day {{day}})"
+  },
+  "recurring": {
+    "notifyTitle": "{{merchant}} is due",
+    "notifyBody": "Confirm the amount.",
+    "notifyUnnamed": "Recurring expense"
   }
 }

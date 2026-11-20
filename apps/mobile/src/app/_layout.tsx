@@ -16,6 +16,7 @@ import { rootStackOptions } from "@/layout/stackOptions";
 import { useFx } from "@/fx/useFx";
 import { LockGate } from "@/lock/LockGate";
 import { PrefsProvider, usePref } from "@/prefs/PrefsProvider";
+import { useNotificationTap } from "@/recurring/useNotificationTap";
 import { useRecurringCatchUp } from "@/recurring/useRecurringCatchUp";
 import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
 import { ThemedStatusBar } from "@/theme/ThemedStatusBar";
@@ -42,11 +43,13 @@ function FxSync() {
 }
 
 /**
- * Renders nothing; creates due recurring expenses. Inside LockGate, so it only runs while the app
+ * Renders nothing; creates due recurring expenses and opens the draft a notification tap points at. Inside LockGate, so it only runs while the app
  * is unlocked and uncovered. Home reads the result through the same hook (shared module state).
  */
 function RecurringCatchUp() {
-  useRecurringCatchUp();
+  const { runNow } = useRecurringCatchUp();
+  // A due-day notification tap opens its draft (deferred while locked).
+  useNotificationTap(runNow);
   return null;
 }
 

@@ -443,5 +443,10 @@
     "byMonth": "Por mes",
     "paceDate": "{{arrow}} {{pct}}% vs {{period}} hasta el {{date}}",
     "paceSlip": "{{arrow}} {{pct}}% vs {{period}} (hasta el día {{day}})"
+  },
+  "recurring": {
+    "notifyTitle": "{{merchant}} vence hoy",
+    "notifyBody": "Confirma el importe.",
+    "notifyUnnamed": "Gasto recurrente"
   }
 }

@@ -443,5 +443,10 @@
     "byMonth": "Per bulan",
     "paceDate": "{{arrow}} {{pct}}% dibanding {{period}} s.d. {{date}}",
     "paceSlip": "{{arrow}} {{pct}}% dibanding {{period}} (s.d. tgl {{day}})"
+  },
+  "recurring": {
+    "notifyTitle": "{{merchant}} jatuh tempo",
+    "notifyBody": "Konfirmasi jumlahnya.",
+    "notifyUnnamed": "Pengeluaran berulang"
   }
 }
