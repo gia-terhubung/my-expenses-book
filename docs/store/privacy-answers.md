@@ -6,6 +6,7 @@ Facts behind every answer:
 - All receipt data (images, OCR text, amounts, notes) is stored only on the device, encrypted (SQLCipher DB, AES-256-GCM images).
 - Outbound calls made by the app: (1) `cdn.jsdelivr.net` `@fawazahmed0/currency-api` exchange-rate tables. The request holds only a currency code and a date in the URL. (2) App Store / Google Play billing requests (products, purchase, recovery), only from the Tip jar screen. On iOS, expo-iap's StoreKit observer starts at app launch, but it makes no request of its own until Tip jar opens.
 - **Android only:** Google ML Kit (`text-recognition`, `genai-prompt`, `play-services-mlkit-document-scanner`) sends Google diagnostics and usage data: device info, app package and version, per-installation identifiers, and performance metrics. It may also download models. Per Google's ML Kit data disclosure (developers.google.com/ml-kit/android-data-disclosure), this data is not shared with third parties and is encrypted in transit. iOS uses Apple Vision: nothing is sent.
+- Recurring-expense reminders are local notifications. The device schedules and delivers them. They send nothing: no push token, no server, no new host. Android's expo-notifications FCM service stays inert (confirm in the D5 proxy run, row R6 of `docs/v1-recurring-acceptance.md`).
 - No account, no analytics, no ads, no crash reporting. The local error log never leaves the device unless the user exports it through the share sheet.
 - Tips are consumable IAPs handled entirely by Apple/Google. The app stores no purchase record.
 

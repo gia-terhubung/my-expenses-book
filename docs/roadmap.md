@@ -1,6 +1,6 @@
 # Roadmap
 
-Last updated 2026-11-20. Based on competitor review research (2026-11-19) and owner decisions.
+Last updated 2026-11-20 (1.0 features built; device acceptance in `docs/v1-recurring-acceptance.md`). Based on competitor review research (2026-11-19) and owner decisions.
 
 **First users:** people leaving paid receipt apps (Smart Receipts, SimplyWise, Expensify individuals): freelancers at tax time and travellers claiming expenses. Pitch: receipt scanning that is free, needs no account, and never loses your data.
 
@@ -8,11 +8,11 @@ Last updated 2026-11-20. Based on competitor review research (2026-11-19) and ow
 
 The app as built, plus (design: `docs/superpowers/specs/2026-11-20-v1-recurring-payday-snapshot-design.md`):
 
-- Recurring expenses, with a per-rule "Add automatically" switch and due-day notifications for draft-type rules
-- Month starts on payday (Home and Stats)
-- Snapshot of the database before upgrades, restored if an upgrade fails
+- [x] Recurring expenses, with a per-rule "Add automatically" switch and due-day notifications for draft-type rules
+- [x] Month starts on payday (Home and Stats)
+- [x] Snapshot of the database before upgrades, restored if an upgrade fails
 
-Launch also waits on: bank account, Paid Apps agreement, tip IAPs, store links.
+Launch also waits on: owner device rows R1 to R8 in `docs/v1-recurring-acceptance.md`, bank account, Paid Apps agreement, tip IAPs, store links.
 
 ## 1.0.x: fixes
 
