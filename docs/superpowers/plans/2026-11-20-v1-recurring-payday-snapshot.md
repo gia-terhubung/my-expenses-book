@@ -35,6 +35,62 @@ All paths below are relative to `apps/mobile/` unless they start with `docs/`.
 4. **An old backup without `recurringRules`** (schema version ≤ 4) still restores in both modes. Test in Task 7.
 5. **Low storage when copying the DB** before a migration: no migration runs, the app shows the free-space message, and the DB is untouched. Test in Task 3.
 
+## UI and UX design (frontend-design pass)
+
+The brief pins the visual direction: the approved **Ledger slip** system (`docs/superpowers/specs/2026-11-16-ledger-slip-redesign-design.md`, tokens in `src/theme/tokens.ts`) and the foldable rules (`docs/superpowers/specs/2026-11-17-foldable-readiness-design.md`). Follow them exactly. No new colours, fonts, shadows or radii.
+
+- **Colour:** existing tokens only. Selected = tonal green fill; rows and cards = 1px green hairline; no grey drop shadows. Text contrast ≥ 4.5:1 in light and dark (`src/theme/contrast.test.ts` pattern).
+- **Type:** the existing `type` scale. Amounts use the same figure style as receipt rows. Sentence case everywhere; no all-caps labels, no eyebrow labels, no middle-dot meta strings, no "→" on buttons.
+- **The one loud element stays the Home slip.** Recurring screens are quiet. The only new distinctive device is the **day grid**: days 1–28 as a 7 × 4 grid, like a calendar page, plus a "Last day" chip. It is shared by the "Month starts on" sheet and the rule form's monthly day, so picking a day looks and works the same in both places.
+- **Components:** existing `Button` (primary, secondary tonal, quiet, destructive), `Card`, `OptionRow`, `PickerSheet`, `FolderPicker`, `EmptyState`. Targets ≥ 48 dp (`size.touch`).
+- **Motion:** none added beyond the existing press feedback; the catch-up banner appears without animation. Respect reduced motion.
+
+Layout sketches (compact phone; medium and expanded use `TwoPane`):
+
+```
+Recurring (compact)                 Recurring (medium/expanded, Duo open, foldable inner)
+┌─────────────────────────────┐     ┌──────┬──────────────────┬───────────────────────┐
+│ ‹ Recurring           New   │     │ rail │ Recurring   New  │ Netflix               │
+│ About Rp 412.000 a month    │     │      │ About Rp 412.000 │ Amount   Rp 186.000   │
+│ ─────────────────────────── │     │      │ a month          │ Repeats  Monthly      │
+│ Netflix            186.000  │     │      │ ──────────────── │ On day   [day grid]   │
+│ Monthly · next 1 Dec        │ ✗   │      │ Netflix   186.000│ Add automatically  ●  │
+│ Electricity     ~ 250.000   │     │      │ Monthly, next…   │ …                     │
+│ Monthly, next 5 Dec · asks  │ ✗   │      │ Rent    3.500.000│ [ Save ]              │
+└─────────────────────────────┘     └──────┴──────────────────┴───────────────────────┘
+```
+
+Row subtitle copy (no middle dots): "Monthly, next 1 Dec" and, for draft-type rules, "Monthly, next 5 Dec. Asks you to confirm." Draft-type amounts are prefixed "~" to show they're estimates.
+
+Catch-up banner (Home, under the slip, above the list; a hairline `Card`):
+
+```
+┌─────────────────────────────────────────────┐
+│ Added 3 recurring expenses.                 │
+│ 2 need you to confirm the amount.           │
+│ [ Review ]                          Undo    │
+└─────────────────────────────────────────────┘
+```
+
+"Review" is a secondary button and opens the first draft; "Undo" is quiet and removes the rows that run added, then the banner reads "Removed 3 recurring expenses." for 4 seconds. When nothing needs confirming the second line is omitted and the button is hidden.
+
+Day grid (sheet and form):
+
+```
+ 1  2  3  4  5  6  7
+ 8  9 10 11 12 13 14
+15 16 17 18 19 20 21
+22 23 24 25 26 27 28
+[ Last day ]            (rule form only; payday stops at 28)
+```
+
+Foldables and iPhone Duo (phase 1 rules from the foldable spec):
+- Window classes from `src/layout/windowClass.ts`: compact < 600 dp, medium 600–839, expanded ≥ 840.
+- Compact (phones, Duo closed and sideways, Z Flip cover, Split View): one pane; the list pushes the form.
+- Medium and expanded (Duo open, Pixel Fold / Z Fold inner): `TwoPane`, list left, form right, so the form sits on the right leaf in book posture and never straddles the fold. The day grid fits a 280 dp pane (7 × 40 dp cells).
+- Everything a person has open survives fold, unfold and rotation: typed form values, the selected rule, an open day sheet.
+- The form's Save button is the last item in the scroll view, not pinned, so it never sits fixed on the tabletop crease.
+
 ---
 
 ### Task 1: Pay-period date functions
@@ -88,6 +144,7 @@ All paths below are relative to `apps/mobile/` unless they start with `docs/`.
   - With `monthStartDay = 1`, the existing snapshot and assertions are unchanged.
   - `TotalsHeader`: the same 25th case, "this month" shows 200.
   - Settings: a row "Month starts on" showing "Day 25" opens a picker of 1–28. Its helper text reads exactly: "Used by Home and Stats. Exports and search use calendar months."
+  - The "Month starts on" sheet renders the day grid (`src/components/DayGrid.tsx`, created here, reused in Task 9): 28 cells, the selected day tonal, each cell ≥ 40 dp with a 48 dp hit area, `accessibilityLabel` "Day {{n}}".
 - [ ] **Step 2: Run** those tests → FAIL.
 - [ ] **Step 3: Implement.**
   - Home and Stats replace `${today.slice(0,7)}-01` / `-31` ranges with `payPeriodOf(today, startDay)`.
@@ -333,15 +390,41 @@ export async function ensurePermissionForDraftRule(s: LocalScheduler): Promise<b
     - "Undo" calls `undoCatchUp([a,b,c])`;
     - "Review" opens the first draft.
   - **ReceiptDetail:** a "Repeat this…" action for confirmed receipts, absent for drafts.
+  - **Banner copy:** exactly "Added 3 recurring expenses." and "2 need you to confirm the amount."; after Undo, "Removed 3 recurring expenses."
+  - **Layouts** (mock `useLayout` with `LAYOUTS` from `src/layout/testing/layouts.ts`; add `foldInner: layoutFor({ width: 841, height: 701, left: 0, right: 0 })`, `foldInnerPortrait: layoutFor({ width: 701, height: 841, left: 0, right: 0 })` and `flipCover: layoutFor({ width: 360, height: 400, left: 0, right: 0 })`):
+    - `phone`, `duoClosed`, `duoSideways`, `flipCover`: the list alone; tapping a rule pushes the form.
+    - `duoPortrait`: icon rail plus one pane (foldable spec row "Duo open, portrait").
+    - `duoLandscape`, `foldInner`: `TwoPane` with list and form side by side; the form pane is ≥ 280 dp.
+    - Switching the mocked layout from `duoClosed` to `duoLandscape` with typed form values keeps the values and the selected rule.
+  - **Contrast:** the "~" estimate prefix and the banner text pass 4.5:1 in light and dark.
 - [ ] **Step 2: Run** → FAIL.
-- [ ] **Step 3: Implement** following the `organize/FolderForm` and `CategoriesScreen` patterns. Every rule write calls `rescheduleAll` afterwards.
+- [ ] **Step 3: Implement** following the `organize/FolderForm` and `CategoriesScreen` patterns and the "UI and UX design" section above (reuse `DayGrid` from Task 2). Every rule write calls `rescheduleAll` afterwards.
 - [ ] **Step 4: Run** `npx jest src/recurring src/receipts src/app src/i18n` → PASS.
 - [ ] **Step 5: Commit** `feat(recurring): rule list, form, Repeat this and catch-up banner`.
 
-### Task 10: Device acceptance and docs
+### Task 10: End-to-end tests on iPhone, iPhone Duo and Android
 
 **Files:**
-- Create: `docs/v1-recurring-acceptance.md`
+- Create: `apps/mobile/e2e/` with Maestro flows (`recurring.yaml`, `payday.yaml`, `catchup-undo.yaml`, `duo-fold.yaml`), and `apps/mobile/e2e/README.md` (how to run)
+- Modify: `src/dev/` (add a `__DEV__`-only deep link `meb://dev/clock?now=<iso>&tz=<IANA>` that overrides `now()` and the device zone for catch-up and Stats, so flows can jump in time without changing the device clock)
+
+Tooling: Maestro CLI (`brew install maestro`), a dev tool only, not an app dependency. Targets:
+- iOS: `iPhone 18 Pro` simulator and the `iPhone Duo` simulator (closed, open portrait, open landscape), via a local dev build (`npx expo run:ios`).
+- Android: the owner's Redmi over USB (`adb devices` must list it), via an EAS development build or `npx expo run:android --device`.
+- Android foldables: no device or emulator is available (no Android SDK emulator on this Mac). Covered by the layout tests in Task 9 and by the Duo simulator; mark Z Fold / Pixel Fold device rows `OWNER-PENDING` in the acceptance doc.
+
+- [ ] **Step 1: Write the flows:**
+  - `payday.yaml`: set Month starts on → Day 25; add a manual receipt dated the 26th of last month; Home shows it in this period and Stats shows "25 Oct – 24 Nov".
+  - `recurring.yaml`: open a confirmed receipt → "Repeat this…" → Save; no duplicate appears; open Recurring and see the rule with "next" one month later.
+  - `catchup-undo.yaml`: with the dev clock 3 months ahead, relaunch; the banner reads "Added 3 recurring expenses."; tap Undo; the feed returns to its previous count.
+  - `duo-fold.yaml` (Duo simulator only): open the rule form while closed, type an amount, switch the simulator to the open posture; the form shows in the right pane with the typed amount.
+- [ ] **Step 2: Run** each flow on iPhone 18 Pro, iPhone Duo and the Redmi: `maestro test e2e/<flow>.yaml`. Expected: all pass. Save screenshots to `docs/v1-recurring-evidence/` (synthetic data only, never real receipts).
+- [ ] **Step 3: Commit** `test(e2e): Maestro flows for recurring, payday and fold`.
+
+### Task 11: Device acceptance and docs
+
+**Files:**
+- Create: `docs/v1-recurring-acceptance.md` (link the Task 10 evidence; rows below are what Maestro cannot automate)
 - Modify: `docs/store/privacy-answers.md` (note that local notifications send nothing), `docs/roadmap.md` (tick 1.0 items when done)
 
 - [ ] **Step 1: Write the acceptance rows** (the owner runs them; status `OWNER-PENDING`):
