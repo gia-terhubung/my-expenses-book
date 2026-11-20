@@ -7,6 +7,7 @@ export interface DbFileOps {
   exists(path: string): boolean;
   copy(from: string, to: string): void; // throws on failure (e.g. ENOSPC); overwrites `to`
   remove(path: string): void; // no-op if missing
+  move(from: string, to: string): void; // rename over `to`; throws on failure
 }
 
 export type MigrateOutcome =
@@ -47,12 +48,46 @@ function toError(e: unknown): Error {
 }
 
 /**
+ * Puts the pre-upgrade copy back without the DB file ever being absent: the copy is duplicated
+ * to `<db>.restoring` first, then the handle is closed, the WAL/SHM sidecars of the failed run
+ * are removed (so their pages are not replayed onto the restored file) and `.restoring` is
+ * moved over the DB. `.pre-upgrade` is kept. Returns the reopened handle.
+ */
+async function restore(opts: {
+  db: AppDb;
+  dbPath: string;
+  files: DbFileOps;
+  close: (db: AppDb) => void;
+  reopen: () => AppDb | Promise<AppDb>;
+}): Promise<AppDb> {
+  const { dbPath, files } = opts;
+  const restoringPath = `${dbPath}.restoring`;
+  try {
+    files.copy(preUpgradePath(dbPath), restoringPath);
+  } catch (e) {
+    try {
+      files.remove(restoringPath);
+    } catch {
+      // the next launch removes it
+    }
+    throw e;
+  }
+  opts.close(opts.db);
+  files.remove(`${dbPath}-wal`);
+  files.remove(`${dbPath}-shm`);
+  files.move(restoringPath, dbPath);
+  return await opts.reopen();
+}
+
+/**
  * Runs pending migrations behind a copy of the DB file.
- * - Nothing pending: removes a leftover copy, returns ok.
- * - Fresh install (0 applied): no data to protect, migrates without a copy.
+ * - A leftover copy next to a DB that looks fresh (file missing or 0 applied migrations) means
+ *   an earlier restore did not finish: restore from the copy (restored). Never delete it then.
+ * - Nothing pending with at least 1 applied: removes a leftover copy, returns ok.
+ * - Fresh install (0 applied, no copy): no data to protect, migrates without a copy.
  * - Otherwise: checkpoint, copy to `<dbPath>.pre-upgrade`, migrate. The copy is kept until a
  *   later launch has nothing pending. If the copy fails nothing is migrated (noSpace). If the
- *   migration fails the handle is closed, the copy is put back and the DB reopened (restored).
+ *   migration fails the copy is put back and the DB reopened (restored).
  * A failure while putting the copy back or reopening rejects; the copy is kept in that case.
  */
 export async function safeMigrate(opts: {
@@ -67,16 +102,30 @@ export async function safeMigrate(opts: {
   const { db, dbPath, files } = opts;
   const copyPath = preUpgradePath(dbPath);
 
+  files.remove(`${dbPath}.restoring`); // stale from an interrupted restore
+
+  const applied = appliedMigrationCount(db);
+  if (files.exists(copyPath) && (applied === 0 || !files.exists(dbPath))) {
+    const reopened = await restore(opts);
+    return {
+      status: "restored",
+      error: new Error("Recovered the database from the pre-upgrade copy."),
+      db: reopened,
+    };
+  }
+
   if (opts.pendingCount(db) <= 0) {
-    try {
-      files.remove(copyPath);
-    } catch {
-      // A leftover copy is harmless; the next clean launch tries again.
+    if (applied >= 1) {
+      try {
+        files.remove(copyPath);
+      } catch {
+        // A leftover copy is harmless; the next clean launch tries again.
+      }
     }
     return { status: "ok" };
   }
 
-  if (appliedMigrationCount(db) === 0) {
+  if (applied === 0) {
     await opts.runMigrations(db);
     return { status: "ok" };
   }
@@ -99,12 +148,7 @@ export async function safeMigrate(opts: {
     return { status: "ok" };
   } catch (e) {
     const error = toError(e);
-    opts.close(db);
-    // Journal files belong to the failed run; the copy was taken with an empty WAL.
-    files.remove(`${dbPath}-wal`);
-    files.remove(`${dbPath}-shm`);
-    files.copy(copyPath, dbPath);
-    const reopened = await opts.reopen();
+    const reopened = await restore(opts);
     return { status: "restored", error, db: reopened };
   }
 }

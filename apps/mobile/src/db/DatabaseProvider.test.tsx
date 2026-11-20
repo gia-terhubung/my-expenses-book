@@ -9,6 +9,8 @@ import { DatabaseProvider } from "./DatabaseProvider";
 
 const mockOpen = jest.fn();
 const mockReset = jest.fn();
+const mockDeleteDb = jest.fn();
+const mockRemoveFile = jest.fn();
 
 jest.mock("./client", () => {
   const actual = jest.requireActual("./client");
@@ -16,6 +18,8 @@ jest.mock("./client", () => {
     ...actual,
     openWithStore: (...a: unknown[]) => mockOpen(...a),
     resetLocalData: (...a: unknown[]) => mockReset(...a),
+    deleteDatabaseFiles: (...a: unknown[]) => mockDeleteDb(...a),
+    dbFilePath: () => "/data/SQLite/meb.db",
   };
 });
 jest.mock("@/crypto/secureStore", () => ({ expoSecretStore: {} }));
@@ -23,10 +27,11 @@ jest.mock("@/prefs/storage", () => ({ deletePrefsStorage: jest.fn() }));
 jest.mock("drizzle-orm/expo-sqlite/migrator", () => ({ migrate: jest.fn() }));
 const mockSafeMigrate = jest.fn();
 jest.mock("./safeMigrate", () => ({
+  preUpgradePath: (p: string) => `${p}.pre-upgrade`,
   pendingMigrationCount: () => () => 0,
   safeMigrate: (...a: unknown[]) => mockSafeMigrate(...a),
 }));
-jest.mock("./expoDbFiles", () => ({ expoDbFiles: {} }));
+jest.mock("./expoDbFiles", () => ({ expoDbFiles: { remove: (...a: unknown[]) => mockRemoveFile(...a) } }));
 jest.mock("./migrations/migrations", () => ({ __esModule: true, default: { journal: { entries: [] }, migrations: {} } }));
 jest.mock("react-native-quick-crypto", () => ({}));
 
@@ -36,6 +41,8 @@ beforeAll(() => initI18n("en"));
 beforeEach(() => {
   mockOpen.mockReset();
   mockReset.mockReset();
+  mockDeleteDb.mockReset();
+  mockRemoveFile.mockReset();
   mockSafeMigrate.mockReset().mockResolvedValue({ status: "ok" });
   fakeDb.$client.closeSync.mockClear();
 });
@@ -94,6 +101,22 @@ describe("DatabaseProvider", () => {
     expect(await screen.findByText("child")).toBeTruthy();
     expect(mockReset).toHaveBeenCalledTimes(1);
     expect(mockOpen).toHaveBeenCalledTimes(2);
+  });
+
+  it("reset wipes the pre-upgrade copy before the DB, so it is never restored afterwards", async () => {
+    await showLocked();
+    mockReset.mockResolvedValueOnce(undefined);
+    mockOpen.mockResolvedValueOnce(fakeDb);
+    await fireEvent.changeText(screen.getByPlaceholderText("RESET"), "RESET");
+    await act(async () => {
+      await fireEvent.press(screen.getByRole("button", { name: "Reset data" }));
+    });
+    const { deleteFiles } = mockReset.mock.calls[0][0] as { deleteFiles: () => void };
+    deleteFiles();
+    expect(mockRemoveFile).toHaveBeenCalledWith("/data/SQLite/meb.db.pre-upgrade");
+    expect(mockRemoveFile).toHaveBeenCalledWith("/data/SQLite/meb.db.restoring");
+    expect(mockDeleteDb).toHaveBeenCalledTimes(1);
+    expect(mockRemoveFile.mock.invocationCallOrder[0]).toBeLessThan(mockDeleteDb.mock.invocationCallOrder[0]);
   });
 
   it("a reset failure shows the failed state with Retry", async () => {

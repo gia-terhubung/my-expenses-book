@@ -13,24 +13,41 @@ import { pendingMigrationCount, safeMigrate, type DbFileOps } from "./safeMigrat
 
 const DB_PATH = "/data/SQLite/meb.db";
 const COPY_PATH = `${DB_PATH}.pre-upgrade`;
+const RESTORING_PATH = `${DB_PATH}.restoring`;
 
 function fakeFiles(initial: Record<string, string> = {}) {
   const map = new Map<string, Uint8Array>(
     Object.entries(initial).map(([p, s]) => [p, new TextEncoder().encode(s)]),
   );
+  // Every op after which the DB file was absent (it must never be, once it existed).
+  const dbAbsentAfter: string[] = [];
+  const hadDb = map.has(DB_PATH);
+  const track = (name: string) => {
+    if (hadDb && !map.has(DB_PATH)) dbAbsentAfter.push(name);
+  };
   const ops = {
     exists: jest.fn((p: string) => map.has(p)),
     copy: jest.fn((from: string, to: string) => {
       const bytes = map.get(from);
       if (!bytes) throw new Error(`missing ${from}`);
       map.set(to, new Uint8Array(bytes));
+      track(`copy ${from} -> ${to}`);
     }),
     remove: jest.fn((p: string) => {
       map.delete(p);
+      track(`remove ${p}`);
+    }),
+    // Atomic rename: the destination is replaced in one step.
+    move: jest.fn((from: string, to: string) => {
+      const bytes = map.get(from);
+      if (!bytes) throw new Error(`missing ${from}`);
+      map.set(to, bytes);
+      map.delete(from);
+      track(`move ${from} -> ${to}`);
     }),
   } satisfies DbFileOps;
   const text = (p: string) => (map.has(p) ? new TextDecoder().decode(map.get(p)) : undefined);
-  return { map, ops, text };
+  return { map, ops, text, dbAbsentAfter };
 }
 
 const close = (db: AppDb) => (db as unknown as { $client: Database.Database }).$client.close();
@@ -157,14 +174,115 @@ describe("safeMigrate", () => {
     expect(closeSpy).toHaveBeenCalledWith(db);
     expect(reopen).toHaveBeenCalledTimes(1);
     // The old handle is closed before the file is replaced, and reopened after.
-    expect(closeSpy.mock.invocationCallOrder[0]).toBeLessThan(
-      ops.copy.mock.invocationCallOrder[ops.copy.mock.invocationCallOrder.length - 1],
-    );
-    expect(reopen.mock.invocationCallOrder[0]).toBeGreaterThan(
-      ops.copy.mock.invocationCallOrder[ops.copy.mock.invocationCallOrder.length - 1],
-    );
+    expect(closeSpy.mock.invocationCallOrder[0]).toBeLessThan(ops.move.mock.invocationCallOrder[0]);
+    expect(reopen.mock.invocationCallOrder[0]).toBeGreaterThan(ops.move.mock.invocationCallOrder[0]);
     // The copy stays until a later launch migrates cleanly.
     expect(map.has(COPY_PATH)).toBe(true);
+  });
+
+  it("restore copies to .restoring then moves it over the DB; the DB file is never absent", async () => {
+    const { ops, map, text, dbAbsentAfter } = fakeFiles({ [DB_PATH]: "v1" });
+    const outcome = await safeMigrate({
+      db: testDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => 1,
+      runMigrations: async () => {
+        map.set(DB_PATH, new TextEncoder().encode("v1-half-migrated"));
+        throw new Error("boom");
+      },
+      close,
+      reopen: () => testDb(),
+    });
+    expect(outcome.status).toBe("restored");
+    expect(ops.copy).toHaveBeenLastCalledWith(COPY_PATH, RESTORING_PATH);
+    expect(ops.move).toHaveBeenCalledTimes(1);
+    expect(ops.move).toHaveBeenCalledWith(RESTORING_PATH, DB_PATH);
+    expect(ops.copy.mock.invocationCallOrder.at(-1)!).toBeLessThan(ops.move.mock.invocationCallOrder[0]);
+    expect(ops.remove).not.toHaveBeenCalledWith(DB_PATH);
+    expect(dbAbsentAfter).toEqual([]);
+    expect(text(DB_PATH)).toBe("v1");
+    expect(map.has(RESTORING_PATH)).toBe(false);
+    expect(text(COPY_PATH)).toBe("v1");
+  });
+
+  it("restore removes the WAL and SHM after closing and before the move", async () => {
+    const { ops, map } = fakeFiles({ [DB_PATH]: "v1" });
+    const closeSpy = jest.fn(close);
+    await safeMigrate({
+      db: testDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => 1,
+      runMigrations: async () => {
+        map.set(`${DB_PATH}-wal`, new TextEncoder().encode("stale frames"));
+        map.set(`${DB_PATH}-shm`, new TextEncoder().encode("stale index"));
+        throw new Error("boom");
+      },
+      close: closeSpy,
+      reopen: () => testDb(),
+    });
+    expect(map.has(`${DB_PATH}-wal`)).toBe(false);
+    expect(map.has(`${DB_PATH}-shm`)).toBe(false);
+    const removeOrder = (p: string) =>
+      ops.remove.mock.invocationCallOrder[ops.remove.mock.calls.findIndex(([x]) => x === p)];
+    for (const p of [`${DB_PATH}-wal`, `${DB_PATH}-shm`]) {
+      expect(removeOrder(p)).toBeGreaterThan(closeSpy.mock.invocationCallOrder[0]);
+      expect(removeOrder(p)).toBeLessThan(ops.move.mock.invocationCallOrder[0]);
+    }
+  });
+
+  it("a stale .restoring file is removed at start", async () => {
+    const { ops, map } = fakeFiles({ [DB_PATH]: "v2", [RESTORING_PATH]: "junk" });
+    await safeMigrate({
+      db: testDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => 0,
+      runMigrations: async () => {},
+      close,
+      reopen: () => testDb(),
+    });
+    expect(map.has(RESTORING_PATH)).toBe(false);
+  });
+
+  it("leftover copy + fresh-looking DB (0 applied): restores from the copy, keeps it, does not migrate", async () => {
+    const { ops, text, dbAbsentAfter } = fakeFiles({ [DB_PATH]: "", [COPY_PATH]: "v1" });
+    const reopened = testDb();
+    const runMigrations = jest.fn(async () => {});
+    const outcome = await safeMigrate({
+      db: emptyDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => journalEntries(),
+      runMigrations,
+      close,
+      reopen: () => reopened,
+    });
+    expect(outcome).toMatchObject({ status: "restored", db: reopened });
+    expect(runMigrations).not.toHaveBeenCalled();
+    expect(text(DB_PATH)).toBe("v1");
+    expect(text(COPY_PATH)).toBe("v1");
+    expect(ops.remove).not.toHaveBeenCalledWith(COPY_PATH);
+    expect(dbAbsentAfter).toEqual([]);
+  });
+
+  it("leftover copy + missing DB file: restores from the copy", async () => {
+    const { ops, text } = fakeFiles({ [COPY_PATH]: "v1" });
+    const runMigrations = jest.fn(async () => {});
+    const outcome = await safeMigrate({
+      db: testDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => 0,
+      runMigrations,
+      close,
+      reopen: () => testDb(),
+    });
+    expect(outcome.status).toBe("restored");
+    expect(runMigrations).not.toHaveBeenCalled();
+    expect(text(DB_PATH)).toBe("v1");
+    expect(text(COPY_PATH)).toBe("v1");
   });
 
   it("copy throws: returns noSpace and runMigrations is never called", async () => {
@@ -219,6 +337,7 @@ describe("safeMigrate on a real file", () => {
     exists: (p) => fs.existsSync(p),
     copy: (from, to) => fs.copyFileSync(from, to),
     remove: (p) => fs.rmSync(p, { force: true }),
+    move: (from, to) => fs.renameSync(from, to),
   };
 
   function openFile(p: string): AppDb {

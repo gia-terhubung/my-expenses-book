@@ -12,10 +12,10 @@ import { deletePagesDir } from "@/images/expoFs";
 import { deletePrefsStorage } from "@/prefs/storage";
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { DbKeyMismatchError, dbFilePath, openWithStore, resetLocalData } from "./client";
+import { DbKeyMismatchError, dbFilePath, deleteDatabaseFiles, openWithStore, resetLocalData } from "./client";
 import { expoDbFiles } from "./expoDbFiles";
 import migrations from "./migrations/migrations";
-import { pendingMigrationCount, safeMigrate } from "./safeMigrate";
+import { pendingMigrationCount, preUpgradePath, safeMigrate } from "./safeMigrate";
 import type { AppDb } from "./types";
 
 const DbContext = createContext<AppDb | null>(null);
@@ -145,6 +145,17 @@ function closeDb(db: AppDb): void {
   }
 }
 
+/**
+ * Reset's file wipe. The pre-upgrade copy goes first: a copy left next to a wiped DB would be
+ * restored on the next launch. If removing it fails, the DB is still intact.
+ */
+function deleteDbAndCopies(): void {
+  const path = dbFilePath();
+  expoDbFiles.remove(preUpgradePath(path));
+  expoDbFiles.remove(`${path}.restoring`);
+  deleteDatabaseFiles();
+}
+
 export function DatabaseProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<OpenState>({ status: "opening" });
   const [attempt, setAttempt] = useState(0);
@@ -190,7 +201,12 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   // A failure shows an error state (no retry loop); the locked handle was already closed.
   const reset = useCallback(async () => {
     try {
-      await resetLocalData({ store: expoSecretStore, wipePrefs: deletePrefsStorage, wipeImages: deletePagesDir });
+      await resetLocalData({
+        store: expoSecretStore,
+        wipePrefs: deletePrefsStorage,
+        wipeImages: deletePagesDir,
+        deleteFiles: deleteDbAndCopies,
+      });
     } catch (e) {
       setState({
         status: "failed",
