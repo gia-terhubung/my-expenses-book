@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 
 import { localToUtc } from "@/capture/localTime";
 import { subscribeDataChanged } from "@/db/changes";
-import { createReceipt, getReceipt, listDraftIds } from "@/db/repositories/receipts";
+import { createReceipt, getReceipt, listDraftIds, updateReceipt } from "@/db/repositories/receipts";
 import { receipts, recurringRules } from "@/db/schema";
 import { testDb } from "@/db/testing/testDb";
 import type { AppDb, NewRecurringRuleInput } from "@/db/types";
@@ -201,5 +201,16 @@ describe("undoCatchUp", () => {
     expect(db.select().from(recurringRules).get()?.lastGeneratedDate).toBe("2026-11-01");
     expect(runCatchUp(db, { now: at("2026-11-20"), home: "IDR", fx: noFx }).createdIds).toEqual([]);
     expect(liveRecurring(db)).toHaveLength(0);
+  });
+
+  it("keeps rows the user edited after the run", () => {
+    const db = testDb();
+    ruleSince(db, "2026-08-01", { autoAdd: false });
+    const res = runCatchUp(db, { now: at("2026-11-20"), home: "IDR", fx: noFx });
+    const [edited, ...untouched] = res.createdIds;
+    updateReceipt(db, edited, { status: "confirmed", totalMinor: 190000 });
+    undoCatchUp(db, res.createdIds);
+    expect(getReceipt(db, edited)).toMatchObject({ status: "confirmed", totalMinor: 190000 });
+    for (const id of untouched) expect(getReceipt(db, id)).toBeNull();
   });
 });

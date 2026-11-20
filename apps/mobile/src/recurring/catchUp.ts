@@ -122,13 +122,24 @@ export function runCatchUp(db: AppDb, opts: { now: Date; home: string; fx: FxCac
   return { createdIds, draftCount };
 }
 
-/** Soft-deletes receipts a catch-up run created. lastGeneratedDate is not rewound, so they stay gone. */
+/**
+ * Soft-deletes receipts a catch-up run created, except rows edited since (version > 1: the user
+ * confirmed or changed them, and a banner tap must not delete that). lastGeneratedDate is not
+ * rewound, so the removed ones stay gone.
+ */
 export function undoCatchUp(db: AppDb, ids: string[]): void {
   if (ids.length === 0) return;
   const t = nowMs();
   db.update(receipts)
     .set({ deletedAt: t, updatedAt: t, version: sql`${receipts.version} + 1` })
-    .where(and(inArray(receipts.id, ids), isNotNull(receipts.recurringRuleId), isNull(receipts.deletedAt)))
+    .where(
+      and(
+        inArray(receipts.id, ids),
+        isNotNull(receipts.recurringRuleId),
+        eq(receipts.version, 1),
+        isNull(receipts.deletedAt),
+      ),
+    )
     .run();
   notifyDataChanged();
 }
