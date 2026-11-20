@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useRef, useSyncExternalStore } from "react";
 
 export type Language = "en" | "id" | "es" | "pt-BR";
 /** Seconds of background time before re-lock; 0 = lock immediately. */
@@ -106,6 +106,16 @@ export function createPrefs(storage: KV): PrefsStore {
 /** Reads one pref reactively from a PrefsStore (see PrefsProvider). */
 export function usePrefFrom<K extends keyof Prefs>(store: PrefsStore, k: K): Prefs[K] {
   const subscribe = useCallback((cb: () => void) => store.subscribe(k, cb), [store, k]);
-  // Primitive values only, so snapshots are referentially stable.
-  return useSyncExternalStore(subscribe, () => store.get(k));
+  // store.get parses a new object on every call; an object pref (fxTables) must return the same
+  // snapshot while its content is unchanged, or useSyncExternalStore re-renders forever.
+  const last = useRef<{ json: string; value: Prefs[K] } | null>(null);
+  const getSnapshot = useCallback(() => {
+    const value = store.get(k);
+    if (value === null || typeof value !== "object") return value;
+    const json = JSON.stringify(value);
+    if (last.current?.json === json) return last.current.value;
+    last.current = { json, value };
+    return value;
+  }, [store, k]);
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
