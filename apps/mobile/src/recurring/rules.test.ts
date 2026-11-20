@@ -43,6 +43,24 @@ describe("rules repository", () => {
     expect(catchUp(db, "2026-12-01").createdIds).toHaveLength(1);
   });
 
+  it("createRule anchored today on a matching day creates today's occurrence on the next catch-up", () => {
+    const db = testDb();
+    const rule = createRule(db, ruleInput({ anchorDate: "2026-11-20", monthDay: 20 }), at("2026-11-20"));
+    expect(rule.lastGeneratedDate).toBeNull();
+    const res = catchUp(db, "2026-11-20");
+    expect(res.createdIds).toHaveLength(1);
+    expect(getReceipt(db, res.createdIds[0])?.recurringDate).toBe("2026-11-20");
+    expect(catchUp(db, "2026-11-20").createdIds).toEqual([]);
+  });
+
+  it("createRule anchored yesterday creates nothing until the next due date", () => {
+    const db = testDb();
+    const rule = createRule(db, ruleInput({ anchorDate: "2026-11-19", monthDay: 19 }), at("2026-11-20"));
+    expect(rule.lastGeneratedDate).toBe("2026-11-20");
+    expect(catchUp(db, "2026-11-20").createdIds).toEqual([]);
+    expect(catchUp(db, "2026-12-19").createdIds).toHaveLength(1);
+  });
+
   it("createRule with a future anchor creates that first occurrence when it is due", () => {
     const db = testDb();
     const rule = createRule(db, ruleInput({ anchorDate: "2026-12-01" }), at("2026-11-20"));

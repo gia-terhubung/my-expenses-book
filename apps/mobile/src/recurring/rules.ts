@@ -46,14 +46,14 @@ function ruleValues(input: NewRecurringRuleInput, lastGeneratedDate: string | nu
 }
 
 /**
- * New rule. No backfill: when the anchor is today or earlier, catch-up starts after today;
- * a future anchor is created on its own day.
+ * New rule. No backfill: a start date in the past starts at the next due date after today. A
+ * start date of today or later is created on its own day (today's by the next catch-up).
  */
 export function createRule(db: AppDb, input: NewRecurringRuleInput, now: Date): RecurringRule {
   const today = todayIn(input.tz, now);
   const row = db
     .insert(recurringRules)
-    .values(ruleValues(input, input.anchorDate <= today ? today : null))
+    .values(ruleValues(input, input.anchorDate < today ? today : null))
     .returning()
     .get();
   notifyDataChanged();
