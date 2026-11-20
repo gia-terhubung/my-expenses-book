@@ -19,8 +19,9 @@ jest.mock("expo-router", () => ({ router: { push: (...a: unknown[]) => mockPush(
 
 let mockDb: AppDb;
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
+let mockMonthStart = 1;
 jest.mock("@/prefs/PrefsProvider", () => ({
-  usePref: (k: string) => ({ homeCurrency: "IDR", taxYearStartMonth: 1 })[k],
+  usePref: (k: string) => ({ homeCurrency: "IDR", taxYearStartMonth: 1, monthStartDay: mockMonthStart })[k],
 }));
 
 let mockLayout: Layout = LAYOUTS.phone;
@@ -49,6 +50,7 @@ beforeAll(() => initI18n("en"));
 beforeEach(() => {
   mockDb = testDb();
   mockPush.mockClear();
+  mockMonthStart = 1;
   mockLayout = LAYOUTS.phone;
 });
 
@@ -80,6 +82,17 @@ function fixToday(iso: string) {
   });
 }
 afterEach(() => jest.useRealTimers());
+
+describe("TotalsHeader pay period", () => {
+  it("with month starting on the 25th, this month runs 25 Oct to 24 Nov", async () => {
+    fixToday("2026-11-20T05:00:00Z");
+    mockMonthStart = 25;
+    seedOn("2026-10-24", 100);
+    seedOn("2026-10-26", 200);
+    await render(<TotalsHeader />);
+    expect(screen.getByTestId("totals-slip").props.accessibilityLabel).toContain(`This month, ${formatMoney(200, "IDR", "en")}`);
+  });
+});
 
 describe("TotalsHeader slip stats", () => {
   it("pace line shows ▲ 12% dibanding Oktober (s.d. tgl 16)", async () => {

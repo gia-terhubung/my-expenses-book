@@ -48,6 +48,9 @@
     "lockTimeoutMinutes_one": "{{count}} minuto",
     "lockTimeoutMinutes_other": "{{count}} minutos",
     "taxYearStart": "O ano fiscal começa em",
+    "monthStart": "O mês começa no dia",
+    "monthStartValue": "Dia {{n}}",
+    "monthStartHelp": "Usado em Início e Estatísticas. Exportação e busca usam meses do calendário.",
     "backup": "Backup",
     "about": "Sobre",
     "devTools": "Ferramentas de desenvolvedor",
@@ -411,6 +414,10 @@
     "title": "Sobre",
     "privacyPolicy": "Política de privacidade",
     "version": "Versão"
+  },
+  "dayGrid": {
+    "day": "Dia {{n}}",
+    "lastDay": "Último dia"
   },
   "stats": {
     "title": "Estatísticas",

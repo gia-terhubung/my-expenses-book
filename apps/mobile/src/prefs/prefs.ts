@@ -29,6 +29,8 @@ export interface Prefs {
   backupReminderSnoozedUntil: number | null;
   /** 1-12 */
   taxYearStartMonth: number;
+  /** 1-28: the day a pay period (the "month" on Home and Stats) starts; 1 = calendar month. */
+  monthStartDay: number;
   /**
    * Object value: read via store.get() (fresh object per call), never usePref — it would break
    * useSyncExternalStore's stable-snapshot rule.
@@ -53,6 +55,7 @@ export const PREF_DEFAULTS: Prefs = {
   receiptsSinceBackup: 0,
   backupReminderSnoozedUntil: null,
   taxYearStartMonth: 1,
+  monthStartDay: 1,
   fxTables: { base: "", latestDate: null, fetchedAt: null, byDate: {} },
 };
 

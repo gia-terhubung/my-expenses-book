@@ -1,5 +1,6 @@
 import { and, desc, eq, gte, inArray, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 
+import type { PayPeriod } from "../../stats/payPeriod";
 import { receipts } from "../schema";
 import type { AppDb, Receipt } from "../types";
 import { toFtsQuery } from "./receipts";
@@ -109,6 +110,13 @@ export function monthTotals(db: AppDb, filter: ReceiptFilter, home: string): Rec
     .all();
   const out: Record<string, HomeTotal> = {};
   for (const { month: m, ...t } of rows) out[m] = t;
+  return out;
+}
+
+/** Totals per pay period, keyed by the period's label ("YYYY-MM"). */
+export function periodTotals(db: AppDb, periods: PayPeriod[], home: string): Record<string, HomeTotal> {
+  const out: Record<string, HomeTotal> = {};
+  for (const p of periods) out[p.label] = sumHome(db, { from: p.from, to: p.to }, home);
   return out;
 }
 

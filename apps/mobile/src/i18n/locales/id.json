@@ -48,6 +48,9 @@
     "lockTimeoutMinutes_one": "{{count}} menit",
     "lockTimeoutMinutes_other": "{{count}} menit",
     "taxYearStart": "Tahun pajak dimulai pada",
+    "monthStart": "Bulan dimulai tanggal",
+    "monthStartValue": "Tanggal {{n}}",
+    "monthStartHelp": "Dipakai di Beranda dan Statistik. Ekspor dan pencarian memakai bulan kalender.",
     "backup": "Cadangan",
     "about": "Tentang",
     "devTools": "Alat pengembang",
@@ -411,6 +414,10 @@
     "title": "Tentang",
     "privacyPolicy": "Kebijakan privasi",
     "version": "Versi"
+  },
+  "dayGrid": {
+    "day": "Tanggal {{n}}",
+    "lastDay": "Hari terakhir"
   },
   "stats": {
     "title": "Statistik",

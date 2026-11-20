@@ -18,6 +18,7 @@ import { LANGUAGE_NAMES, LanguagePicker } from "@/components/LanguagePicker";
 import { LockToggle } from "@/components/LockToggle";
 import { OptionRow } from "@/components/OptionRow";
 import { TaxYearPicker } from "@/components/TaxYearPicker";
+import { MonthStartPicker } from "@/settings/MonthStartPicker";
 import { useDb } from "@/db/DatabaseProvider";
 import { fileSize } from "@/images/expoFs";
 import { StatusBarInset } from "@/layout/StatusBarInset";
@@ -30,7 +31,7 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 const TIMEOUTS: LockTimeout[] = [0, 60, 300, 900];
 
-type Sheet = "language" | "currency" | "taxYear" | null;
+type Sheet = "language" | "currency" | "taxYear" | "monthStart" | null;
 
 function Row({ label, value, onPress }: { label: string; value: string; onPress: () => void }) {
   const theme = useTheme();
@@ -137,6 +138,7 @@ export default function SettingsScreen() {
   const language = usePref("language") ?? resolveLanguage(device);
   const currency = usePref("homeCurrency") ?? resolveHomeCurrency(device);
   const taxYear = usePref("taxYearStartMonth");
+  const monthStart = usePref("monthStartDay") ?? 1;
   const lockEnabled = usePref("lockEnabled");
   const lockTimeout = usePref("lockTimeout");
 
@@ -168,6 +170,11 @@ export default function SettingsScreen() {
             onPress={() => setSheet("currency")}
           />
           <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} />
+          <Row
+            label={t("settings.monthStart")}
+            value={t("settings.monthStartValue", { n: monthStart })}
+            onPress={() => setSheet("monthStart")}
+          />
           <Row label={t("settings.categories")} value="" onPress={() => router.push("/categories" as unknown as Href)} />
           <Row label={t("settings.export")} value="" onPress={() => router.push("/export" as unknown as Href)} />
           {/* /backup is created in the backup task. */}
@@ -222,6 +229,14 @@ export default function SettingsScreen() {
           <PickerSheet title={t("settings.taxYearStart")} onClose={close}>
             <ScrollView>
               <TaxYearPicker lang={language} value={taxYear} onChange={(m) => prefs.set("taxYearStartMonth", m)} />
+            </ScrollView>
+          </PickerSheet>
+        )}
+        {sheet === "monthStart" && (
+          <PickerSheet title={t("settings.monthStart")} onClose={close}>
+            <ScrollView contentContainerStyle={{ gap: theme.spacing.lg }}>
+              <MonthStartPicker value={monthStart} onChange={(d) => prefs.set("monthStartDay", d)} />
+              <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("settings.monthStartHelp")}</Text>
             </ScrollView>
           </PickerSheet>
         )}

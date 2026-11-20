@@ -48,6 +48,9 @@
     "lockTimeoutMinutes_one": "{{count}} minute",
     "lockTimeoutMinutes_other": "{{count}} minutes",
     "taxYearStart": "Tax year starts in",
+    "monthStart": "Month starts on",
+    "monthStartValue": "Day {{n}}",
+    "monthStartHelp": "Used by Home and Stats. Exports and search use calendar months.",
     "backup": "Backup",
     "about": "About",
     "devTools": "Developer tools",
@@ -411,6 +414,10 @@
     "title": "About",
     "privacyPolicy": "Privacy policy",
     "version": "Version"
+  },
+  "dayGrid": {
+    "day": "Day {{n}}",
+    "lastDay": "Last day"
   },
   "stats": {
     "title": "Statistics",

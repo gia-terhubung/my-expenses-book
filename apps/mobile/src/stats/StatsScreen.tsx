@@ -14,6 +14,7 @@ import { listCategories } from "@/db/repositories/categories";
 import { listFolders } from "@/db/repositories/folders";
 import {
   monthTotals,
+  periodTotals,
   sumHome,
   topMerchants,
   totalsByCategory,
@@ -30,7 +31,8 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 import { compactAmount, currencySymbol } from "./compactAmount";
 import { MonthBars, type MonthBar } from "./MonthBars";
-import { lastMonths, pacePercent, pacePeriods, taxYearMonths, taxYearPacePeriods } from "./stats";
+import { lastPayPeriods, payPeriodOf } from "./payPeriod";
+import { pacePercent, pacePeriods, taxYearMonths, taxYearPacePeriods } from "./stats";
 
 type Mode = "month" | "taxYear";
 
@@ -66,16 +68,17 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
   const version = useDataVersion();
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
+  const startDay = usePref("monthStartDay") ?? 1;
   const today = dateToLocalString(now());
   const [mode, setMode] = useState<Mode>("month");
   const add = useAddReceipt();
 
   const data = useMemo(() => {
     const ty = taxYearOf(today, startMonth);
-    const months = mode === "month" ? lastMonths(today, 6) : taxYearMonths(ty, startMonth);
-    // Day 31 is a safe upper bound: dates compare as strings.
-    const period = mode === "month" ? { from: `${today.slice(0, 7)}-01`, to: `${today.slice(0, 7)}-31` } : taxYearRange(ty, startMonth);
-    const pace = mode === "month" ? pacePeriods(today) : taxYearPacePeriods(today, startMonth);
+    const periods = mode === "month" ? lastPayPeriods(today, 6, startDay) : [];
+    const months = mode === "month" ? periods.map((p) => p.label) : taxYearMonths(ty, startMonth);
+    const period = mode === "month" ? payPeriodOf(today, startDay) : taxYearRange(ty, startMonth);
+    const pace = mode === "month" ? pacePeriods(today, startDay) : taxYearPacePeriods(today, startMonth);
     const paceNow = sumHome(db, pace.current, home).homeMinor;
     const pacePrev = sumHome(db, pace.previous, home).homeMinor;
     const categories = new Map(listCategories(db).map((c) => [c.id, c]));
@@ -85,13 +88,17 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
       ty,
       months,
       pace,
+      period,
       paceNow,
       pacePrev,
       any: allTime.count > 0,
       total: sumHome(db, period, home),
       // All time, like the Search filter "See receipts" opens, so the card and Search agree.
       unconverted: allTime.unconverted,
-      byMonth: monthTotals(db, { from: `${months[0]}-01`, to: `${months[months.length - 1]}-31` }, home),
+      byMonth:
+        mode === "month"
+          ? periodTotals(db, periods, home)
+          : monthTotals(db, { from: `${months[0]}-01`, to: `${months[months.length - 1]}-31` }, home),
       // Rows with nothing converted have no share of the total; the unconverted card counts them.
       categories: totalsByCategory(db, period, home)
         .filter((r) => r.total.homeMinor > 0)
@@ -104,13 +111,16 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
     };
     // version: re-read after any receipt write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [db, version, home, today, mode, startMonth]);
+  }, [db, version, home, today, mode, startMonth, startDay]);
 
   const money = (minor: number) => formatMoney(minor, home, locale);
   const muted = { color: colors.textMuted };
   const small = { fontSize: 14, lineHeight: 20 };
-  const curMonth = today.slice(0, 7);
   const dayNum = String(Number(today.slice(8, 10)));
+  const curMonth = mode === "month" ? payPeriodOf(today, startDay).label : today.slice(0, 7);
+
+  // Day first ("25 Oct") in every locale, including English, which would otherwise print "Oct 25".
+  const rangeDate = (d: string) => formatDate(d, locale === "en" ? "en-GB" : locale, { day: "numeric", month: "short" });
   const shortDate = (d: string) => formatDate(d, locale, { day: "numeric", month: "short" });
 
   const periodLabel = mode === "month" ? monthLabel(curMonth, locale) : t("totals.taxYear", { label: taxYearLabel(data.ty, startMonth) });
@@ -284,6 +294,11 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
                   <Text style={[type.label, { color: colors.text }]}>{periodLabel}</Text>
                   <Text style={[small, muted]}>{t("stats.running", { day: runningDay })}</Text>
                 </View>
+                {mode === "month" && startDay !== 1 ? (
+                  <Text testID="stats-range" style={[small, muted]}>
+                    {`${rangeDate(data.period.from)} – ${rangeDate(data.period.to)}`}
+                  </Text>
+                ) : null}
                 <Text
                   testID="stats-total"
                   accessibilityLabel={amount.exact}

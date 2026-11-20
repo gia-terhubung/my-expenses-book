@@ -11,10 +11,11 @@ import { StatsScreen } from "./StatsScreen";
 
 let mockDb: AppDb;
 let mockStartMonth = 1;
+let mockMonthStart = 1;
 const mockRouter = { back: jest.fn(), push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) };
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 jest.mock("@/prefs/PrefsProvider", () => ({
-  usePref: (k: string) => (k === "taxYearStartMonth" ? mockStartMonth : k === "language" ? "en" : "IDR"),
+  usePref: (k: string) => (k === "taxYearStartMonth" ? mockStartMonth : k === "monthStartDay" ? mockMonthStart : k === "language" ? "en" : "IDR"),
 }));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
@@ -62,7 +63,28 @@ beforeAll(() => initI18n("en"));
 beforeEach(() => {
   mockDb = testDb();
   mockStartMonth = 1;
+  mockMonthStart = 1;
   jest.clearAllMocks();
+});
+
+describe("StatsScreen month starts on", () => {
+  it("25th: month total, range subtitle and November bar follow the pay period", async () => {
+    mockMonthStart = 25;
+    seed("Before", "2026-10-24", 100);
+    seed("After", "2026-10-26", 200);
+    await render(<StatsScreen now={() => new Date(2026, 10, 20, 12)} />);
+    expect(screen.getByTestId("stats-total").props.children).toBe(money(200));
+    expect(screen.getByTestId("stats-range")).toHaveTextContent("25 Oct – 24 Nov");
+    expect(screen.getByTestId("month-bar-2026-11")).toHaveTextContent(/Nov/);
+    expect(screen.getByTestId("month-bar-2026-11").props.accessibilityLabel).toBe(`November 2026, ${money(200)}`);
+    expect(screen.getByTestId("month-bar-2026-10").props.accessibilityLabel).toBe(`October 2026, ${money(100)}`);
+  });
+
+  it("day 1 shows no range subtitle", async () => {
+    seed("Now", "2026-11-02", 100);
+    await render(<StatsScreen now={now} />);
+    expect(screen.queryByTestId("stats-range")).toBeNull();
+  });
 });
 
 describe("StatsScreen", () => {

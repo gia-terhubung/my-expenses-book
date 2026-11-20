@@ -6,7 +6,7 @@ import { initI18n } from "@/i18n";
 import { AppObscuredContext } from "@/lock/appObscured";
 
 jest.mock("@/prefs/PrefsProvider", () => ({
-  usePref: (k: string) => ({ language: "en", homeCurrency: "USD", taxYearStartMonth: 1, lockEnabled: false, lockTimeout: 60 })[k],
+  usePref: (k: string) => ({ language: "en", homeCurrency: "USD", taxYearStartMonth: 1, monthStartDay: 25, lockEnabled: false, lockTimeout: 60 })[k],
   usePrefs: () => ({ set: jest.fn() }),
 }));
 jest.mock("expo-router", () => ({
@@ -47,4 +47,13 @@ it("closes an open picker sheet when the app locks, and does not reopen it", asy
   expect(screen.queryByText("Done")).toBeNull();
   await act(async () => setObscured(false));
   expect(screen.queryByText("Done")).toBeNull();
+});
+
+it("Month starts on row shows the day and opens the day grid with the helper text", async () => {
+  await render(<Host />);
+  expect(screen.getByLabelText("Month starts on, Day 25")).toBeTruthy();
+  await fireEvent.press(screen.getByLabelText("Month starts on, Day 25"));
+  expect(screen.getAllByLabelText(/^Day \d+$/)).toHaveLength(28);
+  expect(screen.getByLabelText("Day 25").props.accessibilityState.checked).toBe(true);
+  expect(screen.getByText("Used by Home and Stats. Exports and search use calendar months.")).toBeTruthy();
 });

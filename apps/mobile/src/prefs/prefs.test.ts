@@ -21,6 +21,7 @@ describe("createPrefs", () => {
     expect(p.get("lastBackupAt")).toBeNull();
     expect(p.get("receiptsSinceBackup")).toBe(0);
     expect(p.get("taxYearStartMonth")).toBe(1);
+    expect(p.get("monthStartDay")).toBe(1);
   });
   it("round-trips values across instances on the same storage", () => {
     const kv = memoryKv();

@@ -10,6 +10,7 @@ import { listCategories } from "@/db/repositories/categories";
 import { sumHome, totalsByCategory, type HomeTotal } from "@/db/repositories/receiptQueries";
 import { useLayout } from "@/layout/useLayout";
 import { categoryLabel } from "@/organize/categoryLabel";
+import { payPeriodOf } from "@/stats/payPeriod";
 import { categoryStrip, pacePercent, pacePeriods } from "@/stats/stats";
 import { usePref } from "@/prefs/PrefsProvider";
 import { taxYearLabel, taxYearOf, taxYearRange } from "@/taxYear/taxYear";
@@ -50,21 +51,20 @@ export function TotalsHeader() {
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
+  const startDay = usePref("monthStartDay") ?? 1;
   const version = useDataVersion();
   const today = formatLocal(new Date(), deviceTimeZone()).slice(0, 10);
   const ty = taxYearOf(today, startMonth);
   const { month, year, stats } = useMemo(() => {
-    const [y, m] = today.split("-").map(Number);
-    const first = `${today.slice(0, 7)}-01`;
-    const last = `${today.slice(0, 7)}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, "0")}`;
-    const pace = pacePeriods(today);
+    const period = payPeriodOf(today, startDay);
+    const pace = pacePeriods(today, startDay);
     const categories = new Map(listCategories(db).map((c) => [c.id, c]));
-    const strip = categoryStrip(totalsByCategory(db, { from: first, to: last }, home)).map((s) => ({
+    const strip = categoryStrip(totalsByCategory(db, period, home)).map((s) => ({
       ...s,
       category: s.categoryId ? (categories.get(s.categoryId) ?? null) : null,
     }));
     return {
-      month: sumHome(db, { from: first, to: last }, home),
+      month: sumHome(db, period, home),
       year: sumHome(db, taxYearRange(ty, startMonth), home),
       stats: {
         pace,
@@ -76,7 +76,7 @@ export function TotalsHeader() {
     };
     // version: re-read after any receipt write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [db, version, home, today, ty, startMonth]);
+  }, [db, version, home, today, ty, startMonth, startDay]);
 
   const notConverted = (n: number) => t("totals.notConverted", { count: n });
   const { colors, type, spacing } = theme;
