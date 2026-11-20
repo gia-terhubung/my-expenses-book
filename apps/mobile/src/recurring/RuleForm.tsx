@@ -232,11 +232,11 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
   const [folderOpen, setFolderOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const savedPaused = useRef(initial === "missing" ? false : initial.paused);
-  // Set before a write so a second tap (before the re-render disables the button) never writes
-  // twice: a duplicate rule, a receipt re-linked, onSaved/back() twice. Cleared on failure, and by
-  // an edit after a save (the form stays open in split view).
-  const savingRef = useRef(false);
-  const [saved, setSaved] = useState(false);
+  // The values being written, set before the write so a second tap (before the re-render disables
+  // the button) never writes twice: a duplicate rule, a receipt re-linked, onSaved/back() twice.
+  // Cleared on failure; an edit after a save makes new values (the form stays open in split view).
+  const savingRef = useRef<RuleFormValues | null>(null);
+  const [savedValues, setSavedValues] = useState<RuleFormValues | null>(null);
   const deletingRef = useRef(false);
   const [deleted, setDeleted] = useState(false);
   const categories = useMemo(() => listCategories(db), [db]);
@@ -269,14 +269,12 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
   const set = <K extends keyof RuleFormValues>(k: K, v: RuleFormValues[K]) => {
     setValues((cur) => (cur ? { ...cur, [k]: v } : cur));
     if (k in errors) setErrors((cur) => ({ ...cur, [k]: undefined }));
-    savingRef.current = false;
-    setSaved(false);
   };
   const device = deviceTimeZone();
   const errorCount = Object.values(errors).filter(Boolean).length;
 
   const save = () => {
-    if (savingRef.current) return;
+    if (savingRef.current === values) return;
     const errs = validateRuleValues(values);
     setErrors(errs);
     const first = Object.values(errs).find(Boolean);
@@ -286,7 +284,7 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
       return;
     }
     let rule: RecurringRule;
-    savingRef.current = true;
+    savingRef.current = values;
     try {
       const input = ruleInputFrom(values);
       const at = now();
@@ -304,11 +302,11 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
       }
     } catch (e) {
       logError("recurring", e);
-      savingRef.current = false;
+      savingRef.current = null;
       setSaveFailed("recurring.saveFailed");
       return;
     }
-    setSaved(true);
+    setSavedValues(values);
     setSaveFailed(null);
     void afterRuleWrite(db, !values.autoAdd);
     onSaved(rule);
@@ -488,7 +486,7 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
               {t(saveFailed)}
             </Text>
           ) : null}
-          <Button testID="rule-save" variant="primary" label={t("common.save")} onPress={save} disabled={saved} />
+          <Button testID="rule-save" variant="primary" label={t("common.save")} onPress={save} disabled={savedValues === values} />
           {ruleId ? (
             <View style={{ marginTop: theme.spacing.xl, paddingTop: theme.spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.colors.border }}>
               <Button testID="rule-delete" tone="danger" label={t("recurring.delete")} onPress={() => setConfirmDelete(true)} />
