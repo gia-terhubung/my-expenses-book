@@ -21,7 +21,10 @@ jest.mock("react-native-safe-area-context", () => ({
 }));
 // The typed-text field (the iOS file wraps a native SwiftUI picker).
 jest.mock("@/components/DateField", () => ({ DateField: jest.requireActual("@/components/DateFieldText").DateFieldText }));
-jest.mock("@/dates/clock", () => ({ now: () => new Date("2026-11-20T05:00:00Z") }));
+jest.mock("@/dates/clock", () => ({
+  ...jest.requireActual("@/dates/clock"),
+  now: () => new Date("2026-11-20T05:00:00Z"),
+}));
 jest.mock("./deviceScheduler", () => ({ deviceScheduler: { name: "device" } }));
 jest.mock("./notify", () => ({
   ensurePermissionForDraftRule: jest.fn(async () => true),

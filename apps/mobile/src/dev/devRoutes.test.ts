@@ -5,6 +5,7 @@ const ROUTES: Record<string, string> = {
   "ai-spike": "AiSpike",
   "db-check": "DbCheck",
   "db-spike": "DbSpike",
+  "dev/clock": "DevClock",
   "ocr-check": "OcrCheck",
 };
 

@@ -5,9 +5,10 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import { deviceTimeZone, formatLocal } from "@/capture/localTime";
 import { useAddReceipt } from "@/capture/useAddReceipt";
 import { Button } from "@/components/Button";
-import { dateToLocalString } from "@/components/dateString";
+import { now as clockNow } from "@/dates/clock";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import { listCategories } from "@/db/repositories/categories";
@@ -58,7 +59,7 @@ function bareCompact(minor: number, currency: string, locale: string): string {
  * Statistik: on-device spending for this month or the current tax year, in home currency.
  * Totals count converted receipts only; the rest are counted in the "not converted" card.
  */
-export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
+export function StatsScreen({ now = clockNow }: { now?: () => Date }) {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
@@ -69,7 +70,7 @@ export function StatsScreen({ now = () => new Date() }: { now?: () => Date }) {
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
   const startDay = usePref("monthStartDay") ?? 1;
-  const today = dateToLocalString(now());
+  const today = formatLocal(now(), deviceTimeZone()).slice(0, 10);
   const [mode, setMode] = useState<Mode>("month");
   const add = useAddReceipt();
 

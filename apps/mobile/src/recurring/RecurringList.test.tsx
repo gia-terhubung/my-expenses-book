@@ -41,7 +41,10 @@ jest.mock("expo-router", () => ({
   },
 }));
 jest.mock("@/components/DateField", () => ({ DateField: jest.requireActual("@/components/DateFieldText").DateFieldText }));
-jest.mock("@/dates/clock", () => ({ now: () => new Date("2026-11-20T05:00:00Z") }));
+jest.mock("@/dates/clock", () => ({
+  ...jest.requireActual("@/dates/clock"),
+  now: () => new Date("2026-11-20T05:00:00Z"),
+}));
 jest.mock("./deviceScheduler", () => ({ deviceScheduler: {} }));
 jest.mock("./notify", () => ({ ensurePermissionForDraftRule: jest.fn(async () => true), rescheduleAll: jest.fn(async () => 0) }));
 

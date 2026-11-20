@@ -4,6 +4,7 @@ import { router, type Href } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { deviceTimeZone, formatLocal } from "@/capture/localTime";
+import { now } from "@/dates/clock";
 import { useDb } from "@/db/DatabaseProvider";
 import { useDataVersion } from "@/db/changes";
 import { listCategories } from "@/db/repositories/categories";
@@ -53,7 +54,7 @@ export function TotalsHeader() {
   const startMonth = usePref("taxYearStartMonth") ?? 1;
   const startDay = usePref("monthStartDay") ?? 1;
   const version = useDataVersion();
-  const today = formatLocal(new Date(), deviceTimeZone()).slice(0, 10);
+  const today = formatLocal(now(), deviceTimeZone()).slice(0, 10);
   const ty = taxYearOf(today, startMonth);
   const { month, year, stats } = useMemo(() => {
     const period = payPeriodOf(today, startDay);

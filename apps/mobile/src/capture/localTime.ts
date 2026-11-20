@@ -1,3 +1,5 @@
+import { devTimeZone } from "@/dates/clock";
+
 const pad = (n: number, w = 2) => String(n).padStart(w, "0");
 
 /** Wall-clock fields of `ms` in `tz`; null when the zone is unknown to Intl. */
@@ -22,8 +24,10 @@ function partsIn(ms: number, tz: string): number[] | null {
   return [v("year"), v("month"), v("day"), v("hour") % 24, v("minute"), v("second")];
 }
 
-/** Device IANA zone (falls back to "UTC"). */
+/** Device IANA zone (falls back to "UTC"); the dev clock's zone when one is set (dev builds only). */
 export function deviceTimeZone(): string {
+  const dev = devTimeZone();
+  if (dev) return dev;
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   } catch {
