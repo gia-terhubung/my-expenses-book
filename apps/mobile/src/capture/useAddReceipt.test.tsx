@@ -27,6 +27,10 @@ jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => "db" }));
 jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
 const mockCreateManualDraft = jest.fn((..._args: unknown[]) => "draft-1");
+jest.mock("@/dates/clock", () => ({
+  ...jest.requireActual("@/dates/clock"),
+  now: () => new Date("2026-10-26T03:00:00Z"),
+}));
 jest.mock("@/review/manualDraft", () => ({ createManualDraft: (...a: unknown[]) => mockCreateManualDraft(...a) }));
 let mockMayStart = true;
 jest.mock("./captureGate", () => ({
@@ -60,11 +64,11 @@ describe("useAddReceipt", () => {
     expect(screen.getByTestId("capture-sheet")).toBeTruthy();
   });
 
-  it("manual creates a draft in the home currency and opens its review", async () => {
+  it("manual creates a draft in the home currency, dated by the app clock, and opens its review", async () => {
     await render(<Host />);
     await fireEvent.press(screen.getByText("open"));
     await act(async () => fireEvent.press(screen.getByRole("button", { name: "Add manually" })));
-    expect(mockCreateManualDraft).toHaveBeenCalledWith("db", { home: "IDR" });
+    expect(mockCreateManualDraft).toHaveBeenCalledWith("db", { home: "IDR", now: new Date("2026-10-26T03:00:00Z") });
     expect(router.push).toHaveBeenCalledWith({ pathname: "/review/[id]", params: { id: "draft-1", queue: "" } });
     expect(screen.queryByTestId("capture-sheet")).toBeNull();
   });

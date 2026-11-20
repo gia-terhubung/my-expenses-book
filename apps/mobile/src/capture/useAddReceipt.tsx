@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Alert } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { now } from "@/dates/clock";
 import { useDb } from "@/db/DatabaseProvider";
 import { useWhenUnobscured } from "@/lock/useWhenUnobscured";
 import { usePref } from "@/prefs/PrefsProvider";
@@ -32,7 +33,7 @@ export function useAddReceipt(): { open(): void; start(mode: CaptureChoice): Pro
   const start = async (mode: CaptureChoice) => {
     if (!mayStartCapture((key) => Alert.alert(t(key)))) return;
     if (mode === "manual") {
-      openReview([createManualDraft(db, { home })]);
+      openReview([createManualDraft(db, { home, now: now() })]);
       return;
     }
     let uris: string[];

@@ -46,9 +46,11 @@ export function parseDevClock(
   if (params.reset === "1" || (!params.now && !params.tz)) return null;
   let offsetMs = 0;
   if (params.now) {
+    // A "+hh:mm" offset arrives as " hh:mm" when the link's query is form-decoded.
+    const iso = params.now.replace(/ (\d{2}:\d{2})$/, "+$1");
     // A zone is required: a bare wall time would be read in the simulator's zone.
-    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(params.now)) return undefined;
-    const target = Date.parse(params.now);
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(iso)) return undefined;
+    const target = Date.parse(iso);
     if (Number.isNaN(target)) return undefined;
     offsetMs = target - realNowMs;
   }

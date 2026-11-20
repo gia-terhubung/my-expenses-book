@@ -11,6 +11,8 @@ describe("parseDevClock", () => {
       tz: null,
     });
     expect(parseDevClock({ now: "2026-11-20T17:00:00+07:00" }, REAL)).toEqual({ offsetMs: 0, tz: null });
+    // "+" form-decoded to a space by the deep link.
+    expect(parseDevClock({ now: "2026-11-20T17:00:00 07:00" }, REAL)).toEqual({ offsetMs: 0, tz: null });
   });
 
   it("accepts a zone alone or with a time", () => {
