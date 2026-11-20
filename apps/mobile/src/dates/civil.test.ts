@@ -1,4 +1,4 @@
-import { addDays, daysInMonth, fromDayNumber, pad2, toDayNumber, ymd } from "./civil";
+import { addDays, daysInMonth, fromDayNumber, isValidYmd, pad2, toDayNumber, ymd } from "./civil";
 
 describe("civil dates", () => {
   it("pads and formats", () => {
@@ -26,5 +26,15 @@ describe("civil dates", () => {
     expect(addDays("2028-02-28", 1)).toBe("2028-02-29");
     expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
     expect(addDays("2026-11-02", 7)).toBe("2026-11-09");
+  });
+});
+
+describe("isValidYmd", () => {
+  it("accepts real calendar days only", () => {
+    expect(isValidYmd("2026-11-20")).toBe(true);
+    expect(isValidYmd("2028-02-29")).toBe(true);
+    for (const bad of ["2026-02-29", "2026-13-01", "2026-00-10", "2026-04-31", "2026-11-00", "2026-1-05", "soon", "", "2026-11-20T09:00"]) {
+      expect(isValidYmd(bad)).toBe(false);
+    }
   });
 });

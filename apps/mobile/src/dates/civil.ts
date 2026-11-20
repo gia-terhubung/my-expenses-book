@@ -10,6 +10,15 @@ export function daysInMonth(year: number, month: number): number {
   return [4, 6, 9, 11].includes(month) ? 30 : 31;
 }
 
+/** True for a real calendar day written as "YYYY-MM-DD" (leap years included). */
+export function isValidYmd(date: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  const y = Number(date.slice(0, 4));
+  const m = Number(date.slice(5, 7));
+  const d = Number(date.slice(8, 10));
+  return m >= 1 && m <= 12 && d >= 1 && d <= daysInMonth(y, m);
+}
+
 /** Days since 1970-01-01 (proleptic Gregorian, integer civil algorithm). */
 export function toDayNumber(date: string): number {
   let y = Number(date.slice(0, 4));

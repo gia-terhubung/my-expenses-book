@@ -75,6 +75,53 @@ describe("collectSnapshot", () => {
   });
 });
 
+describe("recurringRuleShape", () => {
+  const rule = {
+    id: "r1",
+    createdAt: 1,
+    updatedAt: 1,
+    deletedAt: null,
+    version: 1,
+    merchant: "Rent",
+    currency: "IDR",
+    totalMinor: 350000000,
+    taxMinor: null,
+    categoryId: null,
+    folderId: null,
+    notes: null,
+    frequency: "monthly",
+    anchorDate: "2026-11-01",
+    monthDay: 1,
+    tz: "Asia/Jakarta",
+    autoAdd: true,
+    endDate: null,
+    paused: false,
+    lastGeneratedDate: null,
+  };
+  const ok = (over: object) => recurringRuleShape.safeParse({ ...rule, ...over }).success;
+
+  it("accepts real dates, a day 1-28 or -1, or none", () => {
+    expect(ok({})).toBe(true);
+    expect(ok({ monthDay: -1, endDate: "2027-02-28", lastGeneratedDate: "2026-11-01" })).toBe(true);
+    expect(ok({ monthDay: 28 })).toBe(true);
+    expect(ok({ frequency: "weekly", monthDay: null })).toBe(true);
+  });
+
+  it("rejects dates that are not YYYY-MM-DD calendar days (they would hang the occurrence loops)", () => {
+    for (const d of ["soon", "", "2026-13-01", "2026-02-30", "2026-11-01T09:00:00"]) {
+      expect(ok({ anchorDate: d })).toBe(false);
+      expect(ok({ endDate: d })).toBe(false);
+      expect(ok({ lastGeneratedDate: d })).toBe(false);
+    }
+  });
+
+  it("rejects a day outside -1 and 1-28, an unknown frequency and an empty zone", () => {
+    for (const monthDay of [0, 29, 31, -2]) expect(ok({ monthDay })).toBe(false);
+    expect(ok({ frequency: "daily" })).toBe(false);
+    expect(ok({ tz: "" })).toBe(false);
+  });
+});
+
 /**
  * Frozen archive snapshot written by schema 4 (synthetic data). Never regenerate it: it stands
  * for backups already on users' devices. When a migration adds a column, add the field to the

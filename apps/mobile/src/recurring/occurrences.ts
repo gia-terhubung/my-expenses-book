@@ -1,7 +1,7 @@
 // Pure occurrence engine for recurring rules. Dates are local "YYYY-MM-DD" strings and all
 // arithmetic is integer civil-day math (no Date), so results never shift with time zones or DST.
 import { formatLocal } from "../capture/localTime";
-import { addDays, daysInMonth, toDayNumber, ymd } from "../dates/civil";
+import { addDays, daysInMonth, isValidYmd, toDayNumber, ymd } from "../dates/civil";
 import type { RecurringRule } from "../db/types";
 
 export type RuleTiming = Pick<
@@ -19,6 +19,21 @@ const parts = (date: string): [number, number, number] => [
   Number(date.slice(5, 7)),
   Number(date.slice(8, 10)),
 ];
+
+/**
+ * False when the loops below could not terminate or would invent dates: a non-date anchor, end
+ * or last-generated date (a damaged backup), or a monthly day outside -1 and 1-28.
+ */
+function isUsable(rule: RuleTiming): boolean {
+  if (!isValidYmd(rule.anchorDate)) return false;
+  if (rule.endDate !== null && !isValidYmd(rule.endDate)) return false;
+  if (rule.lastGeneratedDate !== null && !isValidYmd(rule.lastGeneratedDate)) return false;
+  const md = rule.monthDay;
+  if (rule.frequency === "monthly" && md !== null && !(md === -1 || (Number.isInteger(md) && md >= 1 && md <= 28))) {
+    return false;
+  }
+  return true;
+}
 
 /** The first occurrence on or after `from` (and on or after the anchor). Ignores endDate. */
 function onOrAfter(rule: RuleTiming, from: string): string {
@@ -55,18 +70,19 @@ function onOrAfter(rule: RuleTiming, from: string): string {
   }
 }
 
-/** The first occurrence strictly after `after`, or null once past `endDate`. */
+/** The first occurrence strictly after `after`, or null once past `endDate` (or for invalid input). */
 export function nextOccurrence(rule: RuleTiming, after: string): string | null {
+  if (!isUsable(rule) || !isValidYmd(after)) return null;
   const next = onOrAfter(rule, addDays(after, 1));
   return rule.endDate !== null && next > rule.endDate ? null : next;
 }
 
 /**
  * Occurrences after `lastGeneratedDate` (from `anchorDate` inclusive when null), up to and
- * including `today`, never after `endDate`. Empty when paused.
+ * including `today`, never after `endDate`. Empty when paused, and for invalid input.
  */
 export function dueOccurrences(rule: RuleTiming, today: string): string[] {
-  if (rule.paused) return [];
+  if (rule.paused || !isUsable(rule) || !isValidYmd(today)) return [];
   const out: string[] = [];
   let cur: string | null =
     rule.lastGeneratedDate === null

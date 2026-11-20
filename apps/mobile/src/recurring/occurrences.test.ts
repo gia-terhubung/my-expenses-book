@@ -96,3 +96,32 @@ describe("todayIn", () => {
     expect(todayIn("Pacific/Pago_Pago", new Date("2026-12-01T05:00:00Z"))).toBe("2026-11-30");
   });
 });
+
+describe("invalid dates (a damaged backup) never hang", () => {
+  const bad = ["soon", "", "2026-13-01", "2026-02-30"];
+
+  it("dueOccurrences returns [] for an invalid anchor, last, end or today", () => {
+    for (const d of bad) {
+      expect(dueOccurrences({ ...base, anchorDate: d }, "2026-06-10")).toEqual([]);
+      expect(dueOccurrences({ ...base, lastGeneratedDate: d }, "2026-06-10")).toEqual([]);
+      expect(dueOccurrences({ ...base, endDate: d }, "2026-06-10")).toEqual([]);
+      expect(dueOccurrences(base, d)).toEqual([]);
+      for (const frequency of ["weekly", "yearly"] as const) {
+        expect(dueOccurrences({ ...base, frequency, anchorDate: d }, "2026-06-10")).toEqual([]);
+      }
+    }
+  });
+
+  it("dueOccurrences returns [] for a monthly day outside -1 and 1-28", () => {
+    for (const monthDay of [0, 29, -2, 1.5]) {
+      expect(dueOccurrences({ ...base, monthDay }, "2026-06-10")).toEqual([]);
+    }
+  });
+
+  it("nextOccurrence returns null for an invalid anchor or after", () => {
+    for (const d of bad) {
+      expect(nextOccurrence({ ...base, anchorDate: d }, "2026-06-10")).toBeNull();
+      expect(nextOccurrence(base, d)).toBeNull();
+    }
+  });
+});

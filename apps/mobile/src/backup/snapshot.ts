@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { isValidYmd } from "@/dates/civil";
 import journal from "@/db/migrations/meta/_journal.json";
 import * as schema from "@/db/schema";
 import type { AppDb, Category, Folder, LineItem, Receipt, ReceiptPage, RecurringRule } from "@/db/types";
@@ -49,6 +50,10 @@ export const folderShape = z
   })
   .strict();
 
+// A rule's dates drive the occurrence loops on every unlock: only real "YYYY-MM-DD" days pass.
+const ymdDate = z.string().refine(isValidYmd, { message: "Expected a YYYY-MM-DD date" });
+const monthDay = int.refine((n) => n === -1 || (n >= 1 && n <= 28), { message: "Expected -1 or 1-28" });
+
 export const recurringRuleShape = z
   .object({
     ...base,
@@ -60,13 +65,13 @@ export const recurringRuleShape = z
     folderId: z.string().nullable(),
     notes: z.string().nullable(),
     frequency: z.enum(["weekly", "monthly", "yearly"]),
-    anchorDate: z.string(),
-    monthDay: int.nullable(),
-    tz: z.string(),
+    anchorDate: ymdDate,
+    monthDay: monthDay.nullable(),
+    tz: z.string().min(1),
     autoAdd: z.boolean(),
-    endDate: z.string().nullable(),
+    endDate: ymdDate.nullable(),
     paused: z.boolean(),
-    lastGeneratedDate: z.string().nullable(),
+    lastGeneratedDate: ymdDate.nullable(),
   })
   .strict();
 
