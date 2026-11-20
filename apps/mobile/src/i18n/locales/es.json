@@ -75,6 +75,8 @@
     "resetButton": "Restablecer datos",
     "openFailed": "No se pudieron abrir tus datos.",
     "migrationFailed": "Falló la actualización de tus datos.",
+    "migrationRestored": "La actualización no pudo actualizar tus datos. Tus recibos están a salvo. Vuelve a actualizar la app o contacta con soporte.",
+    "noSpace": "No hay suficiente espacio libre para actualizar tus datos de forma segura. Libera algo de espacio y vuelve a abrir la app.",
     "resetFailed": "Falló el restablecimiento."
   },
   "categories": {

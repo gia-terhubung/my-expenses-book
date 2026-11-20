@@ -75,6 +75,8 @@
     "resetButton": "Setel ulang data",
     "openFailed": "Tidak dapat membuka data Anda.",
     "migrationFailed": "Gagal memperbarui data Anda.",
+    "migrationRestored": "Pembaruan tidak dapat meningkatkan data Anda. Struk Anda aman. Perbarui aplikasi lagi atau hubungi dukungan.",
+    "noSpace": "Ruang kosong tidak cukup untuk memperbarui data Anda dengan aman. Kosongkan sebagian ruang lalu buka aplikasi lagi.",
     "resetFailed": "Penyetelan ulang gagal."
   },
   "categories": {

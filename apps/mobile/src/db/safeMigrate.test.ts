@@ -1,0 +1,264 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+
+import * as schema from "./schema";
+import { migrationsFolder, testDb } from "./testing/testDb";
+import type { AppDb } from "./types";
+import { pendingMigrationCount, safeMigrate, type DbFileOps } from "./safeMigrate";
+
+const DB_PATH = "/data/SQLite/meb.db";
+const COPY_PATH = `${DB_PATH}.pre-upgrade`;
+
+function fakeFiles(initial: Record<string, string> = {}) {
+  const map = new Map<string, Uint8Array>(
+    Object.entries(initial).map(([p, s]) => [p, new TextEncoder().encode(s)]),
+  );
+  const ops = {
+    exists: jest.fn((p: string) => map.has(p)),
+    copy: jest.fn((from: string, to: string) => {
+      const bytes = map.get(from);
+      if (!bytes) throw new Error(`missing ${from}`);
+      map.set(to, new Uint8Array(bytes));
+    }),
+    remove: jest.fn((p: string) => {
+      map.delete(p);
+    }),
+  } satisfies DbFileOps;
+  const text = (p: string) => (map.has(p) ? new TextDecoder().decode(map.get(p)) : undefined);
+  return { map, ops, text };
+}
+
+const close = (db: AppDb) => (db as unknown as { $client: Database.Database }).$client.close();
+
+function emptyDb(): AppDb {
+  return drizzle(new Database(":memory:"), { schema }) as unknown as AppDb;
+}
+
+function journalEntries(): number {
+  return JSON.parse(fs.readFileSync(`${migrationsFolder}/meta/_journal.json`, "utf8")).entries.length;
+}
+
+describe("pendingMigrationCount", () => {
+  const journal = JSON.parse(fs.readFileSync(`${migrationsFolder}/meta/_journal.json`, "utf8"));
+
+  it("is 0 on a fully migrated db", () => {
+    expect(pendingMigrationCount(journal)(testDb())).toBe(0);
+  });
+
+  it("counts every journal entry when __drizzle_migrations is missing", () => {
+    expect(pendingMigrationCount(journal)(emptyDb())).toBe(journalEntries());
+  });
+});
+
+describe("safeMigrate", () => {
+  it("no pending migrations: no copy, ok", async () => {
+    const { ops } = fakeFiles({ [DB_PATH]: "v1" });
+    const runMigrations = jest.fn(async () => {});
+    const outcome = await safeMigrate({
+      db: testDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => 0,
+      runMigrations,
+      close,
+      reopen: () => testDb(),
+    });
+    expect(outcome).toEqual({ status: "ok" });
+    expect(ops.copy).not.toHaveBeenCalled();
+    expect(runMigrations).not.toHaveBeenCalled();
+  });
+
+  it("fresh install (0 applied): no copy, ok", async () => {
+    const { ops } = fakeFiles({ [DB_PATH]: "" });
+    const runMigrations = jest.fn(async () => {});
+    const outcome = await safeMigrate({
+      db: emptyDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => journalEntries(),
+      runMigrations,
+      close,
+      reopen: () => testDb(),
+    });
+    expect(outcome).toEqual({ status: "ok" });
+    expect(ops.copy).not.toHaveBeenCalled();
+    expect(runMigrations).toHaveBeenCalledTimes(1);
+  });
+
+  it("pending + existing data: copies first, migrates, returns ok, keeps the copy", async () => {
+    const { ops, text } = fakeFiles({ [DB_PATH]: "v1" });
+    const runMigrations = jest.fn(async () => {
+      expect(text(COPY_PATH)).toBe("v1");
+    });
+    const outcome = await safeMigrate({
+      db: testDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => 1,
+      runMigrations,
+      close,
+      reopen: () => testDb(),
+    });
+    expect(outcome).toEqual({ status: "ok" });
+    expect(ops.copy).toHaveBeenCalledTimes(1);
+    expect(ops.copy).toHaveBeenCalledWith(DB_PATH, COPY_PATH);
+    expect(runMigrations).toHaveBeenCalledTimes(1);
+    expect(ops.copy.mock.invocationCallOrder[0]).toBeLessThan(runMigrations.mock.invocationCallOrder[0]);
+    expect(text(COPY_PATH)).toBe("v1");
+  });
+
+  it("next launch with nothing pending removes a leftover copy", async () => {
+    const { ops, map } = fakeFiles({ [DB_PATH]: "v2", [COPY_PATH]: "v1" });
+    const outcome = await safeMigrate({
+      db: testDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => 0,
+      runMigrations: async () => {},
+      close,
+      reopen: () => testDb(),
+    });
+    expect(outcome).toEqual({ status: "ok" });
+    expect(map.has(COPY_PATH)).toBe(false);
+    expect(map.has(DB_PATH)).toBe(true);
+  });
+
+  it("migration throws: restores the copy, reopens, returns restored", async () => {
+    const { ops, map, text } = fakeFiles({ [DB_PATH]: "v1" });
+    const preUpgrade = new Uint8Array(map.get(DB_PATH)!);
+    const boom = new Error("no such column: pay_day");
+    const db = testDb();
+    const reopened = testDb();
+    const closeSpy = jest.fn(close);
+    const reopen = jest.fn(() => reopened);
+    const outcome = await safeMigrate({
+      db,
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => 1,
+      runMigrations: async () => {
+        // A half-applied upgrade leaves the main file and a WAL behind.
+        map.set(DB_PATH, new TextEncoder().encode("v1-half-migrated"));
+        map.set(`${DB_PATH}-wal`, new TextEncoder().encode("frames"));
+        throw boom;
+      },
+      close: closeSpy,
+      reopen,
+    });
+    expect(outcome).toEqual({ status: "restored", error: boom, db: reopened });
+    expect(map.get(DB_PATH)).toEqual(preUpgrade);
+    expect(text(DB_PATH)).toBe("v1");
+    expect(map.has(`${DB_PATH}-wal`)).toBe(false);
+    expect(closeSpy).toHaveBeenCalledWith(db);
+    expect(reopen).toHaveBeenCalledTimes(1);
+    // The old handle is closed before the file is replaced, and reopened after.
+    expect(closeSpy.mock.invocationCallOrder[0]).toBeLessThan(
+      ops.copy.mock.invocationCallOrder[ops.copy.mock.invocationCallOrder.length - 1],
+    );
+    expect(reopen.mock.invocationCallOrder[0]).toBeGreaterThan(
+      ops.copy.mock.invocationCallOrder[ops.copy.mock.invocationCallOrder.length - 1],
+    );
+    // The copy stays until a later launch migrates cleanly.
+    expect(map.has(COPY_PATH)).toBe(true);
+  });
+
+  it("copy throws: returns noSpace and runMigrations is never called", async () => {
+    const { ops, map } = fakeFiles({ [DB_PATH]: "v1" });
+    const enospc = new Error("ENOSPC: no space left on device");
+    ops.copy.mockImplementationOnce((_from: string, to: string) => {
+      map.set(to, new TextEncoder().encode("partial"));
+      throw enospc;
+    });
+    const runMigrations = jest.fn(async () => {});
+    const outcome = await safeMigrate({
+      db: testDb(),
+      dbPath: DB_PATH,
+      files: ops,
+      pendingCount: () => 1,
+      runMigrations,
+      close,
+      reopen: () => testDb(),
+    });
+    expect(outcome).toEqual({ status: "noSpace", error: enospc });
+    expect(runMigrations).not.toHaveBeenCalled();
+    // A partial copy is not left behind.
+    expect(map.has(COPY_PATH)).toBe(false);
+    expect(map.has(DB_PATH)).toBe(true);
+  });
+
+  it("reopen failing after a restore rejects with the reopen error", async () => {
+    const { ops, text } = fakeFiles({ [DB_PATH]: "v1" });
+    const reopenError = new Error("cannot open");
+    await expect(
+      safeMigrate({
+        db: testDb(),
+        dbPath: DB_PATH,
+        files: ops,
+        pendingCount: () => 1,
+        runMigrations: async () => {
+          throw new Error("migration failed");
+        },
+        close,
+        reopen: () => {
+          throw reopenError;
+        },
+      }),
+    ).rejects.toBe(reopenError);
+    expect(text(DB_PATH)).toBe("v1");
+  });
+});
+
+/** Real files: a WAL-mode db on disk, an upgrade that damages data and then throws. */
+describe("safeMigrate on a real file", () => {
+  const nodeFiles: DbFileOps = {
+    exists: (p) => fs.existsSync(p),
+    copy: (from, to) => fs.copyFileSync(from, to),
+    remove: (p) => fs.rmSync(p, { force: true }),
+  };
+
+  function openFile(p: string): AppDb {
+    const raw = new Database(p);
+    raw.pragma("journal_mode = WAL");
+    return drizzle(raw, { schema }) as unknown as AppDb;
+  }
+
+  it("restores the pre-upgrade data after a failed upgrade", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "meb-safe-"));
+    const dbPath = path.join(dir, "meb.db");
+    const db = openFile(dbPath);
+    migrate(db as never, { migrationsFolder });
+    const raw = (db as unknown as { $client: Database.Database }).$client;
+    raw.exec(`INSERT INTO receipts (id, created_at, updated_at, version, merchant, purchased_at_local,
+      purchased_at_utc, scanned_at_utc, currency, total_minor, parse_source, status, fx_approximate)
+      VALUES ('r1', 1, 1, 1, 'Indomaret', '2026-01-01T00:00:00', 1, 1, 'IDR', 1000, 'manual', 'draft', 0)`);
+    // The row lives only in the WAL until a checkpoint.
+    expect(fs.statSync(`${dbPath}-wal`).size).toBeGreaterThan(0);
+
+    const outcome = await safeMigrate({
+      db,
+      dbPath,
+      files: nodeFiles,
+      pendingCount: () => 1,
+      runMigrations: async (d) => {
+        const r = (d as unknown as { $client: Database.Database }).$client;
+        r.exec("DELETE FROM receipts");
+        throw new Error("upgrade failed half way");
+      },
+      close,
+      reopen: () => openFile(dbPath),
+    });
+
+    expect(outcome.status).toBe("restored");
+    if (outcome.status !== "restored") throw new Error("unreachable");
+    const reopenedRaw = (outcome.db as unknown as { $client: Database.Database }).$client;
+    expect(reopenedRaw.prepare("SELECT merchant FROM receipts").all()).toEqual([{ merchant: "Indomaret" }]);
+    expect(fs.existsSync(`${dbPath}.pre-upgrade`)).toBe(true);
+    reopenedRaw.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+});

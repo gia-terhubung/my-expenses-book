@@ -1,4 +1,4 @@
-import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
+import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,8 +12,10 @@ import { deletePagesDir } from "@/images/expoFs";
 import { deletePrefsStorage } from "@/prefs/storage";
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { DbKeyMismatchError, openWithStore, resetLocalData } from "./client";
+import { DbKeyMismatchError, dbFilePath, openWithStore, resetLocalData } from "./client";
+import { expoDbFiles } from "./expoDbFiles";
 import migrations from "./migrations/migrations";
+import { pendingMigrationCount, safeMigrate } from "./safeMigrate";
 import type { AppDb } from "./types";
 
 const DbContext = createContext<AppDb | null>(null);
@@ -32,6 +34,19 @@ type OpenState =
 
 type FailureKey = "dbError.openFailed" | "dbError.resetFailed";
 
+type MigrateState =
+  | { status: "running" }
+  | { status: "ok" }
+  | { status: "failed"; titleKey: MigrateFailureKey; scope: string; message: string };
+
+type MigrateFailureKey =
+  | "dbError.migrationFailed"
+  | "dbError.migrationRestored"
+  | "dbError.noSpace"
+  | "dbError.openFailed";
+
+const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
 function Migrated({
   db,
   onRetry,
@@ -42,12 +57,67 @@ function Migrated({
   children: ReactNode;
 }) {
   const { t } = useTranslation();
-  // useMigrations only needs the drizzle expo-sqlite handle's session/dialect.
-  const { success, error } = useMigrations(db as unknown as Parameters<typeof useMigrations>[0], migrations);
-  if (error) {
-    return <ErrorPanel title={t("dbError.migrationFailed")} details={error.message} onRetry={onRetry} scope="db.migrate" />;
+  const [state, setState] = useState<MigrateState>({ status: "running" });
+
+  useEffect(() => {
+    let cancelled = false;
+    // After a restore the original handle is closed; this one holds the restored file until Retry.
+    let reopened: AppDb | null = null;
+    let reopenFailed = false;
+    safeMigrate({
+      db,
+      dbPath: dbFilePath(),
+      files: expoDbFiles,
+      pendingCount: pendingMigrationCount(migrations.journal),
+      // migrate only needs the drizzle expo-sqlite handle's session/dialect.
+      runMigrations: (d) => migrate(d as unknown as Parameters<typeof migrate>[0], migrations),
+      close: closeDb,
+      reopen: async () => {
+        try {
+          return await openWithStore({ store: expoSecretStore });
+        } catch (e) {
+          reopenFailed = true;
+          throw e;
+        }
+      },
+    }).then(
+      (outcome) => {
+        if (outcome.status === "restored") reopened = outcome.db;
+        if (cancelled) {
+          if (reopened) closeDb(reopened);
+          return;
+        }
+        if (outcome.status === "ok") {
+          setState({ status: "ok" });
+          return;
+        }
+        setState({
+          status: "failed",
+          titleKey: outcome.status === "restored" ? "dbError.migrationRestored" : "dbError.noSpace",
+          scope: "db.migrate",
+          message: errorMessage(outcome.error),
+        });
+      },
+      (e) => {
+        if (cancelled) return;
+        setState({
+          status: "failed",
+          titleKey: reopenFailed ? "dbError.openFailed" : "dbError.migrationFailed",
+          scope: reopenFailed ? "db.open" : "db.migrate",
+          message: errorMessage(e),
+        });
+      },
+    );
+    return () => {
+      cancelled = true;
+      if (reopened) closeDb(reopened);
+    };
+  }, [db]);
+
+  if (state.status === "failed") {
+    return <ErrorPanel title={t(state.titleKey)} details={state.message} onRetry={onRetry} scope={state.scope} />;
   }
-  if (!success) return <Loading />;
+  if (state.status === "running") return <Loading />;
   return <DbContext.Provider value={db}>{children}</DbContext.Provider>;
 }
 

@@ -15,6 +15,11 @@ import type { AppDb } from "./types";
 
 export const DB_NAME = "meb.db";
 
+/** Absolute filesystem path (no file:// scheme) of a DB opened by name with the default directory. */
+export function dbFilePath(name: string = DB_NAME): string {
+  return `${SQLite.defaultDatabaseDirectory}/${name}`;
+}
+
 export class DbKeyMismatchError extends Error {
   constructor() {
     super("Database cannot be unlocked with the current key.");

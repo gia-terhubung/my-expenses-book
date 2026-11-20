@@ -75,6 +75,8 @@
     "resetButton": "Reset data",
     "openFailed": "Could not open your data.",
     "migrationFailed": "Updating your data failed.",
+    "migrationRestored": "The update couldn't upgrade your data. Your receipts are safe. Please update the app again or contact support.",
+    "noSpace": "Not enough free space to update your data safely. Free up some space and open the app again.",
     "resetFailed": "Reset failed."
   },
   "categories": {

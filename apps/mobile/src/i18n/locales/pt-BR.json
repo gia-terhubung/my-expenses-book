@@ -75,6 +75,8 @@
     "resetButton": "Redefinir dados",
     "openFailed": "Não foi possível abrir seus dados.",
     "migrationFailed": "Falha ao atualizar seus dados.",
+    "migrationRestored": "A atualização não conseguiu atualizar seus dados. Seus recibos estão seguros. Atualize o app novamente ou entre em contato com o suporte.",
+    "noSpace": "Não há espaço livre suficiente para atualizar seus dados com segurança. Libere algum espaço e abra o app novamente.",
     "resetFailed": "Falha ao redefinir."
   },
   "categories": {
