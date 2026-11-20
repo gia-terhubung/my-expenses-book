@@ -11,7 +11,9 @@ import { runCatchUp } from "./catchUp";
 import { rescheduleAll } from "./notify";
 import { requestCatchUp, useRecurringCatchUp } from "./useRecurringCatchUp";
 
-const mockDb = {};
+let mockDb: object = {};
+let mockNow = new Date("2026-11-20T05:00:00Z");
+jest.mock("@/dates/clock", () => ({ now: () => mockNow }));
 const mockFx = { base: "idr", latestDate: null, fetchedAt: null, byDate: {} };
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 jest.mock("@/prefs/PrefsProvider", () => ({
@@ -20,7 +22,10 @@ jest.mock("@/prefs/PrefsProvider", () => ({
 }));
 jest.mock("./catchUp", () => ({ runCatchUp: jest.fn() }));
 jest.mock("./notify", () => ({ rescheduleAll: jest.fn(async () => 0) }));
-jest.mock("@/capture/localTime", () => ({ deviceTimeZone: jest.fn(() => "Asia/Jakarta") }));
+jest.mock("@/capture/localTime", () => ({
+  ...jest.requireActual("@/capture/localTime"),
+  deviceTimeZone: jest.fn(() => "Asia/Jakarta"),
+}));
 
 const run = runCatchUp as jest.Mock;
 const reschedule = rescheduleAll as jest.Mock;
@@ -29,6 +34,7 @@ type Listener = (s: string) => void;
 let listener: Listener | null = null;
 
 beforeEach(() => {
+  mockNow = new Date("2026-11-20T05:00:00Z");
   reschedule.mockClear();
   tz.mockReturnValue("Asia/Jakarta");
   run.mockReset();
@@ -107,6 +113,53 @@ describe("useRecurringCatchUp", () => {
     expect(result.current.last).toEqual({ createdIds: ["a", "b", "c"], draftCount: 2 });
     await act(async () => result.current.dismiss());
     expect(result.current.last).toBeNull();
+    await unmount();
+  });
+
+  it("a restore clears what earlier runs created, so Undo never touches restored rows", async () => {
+    obscured = false;
+    run.mockReturnValueOnce({ createdIds: ["a"], draftCount: 0 });
+    const { result, unmount } = await renderHook(() => useRecurringCatchUp(), { wrapper });
+    expect(result.current.last).toEqual({ createdIds: ["a"], draftCount: 0 });
+    const release = restoreLease.acquire();
+    await act(async () => release());
+    expect(result.current.last).toBeNull();
+    await act(async () => result.current.dismiss());
+    await unmount();
+  });
+
+  it("a new database handle (restore, reset) clears what runs on the old one created", async () => {
+    obscured = false;
+    run.mockReturnValueOnce({ createdIds: ["a"], draftCount: 0 });
+    const { result, rerender, unmount } = await renderHook(() => useRecurringCatchUp(), { wrapper });
+    expect(result.current.last).toEqual({ createdIds: ["a"], draftCount: 0 });
+    mockDb = {};
+    run.mockReturnValueOnce({ createdIds: ["b"], draftCount: 1 });
+    await rerender({});
+    expect(run).toHaveBeenLastCalledWith(mockDb, expect.anything());
+    expect(result.current.last).toEqual({ createdIds: ["b"], draftCount: 1 });
+    await act(async () => result.current.dismiss());
+    await unmount();
+  });
+
+  it("a run on a later day drops what earlier days created (no weeks-old Undo)", async () => {
+    obscured = false;
+    run.mockReturnValueOnce({ createdIds: ["a"], draftCount: 0 });
+    const { result, unmount } = await renderHook(() => useRecurringCatchUp(), { wrapper });
+    // Same day: added to.
+    run.mockReturnValueOnce({ createdIds: ["b"], draftCount: 0 });
+    await act(async () => listener?.("active"));
+    expect(result.current.last).toEqual({ createdIds: ["a", "b"], draftCount: 0 });
+    // Next day in the device zone (Jakarta), nothing new: the banner goes.
+    mockNow = new Date("2026-11-20T18:00:00Z");
+    await act(async () => listener?.("active"));
+    expect(result.current.last).toBeNull();
+    // A later day with new rows shows only those.
+    run.mockReturnValueOnce({ createdIds: ["c"], draftCount: 1 });
+    mockNow = new Date("2026-12-05T05:00:00Z");
+    await act(async () => listener?.("active"));
+    expect(result.current.last).toEqual({ createdIds: ["c"], draftCount: 1 });
+    await act(async () => result.current.dismiss());
     await unmount();
   });
 

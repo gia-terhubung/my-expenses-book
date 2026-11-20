@@ -13,11 +13,16 @@ import { usePref, usePrefs } from "@/prefs/PrefsProvider";
 import { runCatchUp, type CatchUpResult } from "./catchUp";
 import { deviceScheduler } from "./deviceScheduler";
 import { rescheduleAll } from "./notify";
+import { todayIn } from "./occurrences";
 
 // Module-level so the run in the root layout and the Home banner share one result, and so two
 // mounted hooks never start a run at the same time.
 let running = false;
 let last: CatchUpResult | null = null;
+// `last` is only valid for the DB it was created in and for the device-local day it was created
+// on: Undo must never reach rows a restore brought back, nor rows from a weeks-old run.
+let lastDb: AppDb | null = null;
+let lastDay: string | null = null;
 // Last device zone seen on foreground; a change re-plans notifications (09:00 is device-local).
 let lastTz = deviceTimeZone();
 // The newest mounted hook's run, so screens without the hook can ask for a run (a rule saved).
@@ -54,7 +59,8 @@ export function rescheduleRecurring(db: AppDb): void {
 /**
  * Creates due recurring expenses: on mount, on unlock and on AppState -> active, only while the
  * app is not obscured (locked or covered). Skips while a restore holds `restoreLease` and runs
- * when it frees. `last` collects what runs created until `dismiss()` (the Home banner + Undo).
+ * when it frees. `last` collects what runs created until `dismiss()` (the Home banner + Undo); a
+ * finished restore, a new DB handle or a new device-local day drops it.
  */
 export function useRecurringCatchUp(): { last: CatchUpResult | null; dismiss(): void; runNow(): void } {
   const db = useDb();
@@ -66,12 +72,22 @@ export function useRecurringCatchUp(): { last: CatchUpResult | null; dismiss(): 
     obscuredRef.current = obscured;
   }, [obscured]);
 
+  // Declared before the first run: a new handle (restore, reset) drops the old DB's result.
+  useEffect(() => {
+    if (lastDb !== db && last) setLast(null);
+    lastDb = db;
+  }, [db]);
+
   const attempt = useCallback(() => {
     if (obscuredRef.current || !home || running || restoreLease.held()) return;
     running = true;
     try {
-      const res = runCatchUp(db, { now: now(), home, fx: prefs.get("fxTables") });
+      const at = now();
+      const today = todayIn(deviceTimeZone(), at);
+      if (last && lastDay !== today) setLast(null);
+      const res = runCatchUp(db, { now: at, home, fx: prefs.get("fxTables") });
       if (res.createdIds.length > 0) {
+        lastDay = today;
         setLast(
           last
             ? { createdIds: [...last.createdIds, ...res.createdIds], draftCount: last.draftCount + res.draftCount }
@@ -111,7 +127,15 @@ export function useRecurringCatchUp(): { last: CatchUpResult | null; dismiss(): 
     return () => sub.remove();
   }, [attempt, db]);
 
-  useEffect(() => restoreLease.onFree(attempt), [attempt]);
+  // A restore may have replaced the rows `last` points at (same ids, version 1): drop it first.
+  useEffect(
+    () =>
+      restoreLease.onFree(() => {
+        if (last) setLast(null);
+        attempt();
+      }),
+    [attempt],
+  );
 
   const { last: current, dismiss } = useCatchUpResult();
   return { last: current, dismiss, runNow: attempt };
