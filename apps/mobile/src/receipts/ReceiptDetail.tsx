@@ -19,6 +19,7 @@ import { usePref } from "@/prefs/PrefsProvider";
 import { PageViewer } from "@/review/PageViewer";
 import { categoryLabel } from "@/review/ReviewFields";
 import { discardReceipt } from "@/review/useReviewForm";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { homeLine } from "./format";
@@ -28,8 +29,6 @@ type Props = {
   onEdit(id: string): void;
   onDeleted(): void;
   onBack?: () => void;
-  /** Pushed under a native stack header (iOS insets the content below it). */
-  underHeader?: boolean;
 };
 
 /** Wall-clock purchase time as recorded ("2026-11-03T10:15:00"), locale-formatted, no zone shift. */
@@ -67,7 +66,7 @@ export function fxRateText(r: Receipt, locale: string, t: (k: string, o?: Record
   return parts.join(" · ");
 }
 
-export function ReceiptDetail({ id, onEdit, onDeleted, onBack, underHeader = false }: Props) {
+export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
@@ -94,20 +93,10 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack, underHeader = fal
   );
   /* eslint-enable react-hooks/exhaustive-deps */
 
-  const back = onBack ? (
-    <Button
-      variant="quiet"
-      label={`‹ ${t("common.back")}`}
-      accessibilityLabel={t("common.back")}
-      onPress={onBack}
-      style={{ alignSelf: "flex-start" }}
-    />
-  ) : null;
-
   if (!receipt) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, gap: theme.spacing.md }}>
-        {back}
+        <ScreenHeader title={t("document.title")} onBack={onBack ?? null} />
         <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("receipts.detail.missing")}</Text>
       </View>
     );
@@ -154,7 +143,7 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack, underHeader = fal
     <>
       <ScrollView
         testID="receipt-detail-scroll"
-        contentInsetAdjustmentBehavior={underHeader ? "automatic" : "never"}
+        contentInsetAdjustmentBehavior="never"
         style={{ flex: 1, backgroundColor: theme.colors.background }}
         contentContainerStyle={{
           width: "100%",
@@ -165,11 +154,8 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack, underHeader = fal
           gap: theme.spacing.lg,
         }}
       >
-        {back}
         <View style={{ gap: theme.spacing.xs }}>
-          <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
-            {receipt.merchant ?? t("receipts.unknownMerchant")}
-          </Text>
+          <ScreenHeader title={receipt.merchant ?? t("receipts.unknownMerchant")} titleStyle="headline" onBack={onBack ?? null} />
           <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{localDateTime(receipt.purchasedAtLocal, locale)}</Text>
         </View>
         <View style={{ gap: theme.spacing.xs }}>

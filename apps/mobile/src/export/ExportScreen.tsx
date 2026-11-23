@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import { ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,6 +20,7 @@ import { usePref } from "@/prefs/PrefsProvider";
 import { totalLine } from "@/receipts/format";
 import { categoryLabel } from "@/organize/categoryLabel";
 import { FolderPicker } from "@/organize/FolderPicker";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 import { StatusBarInset } from "@/layout/StatusBarInset";
 
@@ -148,10 +149,7 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
         contentContainerStyle={{ padding: theme.spacing.xl, paddingTop: theme.spacing.lg, paddingBottom: insets.bottom + theme.spacing.xl }}
       >
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
-          <Button variant="quiet" label={t("common.back")} onPress={() => router.back()} style={{ alignSelf: "flex-start" }} />
-          <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
-            {t("export.title")}
-          </Text>
+          <ScreenHeader title={t("export.title")} />
 
           {section(t("export.range"))}
           <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>

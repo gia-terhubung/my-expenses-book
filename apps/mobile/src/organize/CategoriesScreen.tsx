@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,6 +16,7 @@ import {
 } from "@/db/repositories/categories";
 import type { Category } from "@/db/types";
 import { categoryLabel } from "@/review/ReviewFields";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 import { StatusBarInset } from "@/layout/StatusBarInset";
 
@@ -76,12 +76,7 @@ export function CategoriesScreen() {
         }}
       >
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.sm }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
-              {t("categoryManage.title")}
-            </Text>
-            <Button variant="quiet" label={t("common.done")} onPress={() => router.back()} />
-          </View>
+          <ScreenHeader title={t("categoryManage.title")} />
           {list.map((c) => {
             const name = label(c);
             return (

@@ -408,8 +408,10 @@ describe("restore", () => {
     }
   });
 
-  it("iOS: content insets below the native header", async () => {
+  it("has the shared page header: Back chevron and title, no native header inset", async () => {
     await render(<BackupScreen fs={fs} now={now} />);
-    expect(screen.getByTestId("backup-scroll").props.contentInsetAdjustmentBehavior).toBe("automatic");
+    expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Backup & restore" })).toBeTruthy();
+    expect(screen.getByTestId("backup-scroll").props.contentInsetAdjustmentBehavior).toBe("never");
   });
 });

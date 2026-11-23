@@ -17,6 +17,7 @@ import { usePref } from "@/prefs/PrefsProvider";
 import { totalLine } from "@/receipts/format";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { taxYearLabel, taxYearRange } from "@/taxYear/taxYear";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { FolderForm } from "./FolderForm";
@@ -115,13 +116,7 @@ export function CollectionScreen(props: Props) {
               paddingBottom: theme.spacing.md,
             }}
           >
-            {action(t("common.back"), () => router.back())}
-            <Text
-              accessibilityRole="header"
-              style={[theme.type.title, { color: theme.colors.text }]}
-            >
-              {title}
-            </Text>
+            <ScreenHeader title={title} />
             <Text
               testID="collection-total"
               style={[theme.type.headline, { color: theme.colors.text }]}

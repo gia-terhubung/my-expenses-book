@@ -36,6 +36,7 @@ import { FolderPicker } from "@/organize/FolderPicker";
 import { usePref } from "@/prefs/PrefsProvider";
 import { amountText, isKnownCurrency, isValidDate, parseAmountInput } from "@/review/form";
 import { CategoryChips, CurrencyField, FieldShell } from "@/review/ReviewFields";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { deviceScheduler } from "./deviceScheduler";
@@ -247,20 +248,10 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
     [db, values?.folderId, version],
   );
 
-  const back = onBack ? (
-    <Button
-      variant="quiet"
-      label={`‹ ${t("common.back")}`}
-      accessibilityLabel={t("common.back")}
-      onPress={onBack}
-      style={{ alignSelf: "flex-start" }}
-    />
-  ) : null;
-
   if (!values) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, gap: theme.spacing.md }}>
-        {back}
+        <ScreenHeader title={t("recurring.editTitle")} onBack={onBack ?? null} />
         <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("recurring.missing")}</Text>
       </View>
     );
@@ -377,10 +368,7 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
         contentContainerStyle={{ padding: theme.spacing.lg, paddingBottom: theme.spacing.xxl }}
       >
         <View style={{ width: "100%", maxWidth: 640, alignSelf: "center", gap: theme.spacing.lg }}>
-          {back}
-          <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
-            {t(ruleId ? "recurring.editTitle" : "recurring.newTitle")}
-          </Text>
+          <ScreenHeader title={t(ruleId ? "recurring.editTitle" : "recurring.newTitle")} onBack={onBack ?? null} />
           {input("merchant", t("review.merchant"), { autoCapitalize: "words", autoCorrect: false })}
           <View style={{ flexDirection: "row", gap: theme.spacing.md, flexWrap: "wrap" }}>
             <View style={{ flexGrow: 2, flexBasis: 160 }}>{input("amount", t("recurring.amount"), { keyboardType: "decimal-pad" })}</View>

@@ -326,7 +326,8 @@ describe("TipJarScreen price buttons", () => {
 
   it("each tier has exactly one button: the price pill, labelled name and price", async () => {
     await ready();
-    const buttons = screen.getAllByRole("button");
+    // The page's back chevron is the one button outside the tiers.
+    const buttons = screen.getAllByRole("button").filter((b) => b.props.accessibilityLabel !== "Back");
     expect(buttons.map((b) => b.props.accessibilityLabel)).toEqual(LABELS);
     expect(buttons.map((b) => b.props.testID)).toEqual(IDS.map((id) => `tip-price-${id}`));
     // The name and note are spoken by the button (label and hint), not as extra stops.
@@ -369,8 +370,10 @@ describe("TipJarScreen price buttons", () => {
     for (const id of IDS) expect(flat(screen.getByTestId(`tip-price-${id}`)).alignSelf).toBe("stretch");
   });
 
-  it("iOS: content insets below the native header", async () => {
+  it("has the shared page header: Back chevron and title, no native header inset", async () => {
     await render(<TipJarScreen jar={createFakeTipJar()} />);
-    expect(screen.getByTestId("tip-jar-scroll").props.contentInsetAdjustmentBehavior).toBe("automatic");
+    expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Tip jar" })).toBeTruthy();
+    expect(screen.getByTestId("tip-jar-scroll").props.contentInsetAdjustmentBehavior).toBe("never");
   });
 });

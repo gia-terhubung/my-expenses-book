@@ -1,14 +1,10 @@
-import { Stack } from "expo-router";
-import { useTranslation } from "react-i18next";
-
 import { BackupScreen } from "@/backup/BackupScreen";
+import { StatusBarInset } from "@/layout/StatusBarInset";
 
 export default function BackupRoute() {
-  const { t } = useTranslation();
   return (
-    <>
-      <Stack.Screen options={{ headerShown: true, title: t("backup.title") }} />
+    <StatusBarInset>
       <BackupScreen />
-    </>
+    </StatusBarInset>
   );
 }

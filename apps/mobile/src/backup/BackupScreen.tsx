@@ -29,6 +29,7 @@ import { expoFs } from "@/images/expoFs";
 import { useImageStore } from "@/images/ImageStoreProvider";
 import type { FileOps } from "@/images/store";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { openArchive, type ArchiveHeader } from "./container";
@@ -454,7 +455,7 @@ export function BackupScreen({
   return (
     <ScrollView
       testID="backup-scroll"
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior="never"
       style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={{
         padding: theme.spacing.xl,
@@ -470,6 +471,7 @@ export function BackupScreen({
           gap: theme.spacing.md,
         }}
       >
+        <ScreenHeader title={t("backup.title")} />
         {section(t("backup.backupHeading"))}
         <Text style={[theme.type.body, { color: theme.colors.text }]}>
           {lastBackupAt

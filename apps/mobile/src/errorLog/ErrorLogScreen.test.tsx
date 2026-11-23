@@ -86,8 +86,10 @@ describe("ErrorLogScreen", () => {
     await expect(render(<ErrorLogScreen log={log} fs={fakeFs().fs} now={now} appVersion="1.0.0" />)).resolves.toBeTruthy();
   });
 
-  it("iOS: list insets below the native header", async () => {
+  it("has the shared page header: Back chevron and title, no native header inset", async () => {
     await render(<ErrorLogScreen log={createErrorLog(memoryKV())} fs={fakeFs().fs} now={now} appVersion="1.0.0" />);
-    expect(screen.getByTestId("error-log-list").props.contentInsetAdjustmentBehavior).toBe("automatic");
+    expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Error log" })).toBeTruthy();
+    expect(screen.getByTestId("error-log-list").props.contentInsetAdjustmentBehavior).toBe("never");
   });
 });

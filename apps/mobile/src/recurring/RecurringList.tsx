@@ -13,6 +13,7 @@ import type { RecurringRule } from "@/db/types";
 import { EmptyState } from "@/layout/EmptyState";
 import { formatMoney } from "@/money/money";
 import { usePref } from "@/prefs/PrefsProvider";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 import type { ColorTokens } from "@/theme/tokens";
 
@@ -70,25 +71,15 @@ export function RecurringList({ selectedId, onSelect, onNew, onBack }: Props) {
   }, [db, home, fx, version]);
 
   const header = (
-    <View style={{ gap: theme.spacing.xs }}>
-      {onBack ? (
-        <Button
-          variant="quiet"
-          label={`‹ ${t("common.back")}`}
-          accessibilityLabel={t("common.back")}
-          onPress={onBack}
-          style={{ alignSelf: "flex-start" }}
-        />
-      ) : null}
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: theme.spacing.md }}>
-        <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text, flexShrink: 1 }]}>
-          {t("recurring.title")}
-        </Text>
-        {rules.length > 0 ? (
+    <ScreenHeader
+      title={t("recurring.title")}
+      onBack={onBack ?? null}
+      actions={
+        rules.length > 0 ? (
           <Button testID="recurring-new" label={t("recurring.new")} accessibilityLabel={t("recurring.newTitle")} onPress={onNew} />
-        ) : null}
-      </View>
-    </View>
+        ) : null
+      }
+    />
   );
 
   if (rules.length === 0) {

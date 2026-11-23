@@ -7,6 +7,7 @@ import { dateToLocalString } from "@/components/dateString";
 import { EXPORT_DIR, purgeExportDir, shareFile } from "@/export/files";
 import { expoFs } from "@/images/expoFs";
 import type { FileOps } from "@/images/store";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import type { ErrorEntry, ErrorLog } from "./errorLog";
@@ -60,13 +61,14 @@ export function ErrorLogScreen({
   return (
     <FlatList
       testID="error-log-list"
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior="never"
       style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: theme.spacing.xl, gap: theme.spacing.md, width: "100%", maxWidth: 560, alignSelf: "center" }}
+      contentContainerStyle={{ padding: theme.spacing.xl, paddingTop: theme.spacing.lg, gap: theme.spacing.md, width: "100%", maxWidth: 560, alignSelf: "center" }}
       data={entries}
       keyExtractor={(e, i) => `${e.at}-${i}`}
       ListHeaderComponent={
         <View style={{ gap: theme.spacing.md }}>
+          <ScreenHeader title={t("errorLog.title")} />
           <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("errorLog.intro")}</Text>
           {entries.length ? (
             <View style={{ flexDirection: "row", gap: theme.spacing.xl }}>

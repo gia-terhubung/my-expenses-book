@@ -74,7 +74,6 @@ function AppStack() {
   const theme = useTheme();
   return (
     <Stack screenOptions={rootStackOptions(t, theme.colors)}>
-      <Stack.Screen name="document/[id]" options={{ headerShown: true }} />
       {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
       <Stack.Screen name="(modals)" options={{ presentation: "modal" }} />
       <Stack.Screen name="lock" options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }} />

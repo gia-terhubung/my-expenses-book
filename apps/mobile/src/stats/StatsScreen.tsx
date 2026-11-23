@@ -1,4 +1,3 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, type Href } from "expo-router";
 import { useMemo, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -28,6 +27,7 @@ import { usePref } from "@/prefs/PrefsProvider";
 import { monthLabel } from "@/receipts/format";
 import { slipAmountText } from "@/receipts/slipAmount";
 import { taxYearLabel, taxYearOf, taxYearRange } from "@/taxYear/taxYear";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { compactAmount, currencySymbol } from "./compactAmount";
@@ -246,26 +246,7 @@ export function StatsScreen({ now = clockNow }: { now?: () => Date }) {
         contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: insets.bottom + spacing.xxl }}
       >
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center" }}>
-          <View style={{ flexDirection: "row", alignItems: "center", minHeight: size.touch, marginLeft: -spacing.md }}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t("common.back")}
-              onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
-              style={({ pressed }) => ({
-                width: size.touch,
-                height: size.touch,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: size.touch / 2,
-                backgroundColor: pressed ? colors.surfacePressed : "transparent",
-              })}
-            >
-              <Ionicons name="chevron-back" size={26} color={colors.primary} />
-            </Pressable>
-            <Text accessibilityRole="header" style={[type.title, { color: colors.text, flexShrink: 1 }]}>
-              {t("stats.title")}
-            </Text>
-          </View>
+          <ScreenHeader title={t("stats.title")} />
 
           {!data.any ? (
             <View style={{ marginTop: spacing.xl, gap: spacing.lg, alignItems: "flex-start" }}>

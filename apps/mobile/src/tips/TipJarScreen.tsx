@@ -7,6 +7,7 @@ import { useReducedMotion } from "react-native-reanimated";
 import { Button } from "@/components/Button";
 import { TIP_IDS, type TipId, type TipJar } from "@/payments/types";
 import { FONTS } from "@/theme/fonts";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { BeanBackdrop } from "./BeanBackdrop";
@@ -182,9 +183,9 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BeanBackdrop paused={paused} />
-      {/* iOS: pushed under a native header, which content would otherwise slide beneath. */}
-      <ScrollView testID="tip-jar-scroll" contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: spacing.xl, paddingBottom: spacing.xxl }}>
+      <ScrollView testID="tip-jar-scroll" contentInsetAdjustmentBehavior="never" contentContainerStyle={{ padding: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xxl }}>
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: spacing.lg }}>
+          <ScreenHeader title={t("tips.title")} />
           <View style={{ gap: spacing.md }}>
             <Text accessibilityRole="header" style={[theme.type.display, { color: colors.text }]}>
               {t("tips.heading")}

@@ -194,11 +194,12 @@ describe("ReceiptDetail", () => {
     expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
   });
 
-  it("insets below the native header only when it sits under one", async () => {
+  it("back chevron calls onBack and the merchant is the header", async () => {
     const r = seed();
-    const { rerender } = await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} underHeader />);
-    expect(screen.getByTestId("receipt-detail-scroll").props.contentInsetAdjustmentBehavior).toBe("automatic");
-    await rerender(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
+    const onBack = jest.fn();
+    await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} onBack={onBack} />);
+    await fireEvent.press(screen.getByRole("button", { name: "Back" }));
+    expect(onBack).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId("receipt-detail-scroll").props.contentInsetAdjustmentBehavior).toBe("never");
   });
 
