@@ -26,6 +26,7 @@ import { currencyExampleHome, payCycleExample, taxYearExample } from "./examples
 import { guideMode } from "./guideLayout";
 import { GuideShell } from "./GuideShell";
 import { InfoText } from "./InfoText";
+import { TourCards } from "./TourCards";
 
 type Props = { mode: "firstRun" | "replay"; onClose?: () => void };
 
@@ -96,15 +97,7 @@ export function GuideFlow({ mode, onClose }: Props) {
   if (step === "tour" || step === "done") {
     return (
       <StatusBarInset>
-        {/* Task 5 replaces this with the how-it-works cards. */}
-        <GuideShell
-          mode={layout}
-          dots={{ n: 1, total: 1 }}
-          title={t("guide.finish")}
-          explain={null}
-          footer={<Button variant="primary" align="center" label={t("guide.skip")} onPress={finish} />}
-          onClose={replay ? onClose : undefined}
-        />
+        <TourCards mode={layout} onBackFromFirst={() => go("lock")} onDone={finish} onClose={replay ? onClose : undefined} />
       </StatusBarInset>
     );
   }
