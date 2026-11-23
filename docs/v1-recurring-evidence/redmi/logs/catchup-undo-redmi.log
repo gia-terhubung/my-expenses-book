@@ -1,0 +1,38 @@
+[12:15:36 catchup-undo] flow catchup-undo on redmi (CAWGAMI7YPJR497H)
+[12:15:38 catchup-undo] backed up app data to /Users/giaendong/MEB-e2e-backups/CAWGAMI7YPJR497H/20261123-121536
+[12:15:38 catchup-undo] app data wiped (restore: E2E_PLATFORM=android restore_app_data CAWGAMI7YPJR497H /Users/giaendong/MEB-e2e-backups/CAWGAMI7YPJR497H/20261123-121536)
+[12:15:38 catchup-undo] launched com.terhubung.myexpensesbook
+[12:15:59 catchup-undo] tap "English"
+[12:16:03 catchup-undo] tap "Next"
+[12:16:09 catchup-undo] tap "Search"
+[12:16:11 catchup-undo] type "usd"
+[12:16:18 catchup-undo] tap "USD"
+[12:16:21 catchup-undo] tap "Next"
+[12:16:25 catchup-undo] tap "Not now"
+[12:16:28 catchup-undo] sees "No receipts yet"
+[12:16:29 catchup-undo] open myexpensesbook://dev/clock?now=2026-11-20T03:00:00Z&tz=Asia/Jakarta
+[12:16:43 catchup-undo] tap "Add receipt"
+[12:16:48 catchup-undo] tap last "Add manually" at 360 1404
+[12:17:04 catchup-undo] type "Catchup Test Rent"
+[12:17:18 catchup-undo] type "100"
+[12:17:26 catchup-undo] tap "Save receipt"
+[12:17:30 catchup-undo] tap containing "Catchup Test Rent" at 360 499
+[12:17:33 catchup-undo] tap "Repeat this…"
+[12:17:37 catchup-undo] sees "New recurring expense"
+[12:17:55 catchup-undo] tap "Save"
+[12:18:00 catchup-undo] does not see "Repeat this…"
+[12:18:03 catchup-undo] tap "Back"
+[12:18:07 catchup-undo] screenshot catchup-undo-redmi-01-before.png
+[12:18:07 catchup-undo] open myexpensesbook://dev/clock?now=2027-02-20T03:00:00Z&tz=Asia/Jakarta
+Warning: Activity not started, its current task has been brought to the front
+[12:18:21 catchup-undo] background -> foreground
+[12:18:26 catchup-undo] sees "Added 3 recurring expenses."
+[12:18:29 catchup-undo] rows: 1 before, 4 after catch-up
+[12:18:30 catchup-undo] screenshot catchup-undo-redmi-02-banner-added-3.png
+[12:18:33 catchup-undo] tap "Undo"
+[12:18:37 catchup-undo] sees "Removed 3 recurring expenses."
+[12:18:40 catchup-undo] does not see "Added 3 recurring expenses."
+[12:18:43 catchup-undo] rows after Undo: 1
+[12:18:44 catchup-undo] screenshot catchup-undo-redmi-03-after-undo.png
+[12:18:44 catchup-undo] open myexpensesbook://dev/clock?reset=1
+[12:18:55 catchup-undo] PASS

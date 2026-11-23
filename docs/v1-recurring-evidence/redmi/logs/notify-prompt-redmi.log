@@ -1,0 +1,36 @@
+[12:21:05 notify-prompt] flow notify-prompt on redmi (CAWGAMI7YPJR497H)
+[12:21:07 notify-prompt] backed up app data to /Users/giaendong/MEB-e2e-backups/CAWGAMI7YPJR497H/20261123-122106
+[12:21:07 notify-prompt] app data wiped (restore: E2E_PLATFORM=android restore_app_data CAWGAMI7YPJR497H /Users/giaendong/MEB-e2e-backups/CAWGAMI7YPJR497H/20261123-122106)
+[12:21:07 notify-prompt] launched com.terhubung.myexpensesbook
+[12:21:27 notify-prompt] tap "English"
+[12:21:30 notify-prompt] tap "Next"
+[12:21:36 notify-prompt] tap "Search"
+[12:21:38 notify-prompt] type "usd"
+[12:21:45 notify-prompt] tap "USD"
+[12:21:48 notify-prompt] tap "Next"
+[12:21:52 notify-prompt] tap "Not now"
+[12:21:55 notify-prompt] sees "No receipts yet"
+[12:21:58 notify-prompt] tap "Settings"
+[12:22:03 notify-prompt] tap "Recurring"
+[12:22:06 notify-prompt] tap "Add a recurring expense"
+[12:22:10 notify-prompt] sees "New recurring expense"
+[12:22:24 notify-prompt] type "Prompt Test Wifi"
+[12:22:39 notify-prompt] type "25"
+[12:22:44 notify-prompt] screenshot notify-prompt-redmi-01-auto-rule-form.png
+[12:23:03 notify-prompt] tap "Save"
+[12:23:06 notify-prompt] sees "Prompt Test Wifi"
+[12:23:12 notify-prompt] does not see "to send you notifications"
+[12:23:12 notify-prompt] screenshot notify-prompt-redmi-02-after-auto-rule-no-prompt.png
+[12:23:15 notify-prompt] tap "New"
+[12:23:19 notify-prompt] sees "New recurring expense"
+[12:23:32 notify-prompt] type "Prompt Test Gym"
+[12:23:47 notify-prompt] type "30"
+[12:24:09 notify-prompt] tap #rule-auto-add
+[12:24:16 notify-prompt] screenshot notify-prompt-redmi-03-draft-rule-form.png
+[12:24:19 notify-prompt] tap "Save"
+[12:24:23 notify-prompt] sees "to send you notifications"
+[12:24:24 notify-prompt] screenshot notify-prompt-redmi-04-draft-rule-prompt.png
+[12:24:26 notify-prompt] tap "Allow"
+[12:24:30 notify-prompt] sees "Prompt Test Gym"
+[12:24:30 notify-prompt] screenshot notify-prompt-redmi-05-after-allow-list.png
+[12:24:30 notify-prompt] PASS

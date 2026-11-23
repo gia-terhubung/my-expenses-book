@@ -48,7 +48,12 @@ export const deviceScheduler: LocalScheduler = {
   },
   async permission() {
     const p = await Notifications.getPermissionsAsync();
-    return p.granted ? "granted" : p.canAskAgain && p.status === Notifications.PermissionStatus.UNDETERMINED ? "undetermined" : "denied";
+    // On Android 13+, a first-time (never-asked) permission returns status "denied"
+    // but canAskAgain=true. Treat canAskAgain as the canonical "not yet asked" signal
+    // so that ensurePermissionForDraftRule can trigger the system prompt on both platforms.
+    if (p.granted) return "granted";
+    if (p.canAskAgain) return "undetermined";
+    return "denied";
   },
   async request() {
     await ensureChannel();

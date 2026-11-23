@@ -50,6 +50,17 @@ describe("deviceScheduler", () => {
     expect(m.cancelScheduledNotificationAsync.mock.calls).toEqual([["a"]]);
   });
 
+  it("permission: Android never-asked (denied + canAskAgain) is undetermined, so the prompt can show", async () => {
+    m.getPermissionsAsync.mockResolvedValueOnce({ granted: false, status: "denied", canAskAgain: true });
+    await expect(deviceScheduler.permission()).resolves.toBe("undetermined");
+    m.getPermissionsAsync.mockResolvedValueOnce({ granted: false, status: "undetermined", canAskAgain: true });
+    await expect(deviceScheduler.permission()).resolves.toBe("undetermined");
+    m.getPermissionsAsync.mockResolvedValueOnce({ granted: false, status: "denied", canAskAgain: false });
+    await expect(deviceScheduler.permission()).resolves.toBe("denied");
+    m.getPermissionsAsync.mockResolvedValueOnce({ granted: true, status: "granted", canAskAgain: true });
+    await expect(deviceScheduler.permission()).resolves.toBe("granted");
+  });
+
   it("skips a time that has already passed", async () => {
     await deviceScheduler.schedule({ id: "recurring-r1", title: "t", body: "b", at: at(new Date(Date.now() - 86400000)), data });
     expect(m.scheduleNotificationAsync).not.toHaveBeenCalled();

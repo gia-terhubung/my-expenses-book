@@ -1,0 +1,40 @@
+[12:06:33 recurring] flow recurring on redmi (CAWGAMI7YPJR497H)
+[12:06:34 recurring] backed up app data to /Users/giaendong/MEB-e2e-backups/CAWGAMI7YPJR497H/20261123-120633
+[12:06:35 recurring] app data wiped (restore: E2E_PLATFORM=android restore_app_data CAWGAMI7YPJR497H /Users/giaendong/MEB-e2e-backups/CAWGAMI7YPJR497H/20261123-120633)
+[12:06:35 recurring] launched com.terhubung.myexpensesbook
+[12:06:57 recurring] tap "English"
+[12:07:01 recurring] tap "Next"
+[12:07:07 recurring] tap "Search"
+[12:07:09 recurring] type "usd"
+[12:07:16 recurring] tap "USD"
+[12:07:20 recurring] tap "Next"
+[12:07:23 recurring] tap "Not now"
+[12:07:27 recurring] sees "No receipts yet"
+[12:07:27 recurring] open myexpensesbook://dev/clock?now=2026-11-20T03:00:00Z&tz=Asia/Jakarta
+[12:07:41 recurring] tap "Add receipt"
+[12:07:46 recurring] tap last "Add manually" at 360 1404
+[12:08:03 recurring] type "Repeat Test Gym"
+[12:08:20 recurring] type "30"
+[12:08:27 recurring] tap "Save receipt"
+[12:08:31 recurring] sees "Repeat Test Gym"
+[12:08:38 recurring] tap containing "Repeat Test Gym" at 360 499
+[12:08:41 recurring] sees "Repeat this…"
+[12:08:42 recurring] screenshot recurring-redmi-01-receipt-detail.png
+[12:08:44 recurring] tap "Repeat this…"
+[12:08:49 recurring] sees "New recurring expense"
+[12:08:58 recurring] sees "Monthly"
+[12:08:59 recurring] screenshot recurring-redmi-02-rule-form.png
+[12:09:17 recurring] tap "Save"
+[12:09:20 recurring] sees "Repeat Test Gym"
+[12:09:25 recurring] does not see "Repeat this…"
+[12:09:28 recurring] tap "Back"
+Warning: Activity not started, its current task has been brought to the front
+[12:09:31 recurring] background -> foreground
+[12:09:36 recurring] sees "Repeat Test Gym"
+[12:09:39 recurring] screenshot recurring-redmi-03-home-no-duplicate.png
+[12:09:42 recurring] tap "Settings"
+[12:09:46 recurring] tap "Recurring"
+[12:09:49 recurring] sees "Repeat Test Gym, $30.00, Monthly, next 20 Dec"
+[12:09:50 recurring] screenshot recurring-redmi-04-recurring-list.png
+[12:09:50 recurring] open myexpensesbook://dev/clock?reset=1
+[12:10:01 recurring] PASS

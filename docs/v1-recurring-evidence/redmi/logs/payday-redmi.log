@@ -1,0 +1,37 @@
+[12:12:04 payday] flow payday on redmi (CAWGAMI7YPJR497H)
+[12:12:05 payday] backed up app data to /Users/giaendong/MEB-e2e-backups/CAWGAMI7YPJR497H/20261123-121204
+[12:12:05 payday] app data wiped (restore: E2E_PLATFORM=android restore_app_data CAWGAMI7YPJR497H /Users/giaendong/MEB-e2e-backups/CAWGAMI7YPJR497H/20261123-121204)
+[12:12:06 payday] launched com.terhubung.myexpensesbook
+[12:12:27 payday] tap "English"
+[12:12:30 payday] tap "Next"
+[12:12:37 payday] tap "Search"
+[12:12:39 payday] type "usd"
+[12:12:46 payday] tap "USD"
+[12:12:50 payday] tap "Next"
+[12:12:53 payday] tap "Not now"
+[12:12:57 payday] sees "No receipts yet"
+[12:13:00 payday] tap "Settings"
+[12:13:04 payday] tap containing "Month starts on" at 360 663
+[12:13:07 payday] tap "Day 25"
+[12:13:11 payday] tap "Done"
+[12:13:14 payday] sees "Month starts on, Day 25"
+[12:13:15 payday] screenshot payday-redmi-01-settings-day25.png
+[12:13:18 payday] tap "Receipts"
+[12:13:18 payday] open myexpensesbook://dev/clock?now=2026-10-26T03:00:00Z&tz=Asia/Jakarta
+[12:13:33 payday] tap "Add receipt"
+[12:13:38 payday] tap last "Add manually" at 360 1404
+[12:13:54 payday] type "Payday Test Cafe"
+[12:14:09 payday] type "12.50"
+[12:14:14 payday] screenshot payday-redmi-02-receipt-26-oct.png
+[12:14:17 payday] tap "Save receipt"
+[12:14:20 payday] sees "Payday Test Cafe"
+[12:14:21 payday] open myexpensesbook://dev/clock?now=2026-11-20T03:00:00Z&tz=Asia/Jakarta
+[12:14:35 payday] sees "This month, $12.50"
+[12:14:37 payday] sees "Payday Test Cafe"
+[12:14:38 payday] screenshot payday-redmi-03-home-this-period.png
+[12:14:41 payday] tap containing "See statistics" at 360 212
+[12:14:45 payday] sees "25 Oct – 24 Nov"
+[12:14:47 payday] sees "$12.50"
+[12:14:48 payday] screenshot payday-redmi-04-stats-range.png
+[12:14:48 payday] open myexpensesbook://dev/clock?reset=1
+[12:14:59 payday] PASS

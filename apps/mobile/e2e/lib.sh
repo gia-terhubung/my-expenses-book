@@ -4,9 +4,9 @@
 #   source "$(dirname "$0")/lib.sh"; e2e_init "$1" "payday"
 #
 # Every helper goes through a small platform layer (_ui_dump, _tap_label, _type, _shot, ...).
-# Only iOS simulators (AXe + xcrun simctl) are implemented. An Android variant adds the
-# `android` branches (adb + `uiautomator dump`) and sets E2E_PLATFORM=android; the flows stay
-# unchanged because they only call the e2e_* / tap / see helpers below.
+# iOS simulators use AXe + xcrun simctl. Android devices use adb + `uiautomator dump`: set
+# E2E_PLATFORM=android and pass the adb serial instead of the UDID (debug build, Metro running).
+# The flows stay unchanged because they only call the e2e_* / tap / see helpers below.
 set -euo pipefail
 
 E2E_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -35,9 +35,25 @@ e2e_init() {
       command -v "$AXE" >/dev/null || { echo "AXe not found (brew install cameroncooke/axe/axe)" >&2; exit 69; }
       DEVICE_TAG="$(xcrun simctl list devices | grep "$UDID" | sed -E 's/^ *([^(]+) \(.*/\1/' | tr -d ' ' | tr 'A-Z' 'a-z')"
       ;;
+    android)
+      [[ "$(adb -s "$UDID" get-state 2>/dev/null)" == device ]] || { echo "adb device $UDID not connected" >&2; exit 69; }
+      _adb reverse tcp:8081 tcp:8081 >/dev/null # the dev client loads the bundle from Metro on the host
+      # Pin portrait for the run (a phone lying on the desk can flip to the landscape side-rail
+      # layout); the owner's auto-rotate setting is put back on exit.
+      # (`settings put system accelerometer_rotation 0` is ignored on HyperOS; `cmd window` is not.)
+      E2E_ROTATE_WAS="$(_adb shell cmd window user-rotation | tr -d '\r')" # "free" or "lock <n>"
+      # Heads-up notifications from other apps cover the top of the screen (and its buttons),
+      # and would put their messages into the evidence screenshots: off for the run, put back on exit.
+      E2E_HEADSUP_WAS="$(_adb shell settings get global heads_up_notifications_enabled | tr -d '\r')"
+      trap '_adb shell cmd window user-rotation ${E2E_ROTATE_WAS:-free} >/dev/null 2>&1 || true
+        _adb shell settings put global heads_up_notifications_enabled "${E2E_HEADSUP_WAS:-1}" >/dev/null 2>&1 || true' EXIT
+      _adb shell cmd window user-rotation lock 0
+      _adb shell settings put global heads_up_notifications_enabled 0
+      DEVICE_TAG="$(_adb shell getprop ro.product.model | tr -d '\r ' | tr 'A-Z' 'a-z')"
+      ;;
     *) _unsupported ;;
   esac
-  DEVICE_TAG="${DEVICE_TAG:-device}"
+  DEVICE_TAG="${E2E_DEVICE_TAG:-${DEVICE_TAG:-device}}"
   require_wipe_allowed
   mkdir -p "$EVIDENCE_DIR"
   log "flow $FLOW on $DEVICE_TAG ($UDID)"
@@ -54,8 +70,41 @@ fail() {
 pass() { log "PASS"; }
 
 _unsupported() {
-  echo "E2E_PLATFORM=$E2E_PLATFORM is not implemented yet (only ios)" >&2
+  echo "E2E_PLATFORM=$E2E_PLATFORM: ${FUNCNAME[1]:-this step} is not implemented (ios, android)" >&2
   exit 70
+}
+
+_adb() { adb -s "$UDID" "$@"; }
+
+# Android: taps the first node from the uiautomator dump that matches. Usage:
+#   _android_tap_where label <text> [TextField]   (content-desc, or text when there is none)
+#   _android_tap_where id <resource-id>           (React Native testID)
+# Returns 1 when nothing matches, like an AXe tap that finds no element.
+_android_tap_where() {
+  local xy
+  xy="$(_ui_dump | python3 -c '
+import sys, re, xml.etree.ElementTree as ET
+by, want, kind = sys.argv[1], sys.argv[2], (sys.argv[3] if len(sys.argv) > 3 else "")
+try:
+    root = ET.fromstring(sys.stdin.read().strip())
+except Exception:
+    sys.exit(0)
+for n in root.iter("node"):
+    a = n.attrib
+    if by == "id":
+        ok = a.get("resource-id", "") == want
+    else:
+        label = a.get("content-desc") or a.get("text") or ""
+        # The native stack header'"'"'s back button is "Back" on iOS, "Navigate up" on Android.
+        ok = (label == want or (want == "Back" and label == "Navigate up")) and (kind != "TextField" or a.get("class", "").endswith("EditText"))
+    if ok:
+        x1, y1, x2, y2 = map(int, re.findall(r"\d+", a.get("bounds", "")))
+        print((x1 + x2) // 2, (y1 + y2) // 2)
+        break
+' "$@")"
+  [[ -n "$xy" ]] || return 1
+  # shellcheck disable=SC2086
+  _tap_point $xy
 }
 
 # ---- platform layer -------------------------------------------------------------------------
@@ -64,6 +113,7 @@ _unsupported() {
 _ui_dump() {
   case "$E2E_PLATFORM" in
     ios) "$AXE" describe-ui --udid "$UDID" 2>/dev/null ;;
+    android) _adb exec-out uiautomator dump /dev/tty 2>/dev/null | sed -e 's/UI hierchary dumped to.*//' ;;
     *) _unsupported ;;
   esac
 }
@@ -72,6 +122,7 @@ _ui_dump() {
 _tap_label() {
   case "$E2E_PLATFORM" in
     ios) "$AXE" tap --label "$1" ${2:+--element-type "$2"} --udid "$UDID" >/dev/null 2>&1 ;;
+    android) _android_tap_where label "$1" "${2:-}" ;;
     *) _unsupported ;;
   esac
 }
@@ -80,6 +131,7 @@ _tap_label() {
 _tap_id() {
   case "$E2E_PLATFORM" in
     ios) "$AXE" tap --id "$1" --udid "$UDID" >/dev/null 2>&1 ;;
+    android) _android_tap_where id "$1" ;;
     *) _unsupported ;;
   esac
 }
@@ -87,6 +139,7 @@ _tap_id() {
 _tap_point() {
   case "$E2E_PLATFORM" in
     ios) "$AXE" tap -x "$1" -y "$2" --udid "$UDID" >/dev/null ;;
+    android) _adb shell input tap "$1" "$2" ;;
     *) _unsupported ;;
   esac
 }
@@ -94,6 +147,7 @@ _tap_point() {
 _type() {
   case "$E2E_PLATFORM" in
     ios) "$AXE" type "$1" --udid "$UDID" >/dev/null ;;
+    android) _adb shell "input text '${1// /%s}'" ;;
     *) _unsupported ;;
   esac
 }
@@ -101,6 +155,7 @@ _type() {
 _shot() {
   case "$E2E_PLATFORM" in
     ios) "$AXE" --output json screenshot --udid "$UDID" --output "$1" >/dev/null ;;
+    android) _adb exec-out screencap -p >"$1" ;;
     *) _unsupported ;;
   esac
 }
@@ -108,6 +163,7 @@ _shot() {
 _open_url() {
   case "$E2E_PLATFORM" in
     ios) xcrun simctl openurl "$UDID" "$1" ;;
+    android) _adb shell "am start -W -a android.intent.action.VIEW -d '$1' $BUNDLE_ID" >/dev/null ;;
     *) _unsupported ;;
   esac
 }
@@ -115,6 +171,16 @@ _open_url() {
 _launch() {
   case "$E2E_PLATFORM" in
     ios) xcrun simctl launch "$UDID" "$BUNDLE_ID" >/dev/null ;;
+    android)
+      if _adb shell pidof "$BUNDLE_ID" >/dev/null 2>&1; then
+        # Running: bring the existing task to the front (keeps in-memory state such as the dev clock).
+        # (Not `monkey -p ... 1`: its one injected event can be a screen rotation.)
+        _adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n "$BUNDLE_ID/.MainActivity" >/dev/null
+      else
+        # Cold start: the dev client loads the bundle from Metro (adb reverse tcp:8081 in e2e_init).
+        _adb shell "am start -a android.intent.action.VIEW -d 'exp+my-expenses-book://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081' $BUNDLE_ID" >/dev/null
+      fi
+      ;;
     *) _unsupported ;;
   esac
 }
@@ -122,6 +188,7 @@ _launch() {
 _terminate() {
   case "$E2E_PLATFORM" in
     ios) xcrun simctl terminate "$UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true ;;
+    android) _adb shell am force-stop "$BUNDLE_ID" ;;
     *) _unsupported ;;
   esac
 }
@@ -132,6 +199,12 @@ _clear_field() {
     ios)
       "$AXE" key-combo --modifiers 227 --key 4 --udid "$UDID" >/dev/null # Cmd+A
       "$AXE" key 42 --udid "$UDID" >/dev/null                            # Backspace
+      sleep 0.3
+      ;;
+    android)
+      # Move to the end, then delete backwards (Ctrl+A is not reliable across IMEs).
+      _adb shell input keyevent 123
+      _adb shell input keyevent $(printf '67 %.0s' $(seq 1 40))
       sleep 0.3
       ;;
     *) _unsupported ;;
@@ -162,6 +235,11 @@ _scroll_down() {
       # Let the fling settle: a tap that lands on a decelerating list only stops it.
       sleep 1.5
       ;;
+    android)
+      local h; h="$(screen_height)"
+      _adb shell input swipe 360 $((h * 7 / 10)) 360 $((h * 3 / 10)) 300
+      sleep 1.5
+      ;;
     *) _unsupported ;;
   esac
 }
@@ -170,6 +248,10 @@ _scroll_down() {
 _dismiss_keyboard() {
   case "$E2E_PLATFORM" in
     ios) "$AXE" key 40 --udid "$UDID" >/dev/null; sleep 0.5 ;;
+    android)
+      # Back hides the keyboard; without a keyboard it would navigate back, so check first.
+      if _adb shell dumpsys input_method | grep -q 'mInputShown=true'; then _adb shell input keyevent 4; sleep 0.5; fi
+      ;;
     *) _unsupported ;;
   esac
 }
@@ -177,6 +259,7 @@ _dismiss_keyboard() {
 _home() {
   case "$E2E_PLATFORM" in
     ios) "$AXE" button home --udid "$UDID" >/dev/null ;;
+    android) _adb shell input keyevent 3 ;;
     *) _unsupported ;;
   esac
 }
@@ -184,11 +267,42 @@ _home() {
 # ---- queries over the accessibility tree ------------------------------------------------------
 
 # Prints every element as "label<TAB>value<TAB>centerX<TAB>centerY", one per line.
+# iOS: AXe JSON (points). Android: uiautomator XML (pixels); a text field's label is its
+# content-desc and its value its text (blank while the text is only the hint); a radio's value
+# is "radio button[, selected]" like the iOS AXValue.
 ui_elements() {
   _ui_dump | python3 -c '
-import json, sys
+import json, sys, re
+raw = sys.stdin.read().strip()
+if raw.startswith("<"):
+    import xml.etree.ElementTree as ET
+    try:
+        root = ET.fromstring(raw)
+    except Exception:
+        sys.exit(0)
+    # iOS merges a labelled element'"'"'s child texts into it; uiautomator lists them again as
+    # child nodes. Skip a plain text node whose text an ancestor'"'"'s content-desc already holds,
+    # so counts and "first match" match the iOS tree.
+    def walk(n, descs):
+        a = n.attrib
+        cls, text, desc = a.get("class", ""), a.get("text", ""), a.get("content-desc", "")
+        if cls.endswith("EditText"):
+            label, value = desc, ("" if text == a.get("hint", "") else text)
+        elif cls.endswith("RadioButton"):
+            label, value = desc or text, "radio button" + (", selected" if a.get("checked") == "true" else "")
+        else:
+            label, value = desc or text, (text if desc and text else "")
+        echo = not desc and text and any(text in d for d in descs)
+        if (label or value) and not echo:
+            x1, y1, x2, y2 = map(int, re.findall(r"\d+", a.get("bounds", "0 0 0 0")))
+            print("%s\t%s\t%d\t%d" % (label.replace("\n", " "), value.replace("\n", " "), (x1 + x2) // 2, (y1 + y2) // 2))
+        for c in n.findall("node"):
+            walk(c, descs + [desc] if desc else descs)
+    for top in root.findall("node"):
+        walk(top, [])
+    sys.exit(0)
 try:
-    data = json.load(sys.stdin)
+    data = json.loads(raw)
 except Exception:
     sys.exit(0)
 def walk(node):
@@ -212,8 +326,13 @@ walk(data)
 # Height of the app window in points.
 screen_height() {
   _ui_dump | python3 -c '
-import json, sys
-d = json.load(sys.stdin)
+import json, sys, re
+raw = sys.stdin.read().strip()
+if raw.startswith("<"):
+    m = re.search(r"bounds=\"\[0,0\]\[\d+,(\d+)\]\"", raw)
+    print(int(m.group(1)) if m else 1600)
+    sys.exit(0)
+d = json.loads(raw)
 d = d[0] if isinstance(d, list) else d
 print(int((d.get("frame") or {}).get("height", 600)))
 '
@@ -364,6 +483,21 @@ tap_last() {
 # Types $1 a few characters at a time: a controlled React Native field drops keys typed in one burst.
 type_text() {
   local text="$1" i
+  if [[ "$E2E_PLATFORM" == android && "$text" == *" "* ]]; then
+    # Gboard autocorrects a word when a space follows it ("Catchup " -> "Catch-up "). Type the
+    # words last to first, each after a leading space, jumping to the start (MOVE_HOME) between
+    # them, so a space never follows a word that is still being composed.
+    local -a words; read -r -a words <<<"$text"
+    local w j
+    for ((j = ${#words[@]} - 1; j >= 0; j--)); do
+      w="${words[j]}"; ((j > 0)) && w=" $w"
+      for ((i = 0; i < ${#w}; i += 3)); do _type "${w:i:3}"; sleep 0.15; done
+      ((j > 0)) && { _adb shell input keyevent 122; sleep 0.2; }
+    done
+    log "type \"$text\""
+    sleep 0.3
+    return 0
+  fi
   for ((i = 0; i < ${#text}; i += 3)); do
     _type "${text:i:3}"
     sleep 0.15
@@ -377,6 +511,16 @@ field_value() {
   _ui_dump | python3 -c '
 import json, sys
 want = sys.argv[1]
+raw = sys.stdin.read().strip()
+if raw.startswith("<"):
+    import xml.etree.ElementTree as ET
+    for n in ET.fromstring(raw).iter("node"):
+        a = n.attrib
+        if a.get("class", "").endswith("EditText") and a.get("content-desc") == want:
+            t = a.get("text", "")
+            print("" if t == a.get("hint", "") else t)
+            break
+    sys.exit(0)
 def walk(n):
     if isinstance(n, list):
         for x in n: walk(x)
@@ -384,7 +528,7 @@ def walk(n):
     if n.get("type") == "TextField" and n.get("AXLabel") == want:
         print(n.get("AXValue") or ""); sys.exit(0)
     walk(n.get("children", []))
-walk(json.load(sys.stdin))
+walk(json.loads(raw))
 ' "$1"
 }
 
@@ -470,6 +614,19 @@ reset_app_data() {
       rm -rf "${data:?}/Documents/SQLite" "${data:?}/Documents/mmkv"
       log "app data wiped (restore: restore_app_data $UDID $backup)"
       ;;
+    android)
+      # Android: the app's private dir (files/, shared_prefs/) as app-data.tar, read via run-as
+      # (debuggable builds only).
+      _terminate
+      local backup
+      backup="$BACKUP_ROOT/$UDID/$(date +%Y%m%d-%H%M%S)"
+      mkdir -p "$backup"
+      _adb exec-out run-as "$BUNDLE_ID" tar cf - files shared_prefs >"$backup/app-data.tar" 2>"$backup/err.txt"
+      tar tf "$backup/app-data.tar" >/dev/null 2>&1 || fail "backup to $backup failed; nothing was wiped"
+      log "backed up app data to $backup"
+      _adb shell run-as "$BUNDLE_ID" rm -rf files/SQLite files/mmkv
+      log "app data wiped (restore: E2E_PLATFORM=android restore_app_data $UDID $backup)"
+      ;;
     *) _unsupported ;;
   esac
 }
@@ -479,13 +636,19 @@ reset_app_data() {
 # Documents/SQLite and Documents/mmkv with the backup's copies.
 restore_app_data() {
   local udid="$1" backup="$2" data
-  [[ -n "$udid" && -d "$backup/Documents" ]] || { echo "usage: restore_app_data <UDID> <backup-dir with Documents/>" >&2; return 64; }
+  [[ -n "$udid" && ( -d "$backup/Documents" || -f "$backup/app-data.tar" ) ]] || { echo "usage: restore_app_data <UDID> <backup-dir with Documents/ or app-data.tar>" >&2; return 64; }
   case "$E2E_PLATFORM" in
     ios)
       xcrun simctl terminate "$udid" "$BUNDLE_ID" >/dev/null 2>&1 || true
       data="$(xcrun simctl get_app_container "$udid" "$BUNDLE_ID" data)"
       rm -rf "${data:?}/Documents/SQLite" "${data:?}/Documents/mmkv"
       cp -a "$backup/Documents/." "$data/Documents/"
+      echo "restored $backup into $udid"
+      ;;
+    android)
+      adb -s "$udid" shell am force-stop "$BUNDLE_ID"
+      adb -s "$udid" shell run-as "$BUNDLE_ID" rm -rf files/SQLite files/mmkv
+      adb -s "$udid" exec-in run-as "$BUNDLE_ID" tar xf - <"$backup/app-data.tar"
       echo "restored $backup into $udid"
       ;;
     *) _unsupported ;;

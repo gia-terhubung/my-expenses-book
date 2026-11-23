@@ -1,14 +1,15 @@
 # End-to-end flows
 
-Bash scripts that drive a dev build on a simulator through its accessibility tree. No test
-framework, no app dependency: iOS uses [AXe](https://github.com/cameroncooke/AXe) (`axe`) and
-`xcrun simctl`.
+Bash scripts that drive a dev build through its accessibility tree. No test framework, no app
+dependency: iOS simulators use [AXe](https://github.com/cameroncooke/AXe) (`axe`) and
+`xcrun simctl`; Android devices use `adb` and `uiautomator dump` (see [Android](#android)).
 
 | Script | What it checks |
 | --- | --- |
 | `payday.sh` | Month starts on Day 25; a receipt dated 26 Oct counts in the period current on 20 Nov; Stats shows "25 Oct – 24 Nov". |
 | `recurring.sh` | Receipt > "Repeat this…" > Save adds no second expense; Recurring lists "Monthly, next 20 Dec". |
 | `catchup-undo.sh` | Dev clock 3 months ahead, app back to the foreground: "Added 3 recurring expenses."; Undo returns the feed to 1 row. |
+| `notify-prompt.sh` | Android only. Saving an auto-add rule asks nothing; saving the first draft-type rule shows the system notification prompt (R1). Needs an install that has never asked. |
 | `duo-fold.sh` | iPhone Duo only. Rule form keeps typed values across fold, unfold and rotation; two panes when open. |
 | `lib.sh` | Shared helpers (tap by label with wait/retry, fill and read back a field, assert visible, screenshots, dev clock, posture). |
 
@@ -70,13 +71,28 @@ builds redirect the route to Home and never read the override (`__DEV__` is fals
 - Notification prompt: on an install that has never asked, save an auto-add rule (no prompt),
   then a rule with "Add automatically" off (the system prompt appears).
 
-## Android later
+## Android
 
-All platform calls sit in the `_ui_dump`, `_tap_label`, `_tap_id`, `_tap_point`, `_type`,
-`_clear_field`, `_dismiss_keyboard`, `_shot`, `_open_url`, `_launch`, `_terminate`, `_home`, `_scroll_down`,
-`_posture`, `_rotate` functions of `lib.sh`. An Android variant adds an `android)` branch to each
-(`adb shell uiautomator dump`, `adb shell input tap/text/swipe`, `adb exec-out screencap`,
-`adb shell am start -d <url>`, `pm clear` for the reset) and is run with
-`E2E_PLATFORM=android e2e/<flow>.sh <serial>`. `ui_elements`, `field_value` and `screen_height`
-parse the iOS JSON tree today; on Android they need the same output from the uiautomator XML
-(`label<TAB>value<TAB>x<TAB>y` lines, a field's text, the window height).
+Debug (dev client) build installed, Metro running on the host, device connected over USB or
+wireless adb. Pass the adb serial (`adb devices`) instead of a UDID:
+
+```sh
+E2E_PLATFORM=android E2E_ALLOW_WIPE=1 E2E_DEVICE_TAG=redmi \
+  E2E_EVIDENCE_DIR="$PWD/../../docs/v1-recurring-evidence/redmi" e2e/payday.sh <serial>
+```
+
+- `e2e_init` runs `adb reverse tcp:8081 tcp:8081`, so a cold start loads the bundle from Metro.
+- For the run it locks the screen to portrait (`cmd window user-rotation lock 0`) and turns off
+  heads-up notifications (other apps' popups cover buttons and leak messages into screenshots).
+  Both settings are put back on exit.
+- The backup is `run-as tar` of the app's `files/` and `shared_prefs/` into
+  `~/MEB-e2e-backups/<serial>/<timestamp>/app-data.tar`; the wipe removes `files/SQLite` and
+  `files/mmkv`. Restore with
+  `E2E_PLATFORM=android bash -c 'source e2e/lib.sh; restore_app_data <serial> <backup-dir>'`.
+- Differences from iOS the helpers absorb: a text field's label is its `content-desc` (its text
+  is the value, blank while it shows the hint); child texts already in a parent's
+  `content-desc` are skipped, as iOS merges them; "Back" also matches the header's
+  "Navigate up"; words are typed last-first with `MOVE_HOME` in between so Gboard's
+  autocorrect never fires ("Catchup" became "Catch-up").
+- Check screenshots before committing them: a notification that arrives during a run can still
+  show in the status bar.
