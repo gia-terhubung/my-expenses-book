@@ -18,6 +18,9 @@ import { LANGUAGE_NAMES, LanguagePicker } from "@/components/LanguagePicker";
 import { LockToggle } from "@/components/LockToggle";
 import { OptionRow } from "@/components/OptionRow";
 import { TaxYearPicker } from "@/components/TaxYearPicker";
+import { InfoButton } from "@/guide/InfoButton";
+import type { InfoTopic } from "@/guide/info";
+import { InfoText } from "@/guide/InfoText";
 import { MonthStartPicker } from "@/settings/MonthStartPicker";
 import { useDb } from "@/db/DatabaseProvider";
 import { fileSize } from "@/images/expoFs";
@@ -33,9 +36,9 @@ const TIMEOUTS: LockTimeout[] = [0, 60, 300, 900];
 
 type Sheet = "language" | "currency" | "taxYear" | "monthStart" | null;
 
-function Row({ label, value, onPress }: { label: string; value: string; onPress: () => void }) {
+function Row({ label, value, onPress, info }: { label: string; value: string; onPress: () => void; info?: InfoTopic }) {
   const theme = useTheme();
-  return (
+  const card = (
     <Card accessibilityLabel={value ? `${label}, ${value}` : label} onPress={onPress} style={{ justifyContent: "space-between" }}>
       <Text style={[theme.type.body, { color: theme.colors.text }]}>{label}</Text>
       {value ? (
@@ -53,6 +56,14 @@ function Row({ label, value, onPress }: { label: string; value: string; onPress:
         </Text>
       )}
     </Card>
+  );
+  if (!info) return card;
+  // The (i) is its own target beside the row, so the row stays one press target for its picker.
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.xs }}>
+      <View style={{ flex: 1 }}>{card}</View>
+      <InfoButton topic={info} />
+    </View>
   );
 }
 
@@ -168,12 +179,14 @@ export default function SettingsScreen() {
             label={t("settings.homeCurrency")}
             value={currencyLabel(i18n.language, currency)}
             onPress={() => setSheet("currency")}
+            info="homeCurrency"
           />
-          <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} />
+          <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} info="taxYear" />
           <Row
             label={t("settings.monthStart")}
             value={t("settings.monthStartValue", { n: monthStart })}
             onPress={() => setSheet("monthStart")}
+            info="payCycle"
           />
           <Row label={t("settings.categories")} value="" onPress={() => router.push("/categories" as unknown as Href)} />
           <Row label={t("recurring.title")} value="" onPress={() => router.push("/recurring" as unknown as Href)} />
@@ -186,7 +199,10 @@ export default function SettingsScreen() {
           </Card>
           {lockEnabled ? (
             <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
-              <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{t("settings.lockTimeout")}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{t("settings.lockTimeout")}</Text>
+                <InfoButton topic="lockAfter" />
+              </View>
               {TIMEOUTS.map((s) => (
                 <OptionRow key={s} label={timeoutLabel(s)} selected={s === lockTimeout} onPress={() => prefs.set("lockTimeout", s)} />
               ))}
@@ -196,6 +212,9 @@ export default function SettingsScreen() {
             label={t("settings.storage")}
             value={storage ? t("settings.storageValue", { count: storage.receipts, size: formatBytes(storage.bytes, i18n.language) }) : "…"}
           />
+
+          <GroupTitle title={t("settings.help")} />
+          <Row label={t("settings.showGuide")} value="" onPress={() => router.push("/guide" as unknown as Href)} />
 
           <GroupTitle title={t("settings.support")} />
           <TipRow label={t("settings.tipJar")} onPress={() => router.push("/tip-jar" as unknown as Href)} />
@@ -237,7 +256,7 @@ export default function SettingsScreen() {
           <PickerSheet title={t("settings.monthStart")} onClose={close}>
             <ScrollView contentContainerStyle={{ gap: theme.spacing.lg }}>
               <MonthStartPicker value={monthStart} onChange={(d) => prefs.set("monthStartDay", d)} />
-              <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("settings.monthStartHelp")}</Text>
+              <InfoText topic="payCycle" showSummary />
             </ScrollView>
           </PickerSheet>
         )}

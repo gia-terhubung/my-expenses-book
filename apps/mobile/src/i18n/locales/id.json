@@ -49,7 +49,6 @@
     "taxYearStart": "Tahun pajak dimulai pada",
     "monthStart": "Siklus gaji dimulai tanggal",
     "monthStartValue": "Tanggal {{n}}",
-    "monthStartHelp": "Dipakai di Beranda dan Statistik. Ekspor dan pencarian memakai bulan kalender.",
     "backup": "Cadangan",
     "about": "Tentang",
     "devTools": "Alat pengembang",

@@ -49,7 +49,6 @@
     "taxYearStart": "Tax year starts in",
     "monthStart": "Pay cycle starts on",
     "monthStartValue": "Day {{n}}",
-    "monthStartHelp": "Used by Home and Stats. Exports and search use calendar months.",
     "backup": "Backup",
     "about": "About",
     "devTools": "Developer tools",

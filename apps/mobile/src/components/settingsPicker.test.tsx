@@ -9,7 +9,9 @@ jest.mock("@/prefs/PrefsProvider", () => ({
   usePref: (k: string) => ({ language: "en", homeCurrency: "USD", taxYearStartMonth: 1, monthStartDay: 25, lockEnabled: false, lockTimeout: 60 })[k],
   usePrefs: () => ({ set: jest.fn() }),
 }));
+const mockPush = jest.fn();
 jest.mock("expo-router", () => ({
+  router: { push: (...a: unknown[]) => mockPush(...a) },
   Link: require("react-native").Text,
   useFocusEffect: (cb: () => void) => require("react").useEffect(cb, []),
 }));
@@ -55,5 +57,29 @@ it("Pay cycle starts on row shows the day and opens the day grid with the helper
   await fireEvent.press(screen.getByLabelText("Pay cycle starts on, Day 25"));
   expect(screen.getAllByLabelText(/^Day \d+$/)).toHaveLength(28);
   expect(screen.getByLabelText("Day 25").props.accessibilityState.checked).toBe(true);
-  expect(screen.getByText("Used by Home and Stats. Exports and search use calendar months.")).toBeTruthy();
+  expect(screen.getByText(/^Pick the day you get paid\./)).toBeTruthy();
+  expect(screen.getByText(/^Only days 1–28/)).toBeTruthy();
+  expect(screen.getByText("Used by Home and Statistics. Exports and search use calendar months.")).toBeTruthy();
+  // Inline text in the picker sheet, no (i) on top of a sheet.
+  expect(screen.queryAllByRole("button", { name: "About Pay cycle" })).toHaveLength(1);
+});
+
+it("Show guide (in Help) opens /guide", async () => {
+  await render(<Host />);
+  expect(screen.getByRole("header", { name: "Help" })).toBeTruthy();
+  await fireEvent.press(screen.getByLabelText("Show guide"));
+  expect(mockPush).toHaveBeenCalledWith("/guide");
+});
+
+it("tax year (i) opens the Tax year sheet without opening the picker", async () => {
+  await render(<Host />);
+  await fireEvent.press(screen.getByRole("button", { name: "About Tax year" }));
+  expect(screen.getByRole("header", { name: "Tax year" })).toBeTruthy();
+  expect(screen.queryByRole("radio", { name: "April" })).toBeNull();
+});
+
+it("home currency and pay cycle rows have their (i)", async () => {
+  await render(<Host />);
+  expect(screen.getByRole("button", { name: "About Home currency" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "About Pay cycle" })).toBeTruthy();
 });

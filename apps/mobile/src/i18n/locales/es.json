@@ -49,7 +49,6 @@
     "taxYearStart": "El año fiscal comienza en",
     "monthStart": "El ciclo de pago empieza el",
     "monthStartValue": "Día {{n}}",
-    "monthStartHelp": "Se usa en Inicio y Estadísticas. La exportación y la búsqueda usan meses naturales.",
     "backup": "Copia de seguridad",
     "about": "Acerca de",
     "devTools": "Herramientas de desarrollo",
