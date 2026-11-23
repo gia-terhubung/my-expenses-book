@@ -55,23 +55,23 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
   const go = (s: number, x: number, y: number) => {
     "worklet";
     if (reduced) {
-      scale.value = s;
-      tx.value = x;
-      ty.value = y;
+      scale.set(s);
+      tx.set(x);
+      ty.set(y);
     } else {
-      scale.value = withTiming(s, { duration: DURATION });
-      tx.value = withTiming(x, { duration: DURATION });
-      ty.value = withTiming(y, { duration: DURATION });
+      scale.set(withTiming(s, { duration: DURATION }));
+      tx.set(withTiming(x, { duration: DURATION }));
+      ty.set(withTiming(y, { duration: DURATION }));
     }
   };
 
   /** Zoom to `target` keeping the viewport point (fx, fy) still; clamped to the allowed range. */
   const zoomTo = (target: number, fx: number, fy: number) => {
     "worklet";
-    const vp = { width: vpW.value, height: vpH.value };
-    const fit = { width: fitW.value, height: fitH.value };
+    const vp = { width: vpW.get(), height: vpH.get() };
+    const fit = { width: fitW.get(), height: fitH.get() };
     const s = clampScale(target);
-    const raw = zoomAround(fx, fy, vp, { scale: scale.value, x: tx.value, y: ty.value }, s);
+    const raw = zoomAround(fx, fy, vp, { scale: scale.get(), x: tx.get(), y: ty.get() }, s);
     const o = clampOffset(raw.x, raw.y, fit, vp, s);
     go(s, o.x, o.y);
     return s;
@@ -80,25 +80,25 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
   const pinch = usePinchGesture({
     onActivate: () => {
       "worklet";
-      start.value = { scale: scale.value, x: tx.value, y: ty.value };
+      start.set({ scale: scale.get(), x: tx.get(), y: ty.get() });
     },
     onUpdate: (e) => {
       "worklet";
-      const vp = { width: vpW.value, height: vpH.value };
-      const fit = { width: fitW.value, height: fitH.value };
-      const s = Math.min(MAX_SCALE, Math.max(PINCH_FLOOR, start.value.scale * e.scale));
-      const raw = zoomAround(e.focalX, e.focalY, vp, start.value, s);
+      const vp = { width: vpW.get(), height: vpH.get() };
+      const fit = { width: fitW.get(), height: fitH.get() };
+      const s = Math.min(MAX_SCALE, Math.max(PINCH_FLOOR, start.get().scale * e.scale));
+      const raw = zoomAround(e.focalX, e.focalY, vp, start.get(), s);
       const o = clampOffset(raw.x, raw.y, fit, vp, Math.max(1, s));
-      scale.value = s;
-      tx.value = o.x;
-      ty.value = o.y;
+      scale.set(s);
+      tx.set(o.x);
+      ty.set(o.y);
     },
     onDeactivate: () => {
       "worklet";
-      const vp = { width: vpW.value, height: vpH.value };
-      const fit = { width: fitW.value, height: fitH.value };
-      const s = clampScale(scale.value);
-      const o = clampOffset(tx.value, ty.value, fit, vp, s);
+      const vp = { width: vpW.get(), height: vpH.get() };
+      const fit = { width: fitW.get(), height: fitH.get() };
+      const s = clampScale(scale.get());
+      const o = clampOffset(tx.get(), ty.get(), fit, vp, s);
       go(s, o.x, o.y);
       scheduleOnRN(report, s);
     },
@@ -107,12 +107,12 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
   const pan = usePanGesture({
     onUpdate: (e) => {
       "worklet";
-      if (scale.value <= 1) return;
-      const vp = { width: vpW.value, height: vpH.value };
-      const fit = { width: fitW.value, height: fitH.value };
-      const o = clampOffset(tx.value + e.changeX, ty.value + e.changeY, fit, vp, scale.value);
-      tx.value = o.x;
-      ty.value = o.y;
+      if (scale.get() <= 1) return;
+      const vp = { width: vpW.get(), height: vpH.get() };
+      const fit = { width: fitW.get(), height: fitH.get() };
+      const o = clampOffset(tx.get() + e.changeX, ty.get() + e.changeY, fit, vp, scale.get());
+      tx.set(o.x);
+      ty.set(o.y);
     },
   });
 
@@ -120,7 +120,7 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
     numberOfTaps: 2,
     onActivate: (e) => {
       "worklet";
-      const s = scale.value > 1.01 ? zoomTo(1, vpW.value / 2, vpH.value / 2) : zoomTo(DOUBLE_TAP_SCALE, e.x, e.y);
+      const s = scale.get() > 1.01 ? zoomTo(1, vpW.get() / 2, vpH.get() / 2) : zoomTo(DOUBLE_TAP_SCALE, e.x, e.y);
       scheduleOnRN(report, s);
     },
   });
@@ -128,7 +128,7 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
   const gestures = useSimultaneousGestures(pinch, pan, doubleTap);
 
   const imageStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: tx.value }, { translateY: ty.value }, { scale: scale.value }],
+    transform: [{ translateX: tx.get() }, { translateY: ty.get() }, { scale: scale.get() }],
   }));
 
   const onLayout = (e: LayoutChangeEvent) => {
@@ -137,14 +137,14 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
     if (prev && prev.width === width && prev.height === height) return;
     lastLayout.current = { width, height };
     const fit = fitSize(contentSize, { width, height });
-    vpW.value = width;
-    vpH.value = height;
-    fitW.value = fit.width;
-    fitH.value = fit.height;
+    vpW.set(width);
+    vpH.set(height);
+    fitW.set(fit.width);
+    fitH.set(fit.height);
     // A new size (fold, unfold, rotate) starts over at fit: the old offsets mean nothing there.
-    scale.value = 1;
-    tx.value = 0;
-    ty.value = 0;
+    scale.set(1);
+    tx.set(0);
+    ty.set(0);
     setViewport({ width, height });
     setPercent(100);
   };
@@ -153,7 +153,7 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
     const k = e.nativeEvent.actionName === "zoomIn" ? A11Y_STEP : e.nativeEvent.actionName === "zoomOut" ? 1 / A11Y_STEP : null;
     if (k === null) return;
     // Snap to a whole percent so repeated steps land exactly on the 1x and 5x ends.
-    report(zoomTo(Math.round(scale.value * k * 100) / 100, vpW.value / 2, vpH.value / 2));
+    report(zoomTo(Math.round(scale.get() * k * 100) / 100, vpW.get() / 2, vpH.get() / 2));
   };
 
   const fitted = viewport ? fitSize(contentSize, viewport) : null;
