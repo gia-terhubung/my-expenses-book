@@ -383,5 +383,7 @@ describe("TipJarScreen price buttons", () => {
     expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
     expect(screen.getByRole("header", { name: "Tip jar" })).toBeTruthy();
     expect(screen.getByTestId("tip-jar-scroll").props.contentInsetAdjustmentBehavior).toBe("never");
+    // Same 16 pt side margin as every page with the shared header, so the chevron lines up.
+    expect(screen.getByTestId("tip-jar-scroll").props.contentContainerStyle.paddingHorizontal).toBe(16);
   });
 });

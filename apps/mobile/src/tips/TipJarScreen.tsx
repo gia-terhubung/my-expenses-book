@@ -185,7 +185,7 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BeanBackdrop paused={paused} />
-      <ScrollView testID="tip-jar-scroll" contentInsetAdjustmentBehavior="never" contentContainerStyle={{ padding: spacing.xl, paddingTop: spacing.lg, paddingBottom: insets.bottom + spacing.xxl }}>
+      <ScrollView testID="tip-jar-scroll" contentInsetAdjustmentBehavior="never" contentContainerStyle={{ padding: spacing.xl, paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: insets.bottom + spacing.xxl }}>
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: spacing.lg }}>
           <ScreenHeader title={t("tips.title")} />
           <View style={{ gap: spacing.md }}>

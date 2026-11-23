@@ -99,5 +99,7 @@ describe("ErrorLogScreen", () => {
     expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
     expect(screen.getByRole("header", { name: "Error log" })).toBeTruthy();
     expect(screen.getByTestId("error-log-list").props.contentInsetAdjustmentBehavior).toBe("never");
+    // Same 16 pt side margin as every page with the shared header, so the chevron lines up.
+    expect(screen.getByTestId("error-log-list").props.contentContainerStyle.paddingHorizontal).toBe(16);
   });
 });

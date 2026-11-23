@@ -250,7 +250,7 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
 
   if (!values) {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, gap: theme.spacing.md }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingHorizontal: theme.spacing.lg, gap: theme.spacing.md }}>
         <ScreenHeader title={t("recurring.editTitle")} onBack={onBack ?? null} />
         <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("recurring.missing")}</Text>
       </View>

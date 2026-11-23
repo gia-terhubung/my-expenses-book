@@ -84,7 +84,7 @@ it("Settings (i) sheets carry the guide's live example", async () => {
   const today = formatLocal(new Date(), deviceTimeZone()).slice(0, 10);
   await render(<Host />);
   await fireEvent.press(screen.getByRole("button", { name: "About Pay cycle" }));
-  expect(screen.getByText(payCycleExample(today, 25, "en"))).toBeTruthy();
+  expect(screen.getByText(`This month: ${payCycleExample(today, 25, "en")}`)).toBeTruthy();
   await fireEvent.press(screen.getByRole("button", { name: "Done" }));
   await fireEvent.press(screen.getByRole("button", { name: "About Tax year" }));
   expect(screen.getByText(`Tax year ${taxYearExample(today, 1, "en").label}: ${taxYearExample(today, 1, "en").range}`)).toBeTruthy();

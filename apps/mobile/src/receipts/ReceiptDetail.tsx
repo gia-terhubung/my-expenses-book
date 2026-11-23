@@ -97,7 +97,7 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
 
   if (!receipt) {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, gap: theme.spacing.md }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingHorizontal: theme.spacing.lg, gap: theme.spacing.md }}>
         <ScreenHeader title={t("document.title")} onBack={onBack ?? null} />
         <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("receipts.detail.missing")}</Text>
       </View>
@@ -152,6 +152,7 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
           maxWidth: 640,
           alignSelf: "center",
           padding: theme.spacing.xl,
+          paddingHorizontal: theme.spacing.lg,
           paddingBottom: tabBarSpace || insets.bottom + theme.spacing.xl,
           gap: theme.spacing.lg,
         }}

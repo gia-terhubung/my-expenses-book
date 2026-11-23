@@ -38,6 +38,7 @@ export function TourCards({ mode, onBackFromFirst, onDone, onClose }: Props) {
       title={t(`guide.cards.${card.key}.title`)}
       explain={<card.Art />}
       control={<Text style={[type.body, { color: colors.text }]}>{t(`guide.cards.${card.key}.body`)}</Text>}
+      controlFixed
       footer={
         <View style={{ gap: spacing.sm }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", gap: spacing.md }}>

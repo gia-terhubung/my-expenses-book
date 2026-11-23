@@ -459,6 +459,7 @@ export function BackupScreen({
       style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={{
         padding: theme.spacing.xl,
+        paddingHorizontal: theme.spacing.lg,
         paddingTop: theme.spacing.lg,
         paddingBottom: insets.bottom + theme.spacing.xl,
       }}

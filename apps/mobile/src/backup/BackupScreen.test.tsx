@@ -413,5 +413,7 @@ describe("restore", () => {
     expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
     expect(screen.getByRole("header", { name: "Backup & restore" })).toBeTruthy();
     expect(screen.getByTestId("backup-scroll").props.contentInsetAdjustmentBehavior).toBe("never");
+    // Same 16 pt side margin as every page with the shared header, so the chevron lines up.
+    expect(screen.getByTestId("backup-scroll").props.contentContainerStyle.paddingHorizontal).toBe(16);
   });
 });

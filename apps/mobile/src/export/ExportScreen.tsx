@@ -146,7 +146,7 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
       <ScrollView
         testID="export-scroll"
         style={{ backgroundColor: theme.colors.background }}
-        contentContainerStyle={{ padding: theme.spacing.xl, paddingTop: theme.spacing.lg, paddingBottom: insets.bottom + theme.spacing.xl }}
+        contentContainerStyle={{ padding: theme.spacing.xl, paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.lg, paddingBottom: insets.bottom + theme.spacing.xl }}
       >
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
           <ScreenHeader title={t("export.title")} />

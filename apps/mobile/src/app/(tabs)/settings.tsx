@@ -209,7 +209,7 @@ export default function SettingsScreen() {
             value={t("settings.monthStartValue", { n: monthStart })}
             onPress={() => setSheet("monthStart")}
             info="payCycle"
-            infoExample={payCycleExample(today, monthStart, i18n.language)}
+            infoExample={`${t("guide.thisMonth")}: ${payCycleExample(today, monthStart, i18n.language)}`}
           />
           <Row label={t("settings.categories")} value="" onPress={() => router.push("/categories" as unknown as Href)} />
           <Row label={t("recurring.title")} value="" onPress={() => router.push("/recurring" as unknown as Href)} />

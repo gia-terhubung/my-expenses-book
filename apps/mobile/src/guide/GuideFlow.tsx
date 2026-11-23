@@ -108,6 +108,7 @@ export function GuideFlow({ mode, onClose }: Props) {
   let explain: ReactNode;
   let control: ReactNode = null;
   let controlScrolls = false;
+  let controlFixed = false;
   let foot: ReactNode;
 
   switch (step) {
@@ -167,11 +168,17 @@ export function GuideFlow({ mode, onClose }: Props) {
       explain = (
         <>
           <Text style={muted}>{t("info.payCycle.summary")}</Text>
-          <ExampleCard testID="guide-pay-example" label={t("guide.thisMonth")} value={payCycleExample(today, payDay, locale)} />
           <InfoText topic="payCycle" />
         </>
       );
-      control = <MonthStartPicker value={payDay} onChange={(d) => prefs.set("monthStartDay", d)} />;
+      // The example sits right above the grid: tap a day, see the range change next to it.
+      control = (
+        <View style={{ gap: 12 }}>
+          <ExampleCard testID="guide-pay-example" label={t("guide.thisMonth")} value={payCycleExample(today, payDay, locale)} />
+          <MonthStartPicker value={payDay} onChange={(d) => prefs.set("monthStartDay", d)} />
+        </View>
+      );
+      controlFixed = true;
       foot = footer(() => {
         prefs.set("monthStartDay", payDay);
         go(nextStep(step));
@@ -181,12 +188,14 @@ export function GuideFlow({ mode, onClose }: Props) {
       title = t("onboarding.lockTitle");
       explain = <Text style={muted}>{t("onboarding.lockHint")}</Text>;
       control = <LockToggle label={t("onboarding.lockEnable")} value={lockEnabled} onChange={(v) => prefs.set("lockEnabled", v)} />;
+      controlFixed = true;
       foot = footer(() => go(nextStep(step)), lockEnabled ? t("common.next") : t("onboarding.lockSkip"), lockEnabled);
       break;
     default:
       title = t("onboarding.languageTitle");
       explain = <Text style={muted}>{t("onboarding.welcome")}</Text>;
       control = <LanguagePicker value={language} onChange={(l) => prefs.set("language", l)} />;
+      controlFixed = true;
       foot = footer(() => {
         if (!replay) prefs.set("language", language);
         go(nextStep(step));
@@ -202,6 +211,7 @@ export function GuideFlow({ mode, onClose }: Props) {
         explain={explain}
         control={control}
         controlScrolls={controlScrolls}
+        controlFixed={controlFixed}
         footer={foot}
         onClose={replay ? onClose : undefined}
       />

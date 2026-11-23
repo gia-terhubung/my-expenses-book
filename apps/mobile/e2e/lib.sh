@@ -214,7 +214,18 @@ _clear_field() {
 # Foldables: posture closed|open (iPhone Duo hinge via AXe).
 _posture() {
   case "$E2E_PLATFORM" in
-    ios) "$AXE" hinge set "$1" --udid "$UDID" >/dev/null ;;
+    ios)
+      # The simulator can report "screens were still changing" mid-fold: read again, up to 3 times.
+      local try
+      for try in 1 2 3; do
+        "$AXE" hinge set "$1" --timeout 15 --udid "$UDID" >/dev/null 2>&1 && return 0
+        # The hinge itself usually got there; only the settle check timed out.
+        "$AXE" hinge read --udid "$UDID" 2>/dev/null | grep -qi "$1" && { sleep 2; return 0; }
+        sleep 2
+      done
+      echo "hinge did not reach $1: $("$AXE" hinge read --udid "$UDID" 2>&1)" >&2
+      return 1
+      ;;
     *) _unsupported ;;
   esac
 }
@@ -656,7 +667,7 @@ restore_app_data() {
 }
 
 # Fresh app on Home: wipe data, launch (the dev client loads the bundle from Metro), finish
-# onboarding with English, USD and no app lock.
+# onboarding with English, USD, default tax year and pay cycle, no app lock, cards skipped.
 e2e_fresh() {
   reset_app_data
   _launch
@@ -681,7 +692,15 @@ e2e_fresh() {
   _dismiss_keyboard # it can cover Next
   tap "USD"
   tap "Next"
+  # Guide steps added 2026-11-23: tax year (regional default kept), pay cycle (Day 1 kept),
+  # app lock, then the how-it-works cards.
+  wait_for "When does your tax year start?" || fail "no tax year step"
+  tap "Next"
+  wait_for "When does your month start?" || fail "no pay cycle step"
+  tap "Next"
   tap "Not now"
+  wait_for "Add receipts" || fail "no how-it-works cards"
+  tap "Skip"
   assert_see "No receipts yet"
 }
 

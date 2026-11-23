@@ -19,6 +19,11 @@ type Props = {
   control?: ReactNode;
   /** True when the control scrolls itself (a list); otherwise the pane scrolls it. */
   controlScrolls?: boolean;
+  /**
+   * A short control that must stay whole (the day grid): in one column it keeps its height and
+   * the explanation scrolls in what is left. Not in short windows, where the title comes first.
+   */
+  controlFixed?: boolean;
   footer: ReactNode;
   /** Replay only: the Close button. */
   onClose?: () => void;
@@ -29,7 +34,7 @@ type Props = {
  * rotation never remounts the picker (selection and search text survive). In split mode each pane
  * is half the window, so the gutter sits on the fold of the open Duo / Fold.
  */
-export function GuideShell({ mode, dots, title, explain, control, controlScrolls = false, footer, onClose }: Props) {
+export function GuideShell({ mode, dots, title, explain, control, controlScrolls = false, controlFixed = false, footer, onClose }: Props) {
   const { t } = useTranslation();
   const { colors, type, spacing, size } = useTheme();
   const insets = useSafeAreaInsets();
@@ -40,14 +45,27 @@ export function GuideShell({ mode, dots, title, explain, control, controlScrolls
   const pad = short ? spacing.lg : spacing.xl;
 
   const column = { width: "100%", maxWidth: 560, alignSelf: "center" } as const;
-  const leftPane = split ? { width: width / 2 - side.left, flexGrow: 0, flexShrink: 0 } : { ...column, flexGrow: 0, flexShrink: 1, maxHeight: short ? "40%" : "60%" };
-  const rightPane = split ? { width: width / 2 - side.right, flexGrow: 0, flexShrink: 0 } : { ...column, flexGrow: 1, flexShrink: 1 };
+  const fixed = controlFixed && mode === "column";
+  const leftPane = split
+    ? { width: width / 2 - side.left, flexGrow: 0, flexShrink: 0 }
+    : fixed
+      ? { ...column, flexGrow: 1, flexShrink: 1 }
+      : { ...column, flexGrow: 0, flexShrink: 1, maxHeight: short ? "40%" : "60%" };
+  const rightPane = split
+    ? { width: width / 2 - side.right, flexGrow: 0, flexShrink: 0 }
+    : fixed
+      ? { ...column, flexGrow: 0, flexShrink: 0 }
+      : { ...column, flexGrow: 1, flexShrink: 1 };
 
   const label = t("guide.stepOf", { n: dots.n, total: dots.total });
+  // Same element per step in every mode: a fixed control only changes style (sized to its content
+  // in one column, scrolling in a short window), so rotation never remounts it.
   const Control = controlScrolls ? View : ScrollView;
   const controlProps = controlScrolls
     ? { style: { flex: 1 } }
-    : { style: { flex: 1 }, contentContainerStyle: { paddingBottom: spacing.md }, keyboardShouldPersistTaps: "handled" as const };
+    : fixed
+      ? { testID: "guide-control-scroll", style: { flexGrow: 0 }, keyboardShouldPersistTaps: "handled" as const }
+    : { testID: "guide-control-scroll", style: { flex: 1 }, contentContainerStyle: { paddingBottom: spacing.md }, keyboardShouldPersistTaps: "handled" as const };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingBottom: insets.bottom + (short ? spacing.sm : spacing.lg) }}>
