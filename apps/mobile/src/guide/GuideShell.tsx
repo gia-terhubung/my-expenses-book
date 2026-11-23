@@ -49,12 +49,12 @@ export function GuideShell({ mode, dots, title, explain, control, controlScrolls
   const leftPane = split
     ? { width: width / 2 - side.left, flexGrow: 0, flexShrink: 0 }
     : fixed
-      ? { ...column, flexGrow: 1, flexShrink: 1 }
+      ? { ...column, flexGrow: 0, flexShrink: 1 }
       : { ...column, flexGrow: 0, flexShrink: 1, maxHeight: short ? "40%" : "60%" };
   const rightPane = split
     ? { width: width / 2 - side.right, flexGrow: 0, flexShrink: 0 }
     : fixed
-      ? { ...column, flexGrow: 0, flexShrink: 0 }
+      ? { ...column, flexGrow: 1, flexShrink: 0 }
       : { ...column, flexGrow: 1, flexShrink: 1 };
 
   const label = t("guide.stepOf", { n: dots.n, total: dots.total });
@@ -124,6 +124,8 @@ export function GuideShell({ mode, dots, title, explain, control, controlScrolls
           ]}
         >
           <Control {...controlProps}>{control}</Control>
+          {/* Spare room sits above the buttons, so a short control follows its text directly. */}
+          <View testID="guide-footer-spacer" style={{ flexGrow: fixed ? 1 : 0 }} />
           {footer}
         </View>
       </View>

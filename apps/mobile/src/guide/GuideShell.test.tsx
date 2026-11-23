@@ -25,12 +25,16 @@ const shell = (mode: "split" | "column" | "short", controlFixed: boolean) => (
 const flat = (id: string) => StyleSheet.flatten(screen.getByTestId(id).props.style);
 
 describe("GuideShell", () => {
-  it("column + fixed control: the control keeps its full height, the explanation takes the rest and scrolls", async () => {
+  it("column + fixed control: explanation and control stack directly; spare room goes above the buttons", async () => {
     await render(shell("column", true));
-    expect(flat("guide-control").flexShrink).toBe(0);
-    expect(flat("guide-control").flexGrow).toBe(0);
-    expect(flat("guide-explain").flexGrow).toBe(1);
+    // The explanation is only as tall as its text (and shrinks to scroll when space runs out)...
+    expect(flat("guide-explain").flexGrow).toBe(0);
+    expect(flat("guide-explain").flexShrink).toBe(1);
     expect(flat("guide-explain").maxHeight).toBeUndefined();
+    // ...the control pane is never squeezed, and its spacer pushes the buttons to the bottom.
+    expect(flat("guide-control").flexShrink).toBe(0);
+    expect(flat("guide-control").flexGrow).toBe(1);
+    expect(flat("guide-footer-spacer").flexGrow).toBe(1);
   });
 
   it("column + scrolling control (a list): the explanation is capped and the list fills the rest", async () => {
