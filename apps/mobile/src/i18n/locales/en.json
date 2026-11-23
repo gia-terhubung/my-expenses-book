@@ -23,7 +23,6 @@
     "welcome": "Welcome to My Expenses Book",
     "languageTitle": "Choose your language",
     "currencyTitle": "Choose your home currency",
-    "currencyHint": "Totals and reports use this currency. You can change it later.",
     "lockTitle": "Protect your receipts",
     "lockHint": "Require Face ID, fingerprint or your device passcode to open the app.",
     "lockEnable": "Turn on app lock",

@@ -49,10 +49,10 @@ it("closes an open picker sheet when the app locks, and does not reopen it", asy
   expect(screen.queryByText("Done")).toBeNull();
 });
 
-it("Month starts on row shows the day and opens the day grid with the helper text", async () => {
+it("Pay cycle starts on row shows the day and opens the day grid with the helper text", async () => {
   await render(<Host />);
-  expect(screen.getByLabelText("Month starts on, Day 25")).toBeTruthy();
-  await fireEvent.press(screen.getByLabelText("Month starts on, Day 25"));
+  expect(screen.getByLabelText("Pay cycle starts on, Day 25")).toBeTruthy();
+  await fireEvent.press(screen.getByLabelText("Pay cycle starts on, Day 25"));
   expect(screen.getAllByLabelText(/^Day \d+$/)).toHaveLength(28);
   expect(screen.getByLabelText("Day 25").props.accessibilityState.checked).toBe(true);
   expect(screen.getByText("Used by Home and Stats. Exports and search use calendar months.")).toBeTruthy();

@@ -1,4 +1,4 @@
-import { payCycleExample, taxYearExample } from "./examples";
+import { currencyExampleHome, EXAMPLE_RATES_PER_EUR, payCycleExample, taxYearExample } from "./examples";
 
 const dm = new Intl.DateTimeFormat("en", { day: "numeric", month: "short", timeZone: "UTC" });
 const dmy = new Intl.DateTimeFormat("en", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
@@ -26,5 +26,17 @@ describe("taxYearExample", () => {
   });
   it("January start: label 2026", () => {
     expect(taxYearExample("2026-11-23", 1, "en").label).toBe("2026");
+  });
+});
+
+describe("currencyExampleHome", () => {
+  it("formats €12 in the home currency at the example rate", () => {
+    const { formatMoney } = jest.requireActual("@/money/money");
+    expect(currencyExampleHome("IDR", "en")).toBe(formatMoney(Math.round(1200 * EXAMPLE_RATES_PER_EUR.IDR), "IDR", "en"));
+    expect(currencyExampleHome("USD", "en")).toBe(formatMoney(Math.round(1200 * EXAMPLE_RATES_PER_EUR.USD), "USD", "en"));
+  });
+  it("has no example when home is EUR or not in the table", () => {
+    expect(currencyExampleHome("EUR", "en")).toBeNull();
+    expect(currencyExampleHome("XAF", "en")).toBeNull();
   });
 });

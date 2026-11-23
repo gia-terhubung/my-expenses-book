@@ -1,4 +1,6 @@
 // Live example text for the guide and the (i) sheets. Dates are local "YYYY-MM-DD".
+import { currencyExponent } from "@/money/currencies";
+import { formatMoney } from "@/money/money";
 import { payPeriodOf } from "@/stats/payPeriod";
 import { taxYearLabel, taxYearOf, taxYearRange } from "@/taxYear/taxYear";
 
@@ -38,4 +40,34 @@ export function taxYearExample(today: string, startMonth: number, locale: string
   const year = taxYearOf(today, startMonth);
   const r = taxYearRange(year, startMonth);
   return { label: taxYearLabel(year, startMonth), range: formatDayRange(r.from, r.to, locale, true) };
+}
+
+/** Rounded illustrative rates (home units per 1 EUR) for the currency step's example only. */
+export const EXAMPLE_RATES_PER_EUR: Record<string, number> = {
+  IDR: 17000,
+  USD: 1.08,
+  GBP: 0.85,
+  BRL: 6.2,
+  MXN: 20,
+  ARS: 1000,
+  COP: 4500,
+  CLP: 1000,
+  PEN: 4,
+  AUD: 1.65,
+  CAD: 1.5,
+  SGD: 1.45,
+  MYR: 5,
+  JPY: 165,
+  INR: 92,
+  PHP: 62,
+  THB: 38,
+  CHF: 0.95,
+};
+
+/** About €12.00 in `home`, formatted; null when home is EUR or has no example rate. */
+export function currencyExampleHome(home: string, locale: string): string | null {
+  const rate = EXAMPLE_RATES_PER_EUR[home];
+  if (home === "EUR" || rate === undefined) return null;
+  const minor = Math.round(12 * rate * 10 ** currencyExponent(home));
+  return formatMoney(minor, home, locale);
 }

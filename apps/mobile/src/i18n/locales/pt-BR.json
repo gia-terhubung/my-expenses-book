@@ -23,7 +23,6 @@
     "welcome": "Boas-vindas ao My Expenses Book",
     "languageTitle": "Escolha seu idioma",
     "currencyTitle": "Escolha sua moeda principal",
-    "currencyHint": "Os totais e relatórios usam esta moeda. Você pode alterá-la depois.",
     "lockTitle": "Proteja seus recibos",
     "lockHint": "Exija Face ID, impressão digital ou a senha do aparelho para abrir o app.",
     "lockEnable": "Ativar bloqueio do app",

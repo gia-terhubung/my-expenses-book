@@ -23,7 +23,6 @@
     "welcome": "Selamat datang di My Expenses Book",
     "languageTitle": "Pilih bahasa Anda",
     "currencyTitle": "Pilih mata uang utama Anda",
-    "currencyHint": "Total dan laporan memakai mata uang ini. Anda dapat mengubahnya nanti.",
     "lockTitle": "Lindungi struk Anda",
     "lockHint": "Wajibkan Face ID, sidik jari, atau kode sandi perangkat untuk membuka aplikasi.",
     "lockEnable": "Aktifkan kunci aplikasi",
