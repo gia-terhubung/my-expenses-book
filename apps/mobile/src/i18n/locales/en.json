@@ -48,7 +48,7 @@
     "lockTimeoutMinutes_one": "{{count}} minute",
     "lockTimeoutMinutes_other": "{{count}} minutes",
     "taxYearStart": "Tax year starts in",
-    "monthStart": "Month starts on",
+    "monthStart": "Pay cycle starts on",
     "monthStartValue": "Day {{n}}",
     "monthStartHelp": "Used by Home and Stats. Exports and search use calendar months.",
     "backup": "Backup",
@@ -66,7 +66,9 @@
     "storageValue_one": "{{count}} receipt · {{size}}",
     "storageValue_other": "{{count}} receipts · {{size}}",
     "errorLog": "Error log",
-    "support": "Support"
+    "support": "Support",
+    "help": "Help",
+    "showGuide": "Show guide"
   },
   "dbError": {
     "title": "Your data can't be unlocked",
@@ -503,6 +505,69 @@
     "errors": {
       "endBeforeStart": "The end date is before the start date. Pick a later date or remove it.",
       "dayInvalid": "Choose a day from 1 to 28, or Last day."
+    }
+  },
+  "guide": {
+    "stepOf": "Step {{n}} of {{total}}",
+    "close": "Close guide",
+    "skip": "Skip",
+    "finish": "Start using the app",
+    "taxYearTitle": "When does your tax year start?",
+    "payCycleTitle": "When does your month start?",
+    "thisMonth": "This month",
+    "taxYearExample": "Tax year {{label}}",
+    "currencyExample": "A {{foreign}} receipt shows as about {{home}} (example rate)",
+    "cards": {
+      "scan": {
+        "title": "Add receipts",
+        "body": "Tap + to scan a paper receipt, import a photo, or add one by hand. The app reads the merchant, date and total for you."
+      },
+      "review": {
+        "title": "Check and save",
+        "body": "Check what the app read, then save. A field marked \"Check this\" is one the app wasn't sure about."
+      },
+      "totals": {
+        "title": "See your totals",
+        "body": "Home shows this pay cycle and this tax year in your home currency. Tap the slip for statistics."
+      }
+    },
+    "bar": {
+      "text": "New: a short guide to pay cycle and tax year.",
+      "open": "Show guide",
+      "dismiss": "Dismiss"
+    }
+  },
+  "info": {
+    "about": "About {{topic}}",
+    "payCycle": {
+      "title": "Pay cycle",
+      "summary": "Pick the day you get paid. \"This month\" on Home then runs from payday to the day before the next payday. Pick 1 to use calendar months.",
+      "body": "Only days 1–28, because every month has them, so your cycle never skips in February. Paid at the very end of the month? Pick 1.\n\nUsed by Home and Statistics. Exports and search use calendar months."
+    },
+    "taxYear": {
+      "title": "Tax year",
+      "summary": "The month your tax year starts. It sets the \"Tax year\" total on Home, the tax-year folders and the export presets.",
+      "body": "Most countries start in January. Some start in April or July. Check with your tax office if unsure."
+    },
+    "homeCurrency": {
+      "title": "Home currency",
+      "summary": "Totals and reports use this currency. Receipts in other currencies are converted.",
+      "body": "Conversion uses the exchange rate of the receipt's date, downloaded when you're online. Until a rate is available, a receipt is counted as \"not converted\"."
+    },
+    "lockAfter": {
+      "title": "Lock after",
+      "summary": "How long the app can be in the background before it asks you to unlock again.",
+      "body": "\"Immediately\" is the safest. Longer times are handy when you switch apps often, for example to copy a reference number."
+    },
+    "unconverted": {
+      "title": "Not converted",
+      "summary": "Receipts in another currency that don't have an exchange rate yet. They're left out of totals so the totals stay accurate.",
+      "body": "Rates download automatically when you're online. You can also enter a rate yourself when you edit the receipt."
+    },
+    "pace": {
+      "title": "Pace",
+      "summary": "Compares what you've spent so far with the same number of days in the last period.",
+      "body": "\"↑ 12% vs October to day 14\" means you've spent 12% more by day 14 than you had by day 14 of October."
     }
   }
 }

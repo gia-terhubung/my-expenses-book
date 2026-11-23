@@ -28,7 +28,7 @@ describe("locales", () => {
   });
   it("covers the default categories and required namespaces", () => {
     for (const k of CATEGORY_KEYS) expect(enFlat[`categories.${k}`]).toBeDefined();
-    for (const ns of ["common", "tabs", "onboarding", "lock", "settings", "dbError"]) {
+    for (const ns of ["common", "tabs", "onboarding", "lock", "settings", "dbError", "guide", "info"]) {
       expect(Object.keys(enFlat).some((k) => k.startsWith(`${ns}.`))).toBe(true);
     }
   });

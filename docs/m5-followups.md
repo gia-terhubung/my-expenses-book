@@ -62,3 +62,5 @@ v1 ships option A: the Statistik "Belum dikonversi" card links to Search filtere
 - Receipts unconverted because they were saved under an earlier home currency (`homeCurrencyAtSave != home`) are a separate group: offer "Konversi ulang" (run `reconvertAll` for the current home) instead of a rate input; say plainly when no rate is available offline.
 - Entry points: the Statistik card, the slip's "N belum dikonversi" note, and the Search filter's empty/edit state.
 - Open questions for then: one rate per currency vs per month (trips span months), and whether a bulk manual rate should later be replaced by an exact-date table rate (today manual rates are kept).
+
+- guide/info copy (2026-11-23): id needs owner review; es and pt-BR need a native-speaker check before release.

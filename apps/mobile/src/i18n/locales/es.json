@@ -48,7 +48,7 @@
     "lockTimeoutMinutes_one": "{{count}} minuto",
     "lockTimeoutMinutes_other": "{{count}} minutos",
     "taxYearStart": "El año fiscal comienza en",
-    "monthStart": "El mes comienza el día",
+    "monthStart": "El ciclo de pago empieza el",
     "monthStartValue": "Día {{n}}",
     "monthStartHelp": "Se usa en Inicio y Estadísticas. La exportación y la búsqueda usan meses naturales.",
     "backup": "Copia de seguridad",
@@ -66,7 +66,9 @@
     "storageValue_one": "{{count}} recibo · {{size}}",
     "storageValue_other": "{{count}} recibos · {{size}}",
     "errorLog": "Registro de errores",
-    "support": "Soporte"
+    "support": "Soporte",
+    "help": "Ayuda",
+    "showGuide": "Ver guía"
   },
   "dbError": {
     "title": "No se pueden desbloquear tus datos",
@@ -503,6 +505,69 @@
     "errors": {
       "endBeforeStart": "La fecha de fin es anterior a la de inicio. Elige una fecha posterior o quítala.",
       "dayInvalid": "Elige un día del 1 al 28 o Último día."
+    }
+  },
+  "guide": {
+    "stepOf": "Paso {{n}} de {{total}}",
+    "close": "Cerrar guía",
+    "skip": "Omitir",
+    "finish": "Empezar a usar la app",
+    "taxYearTitle": "¿Cuándo empieza tu año fiscal?",
+    "payCycleTitle": "¿Cuándo empieza tu mes?",
+    "thisMonth": "Este mes",
+    "taxYearExample": "Año fiscal {{label}}",
+    "currencyExample": "Un recibo de {{foreign}} se muestra como unos {{home}} (tasa de ejemplo)",
+    "cards": {
+      "scan": {
+        "title": "Añade recibos",
+        "body": "Toca + para escanear un recibo en papel, importar una foto o añadirlo a mano. La app lee el comercio, la fecha y el total por ti."
+      },
+      "review": {
+        "title": "Revisa y guarda",
+        "body": "Revisa lo que leyó la app y guarda. Un campo marcado con \"Revisa esto\" es uno del que la app no estaba segura."
+      },
+      "totals": {
+        "title": "Mira tus totales",
+        "body": "Inicio muestra este ciclo de pago y este año fiscal en tu moneda principal. Toca el recibo verde para ver estadísticas."
+      }
+    },
+    "bar": {
+      "text": "Nuevo: una guía breve sobre el ciclo de pago y el año fiscal.",
+      "open": "Ver guía",
+      "dismiss": "Descartar"
+    }
+  },
+  "info": {
+    "about": "Acerca de {{topic}}",
+    "payCycle": {
+      "title": "Ciclo de pago",
+      "summary": "Elige el día en que cobras. \"Este mes\" en Inicio irá desde el día de cobro hasta el día anterior al siguiente. Elige 1 para usar meses naturales.",
+      "body": "Solo los días 1–28, porque todos los meses los tienen, así tu ciclo nunca se salta febrero. ¿Cobras al final del mes? Elige 1.\n\nLo usan Inicio y Estadísticas. Las exportaciones y la búsqueda usan meses naturales."
+    },
+    "taxYear": {
+      "title": "Año fiscal",
+      "summary": "El mes en que empieza tu año fiscal. Define el total \"Año fiscal\" en Inicio, las carpetas por año fiscal y las opciones de exportación.",
+      "body": "La mayoría de los países empiezan en enero. Algunos empiezan en abril o julio. Consulta con tu oficina tributaria si tienes dudas."
+    },
+    "homeCurrency": {
+      "title": "Moneda principal",
+      "summary": "Los totales y los informes usan esta moneda. Los recibos en otras monedas se convierten.",
+      "body": "La conversión usa la tasa de cambio de la fecha del recibo, descargada cuando tienes conexión. Hasta que haya una tasa, el recibo cuenta como \"sin convertir\"."
+    },
+    "lockAfter": {
+      "title": "Bloquear después de",
+      "summary": "Cuánto tiempo puede estar la app en segundo plano antes de pedirte que la desbloquees.",
+      "body": "\"Inmediatamente\" es lo más seguro. Los tiempos más largos son útiles si cambias de app a menudo, por ejemplo para copiar un número de referencia."
+    },
+    "unconverted": {
+      "title": "Sin convertir",
+      "summary": "Recibos en otra moneda que aún no tienen tasa de cambio. Se dejan fuera de los totales para que sean exactos.",
+      "body": "Las tasas se descargan automáticamente cuando tienes conexión. También puedes introducir una tasa al editar el recibo."
+    },
+    "pace": {
+      "title": "Ritmo",
+      "summary": "Compara lo que llevas gastado con el mismo número de días del periodo anterior.",
+      "body": "\"↑ 12% vs octubre hasta el día 14\" significa que hasta el día 14 has gastado un 12% más que hasta el día 14 de octubre."
     }
   }
 }

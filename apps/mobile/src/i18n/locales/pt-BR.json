@@ -48,7 +48,7 @@
     "lockTimeoutMinutes_one": "{{count}} minuto",
     "lockTimeoutMinutes_other": "{{count}} minutos",
     "taxYearStart": "O ano fiscal começa em",
-    "monthStart": "O mês começa no dia",
+    "monthStart": "O ciclo de pagamento começa no dia",
     "monthStartValue": "Dia {{n}}",
     "monthStartHelp": "Usado em Início e Estatísticas. Exportação e busca usam meses do calendário.",
     "backup": "Backup",
@@ -66,7 +66,9 @@
     "storageValue_one": "{{count}} recibo · {{size}}",
     "storageValue_other": "{{count}} recibos · {{size}}",
     "errorLog": "Registro de erros",
-    "support": "Suporte"
+    "support": "Suporte",
+    "help": "Ajuda",
+    "showGuide": "Ver guia"
   },
   "dbError": {
     "title": "Não foi possível desbloquear seus dados",
@@ -503,6 +505,69 @@
     "errors": {
       "endBeforeStart": "A data de término é anterior à de início. Escolha uma data posterior ou remova-a.",
       "dayInvalid": "Escolha um dia de 1 a 28 ou Último dia."
+    }
+  },
+  "guide": {
+    "stepOf": "Etapa {{n}} de {{total}}",
+    "close": "Fechar guia",
+    "skip": "Pular",
+    "finish": "Começar a usar o app",
+    "taxYearTitle": "Quando começa o seu ano fiscal?",
+    "payCycleTitle": "Quando começa o seu mês?",
+    "thisMonth": "Este mês",
+    "taxYearExample": "Ano fiscal {{label}}",
+    "currencyExample": "Um recibo de {{foreign}} aparece como cerca de {{home}} (taxa de exemplo)",
+    "cards": {
+      "scan": {
+        "title": "Adicione recibos",
+        "body": "Toque em + para digitalizar um recibo de papel, importar uma foto ou adicionar à mão. O app lê o estabelecimento, a data e o total para você."
+      },
+      "review": {
+        "title": "Confira e salve",
+        "body": "Confira o que o app leu e salve. Um campo marcado com \"Confira\" é um em que o app não tinha certeza."
+      },
+      "totals": {
+        "title": "Veja seus totais",
+        "body": "O Início mostra este ciclo de pagamento e este ano fiscal na sua moeda principal. Toque no recibo verde para ver estatísticas."
+      }
+    },
+    "bar": {
+      "text": "Novo: um guia rápido sobre ciclo de pagamento e ano fiscal.",
+      "open": "Ver guia",
+      "dismiss": "Dispensar"
+    }
+  },
+  "info": {
+    "about": "Sobre {{topic}}",
+    "payCycle": {
+      "title": "Ciclo de pagamento",
+      "summary": "Escolha o dia em que você recebe. \"Este mês\" no Início vai do dia do pagamento até a véspera do próximo. Escolha 1 para usar meses do calendário.",
+      "body": "Só os dias 1–28, porque todo mês tem esses dias, então seu ciclo nunca pula fevereiro. Recebe no fim do mês? Escolha 1.\n\nUsado pelo Início e pelas Estatísticas. Exportações e busca usam meses do calendário."
+    },
+    "taxYear": {
+      "title": "Ano fiscal",
+      "summary": "O mês em que seu ano fiscal começa. Define o total \"Ano fiscal\" no Início, as pastas por ano fiscal e as opções de exportação.",
+      "body": "A maioria dos países começa em janeiro. Alguns começam em abril ou julho. Consulte a Receita se tiver dúvida."
+    },
+    "homeCurrency": {
+      "title": "Moeda principal",
+      "summary": "Totais e relatórios usam esta moeda. Recibos em outras moedas são convertidos.",
+      "body": "A conversão usa a taxa de câmbio da data do recibo, baixada quando você está on-line. Até haver uma taxa, o recibo conta como \"sem conversão\"."
+    },
+    "lockAfter": {
+      "title": "Bloquear após",
+      "summary": "Quanto tempo o app pode ficar em segundo plano antes de pedir para desbloquear de novo.",
+      "body": "\"Imediatamente\" é o mais seguro. Tempos maiores ajudam se você troca de app com frequência, por exemplo para copiar um número de referência."
+    },
+    "unconverted": {
+      "title": "Sem conversão",
+      "summary": "Recibos em outra moeda que ainda não têm taxa de câmbio. Ficam fora dos totais para que eles continuem exatos.",
+      "body": "As taxas são baixadas automaticamente quando você está on-line. Você também pode informar uma taxa ao editar o recibo."
+    },
+    "pace": {
+      "title": "Ritmo",
+      "summary": "Compara o que você gastou até agora com o mesmo número de dias do período anterior.",
+      "body": "\"↑ 12% vs outubro até o dia 14\" significa que até o dia 14 você gastou 12% a mais do que até o dia 14 de outubro."
     }
   }
 }

@@ -48,7 +48,7 @@
     "lockTimeoutMinutes_one": "{{count}} menit",
     "lockTimeoutMinutes_other": "{{count}} menit",
     "taxYearStart": "Tahun pajak dimulai pada",
-    "monthStart": "Bulan dimulai tanggal",
+    "monthStart": "Siklus gaji dimulai tanggal",
     "monthStartValue": "Tanggal {{n}}",
     "monthStartHelp": "Dipakai di Beranda dan Statistik. Ekspor dan pencarian memakai bulan kalender.",
     "backup": "Cadangan",
@@ -66,7 +66,9 @@
     "storageValue_one": "{{count}} struk · {{size}}",
     "storageValue_other": "{{count}} struk · {{size}}",
     "errorLog": "Log galat",
-    "support": "Dukungan"
+    "support": "Dukungan",
+    "help": "Bantuan",
+    "showGuide": "Tampilkan panduan"
   },
   "dbError": {
     "title": "Data Anda tidak dapat dibuka",
@@ -503,6 +505,69 @@
     "errors": {
       "endBeforeStart": "Tanggal akhir sebelum tanggal mulai. Pilih tanggal yang lebih lambat atau hapus.",
       "dayInvalid": "Pilih tanggal 1 sampai 28, atau Hari terakhir."
+    }
+  },
+  "guide": {
+    "stepOf": "Langkah {{n}} dari {{total}}",
+    "close": "Tutup panduan",
+    "skip": "Lewati",
+    "finish": "Mulai pakai aplikasi",
+    "taxYearTitle": "Kapan tahun pajak Anda dimulai?",
+    "payCycleTitle": "Kapan bulan Anda dimulai?",
+    "thisMonth": "Bulan ini",
+    "taxYearExample": "Tahun pajak {{label}}",
+    "currencyExample": "Struk {{foreign}} tampil sekitar {{home}} (kurs contoh)",
+    "cards": {
+      "scan": {
+        "title": "Tambah struk",
+        "body": "Ketuk + untuk memindai struk kertas, mengimpor foto, atau menambah secara manual. Aplikasi membaca nama toko, tanggal, dan total untuk Anda."
+      },
+      "review": {
+        "title": "Periksa dan simpan",
+        "body": "Periksa hasil bacaan aplikasi, lalu simpan. Kolom bertanda \"Periksa ini\" adalah kolom yang aplikasi kurang yakin."
+      },
+      "totals": {
+        "title": "Lihat total Anda",
+        "body": "Beranda menampilkan siklus gaji dan tahun pajak ini dalam mata uang utama Anda. Ketuk struk hijau untuk melihat statistik."
+      }
+    },
+    "bar": {
+      "text": "Baru: panduan singkat tentang siklus gaji dan tahun pajak.",
+      "open": "Tampilkan panduan",
+      "dismiss": "Tutup"
+    }
+  },
+  "info": {
+    "about": "Tentang {{topic}}",
+    "payCycle": {
+      "title": "Siklus gaji",
+      "summary": "Pilih tanggal Anda gajian. \"Bulan ini\" di Beranda lalu berjalan dari hari gajian sampai sehari sebelum gajian berikutnya. Pilih 1 untuk memakai bulan kalender.",
+      "body": "Hanya tanggal 1–28, karena setiap bulan memilikinya, jadi siklus Anda tidak pernah terlewat di bulan Februari. Gajian di akhir bulan? Pilih 1.\n\nDipakai oleh Beranda dan Statistik. Ekspor dan pencarian memakai bulan kalender."
+    },
+    "taxYear": {
+      "title": "Tahun pajak",
+      "summary": "Bulan dimulainya tahun pajak Anda. Ini menentukan total \"Tahun pajak\" di Beranda, folder tahun pajak, dan pilihan ekspor.",
+      "body": "Sebagian besar negara mulai di bulan Januari. Ada yang mulai di April atau Juli. Tanyakan ke kantor pajak jika ragu."
+    },
+    "homeCurrency": {
+      "title": "Mata uang utama",
+      "summary": "Total dan laporan memakai mata uang ini. Struk dalam mata uang lain dikonversi.",
+      "body": "Konversi memakai kurs pada tanggal struk, diunduh saat Anda online. Sampai kurs tersedia, struk dihitung sebagai \"belum dikonversi\"."
+    },
+    "lockAfter": {
+      "title": "Kunci setelah",
+      "summary": "Berapa lama aplikasi boleh berada di latar belakang sebelum meminta Anda membuka kunci lagi.",
+      "body": "\"Segera\" adalah yang paling aman. Waktu lebih lama berguna jika Anda sering berpindah aplikasi, misalnya untuk menyalin nomor referensi."
+    },
+    "unconverted": {
+      "title": "Belum dikonversi",
+      "summary": "Struk dalam mata uang lain yang belum punya kurs. Struk ini tidak dihitung dalam total agar total tetap akurat.",
+      "body": "Kurs diunduh otomatis saat Anda online. Anda juga bisa memasukkan kurs sendiri saat mengedit struk."
+    },
+    "pace": {
+      "title": "Laju",
+      "summary": "Membandingkan pengeluaran Anda sejauh ini dengan jumlah hari yang sama pada periode sebelumnya.",
+      "body": "\"↑ 12% vs Oktober sampai hari ke-14\" berarti pengeluaran Anda sampai hari ke-14 lebih besar 12% dibanding sampai hari ke-14 bulan Oktober."
     }
   }
 }
