@@ -18,13 +18,13 @@ import {
   clampScale,
   DOUBLE_TAP_SCALE,
   fitSize,
-  MAX_SCALE,
+  panStep,
+  type PinchStart,
+  pinchStep,
   type Size,
   zoomAround,
 } from "./zoomMath";
 
-/** A pinch may undershoot to this while the fingers are down; it springs back to 1x on release. */
-const PINCH_FLOOR = 0.8;
 const A11Y_STEP = 1.5;
 const DURATION = 220;
 
@@ -47,7 +47,9 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
   const scale = useSharedValue(1);
   const tx = useSharedValue(0);
   const ty = useSharedValue(0);
-  const start = useSharedValue({ scale: 1, x: 0, y: 0 });
+  const start = useSharedValue<PinchStart>({ scale: 1, x: 0, y: 0, focalX: 0, focalY: 0, eScale: 1 });
+  // While a pinch runs it owns the offset (it carries the finger movement); pan yields.
+  const pinching = useSharedValue(false);
 
   const report = useCallback((s: number) => setPercent(Math.round(s * 100)), []);
 
@@ -78,23 +80,23 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
   };
 
   const pinch = usePinchGesture({
-    onActivate: () => {
+    onActivate: (e) => {
       "worklet";
-      start.set({ scale: scale.get(), x: tx.get(), y: ty.get() });
+      pinching.set(true);
+      start.set({ scale: scale.get(), x: tx.get(), y: ty.get(), focalX: e.focalX, focalY: e.focalY, eScale: e.scale });
     },
     onUpdate: (e) => {
       "worklet";
       const vp = { width: vpW.get(), height: vpH.get() };
       const fit = { width: fitW.get(), height: fitH.get() };
-      const s = Math.min(MAX_SCALE, Math.max(PINCH_FLOOR, start.get().scale * e.scale));
-      const raw = zoomAround(e.focalX, e.focalY, vp, start.get(), s);
-      const o = clampOffset(raw.x, raw.y, fit, vp, Math.max(1, s));
-      scale.set(s);
-      tx.set(o.x);
-      ty.set(o.y);
+      const next = pinchStep(start.get(), e.focalX, e.focalY, e.scale, vp, fit);
+      scale.set(next.scale);
+      tx.set(next.x);
+      ty.set(next.y);
     },
     onDeactivate: () => {
       "worklet";
+      pinching.set(false);
       const vp = { width: vpW.get(), height: vpH.get() };
       const fit = { width: fitW.get(), height: fitH.get() };
       const s = clampScale(scale.get());
@@ -107,10 +109,10 @@ export function ZoomableImage({ uri, contentSize }: { uri: string; contentSize: 
   const pan = usePanGesture({
     onUpdate: (e) => {
       "worklet";
-      if (scale.get() <= 1) return;
       const vp = { width: vpW.get(), height: vpH.get() };
       const fit = { width: fitW.get(), height: fitH.get() };
-      const o = clampOffset(tx.get() + e.changeX, ty.get() + e.changeY, fit, vp, scale.get());
+      const o = panStep(pinching.get(), scale.get(), tx.get(), ty.get(), e.changeX, e.changeY, vp, fit);
+      if (!o) return;
       tx.set(o.x);
       ty.set(o.y);
     },

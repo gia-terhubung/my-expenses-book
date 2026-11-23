@@ -1,4 +1,4 @@
-import { clampOffset, clampScale, fitSize, inlineCap, maxOffset, zoomAround } from "./zoomMath";
+import { clampOffset, clampScale, fitSize, inlineCap, maxOffset, panStep, pinchStep, zoomAround } from "./zoomMath";
 
 const vp = { width: 400, height: 800 };
 
@@ -45,5 +45,51 @@ describe("zoomMath", () => {
     expect(inlineCap(466)).toBe(256);
     expect(inlineCap(300)).toBe(240);
     expect(inlineCap(951)).toBe(523);
+  });
+});
+
+describe("pinchStep", () => {
+  const vp400 = { width: 400, height: 800 };
+  const start = { scale: 2, x: 0, y: 0, focalX: 200, focalY: 400, eScale: 1 };
+
+  it("moving the pinch centre at the same scale moves the photo with the fingers", () => {
+    // Review finding: with the start offset but the current focal point, the photo slid against the fingers.
+    expect(pinchStep(start, 250, 400, 1, vp400, vp400)).toEqual({ scale: 2, x: 50, y: 0 });
+  });
+
+  it("keeps the start focal point under the fingers while scaling", () => {
+    const s = { ...start, scale: 1, focalX: 300 };
+    expect(pinchStep(s, 300, 400, 2, vp400, vp400)).toEqual({ scale: 2, x: -100, y: 0 });
+  });
+
+  it("measures scale from activation, so a threshold-delayed start does not jump", () => {
+    const s = { ...start, scale: 1, eScale: 1.05 };
+    expect(pinchStep(s, 200, 400, 1.05, vp400, vp400).scale).toBe(1);
+  });
+
+  it("may undershoot to 0.8 while pinching, offsets clamped as at 1x", () => {
+    const s = { ...start, scale: 1 };
+    expect(pinchStep(s, 200, 400, 0.5, vp400, vp400)).toEqual({ scale: 0.8, x: 0, y: 0 });
+  });
+
+  it("never passes 5x", () => {
+    expect(pinchStep(start, 200, 400, 10, vp400, vp400).scale).toBe(5);
+  });
+});
+
+describe("panStep", () => {
+  const vp400 = { width: 400, height: 800 };
+
+  it("moves the zoomed photo by the finger delta, clamped", () => {
+    expect(panStep(false, 2, 0, 0, 30, -500, vp400, vp400)).toEqual({ x: 30, y: -400 });
+  });
+
+  it("does nothing at 1x", () => {
+    expect(panStep(false, 1, 0, 0, 30, 30, vp400, vp400)).toBeNull();
+  });
+
+  it("yields to an active pinch, which already carries the finger movement", () => {
+    // Review finding: pinch and pan both wrote the offset each frame and fought.
+    expect(panStep(true, 2, 0, 0, 30, 30, vp400, vp400)).toBeNull();
   });
 });

@@ -69,54 +69,54 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
   const side = useSideInsets();
   const uris = useViewUris(pages);
   const [full, setFull] = useState<number | null>(null);
-  // Measured width per page: the inline height is set from it (see `page`).
-  const [widths, setWidths] = useState<Record<string, number>>({});
+  // Measured box per page: only decides the torn edge, never the size (see `page`).
+  const [boxes, setBoxes] = useState<Record<string, { width: number; height: number }>>({});
   const { height: windowHeight } = useWindowDimensions();
   const cap = inlineCap(windowHeight);
+
+  const content = (uri: string | null | "error" | undefined) =>
+    uri === "error" ? (
+      <Text style={[theme.type.body, { color: theme.colors.textMuted, padding: theme.spacing.lg }]}>{t("review.photoUnavailable")}</Text>
+    ) : uri ? (
+      // No disk cache: the only plaintext copy stays in cache/view/ (purged on background).
+      <Image testID="inline-photo" source={{ uri }} cachePolicy="none" contentFit="contain" style={{ width: "100%", height: "100%" }} />
+    ) : null;
 
   const page = (p: ReceiptPage, i: number) => {
     const uri = uris[i];
     const aspectRatio = p.width && p.height ? p.width / p.height : 3 / 4;
-    const width = widths[p.id];
-    const natural = width ? width / aspectRatio : null;
-    // Cut when the full-width page would be taller than the cap (1 pt rounding slack).
-    const cropped = !fill && natural !== null && natural > cap + 1;
+    const box = boxes[p.id];
+    // Cut when the full-width page is taller than the box the cap left it (1 pt rounding slack).
+    const cropped = !fill && !!box && box.width / aspectRatio > box.height + 1;
     const ready = !!uri && uri !== "error";
     return (
       <Pressable
         key={p.id}
         onLayout={(e) => {
-          const w = e.nativeEvent.layout.width;
-          setWidths((m) => (m[p.id] === w ? m : { ...m, [p.id]: w }));
+          const { width, height } = e.nativeEvent.layout;
+          setBoxes((m) => (m[p.id]?.width === width && m[p.id]?.height === height ? m : { ...m, [p.id]: { width, height } }));
         }}
         accessibilityRole="imagebutton"
         accessibilityLabel={pages.length > 1 ? `${t("review.openPhoto")} ${t("review.pageOf", { current: i + 1, total: pages.length })}` : t("review.openPhoto")}
         disabled={!uri || uri === "error"}
         onPress={() => setFull(i)}
         style={[
-          { backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, overflow: "hidden", alignItems: "center", justifyContent: "center" },
+          { backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, overflow: "hidden" },
           fill
-            ? { flex: 1, minHeight: 240 }
-            : natural === null
-              ? { width: "100%", aspectRatio }
-              : // Height set outright: aspectRatio + maxHeight let Yoga shrink the width to fit the cap.
-                { width: "100%", height: Math.min(natural, cap) },
+            ? { flex: 1, minHeight: 240, alignItems: "center", justifyContent: "center" }
+            : // The box clips at the cap and the page inside keeps full width at its own shape, so the
+              // top shows. No measured size: Fabric may skip onLayout on a Duo unfold (see SlipEdge),
+              // and aspectRatio + maxHeight on one node let Yoga shrink the width instead.
+              { width: "100%", maxHeight: cap },
         ]}
       >
-        {uri === "error" ? (
-          <Text style={[theme.type.body, { color: theme.colors.textMuted, padding: theme.spacing.lg }]}>{t("review.photoUnavailable")}</Text>
-        ) : uri ? (
-          // No disk cache: the only plaintext copy stays in cache/view/ (purged on background).
-          <Image
-            testID="inline-photo"
-            source={{ uri }}
-            cachePolicy="none"
-            // Inline: cover + top = the whole page when it fits, its top when the cap cuts it.
-            contentFit={fill ? "contain" : "cover"}
-            contentPosition="top"
-            style={{ width: "100%", height: "100%" }}
-          />
-        ) : null}
+        {fill ? (
+          content(uri)
+        ) : (
+          <View testID="inline-page" style={{ width: "100%", aspectRatio, alignItems: "center", justifyContent: "center" }}>
+            {content(uri)}
+          </View>
+        )}
         {cropped && ready ? <SlipEdge color={theme.colors.background} /> : null}
         {ready ? (
           <View

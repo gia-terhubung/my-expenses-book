@@ -45,29 +45,24 @@ async function layout(width: number, height: number) {
 const cap = inlineCap(Dimensions.get("window").height);
 
 describe("PageViewer inline", () => {
-  it("fills the width and caps the height at 55% of the window", async () => {
+  it("fills the width and caps the height at 55% of the window, without waiting for layout", async () => {
     await render(<PageViewer pages={[page()]} />);
-    // Before the width is known: full width at the page's own shape.
-    expect(StyleSheet.flatten(screen.getByRole("imagebutton").props.style)).toMatchObject({ width: "100%", aspectRatio: 1000 / 3000 });
-    await layout(400, 1200);
-    const style = StyleSheet.flatten(screen.getByRole("imagebutton").props.style);
-    // Device bug (iPhone Duo): aspectRatio + maxHeight let Yoga shrink the width to fit the cap.
-    // Once measured, the height is set outright and the width stays 100%.
-    expect(style).toMatchObject({ width: "100%", height: cap });
-    expect(style.aspectRatio).toBeUndefined();
-    expect(style.maxHeight).toBeUndefined();
+    // Review finding: a measured height went stale when Fabric skipped onLayout on a Duo unfold.
+    // The box clips at the cap; the page inside keeps full width at its own shape.
+    const box = StyleSheet.flatten(screen.getByRole("imagebutton").props.style);
+    expect(box).toMatchObject({ width: "100%", maxHeight: cap, overflow: "hidden" });
+    expect(box.aspectRatio).toBeUndefined();
+    expect(box.height).toBeUndefined();
+    expect(StyleSheet.flatten(screen.getByTestId("inline-page").props.style)).toMatchObject({
+      width: "100%",
+      aspectRatio: 1000 / 3000,
+    });
   });
 
-  it("a short page keeps its own height under the cap", async () => {
-    await render(<PageViewer pages={[page({ width: 1000, height: 500 })]} />);
-    await layout(400, 200);
-    expect(StyleSheet.flatten(screen.getByRole("imagebutton").props.style)).toMatchObject({ width: "100%", height: 200 });
-  });
-
-  it("shows the top of a tall page, full width, with a torn edge where it is cut", async () => {
+  it("shows the top of a tall page, full width, with a torn edge where the box cuts it", async () => {
     await render(<PageViewer pages={[page()]} />);
     await waitFor(() => expect(screen.getByTestId("inline-photo")).toBeTruthy());
-    expect(screen.getByTestId("inline-photo").props).toMatchObject({ contentFit: "cover", contentPosition: { top: 0 } });
+    expect(screen.getByTestId("inline-photo").props.contentFit).toBe("contain");
     await layout(400, cap);
     expect(screen.getByTestId("slip-edge", { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByTestId("photo-expand-hint", { includeHiddenElements: true })).toBeTruthy();
@@ -83,7 +78,7 @@ describe("PageViewer inline", () => {
 
   it("a page of unknown size uses 3:4", async () => {
     await render(<PageViewer pages={[page({ width: null, height: null })]} />);
-    expect(StyleSheet.flatten(screen.getByRole("imagebutton").props.style).aspectRatio).toBe(3 / 4);
+    expect(StyleSheet.flatten(screen.getByTestId("inline-page").props.style).aspectRatio).toBe(3 / 4);
   });
 
   it("a photo that cannot be opened says so, with no expand hint", async () => {
