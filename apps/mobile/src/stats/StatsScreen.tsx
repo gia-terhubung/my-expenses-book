@@ -28,6 +28,7 @@ import { monthLabel } from "@/receipts/format";
 import { slipAmountText } from "@/receipts/slipAmount";
 import { taxYearLabel, taxYearOf, taxYearRange } from "@/taxYear/taxYear";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { InfoButton } from "@/guide/InfoButton";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { compactAmount, currencySymbol } from "./compactAmount";
@@ -292,17 +293,22 @@ export function StatsScreen({ now = clockNow }: { now?: () => Date }) {
                   {amount.text}
                 </Text>
                 {pct !== null ? (
-                  <Text testID="stats-pace" style={[small, muted, { marginTop: 2 }]}>
-                    {paceText.startsWith(paceHead) ? (
-                      <>
-                        <Text style={{ color: colors.text, fontWeight: "700" }}>{paceHead}</Text>
-                        {paceText.slice(paceHead.length)}
-                      </>
-                    ) : (
-                      paceText
-                    )}{" "}
-                    ({money(data.pacePrev)})
-                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs }}>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text testID="stats-pace" style={[small, muted, { marginTop: 2 }]}>
+                        {paceText.startsWith(paceHead) ? (
+                          <>
+                            <Text style={{ color: colors.text, fontWeight: "700" }}>{paceHead}</Text>
+                            {paceText.slice(paceHead.length)}
+                          </>
+                        ) : (
+                          paceText
+                        )}{" "}
+                        ({money(data.pacePrev)})
+                      </Text>
+                    </View>
+                    <InfoButton topic="pace" />
+                  </View>
                 ) : null}
                 <Text testID="stats-count" style={[small, muted]}>
                   {t("stats.receiptCount", { count: data.total.count })}
@@ -415,7 +421,10 @@ export function StatsScreen({ now = clockNow }: { now?: () => Date }) {
 
               {data.unconverted > 0 ? (
                 <>
-                  {section(t("stats.unconverted"))}
+                  <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
+                    {section(t("stats.unconverted"))}
+                    <InfoButton topic="unconverted" />
+                  </View>
                   <View
                     style={{
                       flexDirection: "row",

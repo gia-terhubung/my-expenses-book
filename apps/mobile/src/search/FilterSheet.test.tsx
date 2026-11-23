@@ -60,6 +60,12 @@ describe("FilterSheet", () => {
     }
   });
 
+  it("explains Not converted under its checkbox without toggling it", async () => {
+    await render(<FilterSheet visible value={EMPTY_SEARCH} onApply={jest.fn()} onClose={jest.fn()} />);
+    expect(screen.getByText(/^Receipts in another currency that don't have an exchange rate yet\./)).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Not converted" }).props.accessibilityState.checked).toBe(false);
+  });
+
   it("Apply commits the chosen filters", async () => {
     seed("EUR");
     seed("IDR");

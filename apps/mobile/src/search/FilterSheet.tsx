@@ -131,6 +131,10 @@ function SheetBody({ value, onApply, onClose }: Props) {
           selected={draft.unconverted}
           onPress={() => patch({ unconverted: !draft.unconverted })}
         />
+        {/* Inline, not an (i): this is already a sheet, and a sheet on a sheet is avoided (spec 6.4). */}
+        <Text style={[theme.type.caption, { color: theme.colors.textMuted, paddingHorizontal: theme.spacing.xs }]}>
+          {t("info.unconverted.summary")}
+        </Text>
       </ScrollView>
     </View>
   );

@@ -221,6 +221,30 @@ describe("StatsScreen", () => {
     expect(mockRouter.push).not.toHaveBeenCalled();
   });
 
+  it("pace (i) opens the Pace sheet", async () => {
+    seed("Now Shop", "2026-11-02", 500000);
+    seed("Bluebird Cab", "2026-10-05", 100000);
+    await render(<StatsScreen now={now} />);
+    await fireEvent.press(screen.getByRole("button", { name: "About Pace" }));
+    expect(screen.getByRole("header", { name: "Pace" })).toBeTruthy();
+  });
+
+  it("no pace (i) when the pace line is hidden", async () => {
+    seed("Now Shop", "2026-11-02", 500000);
+    await render(<StatsScreen now={now} />);
+    expect(screen.queryByTestId("stats-pace")).toBeNull();
+    expect(screen.queryByRole("button", { name: "About Pace" })).toBeNull();
+  });
+
+  it("unconverted card (i) opens the Not converted sheet", async () => {
+    seed("Now Shop", "2026-11-02", 50000);
+    seedUnconverted("2026-11-04");
+    await render(<StatsScreen now={now} />);
+    await fireEvent.press(screen.getByRole("button", { name: "About Not converted" }));
+    expect(screen.getAllByRole("header", { name: "Not converted" })).toHaveLength(2);
+    expect(screen.getByText(/^Rates download automatically/)).toBeTruthy();
+  });
+
   it("unconverted card counts all time, like the Search filter it opens", async () => {
     seed("Now Shop", "2026-11-02", 50000);
     seedUnconverted("2026-11-04");
