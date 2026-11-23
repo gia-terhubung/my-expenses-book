@@ -170,6 +170,9 @@
     "closePhoto": "Fechar foto",
     "pageOf": "Página {{current}} de {{total}}",
     "photoUnavailable": "Não foi possível abrir a foto.",
+    "receiptPhoto": "Foto do recibo",
+    "zoomIn": "Ampliar",
+    "zoomOut": "Reduzir",
     "continue": "Continuar revisando ({{n}})",
     "errors": {
       "totalRequired": "Informe o total.",

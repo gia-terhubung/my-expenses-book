@@ -170,6 +170,9 @@
     "closePhoto": "Close photo",
     "pageOf": "Page {{current}} of {{total}}",
     "photoUnavailable": "Couldn't open the photo.",
+    "receiptPhoto": "Receipt photo",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
     "continue": "Continue reviewing ({{n}})",
     "errors": {
       "totalRequired": "Enter the total.",

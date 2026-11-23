@@ -170,6 +170,9 @@
     "closePhoto": "Tutup foto",
     "pageOf": "Halaman {{current}} dari {{total}}",
     "photoUnavailable": "Foto tidak bisa dibuka.",
+    "receiptPhoto": "Foto struk",
+    "zoomIn": "Perbesar",
+    "zoomOut": "Perkecil",
     "continue": "Lanjutkan memeriksa ({{n}})",
     "errors": {
       "totalRequired": "Isi totalnya.",
