@@ -5,6 +5,7 @@ import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { BackupReminder } from "@/backup/BackupReminder";
+import { GuideBar } from "@/guide/GuideBar";
 import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
 import { openReview } from "@/capture/useAddReceipt";
 import { useDb } from "@/db/DatabaseProvider";
@@ -77,6 +78,7 @@ export default function ReceiptsScreen() {
               </Pressable>
             ) : null}
             <BackupReminder />
+            <GuideBar />
           </>
         }
         empty={<FeedEmpty onStart={(m) => void add.start(m)} />}
