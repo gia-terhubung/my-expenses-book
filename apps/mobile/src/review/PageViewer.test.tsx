@@ -11,8 +11,9 @@ const mockImages = {
   openForView: jest.fn(async (p: string) => (p === "bad.jpg" ? Promise.reject(new Error("x")) : `file:///cache/view/${p}`)),
 };
 jest.mock("@/images/ImageStoreProvider", () => ({ useImageStore: () => mockImages }));
+let mockInsets = { top: 0, bottom: 0, left: 0, right: 0 };
 jest.mock("react-native-safe-area-context", () => ({
-  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  useSafeAreaInsets: () => mockInsets,
 }));
 
 beforeAll(() => initI18n("en"));
@@ -46,9 +47,21 @@ const cap = inlineCap(Dimensions.get("window").height);
 describe("PageViewer inline", () => {
   it("fills the width and caps the height at 55% of the window", async () => {
     await render(<PageViewer pages={[page()]} />);
+    // Before the width is known: full width at the page's own shape.
+    expect(StyleSheet.flatten(screen.getByRole("imagebutton").props.style)).toMatchObject({ width: "100%", aspectRatio: 1000 / 3000 });
+    await layout(400, 1200);
     const style = StyleSheet.flatten(screen.getByRole("imagebutton").props.style);
-    expect(style).toMatchObject({ width: "100%", aspectRatio: 1000 / 3000, maxHeight: cap });
-    expect(style.alignSelf).toBeUndefined();
+    // Device bug (iPhone Duo): aspectRatio + maxHeight let Yoga shrink the width to fit the cap.
+    // Once measured, the height is set outright and the width stays 100%.
+    expect(style).toMatchObject({ width: "100%", height: cap });
+    expect(style.aspectRatio).toBeUndefined();
+    expect(style.maxHeight).toBeUndefined();
+  });
+
+  it("a short page keeps its own height under the cap", async () => {
+    await render(<PageViewer pages={[page({ width: 1000, height: 500 })]} />);
+    await layout(400, 200);
+    expect(StyleSheet.flatten(screen.getByRole("imagebutton").props.style)).toMatchObject({ width: "100%", height: 200 });
   });
 
   it("shows the top of a tall page, full width, with a torn edge where it is cut", async () => {
@@ -95,5 +108,28 @@ describe("PageViewer fill (review form pane)", () => {
     expect(screen.getByTestId("inline-photo").props.contentFit).toBe("contain");
     expect(screen.queryByTestId("slip-edge", { includeHiddenElements: true })).toBeNull();
     expect(screen.getByTestId("photo-expand-hint", { includeHiddenElements: true })).toBeTruthy();
+  });
+});
+
+describe("PageViewer full screen", () => {
+  afterEach(() => {
+    mockInsets = { top: 0, bottom: 0, left: 0, right: 0 };
+  });
+
+  it("keeps the photo and Done inside the safe area (Duo outer screen: status column on the right)", async () => {
+    mockInsets = { top: 20, bottom: 10, left: 0, right: 84 };
+    await render(<PageViewer pages={[page()]} />);
+    await waitFor(() => expect(screen.getByTestId("inline-photo")).toBeTruthy());
+    await act(async () => fireEvent.press(screen.getByRole("imagebutton")));
+    expect(StyleSheet.flatten(screen.getByTestId("photo-viewer-area").props.style)).toMatchObject({
+      paddingTop: 20,
+      paddingBottom: 10,
+      paddingLeft: 0,
+      paddingRight: 84,
+    });
+    const done = StyleSheet.flatten(screen.getByRole("button", { name: "Close photo" }).props.style);
+    expect(done.right).toBe(84 + 16);
+    // Seen on the Duo: a 60% black pill vanished over the black band around a fitted photo.
+    expect(done.borderWidth).toBeGreaterThan(0);
   });
 });

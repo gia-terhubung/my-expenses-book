@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { AppModal } from "@/components/AppModal";
 import type { ReceiptPage } from "@/db/types";
 import { useImageStore } from "@/images/ImageStoreProvider";
+import { useSideInsets } from "@/layout/SideSafeArea";
 import { SlipEdge } from "@/receipts/SlipEdge";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -64,25 +65,29 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  // A modal is its own window and reports its own side insets; the root ones are the real strips.
+  const side = useSideInsets();
   const uris = useViewUris(pages);
   const [full, setFull] = useState<number | null>(null);
-  const [boxes, setBoxes] = useState<Record<string, { width: number; height: number }>>({});
+  // Measured width per page: the inline height is set from it (see `page`).
+  const [widths, setWidths] = useState<Record<string, number>>({});
   const { height: windowHeight } = useWindowDimensions();
   const cap = inlineCap(windowHeight);
 
   const page = (p: ReceiptPage, i: number) => {
     const uri = uris[i];
     const aspectRatio = p.width && p.height ? p.width / p.height : 3 / 4;
-    const box = boxes[p.id];
-    // Cut when the full-width page would be taller than the box the cap left it (1 pt rounding slack).
-    const cropped = !fill && !!box && box.width / aspectRatio > box.height + 1;
+    const width = widths[p.id];
+    const natural = width ? width / aspectRatio : null;
+    // Cut when the full-width page would be taller than the cap (1 pt rounding slack).
+    const cropped = !fill && natural !== null && natural > cap + 1;
     const ready = !!uri && uri !== "error";
     return (
       <Pressable
         key={p.id}
         onLayout={(e) => {
-          const { width, height } = e.nativeEvent.layout;
-          setBoxes((b) => (b[p.id]?.width === width && b[p.id]?.height === height ? b : { ...b, [p.id]: { width, height } }));
+          const w = e.nativeEvent.layout.width;
+          setWidths((m) => (m[p.id] === w ? m : { ...m, [p.id]: w }));
         }}
         accessibilityRole="imagebutton"
         accessibilityLabel={pages.length > 1 ? `${t("review.openPhoto")} ${t("review.pageOf", { current: i + 1, total: pages.length })}` : t("review.openPhoto")}
@@ -90,7 +95,12 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
         onPress={() => setFull(i)}
         style={[
           { backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, overflow: "hidden", alignItems: "center", justifyContent: "center" },
-          fill ? { flex: 1, minHeight: 240 } : { width: "100%", aspectRatio, maxHeight: cap },
+          fill
+            ? { flex: 1, minHeight: 240 }
+            : natural === null
+              ? { width: "100%", aspectRatio }
+              : // Height set outright: aspectRatio + maxHeight let Yoga shrink the width to fit the cap.
+                { width: "100%", height: Math.min(natural, cap) },
         ]}
       >
         {uri === "error" ? (
@@ -141,12 +151,24 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
       {pages.map(page)}
       <AppModal visible={full !== null} sideInset={false} animationType="fade" onRequestClose={() => setFull(null)} statusBarTranslucent>
         <View style={{ flex: 1, backgroundColor: "#000" }}>
-          {fullUri && fullUri !== "error" && full !== null ? (
-            <ZoomableImage
-              uri={fullUri}
-              contentSize={{ width: pages[full]?.width ?? 0, height: pages[full]?.height ?? 0 }}
-            />
-          ) : null}
+          {/* Inside the safe area: on the folded Duo the status column covers the right 84 pt. */}
+          <View
+            testID="photo-viewer-area"
+            style={{
+              flex: 1,
+              paddingTop: insets.top,
+              paddingBottom: insets.bottom,
+              paddingLeft: side.left,
+              paddingRight: side.right,
+            }}
+          >
+            {fullUri && fullUri !== "error" && full !== null ? (
+              <ZoomableImage
+                uri={fullUri}
+                contentSize={{ width: pages[full]?.width ?? 0, height: pages[full]?.height ?? 0 }}
+              />
+            ) : null}
+          </View>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("review.closePhoto")}
@@ -154,7 +176,7 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
             style={{
               position: "absolute",
               top: insets.top + theme.spacing.sm,
-              right: theme.spacing.lg,
+              right: side.right + theme.spacing.lg,
               minHeight: 48,
               minWidth: 48,
               paddingHorizontal: theme.spacing.lg,
@@ -162,6 +184,9 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
               alignItems: "center",
               borderRadius: theme.radius.pill,
               backgroundColor: "rgba(0,0,0,0.6)",
+              // The hairline keeps the pill visible over black as well as over the white page.
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.45)",
             }}
           >
             <Text style={[theme.type.body, { color: "#fff", fontWeight: "600" }]}>{t("common.done")}</Text>
