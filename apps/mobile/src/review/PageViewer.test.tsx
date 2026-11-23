@@ -128,7 +128,14 @@ describe("PageViewer full screen", () => {
       paddingRight: 84,
     });
     const done = StyleSheet.flatten(screen.getByRole("button", { name: "Close photo" }).props.style);
-    expect(done.right).toBe(84 + 16);
+    // Bottom centre: on the open Duo the status pill reaches into the top-right of the content.
+    expect(StyleSheet.flatten(screen.getByTestId("photo-done-bar").props.style)).toMatchObject({
+      position: "absolute",
+      left: 0,
+      right: 84,
+      bottom: 10 + 16,
+      alignItems: "center",
+    });
     // Seen on the Duo: a 60% black pill vanished over the black band around a fitted photo.
     expect(done.borderWidth).toBeGreaterThan(0);
   });

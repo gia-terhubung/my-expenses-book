@@ -169,28 +169,39 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
               />
             ) : null}
           </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("review.closePhoto")}
-            onPress={() => setFull(null)}
+          {/* Bottom centre, not top right: on the open Duo the status pill reaches into the
+              top-right of the content, and the bottom is within thumb reach on a tall screen. */}
+          <View
+            testID="photo-done-bar"
+            pointerEvents="box-none"
             style={{
               position: "absolute",
-              top: insets.top + theme.spacing.sm,
-              right: side.right + theme.spacing.lg,
-              minHeight: 48,
-              minWidth: 48,
-              paddingHorizontal: theme.spacing.lg,
-              justifyContent: "center",
+              left: side.left,
+              right: side.right,
+              bottom: insets.bottom + theme.spacing.lg,
               alignItems: "center",
-              borderRadius: theme.radius.pill,
-              backgroundColor: "rgba(0,0,0,0.6)",
-              // The hairline keeps the pill visible over black as well as over the white page.
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.45)",
             }}
           >
-            <Text style={[theme.type.body, { color: "#fff", fontWeight: "600" }]}>{t("common.done")}</Text>
-          </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("review.closePhoto")}
+              onPress={() => setFull(null)}
+              style={{
+                minHeight: 48,
+                minWidth: 48,
+                paddingHorizontal: theme.spacing.lg,
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: theme.radius.pill,
+                backgroundColor: "rgba(0,0,0,0.6)",
+                // The hairline keeps the pill visible over black as well as over the white page.
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.45)",
+              }}
+            >
+              <Text style={[theme.type.body, { color: "#fff", fontWeight: "600" }]}>{t("common.done")}</Text>
+            </Pressable>
+          </View>
         </View>
       </AppModal>
     </View>
