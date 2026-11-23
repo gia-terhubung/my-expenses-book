@@ -29,7 +29,9 @@ export function BackupReminder() {
 
   return (
     <View
+      testID="backup-reminder"
       style={{
+        marginHorizontal: theme.spacing.sm,
         padding: theme.spacing.md,
         borderRadius: theme.radius.md,
         borderWidth: 1,

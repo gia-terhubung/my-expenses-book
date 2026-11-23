@@ -39,7 +39,9 @@ export function GuideBar() {
 
   return (
     <View
+      testID="guide-bar"
       style={{
+        marginHorizontal: theme.spacing.sm,
         padding: theme.spacing.md,
         borderRadius: theme.radius.md,
         borderWidth: 1,

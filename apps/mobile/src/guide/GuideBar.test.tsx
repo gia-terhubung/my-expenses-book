@@ -41,6 +41,9 @@ describe("GuideBar", () => {
   it("shows for an existing user who hasn't seen the guide", async () => {
     await render(<GuideBar />);
     expect(screen.getByText("New: a short guide to pay cycle and tax year.")).toBeTruthy();
+    // Same 8 pt side margin as the draft banner above it, not flush with the screen edge.
+    const { StyleSheet } = jest.requireActual("react-native");
+    expect(StyleSheet.flatten(screen.getByTestId("guide-bar").props.style).marginHorizontal).toBe(8);
   });
 
   it("Dismiss sets guideSeen and hides the bar", async () => {

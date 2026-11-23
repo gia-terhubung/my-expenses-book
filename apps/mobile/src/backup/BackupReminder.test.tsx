@@ -40,6 +40,8 @@ describe("BackupReminder", () => {
     mockPrefs.set("receiptsSinceBackup", 20);
     await render(<BackupReminder />);
     expect(screen.getByText("20 receipts since your last backup")).toBeTruthy();
+    const { StyleSheet } = jest.requireActual("react-native");
+    expect(StyleSheet.flatten(screen.getByTestId("backup-reminder").props.style).marginHorizontal).toBe(8);
     await fireEvent.press(screen.getByText("Back up"));
     expect(mockPush).toHaveBeenCalledWith("/backup");
   });
