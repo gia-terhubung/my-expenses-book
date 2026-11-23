@@ -82,7 +82,7 @@ describe("OnboardingFlow", () => {
     await fireEvent.press(screen.getByText("Next"));
     expect(mockStore.get("homeCurrency")).toBe("EUR");
     expect(mockStore.get("taxYearStartMonth")).toBe(1);
-    expect(mockStore.get("onboardingStep")).toBe("lock");
+    expect(mockStore.get("onboardingStep")).toBe("taxYear");
   });
 
   it("lock step: enable disabled with reason when unavailable; Skip finishes", async () => {

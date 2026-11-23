@@ -36,7 +36,7 @@ export function OnboardingFlow() {
 
   const advance = () => prefs.set("onboardingStep", nextStep(step));
   const finish = () => {
-    advance();
+    prefs.set("onboardingStep", "done");
     router.replace("/");
   };
 

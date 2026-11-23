@@ -3,7 +3,8 @@ import { useCallback, useRef, useSyncExternalStore } from "react";
 export type Language = "en" | "id" | "es" | "pt-BR";
 /** Seconds of background time before re-lock; 0 = lock immediately. */
 export type LockTimeout = 0 | 60 | 300 | 900;
-export type OnboardingStep = "language" | "currency" | "lock" | "done";
+/** Values stored by older builds ("language" | "currency" | "lock" | "done") stay valid. */
+export type OnboardingStep = "language" | "currency" | "taxYear" | "payCycle" | "lock" | "tour" | "done";
 
 /** FX rate cache (see src/fx). Rates are strings: receipt-currency units per 1 `base` unit. */
 export interface FxCache {
@@ -23,6 +24,8 @@ export interface Prefs {
   lockEnabled: boolean;
   lockTimeout: LockTimeout;
   onboardingStep: OnboardingStep;
+  /** The guide was finished, skipped, replayed or its Home bar dismissed. */
+  guideSeen: boolean;
   lastBackupAt: number | null;
   receiptsSinceBackup: number;
   /** Epoch ms until which the backup reminder is snoozed. */
@@ -51,6 +54,7 @@ export const PREF_DEFAULTS: Prefs = {
   lockEnabled: false,
   lockTimeout: 60,
   onboardingStep: "language",
+  guideSeen: false,
   lastBackupAt: null,
   receiptsSinceBackup: 0,
   backupReminderSnoozedUntil: null,
