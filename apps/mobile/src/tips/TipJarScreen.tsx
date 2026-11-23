@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/Button";
 import { TIP_IDS, type TipId, type TipJar } from "@/payments/types";
@@ -179,11 +180,12 @@ export function TipJarScreen({ jar, paused = false }: { jar: TipJar; paused?: bo
   const unavailable = state === "unavailable" || (state === "ready" && prices.size === 0);
   const { width, fontScale } = useWindowDimensions();
   const stacked = fontScale >= STACK_FONT_SCALE || width < STACK_WIDTH;
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BeanBackdrop paused={paused} />
-      <ScrollView testID="tip-jar-scroll" contentInsetAdjustmentBehavior="never" contentContainerStyle={{ padding: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xxl }}>
+      <ScrollView testID="tip-jar-scroll" contentInsetAdjustmentBehavior="never" contentContainerStyle={{ padding: spacing.xl, paddingTop: spacing.lg, paddingBottom: insets.bottom + spacing.xxl }}>
         <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: spacing.lg }}>
           <ScreenHeader title={t("tips.title")} />
           <View style={{ gap: spacing.md }}>

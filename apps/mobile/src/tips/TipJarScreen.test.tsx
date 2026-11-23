@@ -14,6 +14,9 @@ const light = tokens.light.colors;
 
 // Jest's default window is 750 wide at font scale 2; the screen lays out by both.
 const mockWindow = { width: 360, height: 800, scale: 2, fontScale: 1 };
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
+}));
 jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({ __esModule: true, default: () => mockWindow }));
 
 const reducedMotion = useReducedMotion as jest.Mock;
@@ -368,6 +371,11 @@ describe("TipJarScreen price buttons", () => {
     await ready();
     mockWindow.fontScale = 1;
     for (const id of IDS) expect(flat(screen.getByTestId(`tip-price-${id}`)).alignSelf).toBe("stretch");
+  });
+
+  it("pads the scroll end by the bottom inset", async () => {
+    await render(<TipJarScreen jar={createFakeTipJar()} />);
+    expect(screen.getByTestId("tip-jar-scroll").props.contentContainerStyle.paddingBottom).toBe(34 + 32);
   });
 
   it("has the shared page header: Back chevron and title, no native header inset", async () => {

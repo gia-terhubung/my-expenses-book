@@ -2,6 +2,7 @@ import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/Button";
 import { useDb } from "@/db/DatabaseProvider";
@@ -74,6 +75,7 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
   const images = useImageStore();
   // Compact detail shown over a tab's list: clear the floating tab bar.
   const tabBarSpace = useTabBarSpace();
+  const insets = useSafeAreaInsets();
   const home = usePref("homeCurrency") ?? "USD";
   const version = useDataVersion();
   const [picking, setPicking] = useState(false);
@@ -150,7 +152,7 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
           maxWidth: 640,
           alignSelf: "center",
           padding: theme.spacing.xl,
-          paddingBottom: tabBarSpace || theme.spacing.xl,
+          paddingBottom: tabBarSpace || insets.bottom + theme.spacing.xl,
           gap: theme.spacing.lg,
         }}
       >

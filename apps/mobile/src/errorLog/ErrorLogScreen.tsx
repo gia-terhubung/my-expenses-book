@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Alert, FlatList, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
@@ -27,6 +28,7 @@ export function ErrorLogScreen({
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const [entries, setEntries] = useState<ErrorEntry[]>(() => log.list());
   const inflight = useRef(false);
 
@@ -63,7 +65,7 @@ export function ErrorLogScreen({
       testID="error-log-list"
       contentInsetAdjustmentBehavior="never"
       style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: theme.spacing.xl, paddingTop: theme.spacing.lg, gap: theme.spacing.md, width: "100%", maxWidth: 560, alignSelf: "center" }}
+      contentContainerStyle={{ padding: theme.spacing.xl, paddingTop: theme.spacing.lg, paddingBottom: insets.bottom + theme.spacing.xl, gap: theme.spacing.md, width: "100%", maxWidth: 560, alignSelf: "center" }}
       data={entries}
       keyExtractor={(e, i) => `${e.at}-${i}`}
       ListHeaderComponent={

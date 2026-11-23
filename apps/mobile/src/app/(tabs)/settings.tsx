@@ -18,7 +18,11 @@ import { LANGUAGE_NAMES, LanguagePicker } from "@/components/LanguagePicker";
 import { LockToggle } from "@/components/LockToggle";
 import { OptionRow } from "@/components/OptionRow";
 import { TaxYearPicker } from "@/components/TaxYearPicker";
+import { deviceTimeZone, formatLocal } from "@/capture/localTime";
+import { now } from "@/dates/clock";
+import { currencyExampleHome, payCycleExample, taxYearExample } from "@/guide/examples";
 import { InfoButton } from "@/guide/InfoButton";
+import { formatMoney } from "@/money/money";
 import type { InfoTopic } from "@/guide/info";
 import { InfoText } from "@/guide/InfoText";
 import { MonthStartPicker } from "@/settings/MonthStartPicker";
@@ -36,7 +40,20 @@ const TIMEOUTS: LockTimeout[] = [0, 60, 300, 900];
 
 type Sheet = "language" | "currency" | "taxYear" | "monthStart" | null;
 
-function Row({ label, value, onPress, info }: { label: string; value: string; onPress: () => void; info?: InfoTopic }) {
+function Row({
+  label,
+  value,
+  onPress,
+  info,
+  infoExample,
+}: {
+  label: string;
+  value: string;
+  onPress: () => void;
+  info?: InfoTopic;
+  /** The guide's live example, shown in the (i) sheet. */
+  infoExample?: string;
+}) {
   const theme = useTheme();
   const card = (
     <Card accessibilityLabel={value ? `${label}, ${value}` : label} onPress={onPress} style={{ justifyContent: "space-between" }}>
@@ -62,7 +79,7 @@ function Row({ label, value, onPress, info }: { label: string; value: string; on
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.xs }}>
       <View style={{ flex: 1 }}>{card}</View>
-      <InfoButton topic={info} />
+      <InfoButton topic={info} example={infoExample} />
     </View>
   );
 }
@@ -163,6 +180,10 @@ export default function SettingsScreen() {
   const timeoutLabel = (s: LockTimeout) =>
     s === 0 ? t("settings.lockTimeoutImmediately") : t("settings.lockTimeoutMinutes", { count: s / 60 });
   const close = () => setSheet(null);
+  // The guide's live examples for the (i) sheets.
+  const today = formatLocal(now(), deviceTimeZone()).slice(0, 10);
+  const taxEx = taxYearExample(today, taxYear, i18n.language);
+  const homeExample = currencyExampleHome(currency, i18n.language);
 
   return (
     <StatusBarInset>
@@ -180,13 +201,15 @@ export default function SettingsScreen() {
             value={currencyLabel(i18n.language, currency)}
             onPress={() => setSheet("currency")}
             info="homeCurrency"
+            infoExample={homeExample ? t("guide.currencyExample", { foreign: formatMoney(1200, "EUR", i18n.language), home: homeExample }) : undefined}
           />
-          <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} info="taxYear" />
+          <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} info="taxYear" infoExample={`${t("guide.taxYearExample", { label: taxEx.label })}: ${taxEx.range}`} />
           <Row
             label={t("settings.monthStart")}
             value={t("settings.monthStartValue", { n: monthStart })}
             onPress={() => setSheet("monthStart")}
             info="payCycle"
+            infoExample={payCycleExample(today, monthStart, i18n.language)}
           />
           <Row label={t("settings.categories")} value="" onPress={() => router.push("/categories" as unknown as Href)} />
           <Row label={t("recurring.title")} value="" onPress={() => router.push("/recurring" as unknown as Href)} />

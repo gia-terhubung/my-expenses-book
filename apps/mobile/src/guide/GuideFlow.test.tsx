@@ -58,6 +58,15 @@ describe("GuideFlow replay", () => {
     expect(mockStore.get("onboardingStep")).toBe("done");
   });
 
+  it("replay Next leaves language and currency following the device when never picked", async () => {
+    mockStore.set("onboardingStep", "done");
+    await render(<GuideFlow mode="replay" onClose={jest.fn()} />);
+    await fireEvent.press(screen.getByText("Next"));
+    await fireEvent.press(screen.getByText("Next"));
+    expect(mockStore.get("language")).toBeNull();
+    expect(mockStore.get("homeCurrency")).toBeNull();
+  });
+
   it("replay Close calls onClose", async () => {
     mockStore.set("language", "en");
     const onClose = jest.fn();

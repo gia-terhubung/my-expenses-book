@@ -22,8 +22,9 @@ const mockImages = {
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
 jest.mock("@/images/ImageStoreProvider", () => ({ useImageStore: () => mockImages }));
 jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
+let mockBottom = 0;
 jest.mock("react-native-safe-area-context", () => ({
-  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  useSafeAreaInsets: () => ({ top: 0, bottom: mockBottom, left: 0, right: 0 }),
 }));
 const mockRouter = { push: jest.fn() };
 jest.mock("expo-router", () => ({
@@ -192,6 +193,18 @@ describe("ReceiptDetail", () => {
     const r = seed();
     await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
     expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+  });
+
+  it("keeps the last action above the home indicator / system bar when pushed (no tab bar)", async () => {
+    const r = seed();
+    mockBottom = 34;
+    try {
+      await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} onBack={noop} />);
+      const style = screen.getByTestId("receipt-detail-scroll").props.contentContainerStyle;
+      expect(style.paddingBottom).toBe(34 + 24);
+    } finally {
+      mockBottom = 0;
+    }
   });
 
   it("back chevron calls onBack and the merchant is the header", async () => {

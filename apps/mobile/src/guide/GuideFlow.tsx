@@ -128,7 +128,8 @@ export function GuideFlow({ mode, onClose }: Props) {
       control = <CurrencyPicker lang={language} value={currency} onChange={(c) => prefs.set("homeCurrency", c)} />;
       controlScrolls = true;
       foot = footer(() => {
-        prefs.set("homeCurrency", currency);
+        // First run confirms the preselection; a replay only saves what the user picks.
+        if (!replay) prefs.set("homeCurrency", currency);
         go(nextStep(step));
       });
       break;
@@ -187,7 +188,7 @@ export function GuideFlow({ mode, onClose }: Props) {
       explain = <Text style={muted}>{t("onboarding.welcome")}</Text>;
       control = <LanguagePicker value={language} onChange={(l) => prefs.set("language", l)} />;
       foot = footer(() => {
-        prefs.set("language", language);
+        if (!replay) prefs.set("language", language);
         go(nextStep(step));
       });
   }

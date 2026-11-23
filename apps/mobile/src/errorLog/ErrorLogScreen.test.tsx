@@ -11,6 +11,9 @@ import { ErrorLogScreen } from "./ErrorLogScreen";
 const mockShare = jest.fn();
 jest.mock("expo-sharing", () => ({ shareAsync: (...a: unknown[]) => mockShare(...a) }));
 jest.mock("@/images/expoFs", () => ({ expoFs: {} }));
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
+}));
 
 function memoryKV(): KV {
   const m = new Map<string, string>();
@@ -84,6 +87,11 @@ describe("ErrorLogScreen", () => {
       log.append("s", e);
     }
     await expect(render(<ErrorLogScreen log={log} fs={fakeFs().fs} now={now} appVersion="1.0.0" />)).resolves.toBeTruthy();
+  });
+
+  it("pads the list end by the bottom inset", async () => {
+    await render(<ErrorLogScreen log={createErrorLog(memoryKV())} fs={fakeFs().fs} now={now} appVersion="1.0.0" />);
+    expect(screen.getByTestId("error-log-list").props.contentContainerStyle.paddingBottom).toBe(34 + 24);
   });
 
   it("has the shared page header: Back chevron and title, no native header inset", async () => {

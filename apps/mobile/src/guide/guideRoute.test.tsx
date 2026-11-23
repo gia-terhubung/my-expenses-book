@@ -43,6 +43,30 @@ describe("/guide", () => {
     expect(screen.getByRole("header", { name: "Choose your language" })).toBeTruthy();
   });
 
+  it("on iOS the replay modal keeps out of the side strips (own window, outside SideSafeArea)", async () => {
+    const { Platform } = jest.requireActual("react-native");
+    const original = Platform.OS;
+    Platform.OS = "ios";
+    try {
+      await render(<GuideRoute />);
+      expect(screen.getByTestId("modal-side-inset")).toBeTruthy();
+    } finally {
+      Platform.OS = original;
+    }
+  });
+
+  it("on Android the replay is already inside SideSafeArea: no second inset", async () => {
+    const { Platform } = jest.requireActual("react-native");
+    const original = Platform.OS;
+    Platform.OS = "android";
+    try {
+      await render(<GuideRoute />);
+      expect(screen.queryByTestId("modal-side-inset")).toBeNull();
+    } finally {
+      Platform.OS = original;
+    }
+  });
+
   it("Close goes back", async () => {
     await render(<GuideRoute />);
     await fireEvent.press(screen.getByRole("button", { name: "Close guide" }));

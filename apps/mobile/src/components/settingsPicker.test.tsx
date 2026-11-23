@@ -78,6 +78,21 @@ it("tax year (i) opens the Tax year sheet without opening the picker", async () 
   expect(screen.queryByRole("radio", { name: "April" })).toBeNull();
 });
 
+it("Settings (i) sheets carry the guide's live example", async () => {
+  const { payCycleExample, taxYearExample } = jest.requireActual("@/guide/examples");
+  const { deviceTimeZone, formatLocal } = jest.requireActual("@/capture/localTime");
+  const today = formatLocal(new Date(), deviceTimeZone()).slice(0, 10);
+  await render(<Host />);
+  await fireEvent.press(screen.getByRole("button", { name: "About Pay cycle" }));
+  expect(screen.getByText(payCycleExample(today, 25, "en"))).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+  await fireEvent.press(screen.getByRole("button", { name: "About Tax year" }));
+  expect(screen.getByText(`Tax year ${taxYearExample(today, 1, "en").label}: ${taxYearExample(today, 1, "en").range}`)).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+  await fireEvent.press(screen.getByRole("button", { name: "About Home currency" }));
+  expect(screen.getByText(/A €12\.00 receipt shows as about/)).toBeTruthy();
+});
+
 it("home currency and pay cycle rows have their (i)", async () => {
   await render(<Host />);
   expect(screen.getByRole("button", { name: "About Home currency" })).toBeTruthy();
