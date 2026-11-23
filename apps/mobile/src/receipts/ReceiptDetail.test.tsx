@@ -231,4 +231,18 @@ describe("ReceiptDetail", () => {
     await view.rerender(<ReceiptDetail id={owned.id} onEdit={noop} onDeleted={noop} />);
     expect(screen.queryByRole("button", { name: "Repeat this…" })).toBeNull();
   });
+
+  it("the receipt photo sits right under the actions, above category and folder", async () => {
+    const r = seed();
+    createPage(mockDb, { receiptId: r.id, pageIndex: 0, imagePath: "img/a.enc", thumbPath: null, width: 3, height: 4, dhash: null });
+    await render(<ReceiptDetail id={r.id} onEdit={noop} onDeleted={noop} />);
+    await screen.findByRole("imagebutton");
+    const tree = JSON.stringify(screen.toJSON());
+    const actions = tree.indexOf('"receipt-detail-actions"');
+    const photo = tree.indexOf("Open photo full screen");
+    const category = tree.indexOf('"Category"');
+    expect(actions).toBeGreaterThan(-1);
+    expect(photo).toBeGreaterThan(actions);
+    expect(category).toBeGreaterThan(photo);
+  });
 });

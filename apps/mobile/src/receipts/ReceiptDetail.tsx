@@ -181,10 +181,11 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
             : null}
           {action(t("common.delete"), confirmDelete, "danger", deleting)}
         </View>
+        {/* Under the actions: the photo is what people open a receipt to read. */}
+        {pages.length > 0 ? <PageViewer pages={pages} /> : null}
         {field(t("receipts.detail.category"), category ? categoryLabel(category, t) : t("review.noCategory"))}
         {field(t("receipts.detail.folder"), folder?.name ?? t("folders.none"))}
         {receipt.notes ? field(t("receipts.detail.notes"), receipt.notes) : null}
-        {pages.length > 0 ? <PageViewer pages={pages} /> : null}
       </ScrollView>
       <FolderPicker
         visible={picking}
