@@ -31,6 +31,17 @@ describe("review form helpers", () => {
     expect(amountText(2500000, "IDR", "id")).toBe("25000");
   });
 
+  it("amountText works without Intl formatToParts (Hermes has none: the review screen crashed on device)", () => {
+    const proto = Intl.NumberFormat.prototype as { formatToParts?: unknown };
+    const saved = proto.formatToParts;
+    delete proto.formatToParts;
+    try {
+      expect(amountText(2345, "EUR", "es")).toBe("23,45");
+    } finally {
+      proto.formatToParts = saved;
+    }
+  });
+
   it("amountText output reads back through parseAmountInput in every language", () => {
     for (const [minor, cur, lang] of [[2345, "EUR", "es"], [4125, "BRL", "pt-BR"], [1250, "USD", "en"]] as const) {
       expect(parseAmountInput(amountText(minor, cur, lang), cur)).toBe(minor);

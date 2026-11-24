@@ -81,7 +81,9 @@ export function parseAmountInput(text: string, currency: string): number | null 
 /** The decimal mark people write in `locale` ("," in es and pt-BR, "." in en). */
 function decimalMark(locale: string | undefined): string {
   if (!locale) return ".";
-  return new Intl.NumberFormat(locale).formatToParts(1.5).find((p) => p.type === "decimal")?.value ?? ".";
+  // format(), not formatToParts(): Hermes has no formatToParts (the review screen crashed).
+  const mark = new Intl.NumberFormat(locale).format(1.5).replace(/\d/g, "");
+  return mark === "," ? "," : ".";
 }
 
 /**
