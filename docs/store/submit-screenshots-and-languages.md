@@ -15,6 +15,7 @@ Español (España) and Português (Brasil). Do this when you submit; nothing her
 | `store/screenshots/out/appstore/duo-inner/<lang>/` | iPhone Duo inner display, 2007 × 2853 |
 | `store/screenshots/out/play/phone/<lang>/` | Play phone screenshots, 1080 × 1920 |
 | `store/screenshots/out/play/tablet/<lang>/` | Play 7" and 10" tablet screenshots, 1440 × 2560 |
+| `store/screenshots/out/play/feature/<lang>.png` | Play feature graphic, 1024 × 500, one per language |
 
 `<lang>` is `en`, `id`, `es` or `pt-BR`. Each folder has six files, `01-review` to `06-search`.
 Upload them in that order: the first three are what people see in search results.
@@ -91,7 +92,7 @@ Store language to Play language:
    **Full description** from `docs/store/play-listing.md`.
 4. **Graphics**:
    - **App icon**: 512 × 512 PNG.
-   - **Feature graphic**: 1024 × 500 PNG. **Still to make**; Play needs it before you can publish.
+   - **Feature graphic**: `play/feature/en.png` (1024 × 500). Play needs it before you can publish.
    - **Phone screenshots**: the six files from `play/phone/en/`.
    - **7-inch tablet screenshots** and **10-inch tablet screenshots**: the six files from
      `play/tablet/en/` in each. At least four per tablet size is what Play asks for before it
@@ -105,9 +106,9 @@ Store language to Play language:
    **Apply**.
 3. Switch the language selector at the top of the listing to each new language and paste that
    language's name, short description and full description from `docs/store/play-listing.md`.
-4. Still in that language, open **Graphics** and upload that language's phone and tablet
-   screenshots: `play/phone/<lang>/` and `play/tablet/<lang>/`. Play otherwise shows the
-   English screenshots to everyone.
+4. Still in that language, open **Graphics** and upload that language's feature graphic
+   (`play/feature/<lang>.png`) and its phone and tablet screenshots (`play/phone/<lang>/` and
+   `play/tablet/<lang>/`). Play otherwise shows the English ones to everyone.
 5. Click **Save** after each language.
 
 ## Before you press submit
@@ -116,8 +117,8 @@ Store language to Play language:
   and Brazil (ticket, IVA, declaración de la renta; cupom fiscal, imposto de renda), but it has
   not been checked by a native speaker.
 - The shops, addresses and tax numbers in the screenshots are invented. None is a real business.
-- Still open before release: `ASC_APP_ID` in `apps/mobile/eas.json`, `CONTACT_EMAIL` in
-  `docs/store/play-listing.md`, and the Play feature graphic.
+- Still open before release: `ASC_APP_ID` in `apps/mobile/eas.json` and `CONTACT_EMAIL` in
+  `docs/store/play-listing.md`.
 
 ## Rebuilding the screenshots
 
@@ -134,3 +135,5 @@ Needed after a UI change, or when `out/` is gone.
 5. Capture one language: `tools/capture-ios.sh <udid> <lang> raw/iphone/<lang> <metro log file>`.
    This takes about 5 minutes per language.
 6. Build every size: `tools/render.sh`.
+7. Feature graphics: `tools/feature-graphic.swift`; its header has the usage. The subtitle is the
+   App Store subtitle of that language.
