@@ -69,6 +69,9 @@ export const STORE_SHOTS: Record<ShotLang, ShotSet> = {
           { merchant: "Konbini Hikari", total: 865, category: C("groceries") },
           { merchant: "Sushi Mori", total: 6200, category: C("food_drink") },
           { merchant: "Hotel Aoi Shinjuku", total: 18700, category: C("lodging") },
+          { merchant: "Gyoza Bar Tsukiji", total: 2300, category: C("food_drink") },
+          { merchant: "Tea House Matsu", total: 1650, category: C("food_drink") },
+          { merchant: "Shibuya Taxi", total: 3400, category: C("transport") },
         ],
       },
       {
@@ -110,6 +113,9 @@ export const STORE_SHOTS: Record<ShotLang, ShotSet> = {
           { merchant: "Hawker Makan Sedap", total: 12.5, category: C("food_drink") },
           { merchant: "Kedai Kaya Toast", total: 6.4, category: C("food_drink") },
           { merchant: "Hotel Merlin Bay", total: 186, category: C("lodging") },
+          { merchant: "Chicken Rice Uncle Lim", total: 6.5, category: C("food_drink") },
+          { merchant: "Toko Oleh-oleh Orchard", total: 45, category: C("shopping") },
+          { merchant: "Gardens Night Tour", total: 28, category: C("entertainment") },
         ],
       },
       {
@@ -151,6 +157,9 @@ export const STORE_SHOTS: Record<ShotLang, ShotSet> = {
           { merchant: "Camden Corner Café", total: 8.4, category: C("food_drink") },
           { merchant: "Borough Deli", total: 11.2, category: C("food_drink") },
           { merchant: "Kensington Rose Hotel", total: 162, category: C("lodging") },
+          { merchant: "Mabel's Fish & Chips", total: 13.9, category: C("food_drink") },
+          { merchant: "Covent Garden Gifts", total: 15, category: C("shopping") },
+          { merchant: "Black Cab", total: 18.4, category: C("transport") },
         ],
       },
       {
@@ -192,6 +201,9 @@ export const STORE_SHOTS: Record<ShotLang, ShotSet> = {
           { merchant: "Café de la Plaza", total: 12800, category: C("food_drink") },
           { merchant: "Heladería Lucía", total: 6400, category: C("food_drink") },
           { merchant: "Hotel Recoleta Sur", total: 95000, category: C("lodging") },
+          { merchant: "Empanadas Doña Rosa", total: 7200, category: C("food_drink") },
+          { merchant: "Mercado San Telmo", total: 22000, category: C("shopping") },
+          { merchant: "Remis Palermo", total: 9800, category: C("transport") },
         ],
       },
       {
@@ -325,8 +337,9 @@ export function seedStoreShots(db: AppDb, lang: ShotLang, today: string): { inse
   for (const f of set.folders) {
     const folder = createFolder(db, { name: f.name, kind: f.kind, ...(f.currency === set.home ? {} : { defaultCurrency: f.currency }) });
     if (f.kind === "trip") tripId = folder.id;
+    // Trips three months back: a bump on the 6-month chart, and Home's "vs last month" stays ordinary.
     f.receipts.forEach((l, i) =>
-      insert(l, { day: dayIn(today, 1, 10 + i), time: TIMES[(i + 3) % TIMES.length]!, tz: f.tz, currency: f.currency, rate: f.rate, folderId: folder.id }),
+      insert(l, { day: dayIn(today, f.kind === "trip" ? 3 : 1, 10 + i), time: TIMES[(i + 3) % TIMES.length]!, tz: f.tz, currency: f.currency, rate: f.rate, folderId: folder.id }),
     );
   }
   draftId = insert(set.draft, { day: today, time: set.draft.time, tz: set.tz, currency: set.home, rate: 1, status: "draft" });

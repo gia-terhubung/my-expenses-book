@@ -74,6 +74,14 @@ describe("seedStoreShots", () => {
     expect([...months].sort()).toEqual(["2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11"]);
   });
 
+  it("dates the trip three months back, so last month is not inflated", () => {
+    const db = testDb();
+    const r = seedStoreShots(db, "id", TODAY);
+    const trip = db.select().from(receipts).all().filter((x) => x.folderId === r.tripId);
+    expect(trip.length).toBeGreaterThanOrEqual(7);
+    expect(trip.every((x) => x.purchasedAtLocal.startsWith("2026-08"))).toBe(true);
+  });
+
   it("returns the trip folder id so the shot can open it", () => {
     const db = testDb();
     const r = seedStoreShots(db, "en", TODAY);

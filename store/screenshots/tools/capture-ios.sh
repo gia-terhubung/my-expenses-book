@@ -3,7 +3,8 @@
 # Needs: Metro on :8081 (npx expo start --dev-client), the receipt photos served on :8099
 # (python3 -m http.server 8099 in store/screenshots/out/photos), the dev build installed,
 # and a database with no real receipts (the seed refuses otherwise).
-# Usage: capture-ios.sh <udid> <lang> <outdir> <metro-log> [point-scale]
+# Usage: capture-ios.sh <udid> <lang> <outdir> <metro-log>
+# SHOTS="02-home 04-stats" re-shoots only those screens (default: all six).
 # Coordinates below are in points for a 440x956 pt portrait phone; other layouts pass their own.
 set -u
 UDID=$1; LANG_=$2; OUT=$3; LOG=$4
@@ -25,13 +26,14 @@ fresh() { # cold launch, seed, open $1 (home|review|stats|trip)
 shot() { timeout 30 axe screenshot --udid "$UDID" --output "$OUT/$1.png" >/dev/null 2>&1 && echo "  $1"; }
 tap() { timeout 30 axe tap -x "$1" -y "$2" --udid "$UDID" >/dev/null 2>&1; }
 
+want() { [ -z "${SHOTS:-}" ] || [[ " $SHOTS " == *" $1 "* ]]; }
 echo "$LANG_ -> $OUT"
-fresh review; timeout 30 axe swipe --start-x "${X_MID:-220}" --start-y "${Y_SWIPE_FROM:-700}" --end-x "${X_MID:-220}" --end-y "${Y_SWIPE_TO:-520}" --udid "$UDID" >/dev/null 2>&1; sleep 3; shot 01-review
-fresh home; shot 02-home
+want 01-review && { fresh review; timeout 30 axe swipe --start-x "${X_MID:-220}" --start-y "${Y_SWIPE_FROM:-700}" --end-x "${X_MID:-220}" --end-y "${Y_SWIPE_TO:-520}" --udid "$UDID" >/dev/null 2>&1; sleep 3; shot 01-review; }
+want 02-home && { fresh home; shot 02-home; }
 # The full-screen viewer at fit: the whole receipt, sharp. (A 2.5x zoom cut every line in half.)
-fresh review; tap "${X_MID:-220}" "${Y_PHOTO:-300}"; sleep 4; shot 03-zoom
-fresh stats; shot 04-stats
-fresh trip; shot 05-trip
-fresh home; tap "${X_SEARCH_TAB:-145}" "${Y_TABS:-877}"; sleep 3; tap "${X_FIELD:-180}" "${Y_FIELD:-117}"; sleep 2
+want 03-zoom && { fresh review; tap "${X_MID:-220}" "${Y_PHOTO:-300}"; sleep 4; shot 03-zoom; }
+want 04-stats && { fresh stats; shot 04-stats; }
+want 05-trip && { fresh trip; shot 05-trip; }
+want 06-search && { fresh home; tap "${X_SEARCH_TAB:-145}" "${Y_TABS:-877}"; sleep 3; tap "${X_FIELD:-180}" "${Y_FIELD:-117}"; sleep 2
 timeout 30 axe type "$QUERY" --udid "$UDID" >/dev/null 2>&1; sleep 3
-tap "${X_MID:-220}" "${Y_BLANK:-60}"; sleep 2; shot 06-search
+tap "${X_MID:-220}" "${Y_BLANK:-60}"; sleep 2; shot 06-search; }
