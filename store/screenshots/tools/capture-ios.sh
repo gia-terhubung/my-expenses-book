@@ -55,5 +55,5 @@ want 04-stats && { fresh stats; shot 04-stats; }
 want 05-trip && { fresh trip; [ -n "${TRIP_ROW_X:-}" ] && { tap "$TRIP_ROW_X" "$TRIP_ROW_Y"; sleep 3; }; shot 05-trip; }
 want 06-search && { fresh home; tap "${X_SEARCH_TAB:-145}" "${Y_TABS:-877}"; sleep 3; tap "${X_FIELD:-180}" "${Y_FIELD:-117}"; sleep 2
 timeout 30 axe type "$QUERY" --udid "$UDID" >/dev/null 2>&1; sleep 3
-tap "${X_MID:-220}" "${Y_BLANK:-60}"; sleep 2
+tap "${X_BLANK:-${X_MID:-220}}" "${Y_BLANK:-60}"; sleep 2
 [ -n "${SEARCH_ROW_X:-}" ] && { tap "$SEARCH_ROW_X" "$SEARCH_ROW_Y"; sleep 3; }; shot 06-search; }
