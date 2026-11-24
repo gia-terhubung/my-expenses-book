@@ -1,8 +1,8 @@
-// Dev-only: myexpensesbook://dev/store-shots?lang=<en|id|es|pt-BR>&photo=<url>&w=<px>&h=<px>
+// Dev-only: myexpensesbook://dev/store-shots?lang=<en|id|es|pt-BR>&photo=<url>&w=<px>&h=<px>&then=<home|review|stats|trip>
 // Seeds the store-screenshot data for one language (refuses on a database with real receipts),
 // sets language, home currency and a finished onboarding, attaches the review draft's photo
 // (fetched from `photo`, e.g. a local http server), then opens Home.
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, type Href } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
@@ -13,7 +13,14 @@ import { useImageStore } from "@/images/ImageStoreProvider";
 import { usePrefs } from "@/prefs/PrefsProvider";
 
 export default function StoreShots() {
-  const { lang, photo, w, h, today } = useLocalSearchParams<{ lang?: string; photo?: string; w?: string; h?: string; today?: string }>();
+  const { lang, photo, w, h, today, then } = useLocalSearchParams<{
+    lang?: string;
+    photo?: string;
+    w?: string;
+    h?: string;
+    today?: string;
+    then?: string;
+  }>();
   const db = useDb();
   const images = useImageStore();
   const prefs = usePrefs();
@@ -25,7 +32,7 @@ export default function StoreShots() {
     (async () => {
       const set = STORE_SHOTS[l];
       const day = today ?? new Date().toISOString().slice(0, 10);
-      const { draftId } = seedStoreShots(db, l, day);
+      const { draftId, tripId } = seedStoreShots(db, l, day);
       if (photo) {
         const bytes = new Uint8Array(await (await fetch(photo)).arrayBuffer());
         const path = await images.importPage(bytes);
@@ -39,11 +46,18 @@ export default function StoreShots() {
       prefs.set("receiptsSinceBackup", 0);
       console.log("STORE_SHOTS_DONE " + l);
       router.replace("/");
+      // The screen to capture next, opened directly: taps on a slow simulator are unreliable.
+      const next: Record<string, Href> = {
+        review: { pathname: "/review/[id]", params: { id: draftId } } as unknown as Href,
+        stats: "/stats" as Href,
+        trip: { pathname: "/folder/[id]", params: { id: tripId } } as unknown as Href,
+      };
+      if (then && next[then]) setTimeout(() => router.push(next[then]!), 400);
     })().catch((e: unknown) => {
       console.log("STORE_SHOTS_FAILED " + String(e));
       setError(String(e));
     });
-  }, [db, images, prefs, l, photo, w, h, today]);
+  }, [db, images, prefs, l, photo, w, h, today, then]);
 
   return (
     <View style={{ padding: 24, paddingTop: 80 }}>

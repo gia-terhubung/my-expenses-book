@@ -245,7 +245,7 @@ export class RealDataError extends Error {}
  * receipts that are not from a previous store-shot run, so it can never touch a real user's data.
  * The caller sets prefs (language, home currency, onboarding done) and attaches the draft's photo.
  */
-export function seedStoreShots(db: AppDb, lang: ShotLang, today: string): { inserted: number; draftId: string } {
+export function seedStoreShots(db: AppDb, lang: ShotLang, today: string): { inserted: number; draftId: string; tripId: string } {
   const set = STORE_SHOTS[lang];
   const real = db.select({ id: receipts.id, refNo: receipts.refNo }).from(receipts).all();
   if (real.some((r) => !r.refNo?.startsWith("SS-"))) {
@@ -254,6 +254,7 @@ export function seedStoreShots(db: AppDb, lang: ShotLang, today: string): { inse
   const todayDay = Number(today.slice(8, 10));
   let n = 0;
   let draftId = "";
+  let tripId = "";
 
   db.transaction((tx) => {
     const old = tx.select({ id: receipts.id }).from(receipts).where(like(receipts.refNo, "SS-%")).all().map((r) => r.id);
@@ -313,15 +314,17 @@ export function seedStoreShots(db: AppDb, lang: ShotLang, today: string): { inse
     const day = dayIn(today, 0, Math.max(1, todayDay - Math.round((i * (todayDay - 1)) / set.receipts.length)));
     insert(l, { day, time: TIMES[i % TIMES.length]!, tz: set.tz, currency: set.home, rate: 1 });
   });
-  // Two earlier months at other amounts, so Statistics has a trend.
-  [1, 2].forEach((back) =>
-    set.receipts.slice(0, 7 - back).forEach((l, i) => {
-      const total = Number((l.total * (back === 1 ? 1.12 : 0.86)).toFixed(currencyExponent(set.home)));
+  // The five months before, at other amounts, so the 6-month chart has a believable trend.
+  const FACTOR = [1.12, 0.86, 1.04, 0.93, 1.18];
+  [1, 2, 3, 4, 5].forEach((back) =>
+    set.receipts.slice(0, 6).forEach((l, i) => {
+      const total = Number((l.total * FACTOR[back - 1]!).toFixed(currencyExponent(set.home)));
       insert({ ...l, total }, { day: dayIn(today, back, 3 + i * 4), time: TIMES[(i + back) % TIMES.length]!, tz: set.tz, currency: set.home, rate: 1 });
     }),
   );
   for (const f of set.folders) {
     const folder = createFolder(db, { name: f.name, kind: f.kind, ...(f.currency === set.home ? {} : { defaultCurrency: f.currency }) });
+    if (f.kind === "trip") tripId = folder.id;
     f.receipts.forEach((l, i) =>
       insert(l, { day: dayIn(today, 1, 10 + i), time: TIMES[(i + 3) % TIMES.length]!, tz: f.tz, currency: f.currency, rate: f.rate, folderId: folder.id }),
     );
@@ -329,5 +332,5 @@ export function seedStoreShots(db: AppDb, lang: ShotLang, today: string): { inse
   draftId = insert(set.draft, { day: today, time: set.draft.time, tz: set.tz, currency: set.home, rate: 1, status: "draft" });
 
   notifyDataChanged();
-  return { inserted: n, draftId };
+  return { inserted: n, draftId, tripId };
 }

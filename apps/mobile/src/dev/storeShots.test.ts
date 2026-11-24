@@ -65,6 +65,21 @@ describe("seedStoreShots", () => {
     expect(thisMonth.every((x) => x.purchasedAtLocal.slice(0, 10) <= TODAY)).toBe(true);
   });
 
+  it("fills the five months before this one, so the 6-month chart has no empty bars", () => {
+    const db = testDb();
+    seedStoreShots(db, "en", TODAY);
+    const months = new Set(
+      db.select().from(receipts).all().filter((x) => x.status === "confirmed" && !x.folderId).map((x) => x.purchasedAtLocal.slice(0, 7)),
+    );
+    expect([...months].sort()).toEqual(["2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11"]);
+  });
+
+  it("returns the trip folder id so the shot can open it", () => {
+    const db = testDb();
+    const r = seedStoreShots(db, "en", TODAY);
+    expect(listFolders(db).find((f) => f.id === r.tripId)?.name).toBe("Tokyo trip");
+  });
+
   it("refuses to run when the database holds anyone's real receipts", () => {
     const db = testDb();
     createReceipt(db, {
