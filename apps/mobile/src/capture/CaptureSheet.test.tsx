@@ -40,6 +40,13 @@ describe("CaptureSheet", () => {
     expect(flat(photos).borderRadius).toBe(light.radius.control);
   });
 
+  it("Cancel is an outline button, not bare text", async () => {
+    await renderSheet();
+    const cancel = screen.getAllByRole("button", { name: "common.cancel" }).find((b) => flat(b).borderWidth === 1);
+    expect(cancel).toBeTruthy();
+    expect(flat(cancel!)).toMatchObject({ backgroundColor: "transparent", borderColor: light.colors.border });
+  });
+
   it("sheet has the sheet elevation", async () => {
     await renderSheet();
     const sheet = flat(screen.getByTestId("capture-sheet"));

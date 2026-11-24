@@ -142,8 +142,23 @@ export function CaptureSheet({
           {option("scan", t("capture.scan"), true)}
           {option("photos", t("capture.import"))}
           {option("manual", t("capture.manual"))}
-          <Pressable accessibilityRole="button" onPress={onClose} style={[styles.option, { paddingHorizontal: theme.spacing.lg }]}>
-            <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("common.cancel")}</Text>
+          {/* Outline, like every secondary action: never bare text. */}
+          <Pressable
+            accessibilityRole="button"
+            onPress={onClose}
+            style={({ pressed }) => [
+              styles.option,
+              {
+                borderRadius: theme.radius.control,
+                borderCurve: "continuous",
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                backgroundColor: pressed ? theme.colors.tonalPressed : "transparent",
+                paddingHorizontal: theme.spacing.lg,
+              },
+            ]}
+          >
+            <Text style={[theme.type.body, { color: theme.colors.textMuted, fontWeight: "600" }]}>{t("common.cancel")}</Text>
           </Pressable>
         </View>
       </View>
