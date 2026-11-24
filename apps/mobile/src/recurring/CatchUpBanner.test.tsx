@@ -72,6 +72,14 @@ describe("CatchUpBanner", () => {
     expect(screen.getByTestId("catch-up-review")).toBeTruthy();
   });
 
+  it("Review is the yellow nudge button", async () => {
+    mockLast = seedRun();
+    await render(<CatchUpBanner />);
+    const { StyleSheet } = jest.requireActual("react-native");
+    const s = screen.getByTestId("catch-up-review").props.style;
+    expect(StyleSheet.flatten(typeof s === "function" ? s({ pressed: false }) : s).backgroundColor).toBe("#FFD84A");
+  });
+
   it("without drafts the second line and Review are left out", async () => {
     mockLast = { createdIds: ["a"], draftCount: 0 };
     await render(<CatchUpBanner />);

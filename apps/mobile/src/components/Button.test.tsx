@@ -61,17 +61,32 @@ describe("Button", () => {
     expect(style.opacity).toBeUndefined();
   });
 
-  it("quiet is underlined, muted tone is not", async () => {
+  it("quiet is an outline button: no fill, a 1 pt outline, centred label, no underline", async () => {
+    await render(<Button label="Skip" onPress={() => {}} variant="quiet" />);
+    const box = flat(screen.getByRole("button", { name: "Skip" }));
+    expect(box).toMatchObject({ backgroundColor: "transparent", borderWidth: 1, borderColor: light.outline, alignItems: "center" });
+    expect(box.paddingHorizontal).toBe(tokens.light.spacing.lg);
+    const label = StyleSheet.flatten(screen.getByText("Skip").props.style);
+    expect(label.textDecorationLine).toBeUndefined();
+    expect(label.color).toBe(light.primary);
+  });
+
+  it("quiet muted and danger tones colour both the outline and the label", async () => {
     await render(
       <>
-        <Button label="Skip" onPress={() => {}} variant="quiet" />
         <Button label="Later" onPress={() => {}} variant="quiet" tone="muted" />
+        <Button label="Remove" onPress={() => {}} variant="quiet" tone="danger" />
       </>,
     );
-    expect(StyleSheet.flatten(screen.getByText("Skip").props.style).textDecorationLine).toBe("underline");
-    const later = StyleSheet.flatten(screen.getByText("Later").props.style);
-    expect(later.textDecorationLine).toBeUndefined();
-    expect(later.color).toBe(light.textMuted);
+    expect(flat(screen.getByRole("button", { name: "Later" })).borderColor).toBe(light.border);
+    expect(StyleSheet.flatten(screen.getByText("Later").props.style).color).toBe(light.textMuted);
+    expect(flat(screen.getByRole("button", { name: "Remove" })).borderColor).toBe(light.outlineDanger);
+    expect(StyleSheet.flatten(screen.getByText("Remove").props.style).color).toBe(light.danger);
+  });
+
+  it("disabled quiet keeps the outline in the plain border colour", async () => {
+    await render(<Button label="Skip" onPress={() => {}} variant="quiet" disabled />);
+    expect(flat(screen.getByRole("button", { name: "Skip" })).borderColor).toBe(light.border);
   });
 
   it("highlight uses the yellow fill with ink text, and stays yellow when pressed", async () => {
@@ -128,8 +143,10 @@ describe("Button", () => {
       expect((await pressed({ tone: "danger" })).opacity).toBe(0.85);
     });
 
-    it("quiet uses pressedOpacity", async () => {
-      expect((await pressed({ variant: "quiet" })).opacity).toBe(tokens.light.state.pressedOpacity);
+    it("quiet fills with the tonal tint when pressed", async () => {
+      const style = await pressed({ variant: "quiet" });
+      expect(style.backgroundColor).toBe(light.tonalPressed);
+      expect(style.opacity).toBeUndefined();
     });
   });
 });

@@ -46,6 +46,17 @@ describe("GuideBar", () => {
     expect(StyleSheet.flatten(screen.getByTestId("guide-bar").props.style).marginHorizontal).toBe(8);
   });
 
+  it("Show guide is the yellow nudge button; Dismiss is an outline button", async () => {
+    await render(<GuideBar />);
+    const { StyleSheet } = jest.requireActual("react-native");
+    const box = (name: string) => {
+      const s = screen.getByRole("button", { name }).props.style;
+      return StyleSheet.flatten(typeof s === "function" ? s({ pressed: false }) : s);
+    };
+    expect(box("Show guide").backgroundColor).toBe("#FFD84A");
+    expect(box("Dismiss")).toMatchObject({ backgroundColor: "transparent", borderWidth: 1 });
+  });
+
   it("Dismiss sets guideSeen and hides the bar", async () => {
     const { rerender } = await render(<GuideBar />);
     await fireEvent.press(screen.getByRole("button", { name: "Dismiss" }));

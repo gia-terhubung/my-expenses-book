@@ -42,6 +42,9 @@ export const lightColors = {
   slipText: "#FFFFFF",
   slipMuted: "#BFD9CF",
   bar: "#6F9E8E",
+  // Outline buttons: 3:1 against the page and the surface (WCAG 1.4.11, UI boundaries).
+  outline: "#5E8F7F",
+  outlineDanger: "#D06A62",
 } as const;
 
 export type ColorTokens = { [K in keyof typeof lightColors]: string };
@@ -69,6 +72,8 @@ export const darkColors: ColorTokens = {
   slipText: "#EEF3F0",
   slipMuted: "#BFD9CF",
   bar: "#4A7A6B",
+  outline: "#3F7F6C",
+  outlineDanger: "#B85A52",
 };
 
 export const elevation = {

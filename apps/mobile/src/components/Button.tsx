@@ -40,9 +40,9 @@ export function Button({
   style,
 }: ButtonProps) {
   const theme = useTheme();
-  const { colors, spacing, size, radius, state } = theme;
+  const { colors, spacing, size, radius } = theme;
   const inert = !!disabled || !!busy;
-  const textAlign = align ?? (variant === "quiet" ? "start" : "center");
+  const textAlign = align ?? "center";
   const danger = tone === "danger";
 
   let fill = "transparent";
@@ -59,9 +59,13 @@ export function Button({
   } else if (variant === "secondary") {
     fill = danger ? colors.tonalDanger : colors.tonal;
     fillPressed = danger ? colors.tonalDanger : colors.tonalPressed;
-  } else if (tone === "muted") {
-    labelColor = colors.textMuted;
+  } else {
+    // quiet: an outline button. A pressed one takes the tonal tint, like the filled buttons.
+    fillPressed = danger ? colors.tonalDanger : colors.tonalPressed;
+    if (tone === "muted") labelColor = colors.textMuted;
   }
+  const outline =
+    variant !== "quiet" ? null : disabled || tone === "muted" ? colors.border : danger ? colors.outlineDanger : colors.outline;
   if (disabled && variant !== "quiet") {
     fill = colors.tonal;
     fillPressed = colors.tonal;
@@ -88,18 +92,18 @@ export function Button({
           minHeight: size.touch,
           minWidth: size.touch,
           paddingVertical: spacing.sm,
-          paddingHorizontal: variant === "quiet" ? 0 : spacing.lg,
+          paddingHorizontal: spacing.lg,
           justifyContent: "center",
           alignItems: textAlign === "center" ? "center" : "flex-start",
           borderRadius: radius.control,
           borderCurve: "continuous",
           backgroundColor: pressed && !inert ? fillPressed : fill,
         },
+        outline ? { borderWidth: 1, borderColor: outline } : null,
         variant === "primary" && !disabled && theme.scheme === "light"
           ? { boxShadow: "0 6px 14px -8px rgba(31,92,76,0.7)" }
           : null,
         variant === "primary" && pressed && !inert ? { transform: [{ translateY: 1 }] } : null,
-        variant === "quiet" && pressed && !inert ? { opacity: state.pressedOpacity } : null,
         // Ink on yellow must stay on yellow: dim instead of changing the fill.
         variant === "highlight" && pressed && !inert ? { opacity: 0.85 } : null,
         variant === "secondary" && danger && pressed && !inert ? { opacity: 0.85 } : null,
@@ -119,7 +123,6 @@ export function Button({
             textAlign: textAlign === "center" ? "center" : "left",
             opacity: showSpinner ? 0 : 1,
           },
-          variant === "quiet" && tone !== "muted" ? { textDecorationLine: "underline" } : null,
         ]}
       >
         {label}

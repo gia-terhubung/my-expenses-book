@@ -215,7 +215,12 @@ describe("StatsScreen", () => {
 
     expect(screen.getByText("Not converted")).toBeTruthy();
     expect(screen.getByText("2 receipts are not in the total.")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("link", { name: "See receipts" }));
+    // A button, not an underlined link (owner: every action looks like a button).
+    const see = screen.getByRole("button", { name: "See receipts" });
+    const { StyleSheet } = jest.requireActual("react-native");
+    const st = see.props.style;
+    expect(StyleSheet.flatten(typeof st === "function" ? st({ pressed: false }) : st)).toMatchObject({ borderWidth: 1 });
+    await fireEvent.press(see);
     // navigate, not push: Search is a tab, so the existing tabs instance is reused.
     expect(mockRouter.navigate).toHaveBeenCalledWith({ pathname: "/search", params: { unconverted: "1" } });
     expect(mockRouter.push).not.toHaveBeenCalled();

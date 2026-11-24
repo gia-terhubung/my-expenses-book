@@ -18,8 +18,9 @@ export function BackupReminder() {
   if (!shouldRemindBackup({ receiptsSinceBackup, backupReminderSnoozedUntil }, Date.now())) return null;
 
   const action = (label: string, onPress: () => void, primary: boolean) => (
+    // The main action is the yellow nudge button (Home's attention colour); the other is an outline.
     <Button
-      variant="quiet"
+      variant={primary ? "highlight" : "quiet"}
       tone={primary ? "default" : "muted"}
       label={label}
       onPress={onPress}
@@ -42,7 +43,7 @@ export function BackupReminder() {
       <Text style={[theme.type.body, { color: theme.colors.text }]}>
         {t("backup.reminder", { count: receiptsSinceBackup })}
       </Text>
-      <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+      <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
         {action(t("backup.reminderLater"), () => prefs.set("backupReminderSnoozedUntil", Date.now() + SNOOZE_MS), false)}
         {action(t("backup.reminderNow"), () => router.push("/backup" as unknown as Href), true)}
       </View>

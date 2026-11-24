@@ -28,8 +28,9 @@ export function GuideBar() {
 
   const seen = () => prefs.set("guideSeen", true);
   const action = (label: string, onPress: () => void, primary: boolean) => (
+    // The main action is the yellow nudge button (Home's attention colour); the other is an outline.
     <Button
-      variant="quiet"
+      variant={primary ? "highlight" : "quiet"}
       tone={primary ? "default" : "muted"}
       label={label}
       onPress={onPress}
@@ -50,7 +51,7 @@ export function GuideBar() {
       }}
     >
       <Text style={[theme.type.body, { color: theme.colors.text }]}>{t("guide.bar.text")}</Text>
-      <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+      <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
         {action(t("guide.bar.dismiss"), seen, false)}
         {action(
           t("guide.bar.open"),

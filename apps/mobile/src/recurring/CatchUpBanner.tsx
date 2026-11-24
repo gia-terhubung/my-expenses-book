@@ -85,7 +85,7 @@ export function CatchUpBanner() {
         ) : null}
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: theme.spacing.lg }}>
-        {last.draftCount > 0 ? <Button testID="catch-up-review" label={t("recurring.review")} onPress={review} /> : null}
+        {last.draftCount > 0 ? <Button testID="catch-up-review" variant="highlight" label={t("recurring.review")} onPress={review} /> : null}
         <View style={{ flex: 1 }} />
         <Button testID="catch-up-undo" variant="quiet" label={t("recurring.undo")} onPress={undo} />
         <Button testID="catch-up-dismiss" variant="quiet" tone="muted" label={t("recurring.dismiss")} onPress={dismiss} />

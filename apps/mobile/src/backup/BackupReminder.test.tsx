@@ -46,6 +46,18 @@ describe("BackupReminder", () => {
     expect(mockPush).toHaveBeenCalledWith("/backup");
   });
 
+  it("Back up is the yellow nudge button; Later is an outline button", async () => {
+    mockPrefs.set("receiptsSinceBackup", 20);
+    await render(<BackupReminder />);
+    const { StyleSheet } = jest.requireActual("react-native");
+    const box = (name: string) => {
+      const s = screen.getByRole("button", { name }).props.style;
+      return StyleSheet.flatten(typeof s === "function" ? s({ pressed: false }) : s);
+    };
+    expect(box("Back up").backgroundColor).toBe("#FFD84A");
+    expect(box("Later")).toMatchObject({ backgroundColor: "transparent", borderWidth: 1 });
+  });
+
   it("Later snoozes for 7 days and hides", async () => {
     mockPrefs.set("receiptsSinceBackup", 20);
     const now = jest.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);

@@ -445,14 +445,12 @@ export function StatsScreen({ now = clockNow }: { now?: () => Date }) {
                       <Text style={[type.label, { color: colors.warning }]}>
                         {t("stats.unconvertedBody", { count: data.unconverted })}
                       </Text>
-                      <Pressable
-                        accessibilityRole="link"
-                        accessibilityLabel={t("stats.seeReceipts")}
+                      <Button
+                        variant="quiet"
+                        label={t("stats.seeReceipts")}
                         onPress={() => router.navigate({ pathname: "/search", params: { unconverted: "1" } } as unknown as Href)}
-                        style={({ pressed }) => ({ minHeight: size.touch, justifyContent: "center", alignSelf: "flex-start", opacity: pressed ? 0.6 : 1 })}
-                      >
-                        <Text style={[type.label, { color: colors.warning, textDecorationLine: "underline" }]}>{t("stats.seeReceipts")}</Text>
-                      </Pressable>
+                        style={{ alignSelf: "flex-start", marginTop: spacing.sm }}
+                      />
                     </View>
                   </View>
                 </>
