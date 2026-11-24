@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
-import { AppState, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { AppState, Platform, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
@@ -56,22 +56,48 @@ function useViewUris(pages: ReceiptPage[]): (string | null | "error")[] {
 const HINT = 32;
 
 /**
+ * Key for the full-screen modal. On Android an open Modal's window keeps its size through a
+ * rotation (seen on the Redmi), so the key follows the window and the modal remounts at the new
+ * size; the zoom resets on a size change anyway. iOS re-fits in place.
+ */
+export function viewerKey(os: string, width: number, height: number): string {
+  return os === "android" ? `viewer-${Math.round(width)}x${Math.round(height)}` : "viewer";
+}
+
+/**
  * Receipt photo(s): tap a page for a full-screen, zoomable view. `fill` = take the pane height
  * (side-by-side layout, whole page visible); otherwise each page fills the width and is capped at
  * 55% of the window height. A capped page shows its top (store name and items) with the slip's torn
  * edge where it is cut, so it reads as "continues". Every page carries an expand hint.
  */
-export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill?: boolean }) {
+export function PageViewer({
+  pages,
+  fill = false,
+  open,
+  onOpenChange,
+  active = true,
+}: {
+  pages: ReceiptPage[];
+  fill?: boolean;
+  /** Open page index, when the parent owns it (the review form keeps two instances in sync). */
+  open?: number | null;
+  onOpenChange?: (page: number | null) => void;
+  /** False while this instance is hidden: it then shows no viewer, even with a page open. */
+  active?: boolean;
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   // A modal is its own window and reports its own side insets; the root ones are the real strips.
   const side = useSideInsets();
   const uris = useViewUris(pages);
-  const [full, setFull] = useState<number | null>(null);
+  const [ownFull, setOwnFull] = useState<number | null>(null);
+  const controlled = open !== undefined;
+  const full = active ? (controlled ? open : ownFull) : null;
+  const setFull = (page: number | null) => (controlled ? onOpenChange?.(page) : setOwnFull(page));
   // Measured box per page: only decides the torn edge, never the size (see `page`).
   const [boxes, setBoxes] = useState<Record<string, { width: number; height: number }>>({});
-  const { height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const cap = inlineCap(windowHeight);
 
   const content = (uri: string | null | "error" | undefined) =>
@@ -149,7 +175,14 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
   return (
     <View style={[{ gap: theme.spacing.sm }, fill && { flex: 1 }]}>
       {pages.map(page)}
-      <AppModal visible={full !== null} sideInset={false} animationType="fade" onRequestClose={() => setFull(null)} statusBarTranslucent>
+      <AppModal
+        key={viewerKey(Platform.OS, windowWidth, windowHeight)}
+        visible={full !== null}
+        sideInset={false}
+        animationType="fade"
+        onRequestClose={() => setFull(null)}
+        statusBarTranslucent
+      >
         <View style={{ flex: 1, backgroundColor: "#000" }}>
           {/* Inside the safe area: on the folded Duo the status column covers the right 84 pt. */}
           <View
@@ -157,7 +190,6 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
             style={{
               flex: 1,
               paddingTop: insets.top,
-              paddingBottom: insets.bottom,
               paddingLeft: side.left,
               paddingRight: side.right,
             }}
@@ -169,16 +201,15 @@ export function PageViewer({ pages, fill = false }: { pages: ReceiptPage[]; fill
               />
             ) : null}
           </View>
-          {/* Bottom centre, not top right: on the open Duo the status pill reaches into the
-              top-right of the content, and the bottom is within thumb reach on a tall screen. */}
+          {/* Its own bar under the photo, bottom centre: floating over the photo it hid item lines
+              (Redmi, landscape); at the top right the open Duo's status pill covered it. */}
           <View
             testID="photo-done-bar"
-            pointerEvents="box-none"
             style={{
-              position: "absolute",
-              left: side.left,
-              right: side.right,
-              bottom: insets.bottom + theme.spacing.lg,
+              paddingTop: theme.spacing.sm,
+              paddingBottom: insets.bottom + theme.spacing.sm,
+              paddingLeft: side.left,
+              paddingRight: side.right,
               alignItems: "center",
             }}
           >

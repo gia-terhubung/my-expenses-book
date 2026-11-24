@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -54,6 +54,9 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
   const form = useReviewForm(params.id, { queue, mode });
   const categories = useMemo(() => listCategories(db), [db]);
   const failed = editing ? 0 : Number(params.failed ?? 0);
+  // One open page for both photo instances (inline and side pane), so a fold or rotation that
+  // swaps them keeps the full-screen viewer open in the visible one.
+  const [openPage, setOpenPage] = useState<number | null>(null);
 
   // Review: draft already saved or discarded (stale queue entry), move on. Edit: receipt gone or
   // not confirmed, close.
@@ -172,7 +175,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
         {hasPages ? (
           // Inline viewer for compact; kept mounted (hidden) side by side, where the pane viewer shows.
           <View style={sideBySide ? { display: "none" } : undefined} {...(sideBySide ? hiddenView : null)}>
-            <PageViewer pages={form.pages} />
+            <PageViewer pages={form.pages} open={openPage} onOpenChange={setOpenPage} active={!sideBySide} />
           </View>
         ) : null}
         <ReviewFields form={form} categories={categories} />
@@ -200,7 +203,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
           <TwoPane
             primary={
               <View style={{ flex: 1, padding: theme.spacing.lg }}>
-                <PageViewer pages={form.pages} fill />
+                <PageViewer pages={form.pages} fill open={openPage} onOpenChange={setOpenPage} active={sideBySide} />
               </View>
             }
             secondary={formScroll}

@@ -4,7 +4,7 @@ import { Dimensions, StyleSheet } from "react-native";
 import type { ReceiptPage } from "@/db/types";
 import { initI18n } from "@/i18n";
 
-import { PageViewer } from "./PageViewer";
+import { PageViewer, viewerKey } from "./PageViewer";
 import { inlineCap } from "./zoomMath";
 
 const mockImages = {
@@ -118,20 +118,51 @@ describe("PageViewer full screen", () => {
     await act(async () => fireEvent.press(screen.getByRole("imagebutton")));
     expect(StyleSheet.flatten(screen.getByTestId("photo-viewer-area").props.style)).toMatchObject({
       paddingTop: 20,
-      paddingBottom: 10,
       paddingLeft: 0,
       paddingRight: 84,
     });
     const done = StyleSheet.flatten(screen.getByRole("button", { name: "Close photo" }).props.style);
-    // Bottom centre: on the open Duo the status pill reaches into the top-right of the content.
-    expect(StyleSheet.flatten(screen.getByTestId("photo-done-bar").props.style)).toMatchObject({
-      position: "absolute",
-      left: 0,
-      right: 84,
-      bottom: 10 + 16,
-      alignItems: "center",
-    });
     // Seen on the Duo: a 60% black pill vanished over the black band around a fitted photo.
     expect(done.borderWidth).toBeGreaterThan(0);
+    // Its own bar under the photo: floating over it, Done hid item lines (Redmi, landscape).
+    const bar = StyleSheet.flatten(screen.getByTestId("photo-done-bar").props.style);
+    expect(bar).toMatchObject({ paddingBottom: 10 + 8, paddingRight: 84, alignItems: "center" });
+    expect(bar.position).toBeUndefined();
+  });
+});
+
+describe("viewerKey", () => {
+  it("on Android changes with the window size, so a rotation remounts the modal at the new size", () => {
+    // Seen on the Redmi: the open modal's window kept its portrait size after a rotation.
+    expect(viewerKey("android", 360, 820)).not.toBe(viewerKey("android", 820, 360));
+  });
+
+  it("on iOS stays put: the viewer re-fits in place", () => {
+    expect(viewerKey("ios", 360, 820)).toBe(viewerKey("ios", 820, 360));
+  });
+});
+
+describe("PageViewer open state from the parent", () => {
+  it("a hidden instance shows no viewer even when a page is open (review form side by side)", async () => {
+    // Seen on the Redmi: rotating swapped the form to its side pane; the hidden inline instance
+    // kept its viewer open and Android drew only the dim backdrop.
+    await render(<PageViewer pages={[page()]} open={0} onOpenChange={() => {}} active={false} />);
+    expect(screen.queryByTestId("zoom-surface")).toBeNull();
+  });
+
+  it("the visible instance shows the page the parent opened", async () => {
+    await render(<PageViewer pages={[page()]} open={0} onOpenChange={() => {}} />);
+    await waitFor(() => expect(screen.getByTestId("zoom-surface")).toBeTruthy());
+  });
+
+  it("tapping a page asks the parent to open it; Done asks to close", async () => {
+    const onOpenChange = jest.fn();
+    const view = await render(<PageViewer pages={[page()]} open={null} onOpenChange={onOpenChange} />);
+    await waitFor(() => expect(screen.getByTestId("inline-photo")).toBeTruthy());
+    await act(async () => fireEvent.press(screen.getByRole("imagebutton")));
+    expect(onOpenChange).toHaveBeenLastCalledWith(0);
+    await view.rerender(<PageViewer pages={[page()]} open={0} onOpenChange={onOpenChange} />);
+    await act(async () => fireEvent.press(screen.getByRole("button", { name: "Close photo" })));
+    expect(onOpenChange).toHaveBeenLastCalledWith(null);
   });
 });
