@@ -6,6 +6,7 @@ const ROUTES: Record<string, string> = {
   "db-check": "DbCheck",
   "db-spike": "DbSpike",
   "dev/clock": "DevClock",
+  "dev/store-shots": "StoreShots",
   "ocr-check": "OcrCheck",
 };
 
