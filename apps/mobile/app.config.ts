@@ -33,7 +33,9 @@ const config: ExpoConfig = {
     "expo-router",
     "expo-secure-store",
     "react-native-quick-crypto",
-    "expo-localization",
+    // The translated languages, declared so iOS localizes its own controls (date picker months)
+    // and the App Store lists them; Android gets per-app language in its settings.
+    ["expo-localization", { supportedLocales: ["en", "id", "es", "pt-BR"] }],
     ["expo-local-authentication", { faceIDPermission: "Allow $(PRODUCT_NAME) to unlock your receipts with Face ID." }],
     ["expo-sqlite", { useSQLCipher: true }],
     "expo-iap",

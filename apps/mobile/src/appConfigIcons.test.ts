@@ -29,3 +29,19 @@ describe("app icons", () => {
     expect(splash[1].backgroundColor).toBe("#FFD84A");
   });
 });
+
+describe("app languages", () => {
+  it("declares every translated language to iOS and Android", () => {
+    // Without this, iOS shows its own controls (date picker months, system sheets) in English on
+    // a Spanish or Indonesian phone, and the App Store lists the app as English only.
+    const { readdirSync } = require("node:fs");
+    const translated = readdirSync(resolve(root, "src/i18n/locales"))
+      .map((f: string) => f.replace(/\.json$/, ""))
+      .sort();
+    const entry = config.plugins?.find((p) => Array.isArray(p) && p[0] === "expo-localization") as
+      | [string, { supportedLocales?: string[] }]
+      | undefined;
+    expect([...(entry?.[1].supportedLocales ?? [])].sort()).toEqual(translated);
+  });
+});
+
