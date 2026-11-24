@@ -121,10 +121,10 @@ export function ruleInputFrom(v: RuleFormValues): NewRecurringRuleInput {
   };
 }
 
-function valuesFromRule(r: RecurringRule): RuleFormValues {
+function valuesFromRule(r: RecurringRule, locale: string): RuleFormValues {
   return {
     merchant: r.merchant ?? "",
-    amount: amountText(r.totalMinor, r.currency),
+    amount: amountText(r.totalMinor, r.currency, locale),
     currency: r.currency,
     categoryId: r.categoryId,
     folderId: r.folderId,
@@ -141,11 +141,17 @@ function valuesFromRule(r: RecurringRule): RuleFormValues {
 }
 
 /** Starting values: the rule being edited, the receipt being repeated, or a blank monthly rule. */
-function initialValues(db: AppDb, ruleId: string | null, fromReceiptId: string | undefined, home: string): RuleFormValues | "missing" {
+function initialValues(
+  db: AppDb,
+  ruleId: string | null,
+  fromReceiptId: string | undefined,
+  home: string,
+  locale: string,
+): RuleFormValues | "missing" {
   const tz = deviceTimeZone();
   if (ruleId) {
     const rule = listRules(db).find((r) => r.id === ruleId);
-    return rule ? valuesFromRule(rule) : "missing";
+    return rule ? valuesFromRule(rule, locale) : "missing";
   }
   if (fromReceiptId) {
     const r = getReceipt(db, fromReceiptId);
@@ -153,7 +159,7 @@ function initialValues(db: AppDb, ruleId: string | null, fromReceiptId: string |
     const date = r.purchasedAtLocal.slice(0, 10);
     return {
       merchant: r.merchant ?? "",
-      amount: r.totalMinor === 0 ? "" : amountText(r.totalMinor, r.currency),
+      amount: r.totalMinor === 0 ? "" : amountText(r.totalMinor, r.currency, locale),
       currency: r.currency,
       categoryId: r.categoryId,
       folderId: r.folderId,
@@ -226,7 +232,7 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const version = useDataVersion();
-  const [initial] = useState(() => initialValues(db, ruleId, fromReceiptId, home));
+  const [initial] = useState(() => initialValues(db, ruleId, fromReceiptId, home, locale));
   const [values, setValues] = useState<RuleFormValues | null>(initial === "missing" ? null : initial);
   const [errors, setErrors] = useState<RuleFormErrors>({});
   const [saveFailed, setSaveFailed] = useState<string | null>(null);

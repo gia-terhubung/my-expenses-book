@@ -163,7 +163,7 @@ export function useReviewForm(
   id: string,
   opts: { queue?: string[]; mode?: ReviewFormMode } = {},
 ): ReviewForm {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const db = useDb();
   const images = useImageStore();
   const prefs = usePrefs();
@@ -179,7 +179,7 @@ export function useReviewForm(
   const receipt = loaded === "missing" ? "missing" : loaded.receipt;
   const pages = loaded === "missing" ? NO_PAGES : loaded.pages;
   const [confidence] = useState(() => (loaded === "missing" ? null : parseConfidence(loaded.receipt.parseConfidence)));
-  const [initialValues] = useState<ReviewValues>(() => (loaded === "missing" ? EMPTY : valuesFromReceipt(loaded.receipt)));
+  const [initialValues] = useState<ReviewValues>(() => (loaded === "missing" ? EMPTY : valuesFromReceipt(loaded.receipt, i18n.language)));
   const [values, setValues] = useState<ReviewValues>(initialValues);
   const [edited, setEdited] = useState<Set<keyof FieldConfidence>>(() => new Set());
   const [duplicates, setDuplicates] = useState<DuplicateMatch[]>(() =>

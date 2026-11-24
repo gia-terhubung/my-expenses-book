@@ -24,6 +24,19 @@ describe("review form helpers", () => {
     expect(amountText(1250, "USD")).toBe("12.50");
   });
 
+  it("amountText writes the decimal mark of the app language (Spain and Brazil use a comma)", () => {
+    expect(amountText(2345, "EUR", "es")).toBe("23,45");
+    expect(amountText(4125, "BRL", "pt-BR")).toBe("41,25");
+    expect(amountText(1250, "USD", "en")).toBe("12.50");
+    expect(amountText(2500000, "IDR", "id")).toBe("25000");
+  });
+
+  it("amountText output reads back through parseAmountInput in every language", () => {
+    for (const [minor, cur, lang] of [[2345, "EUR", "es"], [4125, "BRL", "pt-BR"], [1250, "USD", "en"]] as const) {
+      expect(parseAmountInput(amountText(minor, cur, lang), cur)).toBe(minor);
+    }
+  });
+
   it("accepts only positive decimal rates", () => {
     expect(parseRate("16250,5")).toBe("16250.5");
     expect(parseRate("0")).toBeNull();
@@ -78,6 +91,24 @@ describe("folder field", () => {
     expect(v.folderId).toBe(folder.id);
     expect(draftPatch(r, v, "IDR", cache).folderId).toBe(folder.id);
     expect(draftPatch(r, { ...v, folderId: null }, "IDR", cache).folderId).toBeNull();
+  });
+});
+
+describe("valuesFromReceipt in the app language", () => {
+  it("shows a Spanish receipt's total and tax with a comma", () => {
+    const db = testDb();
+    const r = createReceipt(db, {
+      status: "draft",
+      merchant: "Frutería La Huerta",
+      purchasedAtLocal: "2026-11-24T19:20:00",
+      purchasedAtUtc: 0,
+      scannedAtUtc: 0,
+      currency: "EUR",
+      totalMinor: 2345,
+      taxMinor: 90,
+      parseSource: "heuristic",
+    });
+    expect(valuesFromReceipt(r, "es")).toMatchObject({ total: "23,45", tax: "0,90" });
   });
 });
 

@@ -78,9 +78,18 @@ export function parseAmountInput(text: string, currency: string): number | null 
   }
 }
 
-/** Minor units as an editable string; an all-zero fraction is dropped ("25000", "12.50"). */
-export function amountText(minor: number, currency: string): string {
-  return fromMinor(minor, currency).replace(/\.0+$/, "");
+/** The decimal mark people write in `locale` ("," in es and pt-BR, "." in en). */
+function decimalMark(locale: string | undefined): string {
+  if (!locale) return ".";
+  return new Intl.NumberFormat(locale).formatToParts(1.5).find((p) => p.type === "decimal")?.value ?? ".";
+}
+
+/**
+ * Minor units as an editable string in the app language's decimal mark; an all-zero fraction is
+ * dropped ("25000", "12.50", es "23,45"). parseAmountInput reads every form back.
+ */
+export function amountText(minor: number, currency: string, locale?: string): string {
+  return fromMinor(minor, currency).replace(/\.0+$/, "").replace(".", decimalMark(locale));
 }
 
 /** Positive plain decimal ("16250.5", "0,0067") normalised with a dot; null otherwise. */
@@ -102,14 +111,14 @@ export function isValidTime(s: string): boolean {
 }
 
 /** Form values for a stored receipt. Ruling X: a 0 total (unknown) shows as empty. */
-export function valuesFromReceipt(r: Receipt): ReviewValues {
+export function valuesFromReceipt(r: Receipt, locale?: string): ReviewValues {
   return {
     merchant: r.merchant ?? "",
     date: r.purchasedAtLocal.slice(0, 10),
     time: r.purchasedAtLocal.slice(11, 16),
-    total: r.totalMinor === 0 ? "" : amountText(r.totalMinor, r.currency),
+    total: r.totalMinor === 0 ? "" : amountText(r.totalMinor, r.currency, locale),
     currency: r.currency,
-    tax: r.taxMinor === null ? "" : amountText(r.taxMinor, r.currency),
+    tax: r.taxMinor === null ? "" : amountText(r.taxMinor, r.currency, locale),
     categoryId: r.categoryId,
     notes: r.notes ?? "",
     fxRate: r.fxRate !== null && r.fxRateDate === null ? r.fxRate : "",
