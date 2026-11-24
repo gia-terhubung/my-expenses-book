@@ -1,7 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import Settings from "@/app/(tabs)/settings";
-import { PRIVACY_POLICY_URL } from "@/about/links";
 import { initI18n } from "@/i18n";
 
 const mockPush = jest.fn();
@@ -56,10 +55,17 @@ it("Tip jar and Error log rows push their routes", async () => {
   expect(mockPush).toHaveBeenCalledWith("/error-log");
 });
 
-it("Privacy policy opens the policy URL in the browser", async () => {
+it("Privacy policy opens the live policy page, not a placeholder", async () => {
   await render(<Settings />);
   await fireEvent.press(screen.getByRole("button", { name: "Privacy policy" }));
-  expect(mockOpen).toHaveBeenCalledWith(PRIVACY_POLICY_URL);
+  // A literal URL: comparing with the constant let a placeholder URL pass unnoticed.
+  expect(mockOpen).toHaveBeenCalledWith("https://meb.terhubung.app/privacy");
+});
+
+it("Terms of use opens the live terms page", async () => {
+  await render(<Settings />);
+  await fireEvent.press(screen.getByRole("button", { name: "Terms of use" }));
+  expect(mockOpen).toHaveBeenCalledWith("https://meb.terhubung.app/terms");
 });
 
 it("Storage and Version rows show their values", async () => {

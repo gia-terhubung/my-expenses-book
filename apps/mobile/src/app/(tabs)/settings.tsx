@@ -8,7 +8,7 @@ import { ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { PRIVACY_POLICY_URL } from "@/about/links";
+import { PRIVACY_POLICY_URL, TERMS_URL } from "@/about/links";
 import { formatBytes, storageStats, type StorageStats } from "@/about/storageStats";
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
@@ -245,6 +245,7 @@ export default function SettingsScreen() {
 
           <GroupTitle title={t("about.title")} />
           <Row label={t("about.privacyPolicy")} value="" onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)} />
+          <Row label={t("about.terms")} value="" onPress={() => void WebBrowser.openBrowserAsync(TERMS_URL)} />
           <InfoRow label={t("about.version")} value={Constants.expoConfig?.version ?? "?"} />
 
           {__DEV__ && (
