@@ -27,7 +27,13 @@ const config: ExpoConfig = {
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
-    blockedPermissions: ["android.permission.RECORD_AUDIO"],
+    // Added by default templates but used by nothing in the app; they would show on the Play listing.
+    blockedPermissions: [
+      "android.permission.RECORD_AUDIO",
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.WRITE_EXTERNAL_STORAGE",
+      "android.permission.SYSTEM_ALERT_WINDOW",
+    ],
   },
   plugins: [
     "expo-router",
@@ -41,7 +47,11 @@ const config: ExpoConfig = {
     "expo-iap",
     // Local notifications only (due-day reminders). No APNs: enableRemoteNotifications false keeps
     // the aps-environment entitlement out of the iOS build; nothing leaves the device.
-    ["expo-notifications", { enableRemoteNotifications: false }],
+    // Android status-bar icon: white-on-transparent glyph from the monochrome logo, tinted brand green.
+    [
+      "expo-notifications",
+      { enableRemoteNotifications: false, icon: "./assets/images/notification-icon.png", color: "#1F5C4C" },
+    ],
     // Local StoreKit test prices for Xcode Debug runs (release builds use the real store).
     "./plugins/withStoreKitConfig",
     // Ruling V: the picker only reads the library; capture uses the document scanner, which needs
