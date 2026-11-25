@@ -20,7 +20,7 @@ Vercel dashboard > Add New > Project > import the Git repository.
 
 ## 3. Production branch
 
-Set it to `main`. `vercel.json` sets `ignoreCommand`, so commits that do not touch `apps/web` skip the build. Keep Settings > Git > Ignored Build Step empty (a dashboard value overrides the file).
+Set it to `main`. `vercel.json` sets `ignoreCommand` to `scripts/vercel-ignore.sh`, so commits that do not touch `apps/web` skip the build. The script fetches the last deployed commit when the shallow clone lacks it, and builds when it cannot tell. Keep Settings > Git > Ignored Build Step empty (a dashboard value overrides the file).
 
 ## 4. Add the domain
 
