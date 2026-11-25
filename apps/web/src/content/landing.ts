@@ -6,7 +6,7 @@ export const hero = {
   title: "Scan a receipt. Keep the record, not the paper.",
   lead: "My Expenses Book reads the merchant, date, total, tax and currency from a receipt, and you only confirm. Everything is stored on your phone, encrypted. No account, no ads, no tracking.",
   note: "Free. For iPhone, iPad and Android phones, tablets and foldables. Requires iOS 16.4 or Android 8, or later.",
-  shot: "home-slip" as ShotId,
+  shot: "review" as ShotId,
 };
 
 export const storeBadges = {
@@ -19,25 +19,46 @@ export const storeBadges = {
   googlePlayAlt: "Get it on Google Play",
 };
 
-export const howItWorks = {
+/** The store listing's story: one scene per store screenshot, captions from store/screenshots/captions.json. */
+export const story = {
   id: "how-it-works",
-  title: "Three steps from paper to record",
-  steps: [
+  title: "How the book works",
+  scenes: [
     {
-      name: "Scan",
-      body: "Scan a paper receipt with the camera, or import photos and screenshots. A receipt with several pages stays together as one record.",
-      shot: "capture" as ShotId,
+      shot: "home" as ShotId,
+      title: "Know this month at a glance.",
+      body: "The green slip on the home screen holds this month's total, the tax year so far and the change against last month, with the split by category. The month's receipts are listed below it.",
     },
     {
-      name: "Review",
-      body: "The app fills in the merchant, date, total, tax, currency and category. A field it is unsure about is marked “Check this”. Nothing is saved until you confirm.",
-      shot: "review" as ShotId,
+      shot: "zoom" as ShotId,
+      title: "Every receipt, readable.",
+      body: "Each record keeps the photo of its receipt. Open it full screen and zoom in, so the small print stays readable long after the paper has faded.",
     },
     {
-      name: "Book",
-      body: "The receipt joins your book. It is grouped by month, added to the total in your home currency, and findable by merchant, note or any word printed on it.",
-      shot: "receipt-detail" as ShotId,
+      shot: "stats" as ShotId,
+      title: "See where it goes.",
+      body: "Compare this month with the last one, and see the last six months, your categories and your top merchants.",
     },
+    {
+      shot: "trip" as ShotId,
+      title: "Trips and projects, any currency.",
+      body: "Put a trip or a project in its own folder. Each receipt keeps its own currency and is converted to your home currency at the rate of the purchase date. Export the folder for the expense claim.",
+    },
+    {
+      shot: "search" as ShotId,
+      title: "Find any receipt in seconds.",
+      body: "Search merchants, notes and the text printed on the receipt itself, then narrow the results with filters.",
+    },
+  ],
+};
+
+export const devices = {
+  id: "fits-your-screen",
+  title: "Fits your screen",
+  body: "On iPhone Duo the book follows the fold: the phone layout on the outer screen, and a wide layout with a side rail when you open it. It adapts the same way to iPad and to Android tablets and foldables.",
+  shots: [
+    { shot: "duo-outer-home" as ShotId, caption: "Folded" },
+    { shot: "duo-inner-home" as ShotId, caption: "Unfolded" },
   ],
 };
 
@@ -79,24 +100,11 @@ export const privacyPromise = {
 
 export const features = {
   id: "features",
-  title: "What the book does",
-  shot: "statistics" as ShotId,
+  title: "What else the book does",
   items: [
-    {
-      name: "Many currencies",
-      body: "Each receipt keeps its own currency. A foreign receipt is converted to your home currency at the rate of the purchase date, and you can enter your own rate.",
-    },
     {
       name: "Folders and tax years",
       body: "Put receipts in folders for trips and projects. Tax-year views add up each year.",
-    },
-    {
-      name: "Search",
-      body: "Search merchants, notes and the text of the receipt itself, then narrow the results with filters.",
-    },
-    {
-      name: "Statistics",
-      body: "Compare this month with the last one, and see the last six months, your categories and your top merchants.",
     },
     {
       name: "Export",
@@ -141,7 +149,6 @@ export const tipJar = {
   title: "Free, with a tip jar",
   body: "My Expenses Book is free, with no ads and no tracking. If it makes your receipts easier to deal with, you can buy the developer a coffee from the tip jar inside the app.",
   note: "Tips are optional and unlock nothing. Every feature works with or without one.",
-  shot: "tip-jar" as ShotId,
 };
 
 export const notFound = {

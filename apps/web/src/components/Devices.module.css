@@ -1,0 +1,29 @@
+.body {
+  max-width: 38rem;
+}
+
+.pair {
+  display: grid;
+  align-items: end;
+  gap: var(--space-4);
+  max-width: 760px;
+  margin-top: var(--space-7);
+}
+
+.figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.figure figcaption {
+  margin-top: var(--space-4);
+  font-family: var(--font-display), var(--font-body);
+  font-weight: 700;
+  font-size: var(--text-h3);
+}
+
+@media (min-width: 900px) {
+  .pair {
+    gap: var(--space-7);
+  }
+}

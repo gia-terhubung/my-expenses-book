@@ -1,64 +1,75 @@
 /**
  * App screenshots shown on the landing page.
  *
- * Source captures: iPhone 16 Pro Max simulator, 1320x2868 PNG, light mode,
- * English, synthetic seed data only. They go in `screenshots-src/<id>.png`
- * and `npm run screenshots` writes `public/screenshots/<id>.webp` (780x1695).
- *
- * While `ready` is false the site draws a clearly marked placeholder in the
- * same phone frame. Set `ready: true` once the .webp file is committed.
+ * Source: the store screenshot run (`store/screenshots/raw/<device>/en/`), English, light mode, synthetic
+ * seed data only. `npm run screenshots` resizes them to `public/screenshots/<id>.webp`; the sizes below
+ * must match what the script writes (a test checks the table against the files).
  */
-export type ShotId = "home-slip" | "capture" | "review" | "receipt-detail" | "statistics" | "tip-jar";
+export type Device = "iphone" | "duo-outer" | "duo-inner";
+
+export type ShotId =
+  | "review"
+  | "home"
+  | "zoom"
+  | "stats"
+  | "trip"
+  | "search"
+  | "duo-outer-home"
+  | "duo-inner-home";
 
 export type Shot = {
   id: ShotId;
-  /** Alt text for the real image. Describes what the screen shows. */
+  device: Device;
+  /** Describes what the screen shows. */
   alt: string;
-  /** Short name of the screen, shown on the placeholder. */
-  screen: string;
-  ready: boolean;
+  width: number;
+  height: number;
 };
 
-export const SHOT_WIDTH = 780;
-export const SHOT_HEIGHT = 1695;
+/** Web size per device, keeping the aspect ratio of the store capture. */
+export const DEVICE_SIZE: Record<Device, { width: number; height: number }> = {
+  iphone: { width: 780, height: 1695 },
+  "duo-outer": { width: 560, height: 815 },
+  "duo-inner": { width: 900, height: 1279 },
+};
+
+function shot(id: ShotId, device: Device, alt: string): Shot {
+  return { id, device, alt, ...DEVICE_SIZE[device] };
+}
 
 export const SHOTS: Record<ShotId, Shot> = {
-  "home-slip": {
-    id: "home-slip",
-    screen: "Home",
-    alt: "The home screen: a green slip with this month's total, and the receipts of the month listed below it.",
-    ready: true,
-  },
-  capture: {
-    id: "capture",
-    screen: "Add a receipt",
-    alt: "The Add a receipt sheet with three choices: Scan receipt, Import from Photos and Add manually.",
-    ready: true,
-  },
-  review: {
-    id: "review",
-    screen: "Review receipt",
-    alt: "The Review receipt screen with merchant, date, total, tax, currency and category filled in, and one field marked Check this.",
-    ready: true,
-  },
-  "receipt-detail": {
-    id: "receipt-detail",
-    screen: "Receipt detail",
-    alt: "A saved receipt in a foreign currency, with its photo, the converted amount and the exchange rate of the purchase date.",
-    ready: true,
-  },
-  statistics: {
-    id: "statistics",
-    screen: "Statistics",
-    alt: "The Statistics screen: this month's total, the last six months as bars, and spending by category.",
-    ready: true,
-  },
-  "tip-jar": {
-    id: "tip-jar",
-    screen: "Tip jar",
-    alt: "The Tip jar screen, offering an espresso, a black coffee or a cappuccino for the developer.",
-    ready: false,
-  },
+  review: shot(
+    "review",
+    "iphone",
+    "The Review receipt screen: the receipt photo above, with merchant, date, time, total, currency and tax filled in from it.",
+  ),
+  home: shot(
+    "home",
+    "iphone",
+    "The home screen: a green slip with this month's total, the tax year total and the change against last month, with the month's receipts listed below.",
+  ),
+  zoom: shot("zoom", "iphone", "A receipt photo open full screen, every line of the printed receipt sharp and readable."),
+  stats: shot(
+    "stats",
+    "iphone",
+    "The Statistics screen: this month's total against last month, the last six months as bars, and spending by category.",
+  ),
+  trip: shot(
+    "trip",
+    "iphone",
+    "A Tokyo trip folder: receipts in yen, each converted to dollars, with the folder total and an Export button.",
+  ),
+  search: shot("search", "iphone", "A search for coffee: six receipts from Blue Door Coffee across six months, with their total."),
+  "duo-outer-home": shot(
+    "duo-outer-home",
+    "duo-outer",
+    "The home screen on the folded iPhone Duo outer screen, in the phone layout.",
+  ),
+  "duo-inner-home": shot(
+    "duo-inner-home",
+    "duo-inner",
+    "The home screen on the unfolded iPhone Duo, in the wide layout with a side rail.",
+  ),
 };
 
 export function shotSrc(id: ShotId): string {

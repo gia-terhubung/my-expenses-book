@@ -1,20 +1,20 @@
 # Screenshot sources
 
-Rules: iPhone 16 Pro Max simulator, portrait, **1320x2868 PNG**, light mode, English, synthetic seed data
-(`src/dev/seed.ts`), status bar at 9:41 with full battery and no carrier text
-(`xcrun simctl status_bar ... override`). Never show real receipts.
+The landing page uses the English captures from the store screenshot run, not files in this folder.
 
-| File (in `apps/web/screenshots-src/`) | Screen | Must show | Used in |
+Sources: `store/screenshots/raw/<device>/en/<scene>.png`, made by `store/screenshots/tools/capture-ios.sh`
+(synthetic seed data, light mode, never real receipts).
+
+| Web file (`public/screenshots/`) | Source | Web size | Used in |
 |---|---|---|---|
-| `home-slip.png` | Home (Receipts tab) | the green slip with the month total and stats line, receipts below | hero |
-| `capture.png` | Add a receipt sheet | Scan receipt, Import from Photos, Add manually | step 1 |
-| `review.png` | Review receipt | all fields filled, one "Check this" mark | step 2 |
-| `receipt-detail.png` | Receipt detail | a foreign-currency receipt: photo, converted amount, rate of the purchase date | step 3 |
-| `statistics.png` | Statistics, Month | total, last six months bars, categories | features |
-| `tip-jar.png` | Tip jar | the three coffees with prices | tip jar |
+| `review.webp` | `iphone/en/01-review.png` (1320x2868) | 780x1695 | hero |
+| `home.webp` | `iphone/en/02-home.png` | 780x1695 | story |
+| `zoom.webp` | `iphone/en/03-zoom.png` | 780x1695 | story |
+| `stats.webp` | `iphone/en/04-stats.png` | 780x1695 | story |
+| `trip.webp` | `iphone/en/05-trip.png` | 780x1695 | story |
+| `search.webp` | `iphone/en/06-search.png` | 780x1695 | story |
+| `duo-outer-home.webp` | `duo-outer/en/02-home.png` (1398x2034) | 560x815 | fits your screen |
+| `duo-inner-home.webp` | `duo-inner/en/02-home.png` (2007x2853) | 900x1279 | fits your screen |
 
-`capture.png` is the add sheet, not the camera: the document scanner does not run in the simulator.
-
-Run `npm run screenshots` to write `public/screenshots/<name>.webp` at 780x1695, quality 82.
-
-After `npm run screenshots`, set `ready: true` for each written file in `src/content/screenshots.ts`.
+After a new store run, `npm run screenshots` rewrites all eight. The sizes must match `DEVICE_SIZE` in
+`src/content/screenshots.ts`.

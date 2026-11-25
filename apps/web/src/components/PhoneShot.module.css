@@ -1,3 +1,4 @@
+/* Device frames. Width is fluid up to a per-device maximum, so a shot never pushes past the gutter. */
 .frame {
   width: 100%;
   max-width: 300px;
@@ -7,41 +8,46 @@
   box-shadow: var(--shadow-raised);
 }
 
-.frame[data-size="sm"] {
-  max-width: 240px;
-  border-radius: 36px;
+.frame[data-device="duo-outer"] {
+  max-width: 260px;
+  border-radius: 40px;
+}
+
+/* The unfolded Duo is nearly square: a slimmer bezel and tighter corners, like a small tablet. */
+.frame[data-device="duo-inner"] {
+  max-width: 420px;
+  padding: 7px;
+  border-radius: 30px;
 }
 
 .screen {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 780 / 1695;
   border-radius: 36px;
 }
 
-.frame[data-size="sm"] .screen {
-  border-radius: 28px;
+.frame[data-device="duo-outer"] .screen {
+  border-radius: 32px;
 }
 
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  text-align: center;
-  color: var(--color-text);
-  font-size: var(--text-small);
-  background: repeating-linear-gradient(45deg, var(--color-tonal) 0 14px, var(--color-border) 14px 15px);
+.frame[data-device="duo-inner"] .screen {
+  border-radius: 23px;
 }
 
-.placeholder span:first-child {
-  font-weight: 700;
+/* Fluid frames fill their parent. Kept last so it wins over the device maximums at equal specificity. */
+.frame[data-fluid] {
+  max-width: none;
 }
 
-.placeholder span:last-child {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  overflow-wrap: anywhere;
+/* Two fluid frames side by side on a narrow phone: a thinner bezel so the screens stay legible. */
+@media (max-width: 479px) {
+  .frame[data-fluid] {
+    padding: 4px;
+    border-radius: 22px;
+  }
+
+  .frame[data-fluid] .screen {
+    border-radius: 18px;
+  }
 }

@@ -1,0 +1,55 @@
+.scenes {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.scene {
+  display: grid;
+  gap: var(--space-6);
+}
+
+/* The store captions are the headlines of the story: set larger than a plain h3. */
+.text h3 {
+  font-size: clamp(1.5rem, 1.25rem + 1.1vw, 2rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  max-width: 16ch;
+}
+
+.text p {
+  margin-top: var(--space-4);
+  max-width: 34rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-lead);
+  line-height: 1.5;
+}
+
+.shot {
+  display: flex;
+  justify-content: center;
+}
+
+.shot > div {
+  max-width: 260px;
+}
+
+@media (min-width: 900px) {
+  .scenes {
+    gap: var(--space-9);
+  }
+
+  .scene {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  .shot > div {
+    max-width: 300px;
+  }
+
+  /* Every second scene puts the screenshot on the left, so the eye zigzags down the page. */
+  .scene:nth-child(even) .shot {
+    order: -1;
+  }
+}
