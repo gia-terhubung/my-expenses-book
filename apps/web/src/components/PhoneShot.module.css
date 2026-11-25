@@ -59,7 +59,12 @@
   position: absolute;
   inset: calc(50% - 6px) 7px auto;
   height: 12px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.07) 45%, rgba(255, 255, 255, 0.12) 55%, transparent);
+  background: linear-gradient(
+    transparent,
+    color-mix(in srgb, var(--color-text) 7%, transparent) 45%,
+    color-mix(in srgb, var(--color-surface) 12%, transparent) 55%,
+    transparent
+  );
   pointer-events: none;
 }
 
