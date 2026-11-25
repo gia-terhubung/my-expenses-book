@@ -5,7 +5,7 @@ Copy this into Play Console → Grow → Store presence → Main store listing. 
 - **App category:** Finance
 - **Tags (pick up to 5 in Console):** Expense tracking, Receipt scanner, Productivity, Travel, Tax
 - **Contact email:** CONTACT_EMAIL
-- **Privacy policy URL:** the URL where `site/privacy/index.html` is published (same value as `PRIVACY_POLICY_URL` in `apps/mobile/src/about/links.ts`)
+- **Privacy policy URL:** https://meb.terhubung.app/privacy (same value as `PRIVACY_POLICY_URL` in `apps/mobile/src/about/links.ts`)
 
 ## English (en-US)
 
