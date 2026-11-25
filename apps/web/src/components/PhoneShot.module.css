@@ -1,23 +1,12 @@
 /* Device frames. Width is fluid up to a per-device maximum, so a shot never pushes past the gutter. */
 .frame {
+  position: relative;
   width: 100%;
   max-width: 300px;
   padding: 8px;
   border-radius: 44px;
   background: var(--color-frame);
   box-shadow: var(--shadow-raised);
-}
-
-.frame[data-device="duo-outer"] {
-  max-width: 260px;
-  border-radius: 40px;
-}
-
-/* The unfolded Duo is nearly square: a slimmer bezel and tighter corners, like a small tablet. */
-.frame[data-device="duo-inner"] {
-  max-width: 420px;
-  padding: 7px;
-  border-radius: 30px;
 }
 
 .screen {
@@ -27,12 +16,51 @@
   border-radius: 36px;
 }
 
+/*
+ * iPhone Duo shapes, from the simulator's own display masks (iPhone Duo.simdevicetype):
+ * - outer display, 466 x 678 pt: a "D". Square corners on the hinge (left) side, 52 pt corners on the right.
+ * - inner display, 1252 x 1780 px: a rounded rectangle with 120 px corners, folding across the middle.
+ * Radii are percentages (horizontal % of width / vertical % of height) so the shape holds at any size.
+ */
+.frame[data-device="duo-outer"] {
+  max-width: 260px;
+  padding: 7px 8px 8px 5px;
+  border-radius: 2% 15% 15% 2% / 1.5% 10.5% 10.5% 1.5%;
+}
+
 .frame[data-device="duo-outer"] .screen {
-  border-radius: 32px;
+  border-radius: 0 11.2% 11.2% 0 / 0 7.7% 7.7% 0;
+}
+
+/* The hinge: a darker spine down the flat edge of the closed phone. */
+.frame[data-device="duo-outer"]::before {
+  content: "";
+  position: absolute;
+  inset: 6% auto 6% 0;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--color-border);
+  opacity: 0.5;
+}
+
+.frame[data-device="duo-inner"] {
+  max-width: 420px;
+  padding: 7px;
+  border-radius: 11% / 7.7%;
 }
 
 .frame[data-device="duo-inner"] .screen {
-  border-radius: 23px;
+  border-radius: 9.6% / 6.7%;
+}
+
+/* The fold: a faint crease across the middle of the open screen. */
+.frame[data-device="duo-inner"]::after {
+  content: "";
+  position: absolute;
+  inset: calc(50% - 6px) 7px auto;
+  height: 12px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.07) 45%, rgba(255, 255, 255, 0.12) 55%, transparent);
+  pointer-events: none;
 }
 
 /* Fluid frames fill their parent. Kept last so it wins over the device maximums at equal specificity. */
@@ -44,10 +72,9 @@
 @media (max-width: 479px) {
   .frame[data-fluid] {
     padding: 4px;
-    border-radius: 22px;
   }
 
-  .frame[data-fluid] .screen {
-    border-radius: 18px;
+  .frame[data-device="duo-inner"][data-fluid]::after {
+    inset-inline: 4px;
   }
 }
