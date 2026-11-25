@@ -2,6 +2,10 @@
 
 The site is a static export (`out/`) served by Vercel. Do these steps once.
 
+**Status: done, live since 2026-11-25.** DNS `meb` CNAME points to Vercel's project target
+(`a1d94cb618e5c86e.vercel-dns-017.com`), HTTPS works, and `/`, `/privacy` and `/terms` answer 200 with the
+security headers from `vercel.json`. The steps below stay as a record and for a rebuild.
+
 ## 1. Create the project
 
 Vercel dashboard > Add New > Project > import the Git repository.
