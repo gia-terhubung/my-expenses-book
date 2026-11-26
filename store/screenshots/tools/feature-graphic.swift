@@ -1,6 +1,7 @@
 // Play Store feature graphic, 1024 x 500, one per language: slip green with the icon, the app
 // name and the store subtitle on the left; a tilted paper receipt on the right whose TOTAL line
-// carries the yellow highlighter, and the app's torn edge along the bottom.
+// carries the yellow highlighter, and the app's torn edge along the bottom. The current graphic is
+// fed zero-receipt.json and the 00-free caption from captions.json as the subtitle.
 // Usage: swift feature-graphic.swift <bold.ttf> <extrabold.ttf> <icon.png> <slips.json> <lang> <subtitle> <out.png>
 import AppKit
 
@@ -9,7 +10,11 @@ for f in [a[1], a[2]] { CTFontManagerRegisterFontsForURL(URL(fileURLWithPath: f)
 let icon = NSImage(contentsOfFile: a[3])!
 let slips = try! JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: a[4]))) as! [String: [String]]
 let lines = slips[a[5]]!
-let subtitle = a[6]
+// A multi-sentence subtitle breaks before its last sentence ("Free. No ads." / "Works offline.").
+let subtitle: String = {
+  guard let r = a[6].range(of: ". ", options: .backwards) else { return a[6] }
+  return a[6].replacingCharacters(in: r, with: ".\n")
+}()
 
 let W: CGFloat = 1024, H: CGFloat = 500
 let green = NSColor(srgbRed: 0x1F / 255, green: 0x5C / 255, blue: 0x4C / 255, alpha: 1)
@@ -28,19 +33,19 @@ NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: true)
 green.setFill(); NSRect(x: 0, y: 0, width: W, height: H).fill()
 
 // Right: the receipt, tilted, running off the bottom edge.
-let paperW: CGFloat = 330, lh: CGFloat = 19, pad: CGFloat = 26
+let paperW: CGFloat = 330, lh: CGFloat = 25, pad: CGFloat = 26
 let shown = Array(lines.prefix(while: { !$0.hasPrefix("TUNAI") && !$0.hasPrefix("VISA") && !$0.hasPrefix("TARJETA") && !$0.hasPrefix("CARTAO") }))
 let paperH = CGFloat(shown.count) * lh + pad * 2 + 40
 NSGraphicsContext.saveGraphicsState()
 cg.translateBy(x: 760, y: 60)
-cg.rotate(by: 0.07)
+cg.rotate(by: 0.025)  // Gentle: a steeper tilt makes amounts read as the next row.
 let shadow = NSShadow(); shadow.shadowColor = NSColor(white: 0, alpha: 0.35); shadow.shadowBlurRadius = 24; shadow.shadowOffset = NSSize(width: 0, height: -8)
 NSGraphicsContext.saveGraphicsState(); shadow.set()
 NSColor(calibratedRed: 0.985, green: 0.978, blue: 0.962, alpha: 1).setFill()
 NSRect(x: -paperW / 2, y: 0, width: paperW, height: paperH).fill()
 NSGraphicsContext.restoreGraphicsState()
-let mono = NSFont.monospacedSystemFont(ofSize: 12.5, weight: .medium)
-let head = NSFont.monospacedSystemFont(ofSize: 15, weight: .bold)
+let mono = NSFont.monospacedSystemFont(ofSize: 14, weight: .medium)
+let head = NSFont.monospacedSystemFont(ofSize: 16, weight: .bold)
 for (i, raw) in shown.enumerated() {
   let y = pad + CGFloat(i) * lh
   let parts = raw.components(separatedBy: "\t")
@@ -56,7 +61,8 @@ for (i, raw) in shown.enumerated() {
     r.draw(at: NSPoint(x: paperW / 2 - pad - r.size(withAttributes: attrs).width, y: y), withAttributes: attrs)
   } else {
     let s = raw as NSString
-    let x = i < 5 ? -s.size(withAttributes: attrs).width / 2 : -paperW / 2 + pad
+    // Header lines and a closing line (the zero receipt's thank-you) are centred.
+    let x = i < 5 || i == shown.count - 1 ? -s.size(withAttributes: attrs).width / 2 : -paperW / 2 + pad
     s.draw(at: NSPoint(x: x, y: y), withAttributes: attrs)
   }
 }
@@ -75,9 +81,10 @@ let title = NSAttributedString(string: "My Expenses Book", attributes: [
 title.draw(at: NSPoint(x: left, y: 222))
 NSColor(srgbRed: 0xFF / 255, green: 0xD8 / 255, blue: 0x4A / 255, alpha: 1).setFill()
 NSBezierPath(roundedRect: NSRect(x: left, y: 300, width: 44, height: 5), xRadius: 2.5, yRadius: 2.5).fill()
+// Wraps, so a long subtitle (the zero receipt's "Free. No ads. Works offline.") stays clear of the slip.
 NSAttributedString(string: subtitle, attributes: [
   .font: NSFont(name: "BricolageGrotesque-Bold", size: 28)!, .foregroundColor: mint,
-]).draw(at: NSPoint(x: left, y: 322))
+]).draw(with: NSRect(x: left, y: 322, width: 470, height: 120), options: [.usesLineFragmentOrigin])
 
 // Torn edge along the bottom, in page colour.
 page.setFill()

@@ -1,4 +1,5 @@
 {
+  "00-free": { "en": "Free. No ads. Works offline.", "id": "Gratis. Tanpa iklan. Bisa offline.", "es": "Gratis. Sin anuncios. Funciona sin internet.", "pt-BR": "Grátis. Sem anúncios. Funciona offline." },
   "01-review": { "en": "Snap a receipt. It reads the total.", "id": "Foto struk. Totalnya terbaca otomatis.", "es": "Haz una foto al ticket. El total se lee solo.", "pt-BR": "Fotografe o cupom. O total é lido sozinho." },
   "02-home": { "en": "Know this month at a glance.", "id": "Lihat pengeluaran bulan ini sekilas.", "es": "Tu mes, de un vistazo.", "pt-BR": "Seu mês num relance." },
   "03-zoom": { "en": "Every receipt, readable.", "id": "Setiap struk, jelas terbaca.", "es": "Cada ticket, legible.", "pt-BR": "Todo cupom, legível." },
