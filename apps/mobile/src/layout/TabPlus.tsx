@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { useVerticalBarEdgeIOS } from "expo-status-bar";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,7 +20,10 @@ export function TabPlus(_: { toolbar?: boolean }) {
   const inNativeTabs = useInNativeTabs();
   const { plus } = useNavSpike();
   // Variant D is added to every page of a tab stack by its layout (TabStackPlus), not here.
-  if (!inNativeTabs || plus !== "C") return null;
+  const edge = useVerticalBarEdgeIOS();
+  // B without a side column (plain iPhone, iPad) falls back to the floating +.
+  const floating = plus === "C" || (plus === "B" && edge === null);
+  if (!inNativeTabs || !floating) return null;
   return <FloatingAddButton />;
 }
 
@@ -27,11 +31,26 @@ export function TabPlus(_: { toolbar?: boolean }) {
 export function TabStackPlus({ children }: { children: ReactNode }) {
   const inNativeTabs = useInNativeTabs();
   const { plus } = useNavSpike();
+  const edge = useVerticalBarEdgeIOS();
   return (
     <>
       {children}
       {inNativeTabs && plus === "D" ? <ToolbarPlus /> : null}
+      {inNativeTabs && plus === "B" && edge !== null ? <HeaderPlus /> : null}
     </>
+  );
+}
+
+/** Variant B: the + as the first header item, so in the Duo column it sits right under Back. */
+function HeaderPlus() {
+  const { t } = useTranslation();
+  const add = useAddReceiptContext();
+  return (
+    <Stack.Toolbar placement="left">
+      <Stack.Toolbar.Button icon="plus" variant="prominent" accessibilityLabel={t("capture.add")} onPress={add.open}>
+        {t("capture.add")}
+      </Stack.Toolbar.Button>
+    </Stack.Toolbar>
   );
 }
 

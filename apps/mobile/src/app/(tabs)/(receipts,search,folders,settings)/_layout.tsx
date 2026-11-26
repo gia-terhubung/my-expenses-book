@@ -1,8 +1,10 @@
 import { Stack } from "expo-router";
+import { useVerticalBarEdgeIOS } from "expo-status-bar";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { rootStackOptions } from "@/layout/stackOptions";
+import { useNavSpike } from "@/layout/navSpike";
 import { TabStackPlus } from "@/layout/TabPlus";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -25,12 +27,27 @@ export default function TabStack() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const base = rootStackOptions(t, theme.colors);
+  const { plus } = useNavSpike();
+  const edge = useVerticalBarEdgeIOS();
+  // Variant B on a side column: tab roots get an empty, see-through header so the + can sit in it.
+  const rootHeader =
+    plus === "B" && edge !== null
+      ? {
+          ...base,
+          headerShown: true,
+          title: "",
+          headerTransparent: true,
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: "transparent" },
+          scrollEdgeEffects: { top: "hidden" as const, bottom: "hidden" as const, left: "hidden" as const, right: "hidden" as const },
+        }
+      : base;
   return (
     <Stack
       screenLayout={({ children }) => <TabStackPlus>{children}</TabStackPlus>}
       screenOptions={({ route }) =>
         TAB_ROOTS.has(route.name)
-          ? base
+          ? rootHeader
           : { ...base, contentStyle: { ...base.contentStyle, paddingLeft: insets.left, paddingRight: insets.right } }
       }
     />
