@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Keyboard, Pressable, Text, View } from "react-native";
 import { router, Stack, useLocalSearchParams, type Href } from "expo-router";
 import { useTranslation } from "react-i18next";
 
@@ -193,7 +193,9 @@ export function SearchScreen() {
       value: effective,
       onApply: (next) => setState((s) => ({ ...next, text: s.text })),
     });
-    router.push("/search-filter" as unknown as Href);
+    // The sheet does not present while the search field holds the keyboard: put it away first.
+    Keyboard.dismiss();
+    setTimeout(() => router.push("/search-filter" as unknown as Href), 50);
   };
   const filterLabel =
     filterCount > 0
@@ -219,6 +221,11 @@ export function SearchScreen() {
               },
             }}
           />
+          <Stack.Toolbar placement="right">
+            <Stack.Toolbar.Button icon="line.3.horizontal.decrease" accessibilityLabel={filterLabel} onPress={openNativeFilter}>
+              {filterLabel}
+            </Stack.Toolbar.Button>
+          </Stack.Toolbar>
 
         </>
       ) : null}
@@ -263,9 +270,7 @@ export function SearchScreen() {
                 {link(filterLabel, () => setSheetOpen(true))}
               </View>
             )}
-            {nativeSearch ? (
-              <View style={{ flexDirection: "row" }}>{link(filterLabel, openNativeFilter)}</View>
-            ) : null}
+
             {chips.length > 0 ? (
               <View
                 style={{
