@@ -14,7 +14,7 @@ import {
   useInNativeTabs,
   useNavSpike,
 } from "./navSpike";
-import { PlusClaimContext, usePlusMenu } from "./PlusMenu";
+import { PlusClaimContext, usePlusMenu, useShortColumn } from "./PlusMenu";
 import { useLayout } from "./useLayout";
 
 /**
@@ -29,13 +29,23 @@ export function TabPlus({ home = false }: { home?: boolean }) {
   const edge = useVerticalBarEdgeIOS();
   // B without a side column (plain iPhone, iPad) falls back to the floating +.
   // Home keeps the floating + near the thumb (owner, 2026-11-26); other pages put it in the column.
-  const floating = plus === "C" || (plus === "B" && (edge === null || home));
+  const short = useShortColumn();
+  const floating =
+    plus === "C" || (plus === "B" && (edge === null || home || short));
   if (!inNativeTabs || !floating) return null;
   return <FloatingAddButton />;
 }
 
 /** Home floats its +; Search (its bar is the search field) and sheets (left slot is Cancel) have none. */
-const NO_HEADER_PLUS = new Set(["index", "search", "search-filter", "sheet", "photo"]);
+/** Tab roots render their own floating + (TabScreen). */
+const TAB_ROOT_ROUTES = new Set(["index", "search", "folders", "settings"]);
+const NO_HEADER_PLUS = new Set([
+  "index",
+  "search",
+  "search-filter",
+  "sheet",
+  "photo",
+]);
 
 /** SPIKE: variant D on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */
 export function TabStackPlus({
@@ -48,6 +58,7 @@ export function TabStackPlus({
   const inNativeTabs = useInNativeTabs();
   const { plus } = useNavSpike();
   const edge = useVerticalBarEdgeIOS();
+  const short = useShortColumn();
   // A page with its own right-side buttons puts the + last among them (PlusToolbarMenu) and claims it.
   const [claims, setClaims] = useState(0);
   const claim = useCallback(() => {
@@ -61,12 +72,25 @@ export function TabStackPlus({
       {inNativeTabs &&
       plus === "B" &&
       edge !== null &&
+      !short &&
       !NO_HEADER_PLUS.has(routeName) &&
       claims === 0 ? (
         <HeaderPlus />
       ) : null}
+      {/* Short column: the + floats on every page (no room for it in the column); tab roots have their own. */}
+      {inNativeTabs &&
+      plus === "B" &&
+      short &&
+      !NO_HEADER_PLUS.has(routeName) &&
+      !TAB_ROOT_ROUTES.has(routeName) ? (
+        <TabPlusFloating />
+      ) : null}
     </PlusClaimContext.Provider>
   );
+}
+
+function TabPlusFloating() {
+  return <FloatingAddButton />;
 }
 
 /** Variant B: the + menu on the right of the header, so in the Duo column it comes after Back. */

@@ -21,7 +21,7 @@ import { PageViewer } from "@/review/PageViewer";
 import { categoryLabel } from "@/review/ReviewFields";
 import { discardReceipt } from "@/review/useReviewForm";
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { useColumnPlusMenu } from "@/layout/PlusMenu";
+import { useColumnPlusMenu, useShortColumn } from "@/layout/PlusMenu";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { homeLine } from "./format";
@@ -107,6 +107,7 @@ export function ReceiptDetail({
   // Compact detail shown over a tab's list: clear the floating tab bar.
   const tabBarSpace = useTabBarSpace();
   const plusMenu = useColumnPlusMenu(nativeHeader);
+  const shortColumn = useShortColumn();
   const insets = useSafeAreaInsets();
   const home = usePref("homeCurrency") ?? "USD";
   const version = useDataVersion();
@@ -223,17 +224,27 @@ export function ReceiptDetail({
         <>
           <Stack.Screen options={{ headerShown: true, title }} />
           <Stack.Toolbar placement="right">
-            <Stack.Toolbar.Button
-              icon="pencil"
-              accessibilityLabel={t("receipts.detail.edit")}
-              onPress={() => onEdit(receipt.id)}
-            >
-              {t("receipts.detail.edit")}
-            </Stack.Toolbar.Button>
+            {shortColumn ? null : (
+              <Stack.Toolbar.Button
+                icon="pencil"
+                accessibilityLabel={t("receipts.detail.edit")}
+                onPress={() => onEdit(receipt.id)}
+              >
+                {t("receipts.detail.edit")}
+              </Stack.Toolbar.Button>
+            )}
             <Stack.Toolbar.Menu
               icon="ellipsis"
               accessibilityLabel={t("common.more")}
             >
+              {shortColumn ? (
+                <Stack.Toolbar.MenuAction
+                  icon="pencil"
+                  onPress={() => onEdit(receipt.id)}
+                >
+                  {t("receipts.detail.edit")}
+                </Stack.Toolbar.MenuAction>
+              ) : null}
               <Stack.Toolbar.MenuAction
                 icon="folder"
                 onPress={() => setPicking(true)}

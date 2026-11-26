@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { useVerticalBarEdgeIOS } from "expo-status-bar";
 import { createContext, useContext, useEffect } from "react";
+import { useWindowDimensions } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
@@ -26,12 +27,27 @@ export const PLUS_CHOICES: {
 /** A page that has its own right-side header buttons claims the column + to put it last among them. */
 export const PlusClaimContext = createContext<(() => () => void) | null>(null);
 
-/** True when this page shows the + in the Duo side column (variant B with a side column). */
+/**
+ * Below this window height the side column cannot hold Back, two page buttons and the + above the
+ * tab group (the folded iPhone Duo held sideways is 466 pt): the + floats and page buttons fold into ⋯.
+ * By available height, never by device model.
+ */
+export const SHORT_COLUMN_HEIGHT = 560;
+
+/** True when the window has a side column that is too short for the full set of header buttons. */
+export function useShortColumn(): boolean {
+  const edge = useVerticalBarEdgeIOS();
+  const { height } = useWindowDimensions();
+  return edge !== null && height < SHORT_COLUMN_HEIGHT;
+}
+
+/** True when this page shows the + in the Duo side column (variant B with a tall side column). */
 export function useColumnPlus(): boolean {
   const inNativeTabs = useInNativeTabs();
   const { plus } = useNavSpike();
   const edge = useVerticalBarEdgeIOS();
-  return inNativeTabs && plus === "B" && edge !== null;
+  const short = useShortColumn();
+  return inNativeTabs && plus === "B" && edge !== null && !short;
 }
 
 /**

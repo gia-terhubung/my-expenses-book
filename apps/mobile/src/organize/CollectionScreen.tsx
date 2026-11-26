@@ -18,7 +18,7 @@ import { totalLine } from "@/receipts/format";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { taxYearLabel, taxYearRange } from "@/taxYear/taxYear";
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { useColumnPlusMenu } from "@/layout/PlusMenu";
+import { useColumnPlusMenu, useShortColumn } from "@/layout/PlusMenu";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { FolderForm } from "./FolderForm";
@@ -36,6 +36,7 @@ export function CollectionScreen(props: Props) {
   const startMonth = usePref("taxYearStartMonth") ?? 1;
   const version = useDataVersion();
   const plusMenu = useColumnPlusMenu(Platform.OS === "ios");
+  const shortColumn = useShortColumn();
   const [renaming, setRenaming] = useState(false);
   const folderId = props.kind === "folder" ? props.folderId : null;
   const year = props.kind === "taxYear" ? props.year : null;
@@ -132,18 +133,28 @@ export function CollectionScreen(props: Props) {
             options={{ headerShown: true, title, headerLargeTitle: false }}
           />
           <Stack.Toolbar placement="right">
-            <Stack.Toolbar.Button
-              icon="square.and.arrow.up"
-              accessibilityLabel={t("export.title")}
-              onPress={openExport}
-            >
-              {t("export.title")}
-            </Stack.Toolbar.Button>
+            {folder && shortColumn ? null : (
+              <Stack.Toolbar.Button
+                icon="square.and.arrow.up"
+                accessibilityLabel={t("export.title")}
+                onPress={openExport}
+              >
+                {t("export.title")}
+              </Stack.Toolbar.Button>
+            )}
             {folder ? (
               <Stack.Toolbar.Menu
                 icon="ellipsis"
                 accessibilityLabel={t("common.more")}
               >
+                {shortColumn ? (
+                  <Stack.Toolbar.MenuAction
+                    icon="square.and.arrow.up"
+                    onPress={openExport}
+                  >
+                    {t("export.title")}
+                  </Stack.Toolbar.MenuAction>
+                ) : null}
                 <Stack.Toolbar.MenuAction
                   icon="pencil"
                   onPress={() => setRenaming(true)}
