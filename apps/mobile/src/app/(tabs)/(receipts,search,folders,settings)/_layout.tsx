@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { rootStackOptions } from "@/layout/stackOptions";
+import { TabStackPlus } from "@/layout/TabPlus";
 import { useTheme } from "@/theme/ThemeProvider";
 
 /** Each tab's first page (expo-router reads a group's own key, without the brackets). */
@@ -26,6 +27,7 @@ export default function TabStack() {
   const base = rootStackOptions(t, theme.colors);
   return (
     <Stack
+      screenLayout={({ children }) => <TabStackPlus>{children}</TabStackPlus>}
       screenOptions={({ route }) =>
         TAB_ROOTS.has(route.name)
           ? base

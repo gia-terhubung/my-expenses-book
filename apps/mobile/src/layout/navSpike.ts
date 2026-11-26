@@ -5,10 +5,10 @@ import { createContext, useContext, useSyncExternalStore } from "react";
  * without a restart. In memory; resets on reload. Not part of the plan of record.
  */
 export type TabPlacement = "automatic" | "sidebar" | "tabBar";
-export type PlusVariant = "C" | "D";
+export type PlusVariant = "C" | "D" | "E";
 export type NavSpike = { placement: TabPlacement; plus: PlusVariant };
 
-let state: NavSpike = { placement: "tabBar", plus: "C" };
+let state: NavSpike = { placement: "tabBar", plus: "E" };
 const listeners = new Set<() => void>();
 
 export function setNavSpike(patch: Partial<NavSpike>) {

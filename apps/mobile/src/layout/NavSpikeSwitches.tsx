@@ -5,7 +5,7 @@ import { useTheme } from "@/theme/ThemeProvider";
 import { setNavSpike, useNavSpike, type PlusVariant, type TabPlacement } from "./navSpike";
 
 const PLACEMENTS: TabPlacement[] = ["tabBar", "sidebar", "automatic"];
-const PLUS: PlusVariant[] = ["C", "D"];
+const PLUS: PlusVariant[] = ["C", "D", "E"];
 
 /** SPIKE dev tools: tab placement and + variant, live, iOS only. English only (dev). */
 export function NavSpikeSwitches() {
@@ -40,7 +40,7 @@ export function NavSpikeSwitches() {
   return (
     <View style={{ gap: theme.spacing.md, marginTop: theme.spacing.md }}>
       {row("Tab placement (iOS 27+)", PLACEMENTS.map((p) => chip(p, nav.placement === p, () => setNavSpike({ placement: p }))))}
-      {row("+ variant (D = toolbar on Receipts only)", PLUS.map((p) => chip(p === "C" ? "C floating" : "D toolbar", nav.plus === p, () => setNavSpike({ plus: p }))))}
+      {row("+ variant (D = toolbar on every tab page)", PLUS.map((p) => chip(p === "C" ? "C floating" : p === "D" ? "D toolbar" : "E accessory", nav.plus === p, () => setNavSpike({ plus: p }))))}
     </View>
   );
 }

@@ -13,15 +13,26 @@ import { useLayout } from "./useLayout";
 /**
  * SPIKE: the + on an iOS native tab screen. Rendered inside each tab screen so it reads that
  * screen's safe area (NativeTabs gives each tab its own, which already includes the tab bar or the
- * Duo side column). Variant D (native bottom toolbar) exists only on Receipts (its own Stack);
- * the other tabs keep variant C so the + is never missing. Renders nothing off iOS native tabs.
+ * Duo side column). Renders nothing off iOS native tabs.
  */
-export function TabPlus({ toolbar = false }: { toolbar?: boolean }) {
+export function TabPlus(_: { toolbar?: boolean }) {
   const inNativeTabs = useInNativeTabs();
   const { plus } = useNavSpike();
-  if (!inNativeTabs) return null;
-  if (plus === "D" && toolbar) return <ToolbarPlus />;
+  // Variant D is added to every page of a tab stack by its layout (TabStackPlus), not here.
+  if (!inNativeTabs || plus !== "C") return null;
   return <FloatingAddButton />;
+}
+
+/** SPIKE: variant D on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */
+export function TabStackPlus({ children }: { children: ReactNode }) {
+  const inNativeTabs = useInNativeTabs();
+  const { plus } = useNavSpike();
+  return (
+    <>
+      {children}
+      {inNativeTabs && plus === "D" ? <ToolbarPlus /> : null}
+    </>
+  );
 }
 
 function ToolbarPlus() {
