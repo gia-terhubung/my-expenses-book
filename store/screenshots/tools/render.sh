@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Builds every store screenshot from the raw captures in raw/<device>/<lang>/NN-name.png.
+# Builds every store screenshot from the raw captures in raw/<device>/<lang>/NN-name.png,
+# renamed to the store slide order by SLIDES below.
 #   raw/iphone      -> out/appstore/iphone-6.9 (1320x2868) and out/play/phone (1080x1920)
 #   raw/ipad        -> out/appstore/ipad-13 (2064x2752) and out/play/tablet (1440x2560, 7" and 10")
 #   raw/duo-outer   -> out/appstore/duo-outer (1398x2034)
@@ -21,6 +22,15 @@ PROMO=out/.promo
 
 caption() { python3 -c 'import json,sys; print(json.load(open("captions.json"))[sys.argv[1]][sys.argv[2]])' "$1" "$2"; }
 
+# Raw capture name -> store slide name. The raws keep the names capture-ios.sh and the website use;
+# the slides carry the store order (00-free and 01-private are drawn by promo.swift below).
+SLIDES="01-review 02-scan
+02-home 03-month
+03-zoom 04-readable
+04-stats 05-stats
+06-search 06-search
+05-trip 07-trips"
+
 # device  crop-top-px  target-folder  W  H
 TARGETS="iphone 186 appstore/iphone-6.9 1320 2868
 iphone 186 play/phone 1080 1920
@@ -34,9 +44,11 @@ echo "$TARGETS" | while read -r dev crop target w h; do
     src="raw/$dev/$lang"
     [ -d "$src" ] || continue
     mkdir -p "out/$target/$lang"
-    for f in "$src"/*.png; do
-      name=$(basename "$f" .png)
-      "$BIN" "$FONT" "$f" "$crop" "$w" "$h" "$(caption "$name" "$lang")" "out/$target/$lang/$name.png"
+    rm -f "out/$target/$lang"/*.png
+    echo "$SLIDES" | while read -r rawname slide; do
+      f="$src/$rawname.png"
+      [ -f "$f" ] || { echo "warning: $f missing, $slide skipped" >&2; continue; }
+      "$BIN" "$FONT" "$f" "$crop" "$w" "$h" "$(caption "$slide" "$lang")" "out/$target/$lang/$slide.png"
     done
     "$PROMO" "$FONT" zero-receipt.json "$lang" "$w" "$h" "$(caption 00-free "$lang")" "out/$target/$lang/00-free.png"
     "$PROMO" "$FONT" private-receipt.json "$lang" "$w" "$h" "$(caption 01-private "$lang")" "out/$target/$lang/01-private.png"
