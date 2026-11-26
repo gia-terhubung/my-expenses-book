@@ -9,7 +9,11 @@ import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PRIVACY_POLICY_URL, TERMS_URL } from "@/about/links";
-import { formatBytes, storageStats, type StorageStats } from "@/about/storageStats";
+import {
+  formatBytes,
+  storageStats,
+  type StorageStats,
+} from "@/about/storageStats";
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -20,7 +24,11 @@ import { OptionRow } from "@/components/OptionRow";
 import { TaxYearPicker } from "@/components/TaxYearPicker";
 import { deviceTimeZone, formatLocal } from "@/capture/localTime";
 import { now } from "@/dates/clock";
-import { currencyExampleHome, payCycleExample, taxYearExample } from "@/guide/examples";
+import {
+  currencyExampleHome,
+  payCycleExample,
+  taxYearExample,
+} from "@/guide/examples";
 import { InfoButton } from "@/guide/InfoButton";
 import { formatMoney } from "@/money/money";
 import type { InfoTopic } from "@/guide/info";
@@ -35,6 +43,11 @@ import type { LockTimeout } from "@/prefs/prefs";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
 import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { NavSpikeSwitches } from "@/layout/NavSpikeSwitches";
+import {
+  NativeSheetHost,
+  SheetBar,
+  useNativeSheets,
+} from "@/layout/NativeSheet";
 import { TabScreen } from "@/layout/TabPlus";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -58,10 +71,22 @@ function Row({
 }) {
   const theme = useTheme();
   const card = (
-    <Card accessibilityLabel={value ? `${label}, ${value}` : label} onPress={onPress} style={{ justifyContent: "space-between" }}>
-      <Text style={[theme.type.body, { color: theme.colors.text }]}>{label}</Text>
+    <Card
+      accessibilityLabel={value ? `${label}, ${value}` : label}
+      onPress={onPress}
+      style={{ justifyContent: "space-between" }}
+    >
+      <Text style={[theme.type.body, { color: theme.colors.text }]}>
+        {label}
+      </Text>
       {value ? (
-        <Text numberOfLines={1} style={[theme.type.body, { color: theme.colors.textMuted, flexShrink: 1 }]}>
+        <Text
+          numberOfLines={1}
+          style={[
+            theme.type.body,
+            { color: theme.colors.textMuted, flexShrink: 1 },
+          ]}
+        >
           {value}
         </Text>
       ) : (
@@ -79,7 +104,13 @@ function Row({
   if (!info) return card;
   // The (i) is its own target beside the row, so the row stays one press target for its picker.
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.xs }}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: theme.spacing.xs,
+      }}
+    >
       <View style={{ flex: 1 }}>{card}</View>
       <InfoButton topic={info} example={infoExample} />
     </View>
@@ -92,11 +123,19 @@ function TipRow({ label, onPress }: { label: string; onPress: () => void }) {
   const ink = theme.colors.onHighlight;
   return (
     <Card tone="highlight" accessibilityLabel={label} onPress={onPress}>
-      <View testID="settings-tip-icon" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <View
+        testID="settings-tip-icon"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
         <Ionicons name="cafe" size={22} color={ink} />
       </View>
       <Text style={[theme.type.label, { color: ink, flex: 1 }]}>{label}</Text>
-      <Text accessibilityElementsHidden importantForAccessibility="no" style={[theme.type.body, { color: ink }]}>
+      <Text
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+        style={[theme.type.body, { color: ink }]}
+      >
         ›
       </Text>
     </Card>
@@ -106,9 +145,17 @@ function TipRow({ label, onPress }: { label: string; onPress: () => void }) {
 function InfoRow({ label, value }: { label: string; value: string }) {
   const theme = useTheme();
   return (
-    <Card accessible accessibilityLabel={`${label}, ${value}`} style={{ justifyContent: "space-between" }}>
-      <Text style={[theme.type.body, { color: theme.colors.text }]}>{label}</Text>
-      <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{value}</Text>
+    <Card
+      accessible
+      accessibilityLabel={`${label}, ${value}`}
+      style={{ justifyContent: "space-between" }}
+    >
+      <Text style={[theme.type.body, { color: theme.colors.text }]}>
+        {label}
+      </Text>
+      <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>
+        {value}
+      </Text>
     </Card>
   );
 }
@@ -116,30 +163,95 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 function GroupTitle({ title }: { title: string }) {
   const theme = useTheme();
   return (
-    <Text accessibilityRole="header" style={[theme.type.caption, { color: theme.colors.textMuted, marginTop: theme.spacing.lg }]}>
+    <Text
+      accessibilityRole="header"
+      style={[
+        theme.type.caption,
+        { color: theme.colors.textMuted, marginTop: theme.spacing.lg },
+      ]}
+    >
       {title}
     </Text>
   );
 }
 
-function PickerSheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+function PickerSheet({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
   const theme = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const sheetTop = useSheetTopInset();
-  return (
-    <AppModal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingTop: sheetTop + theme.spacing.xl, paddingBottom: insets.bottom + theme.spacing.xl, gap: theme.spacing.lg }}>
-        <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", flex: 1, gap: theme.spacing.lg }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
+  const nativeSheets = useNativeSheets();
+  // SPIKE (iOS): native sheet page with the checkmark (Done) at the bottom of the Duo column.
+  const body = (native: boolean) => (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: theme.colors.background,
+        padding: theme.spacing.xl,
+        paddingTop: native ? theme.spacing.lg : sheetTop + theme.spacing.xl,
+        paddingBottom: insets.bottom + theme.spacing.xl,
+        gap: theme.spacing.lg,
+      }}
+    >
+      <View
+        style={{
+          width: "100%",
+          maxWidth: 560,
+          alignSelf: "center",
+          flex: 1,
+          gap: theme.spacing.lg,
+        }}
+      >
+        {native ? (
+          <SheetBar title={title} onDone={onClose} />
+        ) : (
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              accessibilityRole="header"
+              style={[theme.type.title, { color: theme.colors.text }]}
+            >
               {title}
             </Text>
-            <Button variant="quiet" label={t("common.done")} onPress={onClose} />
+            <Button
+              variant="quiet"
+              label={t("common.done")}
+              onPress={onClose}
+            />
           </View>
-          {children}
-        </View>
+        )}
+        {children}
       </View>
+    </View>
+  );
+  if (nativeSheets) {
+    return (
+      <NativeSheetHost visible onClose={onClose}>
+        {body(true)}
+      </NativeSheetHost>
+    );
+  }
+  return (
+    <AppModal
+      visible
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      {body(false)}
     </AppModal>
   );
 }
@@ -182,13 +294,17 @@ function SettingsScreen() {
 
   const monthLabel = (m: number) => {
     try {
-      return new Date(2000, m - 1, 1).toLocaleDateString(language, { month: "long" });
+      return new Date(2000, m - 1, 1).toLocaleDateString(language, {
+        month: "long",
+      });
     } catch {
       return String(m);
     }
   };
   const timeoutLabel = (s: LockTimeout) =>
-    s === 0 ? t("settings.lockTimeoutImmediately") : t("settings.lockTimeoutMinutes", { count: s / 60 });
+    s === 0
+      ? t("settings.lockTimeoutImmediately")
+      : t("settings.lockTimeoutMinutes", { count: s / 60 });
   const close = () => setSheet(null);
   // The guide's live examples for the (i) sheets.
   const today = formatLocal(now(), deviceTimeZone()).slice(0, 10);
@@ -199,21 +315,51 @@ function SettingsScreen() {
     <StatusBarInset>
       <ScrollView
         style={{ backgroundColor: theme.colors.background }}
-        contentContainerStyle={{ padding: theme.spacing.xl, paddingBottom: tabBarSpace || theme.spacing.xl }}
+        contentContainerStyle={{
+          padding: theme.spacing.xl,
+          paddingBottom: tabBarSpace || theme.spacing.xl,
+        }}
       >
-        <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
-          <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
+        <View
+          style={{
+            width: "100%",
+            maxWidth: 560,
+            alignSelf: "center",
+            gap: theme.spacing.md,
+          }}
+        >
+          <Text
+            accessibilityRole="header"
+            style={[theme.type.headline, { color: theme.colors.text }]}
+          >
             {t("settings.title")}
           </Text>
-          <Row label={t("settings.language")} value={LANGUAGE_NAMES[language]} onPress={() => setSheet("language")} />
+          <Row
+            label={t("settings.language")}
+            value={LANGUAGE_NAMES[language]}
+            onPress={() => setSheet("language")}
+          />
           <Row
             label={t("settings.homeCurrency")}
             value={currencyLabel(i18n.language, currency)}
             onPress={() => setSheet("currency")}
             info="homeCurrency"
-            infoExample={homeExample ? t("guide.currencyExample", { foreign: formatMoney(1200, "EUR", i18n.language), home: homeExample }) : undefined}
+            infoExample={
+              homeExample
+                ? t("guide.currencyExample", {
+                    foreign: formatMoney(1200, "EUR", i18n.language),
+                    home: homeExample,
+                  })
+                : undefined
+            }
           />
-          <Row label={t("settings.taxYearStart")} value={monthLabel(taxYear)} onPress={() => setSheet("taxYear")} info="taxYear" infoExample={`${t("guide.taxYearExample", { label: taxEx.label })}: ${taxEx.range}`} />
+          <Row
+            label={t("settings.taxYearStart")}
+            value={monthLabel(taxYear)}
+            onPress={() => setSheet("taxYear")}
+            info="taxYear"
+            infoExample={`${t("guide.taxYearExample", { label: taxEx.label })}: ${taxEx.range}`}
+          />
           <Row
             label={t("settings.monthStart")}
             value={t("settings.monthStartValue", { n: monthStart })}
@@ -221,46 +367,120 @@ function SettingsScreen() {
             info="payCycle"
             infoExample={`${t("guide.thisMonth")}: ${payCycleExample(today, monthStart, i18n.language)}`}
           />
-          <Row label={t("settings.categories")} value="" onPress={() => router.push("/categories" as unknown as Href)} />
-          <Row label={t("recurring.title")} value="" onPress={() => router.push("/recurring" as unknown as Href)} />
-          <Row label={t("settings.export")} value="" onPress={() => router.push("/export" as unknown as Href)} />
+          <Row
+            label={t("settings.categories")}
+            value=""
+            onPress={() => router.push("/categories" as unknown as Href)}
+          />
+          <Row
+            label={t("recurring.title")}
+            value=""
+            onPress={() => router.push("/recurring" as unknown as Href)}
+          />
+          <Row
+            label={t("settings.export")}
+            value=""
+            onPress={() => router.push("/export" as unknown as Href)}
+          />
           {/* /backup is created in the backup task. */}
-          <Row label={t("settings.backupRestore")} value="" onPress={() => router.push("/backup" as unknown as Href)} />
+          <Row
+            label={t("settings.backupRestore")}
+            value=""
+            onPress={() => router.push("/backup" as unknown as Href)}
+          />
 
           <Card style={{ flexDirection: "column", alignItems: "stretch" }}>
-            <LockToggle label={t("settings.appLock")} value={lockEnabled} onChange={(v) => prefs.set("lockEnabled", v)} />
+            <LockToggle
+              label={t("settings.appLock")}
+              value={lockEnabled}
+              onChange={(v) => prefs.set("lockEnabled", v)}
+            />
           </Card>
           {lockEnabled ? (
-            <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{t("settings.lockTimeout")}</Text>
+            <View
+              accessibilityRole="radiogroup"
+              style={{ gap: theme.spacing.sm }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text
+                  style={[
+                    theme.type.caption,
+                    { color: theme.colors.textMuted },
+                  ]}
+                >
+                  {t("settings.lockTimeout")}
+                </Text>
                 <InfoButton topic="lockAfter" />
               </View>
               {TIMEOUTS.map((s) => (
-                <OptionRow key={s} label={timeoutLabel(s)} selected={s === lockTimeout} onPress={() => prefs.set("lockTimeout", s)} />
+                <OptionRow
+                  key={s}
+                  label={timeoutLabel(s)}
+                  selected={s === lockTimeout}
+                  onPress={() => prefs.set("lockTimeout", s)}
+                />
               ))}
             </View>
           ) : null}
           <InfoRow
             label={t("settings.storage")}
-            value={storage ? t("settings.storageValue", { count: storage.receipts, size: formatBytes(storage.bytes, i18n.language) }) : "…"}
+            value={
+              storage
+                ? t("settings.storageValue", {
+                    count: storage.receipts,
+                    size: formatBytes(storage.bytes, i18n.language),
+                  })
+                : "…"
+            }
           />
 
           <GroupTitle title={t("settings.help")} />
-          <Row label={t("settings.showGuide")} value="" onPress={() => router.push("/guide" as unknown as Href)} />
+          <Row
+            label={t("settings.showGuide")}
+            value=""
+            onPress={() => router.push("/guide" as unknown as Href)}
+          />
 
           <GroupTitle title={t("settings.support")} />
-          <TipRow label={t("settings.tipJar")} onPress={() => router.push("/tip-jar" as unknown as Href)} />
-          <Row label={t("settings.errorLog")} value="" onPress={() => router.push("/error-log" as unknown as Href)} />
+          <TipRow
+            label={t("settings.tipJar")}
+            onPress={() => router.push("/tip-jar" as unknown as Href)}
+          />
+          <Row
+            label={t("settings.errorLog")}
+            value=""
+            onPress={() => router.push("/error-log" as unknown as Href)}
+          />
 
           <GroupTitle title={t("about.title")} />
-          <Row label={t("about.privacyPolicy")} value="" onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)} />
-          <Row label={t("about.terms")} value="" onPress={() => void WebBrowser.openBrowserAsync(TERMS_URL)} />
-          <InfoRow label={t("about.version")} value={Constants.expoConfig?.version ?? "?"} />
+          <Row
+            label={t("about.privacyPolicy")}
+            value=""
+            onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)}
+          />
+          <Row
+            label={t("about.terms")}
+            value=""
+            onPress={() => void WebBrowser.openBrowserAsync(TERMS_URL)}
+          />
+          <InfoRow
+            label={t("about.version")}
+            value={Constants.expoConfig?.version ?? "?"}
+          />
 
           {__DEV__ && (
-            <View style={{ gap: theme.spacing.sm, marginTop: theme.spacing.xl }}>
-              <Text style={[theme.type.title, { color: theme.colors.text }]}>{t("settings.devTools")}</Text>
+            <View
+              style={{ gap: theme.spacing.sm, marginTop: theme.spacing.xl }}
+            >
+              <Text style={[theme.type.title, { color: theme.colors.text }]}>
+                {t("settings.devTools")}
+              </Text>
               <Link href="/db-spike">DB spike</Link>
               <Link href="/ai-spike">AI spike</Link>
               <Link href="/db-check">DB check</Link>
@@ -272,25 +492,39 @@ function SettingsScreen() {
 
         {sheet === "language" && (
           <PickerSheet title={t("settings.language")} onClose={close}>
-            <LanguagePicker value={language} onChange={(l) => prefs.set("language", l)} />
+            <LanguagePicker
+              value={language}
+              onChange={(l) => prefs.set("language", l)}
+            />
           </PickerSheet>
         )}
         {sheet === "currency" && (
           <PickerSheet title={t("settings.homeCurrency")} onClose={close}>
-            <CurrencyPicker lang={i18n.language} value={currency} onChange={(c) => prefs.set("homeCurrency", c)} />
+            <CurrencyPicker
+              lang={i18n.language}
+              value={currency}
+              onChange={(c) => prefs.set("homeCurrency", c)}
+            />
           </PickerSheet>
         )}
         {sheet === "taxYear" && (
           <PickerSheet title={t("settings.taxYearStart")} onClose={close}>
             <ScrollView>
-              <TaxYearPicker lang={language} value={taxYear} onChange={(m) => prefs.set("taxYearStartMonth", m)} />
+              <TaxYearPicker
+                lang={language}
+                value={taxYear}
+                onChange={(m) => prefs.set("taxYearStartMonth", m)}
+              />
             </ScrollView>
           </PickerSheet>
         )}
         {sheet === "monthStart" && (
           <PickerSheet title={t("settings.monthStart")} onClose={close}>
             <ScrollView contentContainerStyle={{ gap: theme.spacing.lg }}>
-              <MonthStartPicker value={monthStart} onChange={(d) => prefs.set("monthStartDay", d)} />
+              <MonthStartPicker
+                value={monthStart}
+                onChange={(d) => prefs.set("monthStartDay", d)}
+              />
               <InfoText topic="payCycle" showSummary />
             </ScrollView>
           </PickerSheet>
