@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -105,12 +105,50 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
   const sideBySide = split;
   const errorCount = Object.values(form.errors).filter(Boolean).length;
 
+  // SPIKE (iOS): native header (Later/Cancel left, Discard and Save right) instead of the in-page
+  // header and the bottom bar, so on the iPhone Duo they move into the side column.
+  const nativeHeader = Platform.OS === "ios";
+  const title = t(editing ? "review.editTitle" : "review.title");
+  const nativeBars = nativeHeader ? (
+    <>
+      <Stack.Screen options={{ headerShown: true, title }} />
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button onPress={editing ? form.cancel : () => router.back()} disabled={form.busy}>
+          {t(editing ? "common.cancel" : "review.later")}
+        </Stack.Toolbar.Button>
+      </Stack.Toolbar>
+      <Stack.Toolbar placement="right">
+        {editing ? null : (
+          <Stack.Toolbar.Button
+            icon="trash"
+            tintColor={theme.colors.danger}
+            accessibilityLabel={t("review.discard")}
+            onPress={discard}
+            disabled={form.busy}
+          >
+            {t("review.discard")}
+          </Stack.Toolbar.Button>
+        )}
+        <Stack.Toolbar.Button
+          variant="prominent"
+          accessibilityLabel={form.busy ? t("review.saving") : t("review.saveReceipt")}
+          onPress={save}
+          disabled={form.busy}
+        >
+          {t("common.save")}
+        </Stack.Toolbar.Button>
+      </Stack.Toolbar>
+    </>
+  ) : null;
+
   const header = (
     <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.md }}>
       <View style={{ flex: 1 }}>
-        <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
-          {t(editing ? "review.editTitle" : "review.title")}
-        </Text>
+        {nativeHeader ? null : (
+          <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
+            {title}
+          </Text>
+        )}
         {form.receipt.recurringRuleId !== null ? (
           <Text testID="review-recurring-label" style={[theme.type.caption, { color: theme.colors.primary, fontWeight: "600" }]}>
             {t("recurring.title")}
@@ -120,7 +158,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
           <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{t("review.queued", { n: queue.length })}</Text>
         ) : null}
       </View>
-      {editing ? null : (
+      {editing || nativeHeader ? null : (
         // Keeps the draft (edits are already written); "Continue reviewing" on Receipts reopens it.
         <Button variant="quiet" label={t("review.later")} onPress={() => router.back()} />
       )}
@@ -193,8 +231,12 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={{ flex: 1, backgroundColor: theme.colors.background }}
     >
+      {nativeBars}
       {/* Android shows (modals) full screen under the transparent status bar; iOS uses a page sheet. */}
-      <View testID="form-header" style={{ paddingHorizontal: theme.spacing.lg, paddingTop: sheetTop + theme.spacing.lg }}>
+      <View
+        testID="form-header"
+        style={{ paddingHorizontal: theme.spacing.lg, paddingTop: nativeHeader ? theme.spacing.sm : sheetTop + theme.spacing.lg }}
+      >
         {header}
       </View>
       <View style={{ flex: 1 }}>
@@ -214,7 +256,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
       </View>
       {/* Hidden while the keyboard is up: lifted above it, the bar covered the focused field
           (a tap on Total hit Discard). */}
-      {keyboardVisible ? null : footer}
+      {keyboardVisible || nativeHeader ? null : footer}
     </KeyboardAvoidingView>
   );
 }

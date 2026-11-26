@@ -86,7 +86,11 @@ function AppStack() {
       {/* SPIKE (iOS): tab screens pad their own sides (TabScreen), so the native tab bar reaches the Duo column. */}
       <Stack.Screen name="(tabs)" options={{ contentStyle: { backgroundColor: theme.colors.background } }} />
       {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
-      <Stack.Screen name="(modals)" options={{ presentation: "modal" }} />
+      <Stack.Screen
+        name="(modals)"
+        // SPIKE (iOS): the modal stack pads its own screens; padding here too would inset twice.
+        options={{ presentation: "modal", contentStyle: { backgroundColor: theme.colors.background } }}
+      />
       {/* Settings → Show guide; listed before lock so the lock screen still presents above it. */}
       <Stack.Screen name="guide" options={{ presentation: "fullScreenModal", headerShown: false }} />
       <Stack.Screen name="lock" options={{ presentation: "fullScreenModal", gestureEnabled: false, animation: "none" }} />

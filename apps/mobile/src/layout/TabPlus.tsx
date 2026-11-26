@@ -47,7 +47,12 @@ function HeaderPlus() {
   const add = useAddReceiptContext();
   return (
     <Stack.Toolbar placement="left">
-      <Stack.Toolbar.Button icon="plus" variant="prominent" accessibilityLabel={t("capture.add")} onPress={add.open}>
+      <Stack.Toolbar.Button
+        icon="plus"
+        variant="prominent"
+        accessibilityLabel={t("capture.add")}
+        onPress={add.open}
+      >
         {t("capture.add")}
       </Stack.Toolbar.Button>
     </Stack.Toolbar>
