@@ -156,8 +156,8 @@ the tab bar); plain iPhone still to check; (4) yes, the dev build has the native
 - Recurring with rules and Tax year show no + when held sideways (Back + New / Export, no ⋯). Owner to decide.
 - Second field focused while the keyboard is already up does not auto-scroll.
 - Review/edit and other sheets opened from the add flow (its category/currency pickers) still old style.
-- Phase C (Android/Redmi), D (plain iPhone: X/✓ bottom toolbar vs tab bar, worst-case text sizes),
-  E (iPad).
+- Phase C (Android/Redmi) and D (plain iPhone: X/✓ bottom toolbar vs tab bar, worst-case text sizes).
+  Phase E (iPad) approved by the owner by hand on 2026-11-27.
 - Tests: tabsLayout.test.tsx (16 fail: jest runs as iOS) and tests importing old route paths
   (`@/app/(tabs)/settings` etc.) need updating in the real implementation plan.
 - One native crash seen once right after a reload (Auto Layout exception in a navigation transition), not

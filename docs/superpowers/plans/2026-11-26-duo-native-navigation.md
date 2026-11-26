@@ -113,11 +113,13 @@ One simulator, opened alone. Close it before Phase E.
 
 ## Phase E: iPad pass
 
+DONE 2026-11-27: owner tested the iPad by hand and approved.
+
 One simulator, opened alone.
 
-- [ ] E1 Full screen: Apple's default placement; + bottom-right; folder screen header.
-- [ ] E2 Split View (half and one third) and Slide Over: compact width, tab bar, + on the outer edge.
-- [ ] E3 Write the iPad results into the spec. Close the iPad simulator.
+- [x] E1 Full screen: Apple's default placement; + bottom-right; folder screen header.
+- [x] E2 Split View (half and one third) and Slide Over: compact width, tab bar, + on the outer edge.
+- [x] E3 Write the iPad results into the spec. Close the iPad simulator.
 
 ## Phase F: wrap up the session
 
