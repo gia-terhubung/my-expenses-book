@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams, type Href } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { deviceTimeZone, formatLocal } from "@/capture/localTime";
@@ -20,6 +20,7 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 import { useInNativeTabs } from "@/layout/navSpike";
 
+import { setFilterRequest } from "./filterBridge";
 import { FilterSheet } from "./FilterSheet";
 import {
   activeFilterCount,
@@ -187,6 +188,13 @@ export function SearchScreen() {
     />
   );
 
+  const openNativeFilter = () => {
+    setFilterRequest({
+      value: effective,
+      onApply: (next) => setState((s) => ({ ...next, text: s.text })),
+    });
+    router.push("/search-filter" as unknown as Href);
+  };
   const filterLabel =
     filterCount > 0
       ? `${t("search.filters")} (${filterCount})`
@@ -211,15 +219,7 @@ export function SearchScreen() {
               },
             }}
           />
-          <Stack.Toolbar placement="right">
-            <Stack.Toolbar.Button
-              icon="line.3.horizontal.decrease"
-              accessibilityLabel={filterLabel}
-              onPress={() => setSheetOpen(true)}
-            >
-              {filterLabel}
-            </Stack.Toolbar.Button>
-          </Stack.Toolbar>
+
         </>
       ) : null}
       <ReceiptListDetail
@@ -263,6 +263,9 @@ export function SearchScreen() {
                 {link(filterLabel, () => setSheetOpen(true))}
               </View>
             )}
+            {nativeSearch ? (
+              <View style={{ flexDirection: "row" }}>{link(filterLabel, openNativeFilter)}</View>
+            ) : null}
             {chips.length > 0 ? (
               <View
                 style={{

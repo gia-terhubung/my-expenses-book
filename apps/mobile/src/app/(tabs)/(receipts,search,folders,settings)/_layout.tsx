@@ -55,6 +55,9 @@ export default function TabStack() {
               contentStyle: { ...base.contentStyle, paddingLeft: insets.left, paddingRight: insets.right },
             }
       }
-    />
+    >
+      {/* SPIKE (iOS): native filter sheet with Apple's bar (Cancel, Apply). */}
+      <Stack.Screen name="search-filter" options={{ presentation: "modal", headerShown: true, title: t("search.filters") }} />
+    </Stack>
   );
 }

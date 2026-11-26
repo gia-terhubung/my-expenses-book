@@ -28,6 +28,9 @@ export function TabPlus({ home = false }: { home?: boolean }) {
   return <FloatingAddButton />;
 }
 
+/** Home floats its +; Search (its bar is the search field) and sheets (left slot is Cancel) have none. */
+const NO_HEADER_PLUS = new Set(["index", "search", "search-filter"]);
+
 /** SPIKE: variant D on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */
 export function TabStackPlus({ children, routeName }: { children: ReactNode; routeName: string }) {
   const inNativeTabs = useInNativeTabs();
@@ -37,7 +40,7 @@ export function TabStackPlus({ children, routeName }: { children: ReactNode; rou
     <>
       {children}
       {inNativeTabs && plus === "D" ? <ToolbarPlus /> : null}
-      {inNativeTabs && plus === "B" && edge !== null && routeName !== "index" ? <HeaderPlus /> : null}
+      {inNativeTabs && plus === "B" && edge !== null && !NO_HEADER_PLUS.has(routeName) ? <HeaderPlus /> : null}
     </>
   );
 }
