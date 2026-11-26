@@ -125,13 +125,16 @@ function SheetBody({
             options={{ headerShown: true, title: t("search.filters") }}
           />
           <Stack.Toolbar placement="left">
-            <Stack.Toolbar.Button onPress={onClose}>
+            <Stack.Toolbar.Button icon="xmark" accessibilityLabel={t("common.cancel")} onPress={onClose}>
               {t("common.cancel")}
             </Stack.Toolbar.Button>
           </Stack.Toolbar>
           <Stack.Toolbar placement="right">
             <Stack.Toolbar.Button
+              icon="checkmark"
               variant="prominent"
+              tintColor={theme.colors.primary}
+              accessibilityLabel={t("search.apply")}
               onPress={() => onApply(draft)}
             >
               {t("search.apply")}
