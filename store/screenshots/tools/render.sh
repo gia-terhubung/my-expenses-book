@@ -20,6 +20,8 @@ mkdir -p out
 PROMO=out/.promo
 [ "$PROMO" -nt tools/promo.swift ] || swiftc -O tools/promo.swift -o "$PROMO"
 
+# Marks for the scan slide, from marks.json: "x,y,w,h;x,y,w,h" ("-" for a missing rect).
+marks() { python3 -c 'import json,sys; r=json.load(open("marks.json")).get(sys.argv[1]); print(";".join("-" if x is None else ",".join(map(str,x)) for x in r) if r else "")' "$1"; }
 caption() { python3 -c 'import json,sys; print(json.load(open("captions.json"))[sys.argv[1]][sys.argv[2]])' "$1" "$2"; }
 
 # Raw capture name -> store slide name. The raws keep the names capture-ios.sh and the website use;
@@ -48,7 +50,8 @@ echo "$TARGETS" | while read -r dev crop target w h; do
     echo "$SLIDES" | while read -r rawname slide; do
       f="$src/$rawname.png"
       [ -f "$f" ] || { echo "warning: $f missing, $slide skipped" >&2; continue; }
-      "$BIN" "$FONT" "$f" "$crop" "$w" "$h" "$(caption "$slide" "$lang")" "out/$target/$lang/$slide.png"
+      extra=""; [ "$slide" = 02-scan ] && extra=$(marks "$dev/$lang")
+      "$BIN" "$FONT" "$f" "$crop" "$w" "$h" "$(caption "$slide" "$lang")" "out/$target/$lang/$slide.png" ${extra:+"$extra"}
     done
     "$PROMO" "$FONT" zero-receipt.json "$lang" "$w" "$h" "$(caption 00-free "$lang")" "out/$target/$lang/00-free.png"
     "$PROMO" "$FONT" private-receipt.json "$lang" "$w" "$h" "$(caption 01-private "$lang")" "out/$target/$lang/01-private.png"

@@ -19,6 +19,8 @@ TARGETS = {
 }
 # Characters that fit on one slip line (promo.swift: 76-unit slip, 8-unit padding, mono 4.3 / bold 4.9).
 LINE_MAX, TOTAL_MAX = 21, 19
+# Raw review captures whose receipt photo is scrolled so TOTAL is off screen: field mark only.
+NO_RECEIPT_TOTAL = {"duo-inner/en"}
 fails = []
 
 def load(path):
@@ -77,16 +79,23 @@ def marks():
         for lang in LANGS:
             key = f"{dev}/{lang}"
             rects = data.get(key)
-            if not rects or len(rects) != 2 or any(len(r) != 4 for r in rects):
+            # The receipt rect may be null only where the raw does not show the receipt's TOTAL.
+            receipt_ok = rects and (rects[0] is not None or key in NO_RECEIPT_TOTAL)
+            if not rects or len(rects) != 2 or not receipt_ok or any(r is not None and len(r) != 4 for r in rects) or rects[1] is None:
                 fails.append(f"marks.json: {key} needs 2 rects [x, y, w, h]")
                 continue
             raw = f"raw/{dev}/{lang}/01-review.png"
             w, h, _ = size(raw)
-            for x, y, rw, rh in rects:
+            for r in rects:
+                if r is None:
+                    continue
+                x, y, rw, rh = r
                 if x < 0 or y < 0 or rw <= 0 or rh <= 0 or x + rw > w or y + rh > h:
-                    fails.append(f"marks.json: {key} rect {[x, y, rw, rh]} outside {w}x{h}")
-            if rects[1][1] <= rects[0][1] + rects[0][3]:
-                fails.append(f"marks.json: {key} field rect is not below the receipt rect")
+                    fails.append(f"marks.json: {key} rect {r} outside {w}x{h}")
+            receipt, field = rects
+            # The field is in the form, which starts left of (phones) or right of (iPad) the receipt row.
+            if receipt is not None and receipt[0] <= field[0] <= receipt[0] + receipt[2]:
+                fails.append(f"marks.json: {key} field rect starts inside the receipt row")
 
 def png():
     for target, (W, H) in TARGETS.items():

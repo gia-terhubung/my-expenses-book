@@ -1,7 +1,9 @@
 // Frames one raw app screen as a store screenshot: a slip-green header with the caption
 // (Bricolage Grotesque ExtraBold, left aligned), the yellow bar from under the month total, the
 // app's torn bottom edge, then the real screen (status bar cropped) running off the bottom.
-// Usage: swift frame.swift <font.ttf> <raw.png> <cropTopPx> <W> <H> <caption> <out.png>
+// Optional marks: "x,y,w,h;x,y,w,h" in raw pixels (top-left origin), the receipt row then the field,
+// drawn as a yellow highlighter joined by a dashed line. "-" in place of a rect skips it.
+// Usage: swift frame.swift <font.ttf> <raw.png> <cropTopPx> <W> <H> <caption> <out.png> [marks]
 import AppKit
 
 let a = CommandLine.arguments
@@ -76,6 +78,35 @@ NSBezierPath(roundedRect: dest, xRadius: radius, yRadius: radius).addClip()
 // Source rect in the image's own bottom-left coordinates: everything below the status bar.
 let src = NSRect(x: 0, y: 0, width: raw.size.width, height: raw.size.height * (rawH - crop) / rawH)
 raw.draw(in: dest, from: src, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: [.interpolation: NSImageInterpolation.high])
+if a.count > 8 {
+  // Raw pixels to page: same scale as the screen, shifted by the cropped status bar.
+  let k = screenW / rawW
+  let marks: [NSRect?] = a[8].split(separator: ";").map { part in
+    let v = part.split(separator: ",").compactMap { Double($0) }.map { CGFloat($0) }
+    guard v.count == 4 else { return nil }
+    return NSRect(x: screenX + v[0] * k, y: screenTop + (v[1] - crop) * k, width: v[2] * k, height: v[3] * k)
+      .insetBy(dx: -0.6 * u, dy: -0.6 * u)
+  }
+  cg.setBlendMode(.multiply)
+  yellow.withAlphaComponent(0.55).setFill()
+  for m in marks.compactMap({ $0 }) { NSBezierPath(roundedRect: m, xRadius: 0.8 * u, yRadius: 0.8 * u).fill() }
+  cg.setBlendMode(.normal)
+  if marks.count == 2, let r = marks[0], let f = marks[1] {
+    // An elbow through the gutter left of the field labels, so it never crosses other form text:
+    // from the receipt row's near end (its left end on phones, where the form is below the photo;
+    // its right end on iPad, where the form is beside it), down or up to the field's centre line.
+    let gx = f.minX - 3.5 * u
+    let line = NSBezierPath()
+    line.move(to: NSPoint(x: r.minX > gx ? r.minX : r.maxX, y: r.midY))
+    line.line(to: NSPoint(x: gx, y: r.midY))
+    line.line(to: NSPoint(x: gx, y: f.midY))
+    line.line(to: NSPoint(x: f.minX, y: f.midY))
+    line.lineWidth = 0.5 * u
+    line.setLineDash([1.4 * u, 1.0 * u], count: 2, phase: 0)
+    line.lineCapStyle = .round
+    yellow.setStroke(); line.stroke()
+  }
+}
 NSGraphicsContext.restoreGraphicsState()
 NSGraphicsContext.current = nil
 let out = NSBitmapImageRep(cgImage: cg.makeImage()!)
