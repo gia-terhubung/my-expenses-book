@@ -21,6 +21,7 @@ import { PageViewer } from "@/review/PageViewer";
 import { categoryLabel } from "@/review/ReviewFields";
 import { discardReceipt } from "@/review/useReviewForm";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { useColumnPlusMenu } from "@/layout/PlusMenu";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { homeLine } from "./format";
@@ -105,6 +106,7 @@ export function ReceiptDetail({
   const images = useImageStore();
   // Compact detail shown over a tab's list: clear the floating tab bar.
   const tabBarSpace = useTabBarSpace();
+  const plusMenu = useColumnPlusMenu(nativeHeader);
   const insets = useSafeAreaInsets();
   const home = usePref("homeCurrency") ?? "USD";
   const version = useDataVersion();
@@ -252,6 +254,7 @@ export function ReceiptDetail({
                 {t("common.delete")}
               </Stack.Toolbar.MenuAction>
             </Stack.Toolbar.Menu>
+            {plusMenu}
           </Stack.Toolbar>
         </>
       ) : null}

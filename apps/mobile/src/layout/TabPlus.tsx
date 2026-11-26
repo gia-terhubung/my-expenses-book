@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 import { useVerticalBarEdgeIOS } from "expo-status-bar";
-import type { ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,13 @@ import { useTranslation } from "react-i18next";
 import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
 
 import { FloatingAddButton } from "./FloatingAddButton";
-import { ContentInsetsContext, TabRootContext, useInNativeTabs, useNavSpike } from "./navSpike";
+import {
+  ContentInsetsContext,
+  TabRootContext,
+  useInNativeTabs,
+  useNavSpike,
+} from "./navSpike";
+import { PlusClaimContext, usePlusMenu } from "./PlusMenu";
 import { useLayout } from "./useLayout";
 
 /**
@@ -32,35 +38,41 @@ export function TabPlus({ home = false }: { home?: boolean }) {
 const NO_HEADER_PLUS = new Set(["index", "search", "search-filter", "sheet"]);
 
 /** SPIKE: variant D on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */
-export function TabStackPlus({ children, routeName }: { children: ReactNode; routeName: string }) {
+export function TabStackPlus({
+  children,
+  routeName,
+}: {
+  children: ReactNode;
+  routeName: string;
+}) {
   const inNativeTabs = useInNativeTabs();
   const { plus } = useNavSpike();
   const edge = useVerticalBarEdgeIOS();
+  // A page with its own right-side buttons puts the + last among them (PlusToolbarMenu) and claims it.
+  const [claims, setClaims] = useState(0);
+  const claim = useCallback(() => {
+    setClaims((n) => n + 1);
+    return () => setClaims((n) => n - 1);
+  }, []);
   return (
-    <>
+    <PlusClaimContext.Provider value={claim}>
       {children}
       {inNativeTabs && plus === "D" ? <ToolbarPlus /> : null}
-      {inNativeTabs && plus === "B" && edge !== null && !NO_HEADER_PLUS.has(routeName) ? <HeaderPlus /> : null}
-    </>
+      {inNativeTabs &&
+      plus === "B" &&
+      edge !== null &&
+      !NO_HEADER_PLUS.has(routeName) &&
+      claims === 0 ? (
+        <HeaderPlus />
+      ) : null}
+    </PlusClaimContext.Provider>
   );
 }
 
-/** Variant B: the + as the first header item, so in the Duo column it sits right under Back. */
+/** Variant B: the + menu on the right of the header, so in the Duo column it comes after Back. */
 function HeaderPlus() {
-  const { t } = useTranslation();
-  const add = useAddReceiptContext();
-  return (
-    <Stack.Toolbar placement="left">
-      <Stack.Toolbar.Button
-        icon="plus"
-        variant="prominent"
-        accessibilityLabel={t("capture.add")}
-        onPress={add.open}
-      >
-        {t("capture.add")}
-      </Stack.Toolbar.Button>
-    </Stack.Toolbar>
-  );
+  const menu = usePlusMenu();
+  return <Stack.Toolbar placement="right">{menu}</Stack.Toolbar>;
 }
 
 function ToolbarPlus() {
@@ -69,7 +81,12 @@ function ToolbarPlus() {
   return (
     <Stack.Toolbar placement="bottom">
       <Stack.Toolbar.Spacer />
-      <Stack.Toolbar.Button icon="plus" variant="prominent" accessibilityLabel={t("capture.add")} onPress={add.open}>
+      <Stack.Toolbar.Button
+        icon="plus"
+        variant="prominent"
+        accessibilityLabel={t("capture.add")}
+        onPress={add.open}
+      >
         {t("capture.add")}
       </Stack.Toolbar.Button>
     </Stack.Toolbar>
@@ -94,11 +111,14 @@ export function TabScreen({
   const inNativeTabs = useInNativeTabs();
   const insets = useSafeAreaInsets();
   const { split } = useLayout();
-  if (!inNativeTabs) return <TabRootContext.Provider value>{children}</TabRootContext.Provider>;
+  if (!inNativeTabs)
+    return <TabRootContext.Provider value>{children}</TabRootContext.Provider>;
   if (bleed && !split) {
     return (
       <TabRootContext.Provider value>
-        <ContentInsetsContext.Provider value={{ left: insets.left, right: insets.right }}>
+        <ContentInsetsContext.Provider
+          value={{ left: insets.left, right: insets.right }}
+        >
           <View style={{ flex: 1 }}>
             {children}
             <TabPlus home={home} />
@@ -110,7 +130,15 @@ export function TabScreen({
   return (
     <TabRootContext.Provider value>
       <View style={{ flex: 1 }}>
-        <View style={{ flex: 1, paddingLeft: insets.left, paddingRight: insets.right }}>{children}</View>
+        <View
+          style={{
+            flex: 1,
+            paddingLeft: insets.left,
+            paddingRight: insets.right,
+          }}
+        >
+          {children}
+        </View>
         <TabPlus home={home} />
       </View>
     </TabRootContext.Provider>

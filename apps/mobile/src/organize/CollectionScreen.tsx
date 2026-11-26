@@ -18,6 +18,7 @@ import { totalLine } from "@/receipts/format";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { taxYearLabel, taxYearRange } from "@/taxYear/taxYear";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { useColumnPlusMenu } from "@/layout/PlusMenu";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { FolderForm } from "./FolderForm";
@@ -34,6 +35,7 @@ export function CollectionScreen(props: Props) {
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
   const version = useDataVersion();
+  const plusMenu = useColumnPlusMenu(Platform.OS === "ios");
   const [renaming, setRenaming] = useState(false);
   const folderId = props.kind === "folder" ? props.folderId : null;
   const year = props.kind === "taxYear" ? props.year : null;
@@ -157,6 +159,7 @@ export function CollectionScreen(props: Props) {
                 </Stack.Toolbar.MenuAction>
               </Stack.Toolbar.Menu>
             ) : null}
+            {plusMenu}
           </Stack.Toolbar>
         </>
       ) : null}
