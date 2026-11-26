@@ -26,3 +26,8 @@ export function useAddReceiptContext(): AddReceipt {
   if (!ctx) throw new Error("useAddReceiptContext must be used inside AddReceiptProvider");
   return ctx;
 }
+
+/** The add flow if this screen is inside the tabs, else null (pages outside the tabs have no +). */
+export function useMaybeAddReceiptContext(): AddReceipt | null {
+  return useContext(AddReceiptContext);
+}

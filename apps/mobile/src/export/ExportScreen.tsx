@@ -1,6 +1,6 @@
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useRef, useState } from "react";
-import { ScrollView, Switch, Text, View } from "react-native";
+import { Platform, ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
@@ -21,6 +21,7 @@ import { totalLine } from "@/receipts/format";
 import { categoryLabel } from "@/organize/categoryLabel";
 import { FolderPicker } from "@/organize/FolderPicker";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { SheetBar } from "@/layout/NativeSheet";
 import { useTheme } from "@/theme/ThemeProvider";
 import { StatusBarInset } from "@/layout/StatusBarInset";
 
@@ -31,7 +32,14 @@ import { renderPdf } from "./pdf";
 import { buildReportHtml, buildReportInput } from "./reportHtml";
 import { loadExportRows } from "./rows";
 
-const PRESETS: RangePreset[] = ["thisTaxYear", "lastTaxYear", "thisMonth", "lastMonth", "all", "custom"];
+const PRESETS: RangePreset[] = [
+  "thisTaxYear",
+  "lastTaxYear",
+  "thisMonth",
+  "lastMonth",
+  "all",
+  "custom",
+];
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
 type Format = "csv" | "pdf";
@@ -43,7 +51,13 @@ type FolderSel = string | null | undefined;
  * share sheet. Plaintext files go to cache/export/ (purged on cold start, never on background).
  * Params: `folderId`, `from`, `to` (Collection passes these).
  */
-export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: FileOps; now?: () => Date }) {
+export function ExportScreen({
+  fs = expoFs,
+  now = () => new Date(),
+}: {
+  fs?: FileOps;
+  now?: () => Date;
+}) {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
@@ -53,7 +67,11 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   const version = useDataVersion();
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
-  const params = useLocalSearchParams<{ folderId?: string; from?: string; to?: string }>();
+  const params = useLocalSearchParams<{
+    folderId?: string;
+    from?: string;
+    to?: string;
+  }>();
   const today = useMemo(() => dateToLocalString(now()), [now]);
 
   const hasRange = Boolean(params.from || params.to);
@@ -61,7 +79,10 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   const [preset, setPreset] = useState<RangePreset>(
     hasRange ? "custom" : params.folderId ? "all" : "thisTaxYear",
   );
-  const [custom, setCustom] = useState({ from: params.from ?? "", to: params.to ?? "" });
+  const [custom, setCustom] = useState({
+    from: params.from ?? "",
+    to: params.to ?? "",
+  });
   const [folder, setFolder] = useState<FolderSel>(params.folderId || undefined);
   const [pickingFolder, setPickingFolder] = useState(false);
   const [format, setFormat] = useState<Format>("csv");
@@ -71,17 +92,30 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   const [thumbFailures, setThumbFailures] = useState(0);
   const inflight = useRef(false);
 
-  const range = preset === "custom"
-    ? { from: isDate(custom.from) ? custom.from : undefined, to: isDate(custom.to) ? custom.to : undefined }
-    : presetRange(preset, today, startMonth);
-  const filter: ReceiptFilter = { ...range, ...(folder !== undefined ? { folderId: folder } : {}) };
+  const range =
+    preset === "custom"
+      ? {
+          from: isDate(custom.from) ? custom.from : undefined,
+          to: isDate(custom.to) ? custom.to : undefined,
+        }
+      : presetRange(preset, today, startMonth);
+  const filter: ReceiptFilter = {
+    ...range,
+    ...(folder !== undefined ? { folderId: folder } : {}),
+  };
   const filterKey = JSON.stringify(filter);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const total = useMemo(() => sumHome(db, filter, home), [db, filterKey, home, version]);
+  const total = useMemo(
+    () => sumHome(db, filter, home),
+    [db, filterKey, home, version],
+  );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const folders = useMemo(() => listFolders(db), [db, version]);
-  const folderName = typeof folder === "string" ? (folders.find((f) => f.id === folder)?.name ?? "") : null;
+  const folderName =
+    typeof folder === "string"
+      ? (folders.find((f) => f.id === folder)?.name ?? "")
+      : null;
   const empty = total.count === 0;
 
   const rangeLabel = () => {
@@ -100,7 +134,8 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
     try {
       await purgeExportDir(fs);
       const uri = fs.cacheDir + EXPORT_DIR + exportFileName(format, today);
-      const label = (c: Parameters<typeof categoryLabel>[0]) => categoryLabel(c, t);
+      const label = (c: Parameters<typeof categoryLabel>[0]) =>
+        categoryLabel(c, t);
       if (format === "csv") {
         const rows = loadExportRows(db, filter, label);
         const csv = toCsv(rows, (c) => t(`export.csvHeader.${c}`));
@@ -131,11 +166,21 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
   };
 
   if (error !== null) {
-    return <ErrorPanel title={t("export.failed")} details={error} onRetry={() => setError(null)} scope="export" />;
+    return (
+      <ErrorPanel
+        title={t("export.failed")}
+        details={error}
+        onRetry={() => setError(null)}
+        scope="export"
+      />
+    );
   }
 
   const section = (title: string) => (
-    <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
+    <Text
+      accessibilityRole="header"
+      style={[theme.type.headline, { color: theme.colors.text }]}
+    >
       {title}
     </Text>
   );
@@ -146,30 +191,80 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
       <ScrollView
         testID="export-scroll"
         style={{ backgroundColor: theme.colors.background }}
-        contentContainerStyle={{ padding: theme.spacing.xl, paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.lg, paddingBottom: insets.bottom + theme.spacing.xl }}
+        contentContainerStyle={{
+          padding: theme.spacing.xl,
+          paddingHorizontal: theme.spacing.lg,
+          paddingTop: theme.spacing.lg,
+          paddingBottom: insets.bottom + theme.spacing.xl,
+        }}
       >
-        <View style={{ width: "100%", maxWidth: 560, alignSelf: "center", gap: theme.spacing.md }}>
-          <ScreenHeader title={t("export.title")} />
+        <View
+          style={{
+            width: "100%",
+            maxWidth: 560,
+            alignSelf: "center",
+            gap: theme.spacing.md,
+          }}
+        >
+          {Platform.OS === "ios" ? (
+            // SPIKE (iOS): X closes, checkmark runs the export (owner, 2026-11-26: create pages get X and checkmark).
+            <SheetBar
+              title={t("export.title")}
+              onCancel={() => (router.canGoBack() ? router.back() : undefined)}
+              onDone={() => void run()}
+              doneLabel={t("export.run")}
+              doneDisabled={disabled}
+            />
+          ) : (
+            <ScreenHeader title={t("export.title")} />
+          )}
 
           {section(t("export.range"))}
-          <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
+          <View
+            accessibilityRole="radiogroup"
+            style={{ gap: theme.spacing.sm }}
+          >
             {PRESETS.map((p) => (
-              <OptionRow key={p} label={t(`export.${p}`)} selected={p === preset} onPress={() => setPreset(p)} />
+              <OptionRow
+                key={p}
+                label={t(`export.${p}`)}
+                selected={p === preset}
+                onPress={() => setPreset(p)}
+              />
             ))}
           </View>
           {preset === "custom" ? (
             <View style={{ gap: theme.spacing.sm }}>
-              <DateField label={t("export.from")} value={custom.from} onChange={(v) => setCustom((c) => ({ ...c, from: v }))} />
-              <DateField label={t("export.to")} value={custom.to} onChange={(v) => setCustom((c) => ({ ...c, to: v }))} />
+              <DateField
+                label={t("export.from")}
+                value={custom.from}
+                onChange={(v) => setCustom((c) => ({ ...c, from: v }))}
+              />
+              <DateField
+                label={t("export.to")}
+                value={custom.to}
+                onChange={(v) => setCustom((c) => ({ ...c, to: v }))}
+              />
             </View>
           ) : null}
 
           {section(t("export.folder"))}
-          <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
-            <OptionRow label={t("export.folderAny")} selected={folder === undefined} onPress={() => setFolder(undefined)} />
+          <View
+            accessibilityRole="radiogroup"
+            style={{ gap: theme.spacing.sm }}
+          >
+            <OptionRow
+              label={t("export.folderAny")}
+              selected={folder === undefined}
+              onPress={() => setFolder(undefined)}
+            />
             <OptionRow
               label={t("export.folderPick")}
-              detail={folder === undefined ? undefined : (folderName ?? t("folders.none"))}
+              detail={
+                folder === undefined
+                  ? undefined
+                  : (folderName ?? t("folders.none"))
+              }
               selected={folder !== undefined}
               onPress={() => setPickingFolder(true)}
             />
@@ -185,40 +280,78 @@ export function ExportScreen({ fs = expoFs, now = () => new Date() }: { fs?: Fil
           />
 
           {section(t("export.format"))}
-          <View accessibilityRole="radiogroup" style={{ gap: theme.spacing.sm }}>
-            <OptionRow label={t("export.csv")} selected={format === "csv"} onPress={() => setFormat("csv")} />
-            <OptionRow label={t("export.pdf")} selected={format === "pdf"} onPress={() => setFormat("pdf")} />
+          <View
+            accessibilityRole="radiogroup"
+            style={{ gap: theme.spacing.sm }}
+          >
+            <OptionRow
+              label={t("export.csv")}
+              selected={format === "csv"}
+              onPress={() => setFormat("csv")}
+            />
+            <OptionRow
+              label={t("export.pdf")}
+              selected={format === "pdf"}
+              onPress={() => setFormat("pdf")}
+            />
           </View>
           {format === "pdf" ? (
-            <View style={{ minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: theme.spacing.md }}>
-              <Text style={[theme.type.body, { color: theme.colors.text, flex: 1 }]}>{t("export.images")}</Text>
-              <Switch accessibilityLabel={t("export.images")} value={images} onValueChange={setImages} />
+            <View
+              style={{
+                minHeight: 48,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: theme.spacing.md,
+              }}
+            >
+              <Text
+                style={[theme.type.body, { color: theme.colors.text, flex: 1 }]}
+              >
+                {t("export.images")}
+              </Text>
+              <Switch
+                accessibilityLabel={t("export.images")}
+                value={images}
+                onValueChange={setImages}
+              />
             </View>
           ) : null}
 
-          <Text testID="export-summary" accessibilityLiveRegion="polite" style={[theme.type.body, { color: theme.colors.text }]}>
+          <Text
+            testID="export-summary"
+            accessibilityLiveRegion="polite"
+            style={[theme.type.body, { color: theme.colors.text }]}
+          >
             {empty
               ? t("export.empty")
               : t("export.summary", {
                   count: total.count,
-                  total: totalLine(total, home, locale, (n) => t("totals.notConverted", { count: n })),
+                  total: totalLine(total, home, locale, (n) =>
+                    t("totals.notConverted", { count: n }),
+                  ),
                 })}
           </Text>
           {thumbFailures > 0 ? (
-            <Text accessibilityLiveRegion="polite" style={[theme.type.caption, { color: theme.colors.warning }]}>
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[theme.type.caption, { color: theme.colors.warning }]}
+            >
               {t("export.thumbFailures", { count: thumbFailures })}
             </Text>
           ) : null}
 
-          <Button
-            variant="primary"
-            label={busy ? t("export.busy") : t("export.run")}
-            accessibilityLabel={t("export.run")}
-            disabled={disabled}
-            busy={busy}
-            busyIndicator={false}
-            onPress={() => void run()}
-          />
+          {Platform.OS === "ios" ? null : (
+            <Button
+              variant="primary"
+              label={busy ? t("export.busy") : t("export.run")}
+              accessibilityLabel={t("export.run")}
+              disabled={disabled}
+              busy={busy}
+              busyIndicator={false}
+              onPress={() => void run()}
+            />
+          )}
         </View>
       </ScrollView>
     </StatusBarInset>

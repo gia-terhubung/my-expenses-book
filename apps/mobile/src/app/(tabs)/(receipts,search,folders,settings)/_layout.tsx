@@ -62,6 +62,8 @@ export default function TabStack() {
       }
     >
       {/* SPIKE (iOS): any sheet body as a native sheet page (NativeSheetHost). */}
+      {/* Create/edit pages: a sheet over the tabs (no tab bar, no +), X and checkmark (owner, 2026-11-26). */}
+      <Stack.Screen name="recurring/[id]" options={{ presentation: "modal", headerShown: true }} />
       <Stack.Screen name="sheet" options={{ presentation: "modal", headerShown: true }} />
       <Stack.Screen
         name="photo"

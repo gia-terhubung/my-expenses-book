@@ -44,6 +44,7 @@ const NO_HEADER_PLUS = new Set([
   "search-filter",
   "sheet",
   "photo",
+  "recurring/[id]",
 ]);
 
 /** SPIKE: variant D on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */

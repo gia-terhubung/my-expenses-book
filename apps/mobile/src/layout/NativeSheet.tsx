@@ -112,18 +112,23 @@ export function SheetBar({
   onDone,
   doneLabel,
   doneDisabled = false,
+  doneIcon = "checkmark",
 }: {
   title: string;
   onCancel?: () => void;
   onDone?: () => void;
   doneLabel?: string;
   doneDisabled?: boolean;
+  /** SF Symbol for the confirm button (checkmark by default). */
+  doneIcon?: "checkmark";
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
   return (
     <>
-      <Stack.Screen options={{ title }} />
+      <Stack.Screen
+        options={{ title, headerShown: true, headerBackVisible: false }}
+      />
       {/* Bottom toolbar: X and checkmark sit at the bottom of the Duo column, near the thumb (owner, 2026-11-26). */}
       <Stack.Toolbar placement="bottom">
         <Stack.Toolbar.Spacer />
@@ -138,7 +143,7 @@ export function SheetBar({
         ) : null}
         {onDone ? (
           <Stack.Toolbar.Button
-            icon="checkmark"
+            icon={doneIcon}
             variant="prominent"
             tintColor={theme.colors.primary}
             accessibilityLabel={doneLabel ?? t("common.done")}

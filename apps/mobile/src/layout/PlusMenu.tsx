@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect } from "react";
 import { useWindowDimensions } from "react-native";
 import { useTranslation } from "react-i18next";
 
-import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
+import { useMaybeAddReceiptContext } from "@/capture/AddReceiptProvider";
 import type { CaptureChoice } from "@/capture/CaptureSheet";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -56,7 +56,9 @@ export function useColumnPlus(): boolean {
  * not show the column +. Claims the column + so the tab stack does not add a second one.
  */
 export function useColumnPlusMenu(enabled = true) {
-  const show = useColumnPlus() && enabled;
+  // Outside the tabs (modals: export, review) there is no add flow and no +.
+  const show =
+    useColumnPlus() && enabled && useMaybeAddReceiptContext() !== null;
   const short = useShortColumn();
   const claim = useContext(PlusClaimContext);
   useEffect(() => (show && claim ? claim() : undefined), [show, claim]);
@@ -72,14 +74,14 @@ export function useColumnPlusMenu(enabled = true) {
 /** "Add receipt" as a submenu row (inside a page's ⋯ menu): Scan / Import / Add manually. */
 export function usePlusSubmenu() {
   const { t } = useTranslation();
-  const add = useAddReceiptContext();
+  const add = useMaybeAddReceiptContext();
   return (
     <Stack.Toolbar.Menu icon="plus" title={t("capture.add")}>
       {PLUS_CHOICES.map((c) => (
         <Stack.Toolbar.MenuAction
           key={c.mode}
           icon={c.icon}
-          onPress={() => void add.start(c.mode)}
+          onPress={() => void add?.start(c.mode)}
         >
           {t(c.key)}
         </Stack.Toolbar.MenuAction>
@@ -92,7 +94,7 @@ export function usePlusSubmenu() {
 export function usePlusMenu() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const add = useAddReceiptContext();
+  const add = useMaybeAddReceiptContext();
   return (
     <Stack.Toolbar.Menu
       icon="plus"
@@ -104,7 +106,7 @@ export function usePlusMenu() {
         <Stack.Toolbar.MenuAction
           key={c.mode}
           icon={c.icon}
-          onPress={() => void add.start(c.mode)}
+          onPress={() => void add?.start(c.mode)}
         >
           {t(c.key)}
         </Stack.Toolbar.MenuAction>
