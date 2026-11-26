@@ -16,19 +16,20 @@ import { useLayout } from "./useLayout";
  * screen's safe area (NativeTabs gives each tab its own, which already includes the tab bar or the
  * Duo side column). Renders nothing off iOS native tabs.
  */
-export function TabPlus(_: { toolbar?: boolean }) {
+export function TabPlus({ home = false }: { home?: boolean }) {
   const inNativeTabs = useInNativeTabs();
   const { plus } = useNavSpike();
   // Variant D is added to every page of a tab stack by its layout (TabStackPlus), not here.
   const edge = useVerticalBarEdgeIOS();
   // B without a side column (plain iPhone, iPad) falls back to the floating +.
-  const floating = plus === "C" || (plus === "B" && edge === null);
+  // Home keeps the floating + near the thumb (owner, 2026-11-26); other pages put it in the column.
+  const floating = plus === "C" || (plus === "B" && (edge === null || home));
   if (!inNativeTabs || !floating) return null;
   return <FloatingAddButton />;
 }
 
 /** SPIKE: variant D on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */
-export function TabStackPlus({ children }: { children: ReactNode }) {
+export function TabStackPlus({ children, routeName }: { children: ReactNode; routeName: string }) {
   const inNativeTabs = useInNativeTabs();
   const { plus } = useNavSpike();
   const edge = useVerticalBarEdgeIOS();
@@ -36,7 +37,7 @@ export function TabStackPlus({ children }: { children: ReactNode }) {
     <>
       {children}
       {inNativeTabs && plus === "D" ? <ToolbarPlus /> : null}
-      {inNativeTabs && plus === "B" && edge !== null ? <HeaderPlus /> : null}
+      {inNativeTabs && plus === "B" && edge !== null && routeName !== "index" ? <HeaderPlus /> : null}
     </>
   );
 }
@@ -78,11 +79,12 @@ function ToolbarPlus() {
  */
 export function TabScreen({
   children,
-  toolbar = false,
+  home = false,
   bleed = false,
 }: {
   children: ReactNode;
-  toolbar?: boolean;
+  /** Receipts (Home): the + floats at the bottom instead of sitting in the side column. */
+  home?: boolean;
   /** Full width: backgrounds run under the side column, content pads via ContentInsetsContext. Single pane only. */
   bleed?: boolean;
 }) {
@@ -96,7 +98,7 @@ export function TabScreen({
         <ContentInsetsContext.Provider value={{ left: insets.left, right: insets.right }}>
           <View style={{ flex: 1 }}>
             {children}
-            <TabPlus toolbar={toolbar} />
+            <TabPlus home={home} />
           </View>
         </ContentInsetsContext.Provider>
       </TabRootContext.Provider>
@@ -106,7 +108,7 @@ export function TabScreen({
     <TabRootContext.Provider value>
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1, paddingLeft: insets.left, paddingRight: insets.right }}>{children}</View>
-        <TabPlus toolbar={toolbar} />
+        <TabPlus home={home} />
       </View>
     </TabRootContext.Provider>
   );

@@ -44,11 +44,16 @@ export default function TabStack() {
       : base;
   return (
     <Stack
-      screenLayout={({ children }) => <TabStackPlus>{children}</TabStackPlus>}
+      screenLayout={({ children, route }) => <TabStackPlus routeName={route.name}>{children}</TabStackPlus>}
       screenOptions={({ route }) =>
         TAB_ROOTS.has(route.name)
           ? rootHeader
-          : { ...base, contentStyle: { ...base.contentStyle, paddingLeft: insets.left, paddingRight: insets.right } }
+          : {
+              ...base,
+              // The + is a left header item (variant B); keep Back next to it instead of replacing it.
+              headerBackVisible: true,
+              contentStyle: { ...base.contentStyle, paddingLeft: insets.left, paddingRight: insets.right },
+            }
       }
     />
   );
