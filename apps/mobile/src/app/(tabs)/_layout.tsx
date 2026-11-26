@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router/js-tabs";
 import { NativeTabs } from "expo-router/native-tabs";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -25,9 +26,16 @@ function IosTabs() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { placement } = useNavSpike();
+  // SPIKE workaround (react-native-screens #4989 / #5115): on an iPhone Duo cold launch the tab bar
+  // misses the side column until a later layout pass. Mount it hidden, show it after 500 ms.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setReady(true), 500);
+    return () => clearTimeout(id);
+  }, []);
   return (
     <NativeTabsContext.Provider value>
-      <NativeTabs preferredPlacement={placement} tintColor={theme.colors.primary}>
+      <NativeTabs hidden={!ready} preferredPlacement={placement} tintColor={theme.colors.primary}>
         {TAB_ROUTES.map((name) => (
           <NativeTabs.Trigger key={name} name={name}>
             <NativeTabs.Trigger.Icon sf={TAB_SF_SYMBOLS[name]} />
