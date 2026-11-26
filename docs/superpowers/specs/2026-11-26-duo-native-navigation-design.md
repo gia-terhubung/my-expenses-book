@@ -25,12 +25,9 @@ users who want a simple app. Standard, familiar controls with large tap targets 
 - Work style: live review. The owner looks at the running app on the simulators and the Redmi, screen
   by screen, and approves directly. No throwaway screenshot spike.
 - Positioning first. `@expo/ui` is not needed for this stage.
-
-## To confirm at the start of the session
-
-- **Native tabs on iPhone and iPad only; Android keeps today's bottom bar and side rail.** Reason: the
-  installed expo-router's `NativeTabs` has no side rail or sidebar on Android (bottom bar only), which
-  would be a step back on the Z Fold, Pixel Fold and Android tablets. Proposed, not yet answered.
+- **Native tabs on iPhone and iPad only; Android keeps today's bottom bar and side rail** (confirmed
+  2026-11-26). Reason: the installed expo-router's `NativeTabs` has no side rail or sidebar on Android
+  (bottom bar only), which would be a step back on the Z Fold, Pixel Fold and Android tablets.
 
 ## Facts found (2026-11-26)
 

@@ -36,7 +36,6 @@ choice for the +, non-goals). Read it in full before Checkpoint 0.
 ## Checkpoint 0: setup
 
 - [ ] `git switch -c spike/duo-native-nav`.
-- [ ] Ask the owner: "Native tabs on iPhone/iPad only, Android unchanged?" (spec, "To confirm").
 - [ ] Start Metro, open the app on the Duo simulator, iPad simulator and Redmi. If the iOS dev build
       fails on `NativeTabs` (missing native code), rebuild the dev client once
       (`eas build --profile development --platform ios --local` or the project's usual path) and say so.
