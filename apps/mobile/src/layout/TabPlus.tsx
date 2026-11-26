@@ -1,4 +1,7 @@
 import { Stack } from "expo-router";
+import type { ReactNode } from "react";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
@@ -30,5 +33,21 @@ function ToolbarPlus() {
         {t("capture.add")}
       </Stack.Toolbar.Button>
     </Stack.Toolbar>
+  );
+}
+
+/**
+ * SPIKE: a tab screen on iOS native tabs. Pads the content by the tab's own side insets (they
+ * include the iPhone Duo side column), then adds the +. Off native tabs it is a plain pass-through.
+ */
+export function TabScreen({ children, toolbar = false }: { children: ReactNode; toolbar?: boolean }) {
+  const inNativeTabs = useInNativeTabs();
+  const insets = useSafeAreaInsets();
+  if (!inNativeTabs) return <>{children}</>;
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, paddingLeft: insets.left, paddingRight: insets.right }}>{children}</View>
+      <TabPlus toolbar={toolbar} />
+    </View>
   );
 }

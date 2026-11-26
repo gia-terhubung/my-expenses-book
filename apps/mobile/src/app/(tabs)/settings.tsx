@@ -35,7 +35,7 @@ import type { LockTimeout } from "@/prefs/prefs";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
 import { useSheetTopInset } from "@/layout/useSheetTopInset";
 import { NavSpikeSwitches } from "@/layout/NavSpikeSwitches";
-import { TabPlus } from "@/layout/TabPlus";
+import { TabScreen } from "@/layout/TabPlus";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const TIMEOUTS: LockTimeout[] = [0, 60, 300, 900];
@@ -144,7 +144,15 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
   );
 }
 
-export default function SettingsScreen() {
+export default function SettingsTab() {
+  return (
+    <TabScreen>
+      <SettingsScreen />
+    </TabScreen>
+  );
+}
+
+function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const prefs = usePrefs();
@@ -288,7 +296,6 @@ export default function SettingsScreen() {
           </PickerSheet>
         )}
       </ScrollView>
-      <TabPlus />
     </StatusBarInset>
   );
 }

@@ -2,6 +2,7 @@ import { getLocales } from "expo-localization";
 import { install } from "react-native-quick-crypto";
 import { Redirect, Stack, useSegments, type ErrorBoundaryProps } from "expo-router";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { ErrorPanel } from "@/components/ErrorPanel";
@@ -11,7 +12,7 @@ import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { ImageStoreProvider } from "@/images/ImageStoreProvider";
 import { initI18n } from "@/i18n";
 import { resolveLanguage } from "@/i18n/resolve";
-import { SideSafeArea } from "@/layout/SideSafeArea";
+import { SideSafeArea, useSideInsets } from "@/layout/SideSafeArea";
 import { rootStackOptions } from "@/layout/stackOptions";
 import { useFx } from "@/fx/useFx";
 import { LockGate } from "@/lock/LockGate";
@@ -72,8 +73,18 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
 function AppStack() {
   const { t } = useTranslation();
   const theme = useTheme();
+  const side = useSideInsets();
+  const base = rootStackOptions(t, theme.colors);
+  // SPIKE (iOS): the root no longer pads the sides (SideSafeArea), so native headers and toolbars can
+  // move into the iPhone Duo side column; the screen content pads instead.
+  const screenOptions =
+    Platform.OS === "ios"
+      ? { ...base, contentStyle: { ...base.contentStyle, paddingLeft: side.left, paddingRight: side.right } }
+      : base;
   return (
-    <Stack screenOptions={rootStackOptions(t, theme.colors)}>
+    <Stack screenOptions={screenOptions}>
+      {/* SPIKE (iOS): tab screens pad their own sides (TabScreen), so the native tab bar reaches the Duo column. */}
+      <Stack.Screen name="(tabs)" options={{ contentStyle: { backgroundColor: theme.colors.background } }} />
       {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
       <Stack.Screen name="(modals)" options={{ presentation: "modal" }} />
       {/* Settings → Show guide; listed before lock so the lock screen still presents above it. */}
