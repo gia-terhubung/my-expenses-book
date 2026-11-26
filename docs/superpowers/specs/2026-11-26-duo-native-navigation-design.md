@@ -1,0 +1,98 @@
+# iPhone Duo and iPad: native navigation (design)
+
+Date: 2026-11-26. Status: draft. The direction is agreed in conversation; the details are settled in a
+live review session (see the plan). Plan: `docs/superpowers/plans/2026-11-26-duo-native-navigation.md`.
+
+## Intent
+
+The app should feel at home on the iPhone Duo and the iPad, the way Apple's own apps do. On the Duo,
+Apple moves native tab bars, toolbars and headers into a side column on the outer screen and a sidebar
+on the inner screen. Our navigation is drawn by us (`expo-router/js-tabs` with `BottomTabs` and
+`SideRail`, root `Stack` with `headerShown: false`), so none of that happens for us today.
+
+The target users are privacy-minded people leaving cloud apps, people who want a free app, and older
+users who want a simple app. Standard, familiar controls with large tap targets serve all of them.
+
+## Decisions so far (owner)
+
+- Go toward native navigation (option "B"), staged. The release date is not the constraint.
+- The + stays at the bottom, near the thumb.
+- Today's + behaviour stays for now: it opens the add sheet **over** the current screen. That is the
+  better experience than switching to an "Add" page.
+- Later, not now: the + expands into a menu (Scan receipt / Import photo / Type it in), in Apple's
+  native menu style with an icon and a word on each row ("option 1" of the mockups). No icon-only
+  bubbles: older users need the words.
+- Work style: live review. The owner looks at the running app on the simulators and the Redmi, screen
+  by screen, and approves directly. No throwaway screenshot spike.
+- Positioning first. `@expo/ui` is not needed for this stage.
+
+## To confirm at the start of the session
+
+- **Native tabs on iPhone and iPad only; Android keeps today's bottom bar and side rail.** Reason: the
+  installed expo-router's `NativeTabs` has no side rail or sidebar on Android (bottom bar only), which
+  would be a step back on the Z Fold, Pixel Fold and Android tablets. Proposed, not yet answered.
+
+## Facts found (2026-11-26)
+
+- Expo SDK 58 is current: `expo 58.0.26`, `npx expo install --check` "Dependencies are up to date",
+  `expo-doctor` 20/20 passed.
+- Apple (Tech Talk 111466, "Design for iPhone Duo"): only system bars move into the side column;
+  custom views are left out. Top-bar items go to the top of the column, bottom-bar items to the bottom,
+  the tab bar stays bottom-aligned. Inner screen: tab bar can become a sidebar. System sheets, alerts,
+  menus and toolbar buttons avoid the fold on their own.
+- Expo blog "Supporting iPhone Duo": use `Stack` and `NativeTabs`; JS tab bars in the vertical rail are
+  intentionally not supported; floating views use `insets.right + 16`; read window size at render time;
+  inside `NativeTabs` screens do not add a fixed tab-bar height (`insets.bottom` already includes it).
+- Installed `expo-router` 58.0.32, `NativeTabs` (`expo-router/native-tabs` types):
+  - `preferredPlacement` (`'sidebar' | 'tabBar' | 'automatic'`, iOS 27+), `sidebarAdaptable` (iOS 18+).
+  - Trigger `prominent` (iOS 27+): the tab on its own surface; still a tab (a page), not a button.
+  - Trigger `disabled`: tab stays visible but inert; `tabPress` still fires (`canPreventDefault: false`).
+  - `NativeTabs.BottomAccessory` (iOS 26+): a bar for things like a mini player.
+  - No Android rail or sidebar.
+- `Stack.Toolbar` (expo-router): `placement` `'left' | 'right' | 'bottom'` (default bottom), with
+  `Stack.Toolbar.Button`, `.Menu`, `.Spacer`, `.View`. Toolbars belong to a native stack screen.
+- `@expo/ui` 58.0.29 is installed and has `Menu`, `GlassEffectContainer`, `Namespace`, `ArrangementView`
+  (for the later menu and fold work).
+
+## Where the + can go (approaches)
+
+| | What | Keeps today's sheet | Near thumb on Duo | Verdict |
+|---|---|---|---|---|
+| A | `prominent` tab that opens an "Add" page | no (page) | yes | follows Apple's rules, worse UX; not chosen |
+| B | Native header + (top right) | yes | no (top of column) | not chosen |
+| — | `disabled` prominent tab whose `tabPress` opens the sheet | yes | yes | rejected: uses a tab as an action, against Apple's tab-bar guidance |
+| C | Our floating + beside the side column (`insets.right + 16`) | yes | yes | candidate, fallback |
+| D | Native bottom toolbar button (`Stack.Toolbar placement="bottom"`) | yes | yes, inside the column | candidate, best if iPhone shows it well next to the tab bar |
+
+C and D are compared live in the session. D needs each tab wrapped in its own `Stack` (toolbars belong
+to a stack screen), which changes the route structure; try it on the Receipts tab first.
+
+## Goals
+
+- iOS: `NativeTabs` for the 4 tabs (Receipts, Search, Folders, Settings); sidebar on the open Duo and
+  the iPad.
+- The + in the best of C or D, opening today's add sheet.
+- Screen actions that are our own buttons today become native toolbar items, so they move into the side
+  column (folder: Export, Rename, Delete; review: Discard, Save; and the rest found in the sweep).
+
+## Non-goals (this stage)
+
+- The expanding + menu.
+- Fold avoidance for controls inside screens (Tip jar prices, "Add manually", "Restore"):
+  `ArrangementView` or `react-native-reserved-regions` / `expo-hinge`, Phase 2 of
+  `2026-11-17-foldable-readiness-design.md`.
+- Android navigation changes.
+- The Duo store listing (start the Duo screenshot sets with app screens): a separate small task.
+
+## Anti-goals
+
+- Losing today's "sheet over the current screen" add flow.
+- Breaking Android or the plain iPhone.
+- Tying a feature to one pose or one display.
+
+## Open questions the live session answers
+
+1. Do `NativeTabs` land at the bottom of the Duo's side column when closed, and as a sidebar when open?
+2. Does a bottom toolbar (D) show well together with the tab bar on a plain iPhone?
+3. What does the native tab bar look like next to our slip design (our capsule style goes away on iOS)?
+4. Does the current dev build already contain the native tab code (`react-native-screens`)? Expected yes.
