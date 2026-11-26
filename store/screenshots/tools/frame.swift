@@ -59,7 +59,17 @@ while x < W + tooth {
 // The screen: status bar cropped, centred, as wide as the margins allow, running off the bottom.
 let screenTop = headerH + 6 * u
 let maxW = W - 2 * margin
-let screenW = min(maxW, (H - screenTop + 40 * u) * rawW / (rawH - crop))
+// Marks in raw pixels; nil where a rect is "-".
+let rawMarks: [NSRect?] = a.count > 8 ? a[8].split(separator: ";").map { part in
+  let v = part.split(separator: ",").compactMap { Double($0) }.map { CGFloat($0) }
+  return v.count == 4 ? NSRect(x: v[0], y: v[1], width: v[2], height: v[3]) : nil
+} : []
+// A mark must end above the page's bottom margin (4u): on short pages the screen shrinks to fit it.
+let markFloor = rawMarks.compactMap { $0?.maxY }.max()
+let markRoom: CGFloat = H - 4.6 * u - screenTop
+var fitMarks = CGFloat.greatestFiniteMagnitude
+if let floor = markFloor { fitMarks = markRoom * rawW / (floor - crop) }
+let screenW = min(maxW, (H - screenTop + 40 * u) * rawW / (rawH - crop), fitMarks)
 let screenX = (W - screenW) / 2
 let visibleH = (rawH - crop) * screenW / rawW
 let dest = NSRect(x: screenX, y: screenTop, width: screenW, height: visibleH)
@@ -81,12 +91,12 @@ raw.draw(in: dest, from: src, operation: .sourceOver, fraction: 1, respectFlippe
 if a.count > 8 {
   // Raw pixels to page: same scale as the screen, shifted by the cropped status bar.
   let k = screenW / rawW
-  let marks: [NSRect?] = a[8].split(separator: ";").map { part in
-    let v = part.split(separator: ",").compactMap { Double($0) }.map { CGFloat($0) }
-    guard v.count == 4 else { return nil }
-    return NSRect(x: screenX + v[0] * k, y: screenTop + (v[1] - crop) * k, width: v[2] * k, height: v[3] * k)
-      .insetBy(dx: -0.6 * u, dy: -0.6 * u)
+  let marks: [NSRect?] = rawMarks.map { m in
+    m.map { NSRect(x: screenX + $0.minX * k, y: screenTop + ($0.minY - crop) * k, width: $0.width * k, height: $0.height * k)
+      .insetBy(dx: -0.6 * u, dy: -0.6 * u) }
   }
+  // Placement report for check.sh: the lowest mark's bottom edge and the page's usable bottom.
+  if let low = marks.compactMap({ $0 }).map(\.maxY).max() { print("marks-bottom \(Int(low)) \(Int(H - 4 * u))") }
   cg.setBlendMode(.multiply)
   yellow.withAlphaComponent(0.55).setFill()
   for m in marks.compactMap({ $0 }) { NSBezierPath(roundedRect: m, xRadius: 0.8 * u, yRadius: 0.8 * u).fill() }

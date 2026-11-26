@@ -41,6 +41,8 @@ ipad 64 play/tablet 1440 2560
 duo-outer 0 appstore/duo-outer 1398 2034
 duo-inner 246 appstore/duo-inner 2007 2853"
 
+# One line per marked slide, "<target>/<lang> <mark bottom> <usable bottom>", read by check.sh.
+rm -f out/.marks-placement
 echo "$TARGETS" | while read -r dev crop target w h; do
   for lang in $LANGS; do
     src="raw/$dev/$lang"
@@ -51,7 +53,8 @@ echo "$TARGETS" | while read -r dev crop target w h; do
       f="$src/$rawname.png"
       [ -f "$f" ] || { echo "warning: $f missing, $slide skipped" >&2; continue; }
       extra=""; [ "$slide" = 02-scan ] && extra=$(marks "$dev/$lang")
-      "$BIN" "$FONT" "$f" "$crop" "$w" "$h" "$(caption "$slide" "$lang")" "out/$target/$lang/$slide.png" ${extra:+"$extra"}
+      "$BIN" "$FONT" "$f" "$crop" "$w" "$h" "$(caption "$slide" "$lang")" "out/$target/$lang/$slide.png" ${extra:+"$extra"} |
+        sed -n "s|^marks-bottom |$target/$lang |p" >> out/.marks-placement
     done
     "$PROMO" "$FONT" zero-receipt.json "$lang" "$w" "$h" "$(caption 00-free "$lang")" "out/$target/$lang/00-free.png"
     "$PROMO" "$FONT" private-receipt.json "$lang" "$w" "$h" "$(caption 01-private "$lang")" "out/$target/$lang/01-private.png"

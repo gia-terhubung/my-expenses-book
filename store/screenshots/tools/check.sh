@@ -72,6 +72,7 @@ def size(path):
     return int(vals.get("pixelWidth", 0)), int(vals.get("pixelHeight", 0)), vals.get("hasAlpha")
 
 def marks():
+    placement()
     data = load("marks.json")
     if data is None:
         return
@@ -97,6 +98,23 @@ def marks():
             if receipt is not None and receipt[0] <= field[0] <= receipt[0] + receipt[2]:
                 fails.append(f"marks.json: {key} field rect starts inside the receipt row")
 
+def placement():
+    # Written by render.sh: every scan-slide mark must end above the page's bottom margin.
+    path = "out/.marks-placement"
+    if not os.path.exists(path):
+        fails.append(f"{path} missing: run tools/render.sh")
+        return
+    seen = set()
+    for line in open(path):
+        where, bottom, limit = line.split()
+        seen.add(where)
+        if int(bottom) > int(limit):
+            fails.append(f"out/{where}/02-scan.png: mark ends at y={bottom}, below the page margin {limit}")
+    for target in TARGETS:
+        for lang in LANGS:
+            if f"{target}/{lang}" not in seen:
+                fails.append(f"out/{target}/{lang}/02-scan.png: no marks drawn")
+
 def png():
     for target, (W, H) in TARGETS.items():
         for lang in LANGS:
@@ -113,8 +131,12 @@ def png():
         if (w, h) != (1024, 500) or alpha != "no":
             fails.append(f"{path}: {w}x{h} alpha={alpha}, want 1024x500 alpha=no")
 
+SECTIONS = {"slips": slips, "files": files, "marks": marks, "png": png}
 for section in sys.argv[1:]:
-    {"slips": slips, "files": files, "marks": marks, "png": png}[section]()
+    if section not in SECTIONS:
+        fails.append(f"unknown section {section}; use {' '.join(SECTIONS)}")
+        continue
+    SECTIONS[section]()
 for f in fails:
     print("FAIL:", f)
 print("ok" if not fails else f"{len(fails)} problem(s)")
