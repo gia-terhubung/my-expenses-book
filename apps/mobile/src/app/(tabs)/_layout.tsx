@@ -43,7 +43,7 @@ function IosTabs() {
           </NativeTabs.BottomAccessory>
         ) : null}
         {TAB_ROUTES.map((name) => (
-          <NativeTabs.Trigger key={name} name={name}>
+          <NativeTabs.Trigger key={name} name={name} role={name === "(search)" ? "search" : undefined}>
             <NativeTabs.Trigger.Icon sf={TAB_SF_SYMBOLS[name]} />
             <NativeTabs.Trigger.Label>{t(TAB_LABEL_KEYS[name])}</NativeTabs.Trigger.Label>
           </NativeTabs.Trigger>
