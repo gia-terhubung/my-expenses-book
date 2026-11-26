@@ -52,7 +52,12 @@ function JsTabs() {
   const bar = nav === "bar";
   return (
     <Tabs
-      tabBar={(props) => (bar ? <BottomTabs {...props} /> : <SideRail {...props} variant={nav === "iconRail" ? "icons" : "labels"} />)}
+      tabBar={(props) => {
+        if (!bar) return <SideRail {...props} variant={nav === "iconRail" ? "icons" : "labels"} />;
+        // SPIKE: phone width hides the bar on pages pushed inside a tab (Google's phone pattern); the rail stays.
+        const nested = (props.state.routes[props.state.index] as { state?: { index?: number } } | undefined)?.state;
+        return nested && (nested.index ?? 0) > 0 ? null : <BottomTabs {...props} />;
+      }}
       screenOptions={{ headerShown: false, tabBarPosition: bar ? "bottom" : "left" }}
     >
       {TAB_ROUTES.map((name) => (

@@ -34,3 +34,7 @@ export const useInNativeTabs = () => useContext(NativeTabsContext);
 export type ContentInsets = { left: number; right: number };
 export const ContentInsetsContext = createContext<ContentInsets>({ left: 0, right: 0 });
 export const useContentInsets = () => useContext(ContentInsetsContext);
+
+/** SPIKE: true on a tab's root screen (set by TabScreen); its in-page header is not a stack header. */
+export const TabRootContext = createContext(false);
+export const useInTabRoot = () => useContext(TabRootContext);

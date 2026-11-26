@@ -2,7 +2,7 @@ import { router, Stack } from "expo-router";
 import type { ReactNode } from "react";
 import { Platform, Text, View } from "react-native";
 
-import { useInNativeTabs } from "@/layout/navSpike";
+import { useInTabRoot } from "@/layout/navSpike";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/theme/ThemeProvider";
@@ -35,10 +35,10 @@ export function ScreenHeader({
 }) {
   const { t } = useTranslation();
   const { colors, type, spacing, size } = useTheme();
-  const inNativeTabs = useInNativeTabs();
+  const inTabRoot = useInTabRoot();
   // SPIKE (iOS): a page with a back control on a stack screen uses the native header, so Back and its
-  // actions move into the iPhone Duo side column. Not inside the tabs (the detail pane there has no stack header).
-  if (Platform.OS === "ios" && onBack !== null && !inNativeTabs) {
+  // actions move into the iPhone Duo side column. Not on a tab root (its detail pane has no stack header).
+  if (Platform.OS === "ios" && onBack !== null && !inTabRoot) {
     return (
       <>
         <Stack.Screen options={{ headerShown: true, title }} />

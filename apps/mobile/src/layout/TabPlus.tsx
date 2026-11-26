@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
 
 import { FloatingAddButton } from "./FloatingAddButton";
-import { ContentInsetsContext, useInNativeTabs, useNavSpike } from "./navSpike";
+import { ContentInsetsContext, TabRootContext, useInNativeTabs, useNavSpike } from "./navSpike";
 import { useLayout } from "./useLayout";
 
 /**
@@ -54,21 +54,25 @@ export function TabScreen({
   const inNativeTabs = useInNativeTabs();
   const insets = useSafeAreaInsets();
   const { split } = useLayout();
-  if (!inNativeTabs) return <>{children}</>;
+  if (!inNativeTabs) return <TabRootContext.Provider value>{children}</TabRootContext.Provider>;
   if (bleed && !split) {
     return (
-      <ContentInsetsContext.Provider value={{ left: insets.left, right: insets.right }}>
-        <View style={{ flex: 1 }}>
-          {children}
-          <TabPlus toolbar={toolbar} />
-        </View>
-      </ContentInsetsContext.Provider>
+      <TabRootContext.Provider value>
+        <ContentInsetsContext.Provider value={{ left: insets.left, right: insets.right }}>
+          <View style={{ flex: 1 }}>
+            {children}
+            <TabPlus toolbar={toolbar} />
+          </View>
+        </ContentInsetsContext.Provider>
+      </TabRootContext.Provider>
     );
   }
   return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flex: 1, paddingLeft: insets.left, paddingRight: insets.right }}>{children}</View>
-      <TabPlus toolbar={toolbar} />
-    </View>
+    <TabRootContext.Provider value>
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, paddingLeft: insets.left, paddingRight: insets.right }}>{children}</View>
+        <TabPlus toolbar={toolbar} />
+      </View>
+    </TabRootContext.Provider>
   );
 }
