@@ -4,8 +4,9 @@
 #   raw/ipad        -> out/appstore/ipad-13 (2064x2752) and out/play/tablet (1440x2560, 7" and 10")
 #   raw/duo-outer   -> out/appstore/duo-outer (1398x2034)
 #   raw/duo-inner   -> out/appstore/duo-inner (2007x2853)
-# Slide 1 (00-free, the "zero receipt") has no raw capture: tools/promo.swift draws it from
-# zero-receipt.json for every target that has that language.
+# Slides 00-free (the "zero receipt") and 01-private (the privacy receipt) have no raw capture:
+# tools/promo.swift draws them from zero-receipt.json and private-receipt.json for every target
+# that has that language.
 # A device folder that does not exist yet is skipped. Usage: tools/render.sh [lang ...]
 set -u
 cd "$(dirname "$0")/.."
@@ -38,6 +39,7 @@ echo "$TARGETS" | while read -r dev crop target w h; do
       "$BIN" "$FONT" "$f" "$crop" "$w" "$h" "$(caption "$name" "$lang")" "out/$target/$lang/$name.png"
     done
     "$PROMO" "$FONT" zero-receipt.json "$lang" "$w" "$h" "$(caption 00-free "$lang")" "out/$target/$lang/00-free.png"
+    "$PROMO" "$FONT" private-receipt.json "$lang" "$w" "$h" "$(caption 01-private "$lang")" "out/$target/$lang/01-private.png"
     echo "$target/$lang: $(ls "out/$target/$lang" | wc -l | tr -d ' ') shots"
   done
 done

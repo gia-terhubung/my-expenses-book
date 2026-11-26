@@ -1,9 +1,10 @@
 {
-  "00-free": { "en": "Free. No ads. Works offline.", "id": "Gratis. Tanpa iklan. Bisa offline.", "es": "Gratis. Sin anuncios. Funciona sin internet.", "pt-BR": "Grátis. Sem anúncios. Funciona offline." },
-  "01-review": { "en": "Snap a receipt. It reads the total.", "id": "Foto struk. Totalnya terbaca otomatis.", "es": "Haz una foto al ticket. El total se lee solo.", "pt-BR": "Fotografe o cupom. O total é lido sozinho." },
-  "02-home": { "en": "Know this month at a glance.", "id": "Lihat pengeluaran bulan ini sekilas.", "es": "Tu mes, de un vistazo.", "pt-BR": "Seu mês num relance." },
-  "03-zoom": { "en": "Every receipt, readable.", "id": "Setiap struk, jelas terbaca.", "es": "Cada ticket, legible.", "pt-BR": "Todo cupom, legível." },
-  "04-stats": { "en": "See where it goes.", "id": "Lihat ke mana uangmu pergi.", "es": "Mira en qué se va.", "pt-BR": "Veja para onde vai o dinheiro." },
-  "05-trip": { "en": "Trips and projects, any currency.", "id": "Perjalanan dan proyek, mata uang apa pun.", "es": "Viajes y proyectos, en cualquier moneda.", "pt-BR": "Viagens e projetos, em qualquer moeda." },
-  "06-search": { "en": "Find any receipt in seconds.", "id": "Temukan struk apa pun dalam hitungan detik.", "es": "Encuentra cualquier ticket al momento.", "pt-BR": "Encontre qualquer cupom na hora." }
+  "00-free": {"en": "Free. No ads. Works offline.", "id": "Gratis. Tanpa iklan. Bisa offline.", "es": "Gratis. Sin anuncios. Funciona sin internet.", "pt-BR": "Grátis. Sem anúncios. Funciona offline."},
+  "01-private": {"en": "Your receipts stay on your phone.", "id": "Strukmu tetap di ponselmu.", "es": "Tus tickets se quedan en tu móvil.", "pt-BR": "Seus cupons ficam no seu celular."},
+  "01-review": {"en": "Snap a receipt. It reads the total.", "id": "Foto struk. Totalnya terbaca otomatis.", "es": "Haz una foto al ticket. El total se lee solo.", "pt-BR": "Fotografe o cupom. O total é lido sozinho."},
+  "02-home": {"en": "Know this month at a glance.", "id": "Lihat pengeluaran bulan ini sekilas.", "es": "Tu mes, de un vistazo.", "pt-BR": "Seu mês num relance."},
+  "03-zoom": {"en": "Every receipt, readable.", "id": "Setiap struk, jelas terbaca.", "es": "Cada ticket, legible.", "pt-BR": "Todo cupom, legível."},
+  "04-stats": {"en": "See where it goes.", "id": "Lihat ke mana uangmu pergi.", "es": "Mira en qué se va.", "pt-BR": "Veja para onde vai o dinheiro."},
+  "05-trip": {"en": "Trips and projects, any currency.", "id": "Perjalanan dan proyek, mata uang apa pun.", "es": "Viajes y proyectos, en cualquier moneda.", "pt-BR": "Viagens e projetos, em qualquer moeda."},
+  "06-search": {"en": "Find any receipt in seconds.", "id": "Temukan struk apa pun dalam hitungan detik.", "es": "Encuentra cualquier ticket al momento.", "pt-BR": "Encontre qualquer cupom na hora."}
 }

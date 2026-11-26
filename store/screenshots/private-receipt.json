@@ -1,0 +1,6 @@
+{
+  "en": ["YOUR RECEIPTS", "", "Stored on\tthis phone", "Cloud upload\t0", "Data sent to us\t0", "Encrypted\tyes", "App lock\tyes", "Backup\tyour own file", "", "TOTAL\tON YOUR PHONE"],
+  "id": ["STRUKMU", "", "Tempat\tponsel ini", "Unggah ke cloud\t0", "Data ke kami\t0", "Terenkripsi\tya", "Kunci aplikasi\tya", "Cadangan\tfile milikmu", "", "TOTAL\tDI PONSELMU"],
+  "es": ["TUS TICKETS", "", "Dónde\teste móvil", "Subida a la nube\t0", "Datos que recibimos\t0", "Cifrado\tsí", "Bloqueo de la app\tsí", "Copia\ttu archivo", "", "TOTAL\tEN TU MÓVIL"],
+  "pt-BR": ["SEUS CUPONS", "", "Fica em\teste celular", "Envio à nuvem\t0", "Dados que recebemos\t0", "Criptografado\tsim", "Bloqueio do app\tsim", "Backup\tarquivo seu", "", "TOTAL\tNO CELULAR"]
+}
