@@ -2,7 +2,8 @@
 
 > **For agentic workers:** this is a live review session, ordered **by device** so the owner opens each
 > simulator or phone once: first build all the iOS changes, then review everything on the iPhone Duo,
-> then the Android changes and the Redmi (plus Android emulators), then the iPad and the plain iPhone.
+> then the Android changes and the Redmi (plus Android emulators), then the plain iPhone, then the
+> iPad, each alone.
 > Within a device pass, show one item at a time, wait for "approved" or changes, fix on the spot, then go
 > to the next item. Do not switch devices until the current pass is done. Read the spec first.
 
@@ -98,17 +99,25 @@ The owner sets each pose in Device Hub. Show one item at a time; fix small thing
       width).
 - [ ] C7 Write the Android results into the spec.
 
-## Phase D: iPad and plain iPhone pass
+## Phase D: plain iPhone pass
 
-Both are iOS simulators; open them together.
+One simulator, opened alone. Close it before Phase E.
 
-- [ ] D1 Plain iPhone: native tab bar; + variant C against D: does the bottom toolbar sit well with the
-      tab bar? **Confirm the + pick from B2.** Folder screen header.
-- [ ] D2 iPad full screen: Apple's default placement; + bottom-right; folder screen header.
-- [ ] D3 iPad Split View (half and one third) and Slide Over: compact width, tab bar, + on the outer edge.
-- [ ] D4 Write the iPad and iPhone results into the spec.
+- [ ] D1 Native tab bar look next to the slip header.
+- [ ] D2 + variant C against D: does the bottom toolbar sit well with the tab bar? **Confirm the + pick
+      from B2.**
+- [ ] D3 Folder screen header: Back, Export, ⋯.
+- [ ] D4 Write the iPhone results into the spec. Close the iPhone simulator.
 
-## Phase E: wrap up the session
+## Phase E: iPad pass
+
+One simulator, opened alone.
+
+- [ ] E1 Full screen: Apple's default placement; + bottom-right; folder screen header.
+- [ ] E2 Split View (half and one third) and Slide Over: compact width, tab bar, + on the outer edge.
+- [ ] E3 Write the iPad results into the spec. Close the iPad simulator.
+
+## Phase F: wrap up the session
 
 - [ ] Finish "Session results" in the spec: tab placement, + variant, header pattern, anything the owner
       rejected, screenshots if the owner wants them kept. Remove the dev-only switches from the plan of
