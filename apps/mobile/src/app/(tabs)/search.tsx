@@ -1,3 +1,11 @@
+import { TabPlus } from "@/layout/TabPlus";
 import { SearchScreen } from "@/search/SearchScreen";
 
-export default SearchScreen;
+export default function SearchScreenTab() {
+  return (
+    <>
+      <SearchScreen />
+      <TabPlus />
+    </>
+  );
+}

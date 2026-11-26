@@ -1,3 +1,11 @@
+import { TabPlus } from "@/layout/TabPlus";
 import { FoldersScreen } from "@/organize/FoldersScreen";
 
-export default FoldersScreen;
+export default function FoldersScreenTab() {
+  return (
+    <>
+      <FoldersScreen />
+      <TabPlus />
+    </>
+  );
+}

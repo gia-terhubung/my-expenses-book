@@ -10,6 +10,7 @@ import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
 import { openReview } from "@/capture/useAddReceipt";
 import { useDb } from "@/db/DatabaseProvider";
 import { listDraftIds } from "@/db/repositories/receipts";
+import { TabPlus } from "@/layout/TabPlus";
 import { useLayout } from "@/layout/useLayout";
 import { FeedEmpty } from "@/receipts/FeedEmpty";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
@@ -83,6 +84,7 @@ export default function ReceiptsScreen() {
         }
         empty={<FeedEmpty onStart={(m) => void add.start(m)} />}
       />
+      <TabPlus toolbar />
     </>
   );
 }

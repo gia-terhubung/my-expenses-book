@@ -22,7 +22,7 @@ let mockLayout: Layout = LAYOUTS.phone;
 jest.mock("./useLayout", () => ({ useLayout: () => mockLayout }));
 
 const light = tokens.light;
-const ROUTES = ["index", "search", "folders", "settings"];
+const ROUTES = ["(receipts)", "search", "folders", "settings"];
 
 const props = (index = 0) =>
   ({

@@ -13,7 +13,7 @@ import { useLayout } from "@/layout/useLayout";
 
 import TabsLayout from "@/app/(tabs)/_layout";
 import Folders from "@/app/(tabs)/folders";
-import Index from "@/app/(tabs)/index";
+import Index from "@/app/(tabs)/(receipts)/index";
 import Search from "@/app/(tabs)/search";
 import Settings from "@/app/(tabs)/settings";
 
@@ -61,7 +61,7 @@ function renderApp(initialUrl = "/") {
   return renderRouter(
     {
       "(tabs)/_layout": TabsLayout,
-      "(tabs)/index": Index,
+      "(tabs)/(receipts)/index": Index,
       "(tabs)/search": Search,
       "(tabs)/folders": Folders,
       "(tabs)/settings": Settings,

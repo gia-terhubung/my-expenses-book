@@ -1,11 +1,14 @@
 import type Ionicons from "@expo/vector-icons/Ionicons";
 
-/** Tab route names under (tabs); the order here is the display order. */
-export const TAB_ROUTES = ["index", "search", "folders", "settings"] as const;
+/**
+ * Tab route names under (tabs); the order here is the display order. Receipts is a group with its
+ * own Stack (SPIKE: so the iOS + can be a native bottom toolbar button, variant D).
+ */
+export const TAB_ROUTES = ["(receipts)", "search", "folders", "settings"] as const;
 export type TabRoute = (typeof TAB_ROUTES)[number];
 
 export const TAB_LABEL_KEYS: Record<TabRoute, string> = {
-  index: "tabs.receipts",
+  "(receipts)": "tabs.receipts",
   search: "tabs.search",
   folders: "tabs.folders",
   settings: "tabs.settings",
@@ -13,8 +16,16 @@ export const TAB_LABEL_KEYS: Record<TabRoute, string> = {
 
 /** Floating tab bar icons (Ionicons, bundled). Settings is a gear. */
 export const TAB_ICONS: Record<TabRoute, keyof typeof Ionicons.glyphMap> = {
-  index: "receipt-outline",
+  "(receipts)": "receipt-outline",
   search: "search-outline",
   folders: "folder-outline",
   settings: "settings-outline",
 };
+
+/** iOS native tab bar icons (SF Symbols); same order and meaning as TAB_ICONS. */
+export const TAB_SF_SYMBOLS = {
+  "(receipts)": "doc.text",
+  search: "magnifyingglass",
+  folders: "folder",
+  settings: "gearshape",
+} as const satisfies Record<TabRoute, string>;

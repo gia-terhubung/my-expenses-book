@@ -34,6 +34,8 @@ import { resolveHomeCurrency, resolveLanguage } from "@/i18n/resolve";
 import type { LockTimeout } from "@/prefs/prefs";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
 import { useSheetTopInset } from "@/layout/useSheetTopInset";
+import { NavSpikeSwitches } from "@/layout/NavSpikeSwitches";
+import { TabPlus } from "@/layout/TabPlus";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const TIMEOUTS: LockTimeout[] = [0, 60, 300, 900];
@@ -255,6 +257,7 @@ export default function SettingsScreen() {
               <Link href="/ai-spike">AI spike</Link>
               <Link href="/db-check">DB check</Link>
               <Link href="/ocr-check">OCR check</Link>
+              <NavSpikeSwitches />
             </View>
           )}
         </View>
@@ -285,6 +288,7 @@ export default function SettingsScreen() {
           </PickerSheet>
         )}
       </ScrollView>
+      <TabPlus />
     </StatusBarInset>
   );
 }

@@ -19,7 +19,7 @@ jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => null }));
 jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
 
 const light = tokens.light;
-const ROUTES = ["index", "search", "folders", "settings"];
+const ROUTES = ["(receipts)", "search", "folders", "settings"];
 
 const props = (index = 0) =>
   ({
