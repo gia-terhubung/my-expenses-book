@@ -29,7 +29,7 @@ export function TabPlus({ home = false }: { home?: boolean }) {
 }
 
 /** Home floats its +; Search (its bar is the search field) and sheets (left slot is Cancel) have none. */
-const NO_HEADER_PLUS = new Set(["index", "search", "search-filter"]);
+const NO_HEADER_PLUS = new Set(["index", "search", "search-filter", "sheet"]);
 
 /** SPIKE: variant D on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */
 export function TabStackPlus({ children, routeName }: { children: ReactNode; routeName: string }) {

@@ -124,12 +124,16 @@ function SheetBody({
           <Stack.Screen
             options={{ headerShown: true, title: t("search.filters") }}
           />
-          <Stack.Toolbar placement="left">
-            <Stack.Toolbar.Button icon="xmark" accessibilityLabel={t("common.cancel")} onPress={onClose}>
+          {/* SPIKE: bottom toolbar, so X and checkmark sit at the bottom of the Duo column (thumb reach). */}
+          <Stack.Toolbar placement="bottom">
+            <Stack.Toolbar.Spacer />
+            <Stack.Toolbar.Button
+              icon="xmark"
+              accessibilityLabel={t("common.cancel")}
+              onPress={onClose}
+            >
               {t("common.cancel")}
             </Stack.Toolbar.Button>
-          </Stack.Toolbar>
-          <Stack.Toolbar placement="right">
             <Stack.Toolbar.Button
               icon="checkmark"
               variant="prominent"

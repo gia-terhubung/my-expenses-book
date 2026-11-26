@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { rootStackOptions } from "@/layout/stackOptions";
+import { TabStackContext } from "@/layout/NativeSheet";
 import { useNavSpike } from "@/layout/navSpike";
 import { TabStackPlus } from "@/layout/TabPlus";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -44,7 +45,11 @@ export default function TabStack() {
       : base;
   return (
     <Stack
-      screenLayout={({ children, route }) => <TabStackPlus routeName={route.name}>{children}</TabStackPlus>}
+      screenLayout={({ children, route }) => (
+        <TabStackContext.Provider value>
+          <TabStackPlus routeName={route.name}>{children}</TabStackPlus>
+        </TabStackContext.Provider>
+      )}
       screenOptions={({ route }) =>
         TAB_ROOTS.has(route.name)
           ? rootHeader
@@ -56,6 +61,8 @@ export default function TabStack() {
             }
       }
     >
+      {/* SPIKE (iOS): any sheet body as a native sheet page (NativeSheetHost). */}
+      <Stack.Screen name="sheet" options={{ presentation: "modal", headerShown: true }} />
       {/* SPIKE (iOS): native filter sheet with Apple's bar (Cancel, Apply). */}
       <Stack.Screen name="search-filter" options={{ presentation: "modal", headerShown: true, title: t("search.filters") }} />
     </Stack>
