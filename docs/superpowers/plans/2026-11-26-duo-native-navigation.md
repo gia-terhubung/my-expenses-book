@@ -30,7 +30,8 @@ choice for the +, non-goals). Read it in full before Checkpoint 0.
 - iPhone Duo simulator (Xcode 27.x; poses via Xcode → Open Developer Tool → Device Hub: closed, open,
   partially open, rotate). The owner sets poses by hand.
 - A plain iPhone simulator, and an iPad simulator.
-- Redmi 14C over adb (Android sanity only).
+- Redmi 14C over adb (upright, sideways, and split screen).
+- Android Studio emulators: a foldable (Z Fold or Pixel Fold) and a tablet, for the rail and split screen.
 - Metro: in `apps/mobile`, `npx expo start --dev-client`.
 
 ## Checkpoint 0: setup
@@ -49,7 +50,8 @@ choice for the +, non-goals). Read it in full before Checkpoint 0.
       Both inside `AddReceiptProvider`.
 - [ ] Add SF Symbol names per tab to `tabs.ts` (`TAB_SF_SYMBOLS`): `doc.text`, `magnifyingglass`,
       `folder`, `gearshape`. Labels from `TAB_LABEL_KEYS`.
-- [ ] `NativeTabs preferredPlacement="sidebar"` (try `"automatic"` too if the owner wants to compare).
+- [ ] Open Duo held wide: compare `preferredPlacement="sidebar"` with `"tabBar"` (tabs in the right side
+      column, at the bottom). Lean `tabBar` (spec, "Thumb reach"). The owner picks; iPad keeps Apple's default.
 - [ ] `useTabBarSpace()` returns 0 under `NativeTabs` (Expo: `insets.bottom` already includes the bar).
 - [ ] The + is temporarily the floating variant (C), so adding still works: extract the round + from
       `BottomTabs` into `src/layout/FloatingAddButton.tsx`, absolute, `right: insets.right + 16`,
@@ -77,11 +79,39 @@ choice for the +, non-goals). Read it in full before Checkpoint 0.
       into a `Stack.Toolbar.Menu` ("⋯"). Keep the Delete confirmation as it is today.
 - [ ] **Owner reviews** on Duo closed (Back, Export, ⋯ at the top of the column), plain iPhone, iPad.
 
-## Checkpoint 4: Android sanity
+## Checkpoint 4: Android rail at the bottom, and Android sanity
 
-- [ ] Redmi: tabs, the +, the add sheet and the folder screen look and work exactly as before.
+**Files:** `src/layout/SideRail.tsx`, `src/layout/SideRail.test.tsx`.
 
-## Checkpoint 5: wrap up the session
+- [ ] Group the rail tabs at the bottom, just above the +: the rail's `ScrollView` content grows to fill
+      (`flexGrow: 1`) and aligns its items to the end (`justifyContent: "flex-end"`). Short windows still
+      scroll, and every tab stays reachable above the + (the landscape-phone fix in commit 8928d88 must
+      still hold).
+- [ ] Update `SideRail.test.tsx` for the new alignment.
+- [ ] **Owner reviews:** Redmi held sideways (icon rail), an Android foldable emulator unfolded (Z Fold or
+      Pixel Fold), an Android tablet emulator (wide rail).
+- [ ] Redmi upright: tabs, the +, the add sheet and the folder screen look and work exactly as before.
+
+## Checkpoint 5: Split View on every device
+
+Goal: in a split, the tabs, the rail and the + sit on the window's **outer** edge and stay reachable;
+nothing sits at the inner edge next to the other app (spec, "Split View").
+
+- [ ] If the + is the floating variant (C): place it on the side `useVerticalBarEdgeIOS()` returns
+      (`'leading'` = left, `'trailing'` = right; `null` = today's bottom-right).
+- [ ] **Owner reviews each, both halves where it applies:**
+  - Duo inner, Split View 50/50: our app in the left half (469 pt) and in the right half. Bars and +
+    on the outer edge? Phone layout used?
+  - Duo with a pinned picture-in-picture video at the top: the app gets shorter; + and tabs still
+    reachable?
+  - iPad Split View (half and one third) and Slide Over: compact width, tab bar, + position.
+  - Android foldable emulator, split screen side by side: our app in each half (compact width, bottom bar).
+  - Android tablet emulator, split screen: each half (rail or bottom bar, by width); rail tabs at the bottom.
+  - Redmi split screen top and bottom: short window; tabs, + and the add sheet still usable.
+- [ ] Note every problem in the spec's "Session results"; fix the small ones in the session.
+
+
+## Checkpoint 6: wrap up the session
 
 - [ ] Write "Session results" in the spec: tab placement, + variant, header pattern, anything the owner
       rejected, screenshots if the owner wants them kept.
@@ -96,6 +126,7 @@ choice for the +, non-goals). Read it in full before Checkpoint 0.
 
 1. Folding or unfolding with the add sheet open keeps the sheet (today's `AddReceiptProvider` guarantee).
 2. Selected tab and open receipt survive fold, unfold and rotation (`pendingSelection.ts`).
-3. Split View at 469 pt wide (left window): phone layout, + reachable, nothing under the side column.
+3. Split View (469 pt left window on the Duo, iPad thirds, Android halves): phone layout, bars and + on the
+   outer edge, nothing under the side column.
 4. VoiceOver reads every native toolbar item with a label (Apple requires a symbol and a title).
 5. Android unchanged on the Redmi and a foldable emulator.

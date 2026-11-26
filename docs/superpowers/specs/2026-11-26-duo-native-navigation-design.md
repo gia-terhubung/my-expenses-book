@@ -28,6 +28,20 @@ users who want a simple app. Standard, familiar controls with large tap targets 
 - **Native tabs on iPhone and iPad only; Android keeps today's bottom bar and side rail** (confirmed
   2026-11-26). Reason: the installed expo-router's `NativeTabs` has no side rail or sidebar on Android
   (bottom bar only), which would be a step back on the Z Fold, Pixel Fold and Android tablets.
+- **Thumb reach on big screens** (approved 2026-11-26). Held in two hands, thumbs reach the lower half of
+  both side edges; the top corners are the hardest. So:
+  - Android side rail (ours, `src/layout/SideRail.tsx`): group the tabs at the **bottom**, just above the
+    +, instead of the top (Material: rail items may be top, center or bottom aligned; bottom alignment is
+    easier for thumbs on tablets). Short windows keep scrolling.
+  - iOS open Duo held wide: compare Apple's `preferredPlacement="sidebar"` (left list, top) with
+    `"tabBar"` (tabs in the right side column, at the bottom, like the closed Duo) in the live session.
+    Lean: `tabBar`, for thumb reach and the same place as the closed screen.
+  - iPad: Apple's default; the + stays bottom-right.
+- **Split View is checked on every device** (approved 2026-11-26). In a split, controls belong on the
+  window's **outer** edge, away from the middle (Apple: an app in the left half puts its bars on the
+  left edge). The + must follow: a floating + (variant C) reads the bar edge with
+  `useVerticalBarEdgeIOS()` (`expo-status-bar`: `'leading'`, `'trailing'` or `null`) and sits on that
+  side, never at the inner edge next to the other app; a native toolbar + (variant D) moves by itself.
 
 ## Facts found (2026-11-26)
 
@@ -93,3 +107,5 @@ to a stack screen), which changes the route structure; try it on the Receipts ta
 2. Does a bottom toolbar (D) show well together with the tab bar on a plain iPhone?
 3. What does the native tab bar look like next to our slip design (our capsule style goes away on iOS)?
 4. Does the current dev build already contain the native tab code (`react-native-screens`)? Expected yes.
+5. In Split View (Duo inner, iPad, Android foldables and tablets), where do the tabs, rail and + land, and
+   are they on the outer edge and reachable?
