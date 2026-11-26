@@ -68,7 +68,7 @@ Duo simulator after each step; the owner does not review yet.
 
 ## Phase B: iPhone Duo pass (one simulator session)
 
-Outer screen (closed, upright and sideways) DONE 2026-11-26; see the spec, "Session results". Resume at B4.
+Phase B DONE 2026-11-26 (owner): outer screen, open screen (landscape and portrait) and Split View approved; see the spec, "Session results". Next: Phase C (Android).
 
 The owner sets each pose in Device Hub. Show one item at a time; fix small things on the spot.
 
@@ -77,14 +77,14 @@ The owner sets each pose in Device Hub. Show one item at a time; fix small thing
 - [x] B2 Closed: + variant C (floating, beside the column) against D (inside the column). Provisional
       pick; it is confirmed on the plain iPhone in Phase D.
 - [x] B3 Closed: folder screen; Back, Export and ⋯ at the top of the column.
-- [ ] B4 Open, held wide: `sidebar` against `tabBar` placement (lean `tabBar`). **Owner picks.**
-- [ ] B5 Open, held tall: horizontal bars; + position.
-- [ ] B6 Half open (book and tabletop): nothing tappable in the fold band from the tabs or the +.
-- [ ] B7 Split View 50/50: our app in the left half (469 pt) and in the right half; phone layout; bars
+- [x] B4 Open, held wide: `sidebar` against `tabBar` placement (lean `tabBar`). **Owner picks.**
+- [x] B5 Open, held tall: horizontal bars; + position.
+- [x] B6 Half open (book and tabletop): nothing tappable in the fold band from the tabs or the +.
+- [x] B7 Split View 50/50: our app in the left half (469 pt) and in the right half; phone layout; bars
       and + on the outer edge.
-- [ ] B8 A pinned picture-in-picture video at the top: the app gets shorter; tabs and + still reachable.
-- [ ] B9 Fold and unfold with the add sheet open: the sheet stays.
-- [ ] B10 Write the Duo results into the spec under "Session results". Close the Duo simulator.
+- [x] B8 A pinned picture-in-picture video at the top: the app gets shorter; tabs and + still reachable.
+- [x] B9 Fold and unfold with the add sheet open: the sheet stays.
+- [x] B10 Write the Duo results into the spec under "Session results". Close the Duo simulator.
 
 ## Phase C: Android pass (Redmi, then emulators)
 

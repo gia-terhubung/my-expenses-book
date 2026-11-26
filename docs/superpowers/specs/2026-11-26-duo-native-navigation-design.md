@@ -110,9 +110,9 @@ to a stack screen), which changes the route structure; try it on the Receipts ta
 5. In Split View (Duo inner, iPad, Android foldables and tablets), where do the tabs, rail and + land, and
    are they on the outer edge and reachable?
 
-## Session results: iPhone Duo outer screen (2026-11-26) — DONE
+## Session results: iPhone Duo (2026-11-26) — DONE
 
-Owner approved the closed Duo (outer screen), held upright and held sideways. All work is on branch
+Owner approved the closed Duo (outer screen), held upright and held sideways, and after testing by hand the open Duo (landscape and portrait) and Split View. Phase B is done. All work is on branch
 `spike/duo-native-nav` (23 commits, last `fabaa35`), not on `main`. Dev switches live in Settings →
 Developer tools (tab placement; + variant B/C/D/E). Default is B.
 
@@ -152,7 +152,7 @@ the tab bar); plain iPhone still to check; (4) yes, the dev build has the native
 
 ### Still open (next sessions)
 
-- B4–B9: open Duo held wide (sidebar vs tabBar), held tall, half open, Split View, PiP, fold with a sheet open.
+- Open Duo was approved by the owner by hand; tab placement stays at the dev default (tabBar). Half open, PiP and fold-with-sheet-open were not walked step by step.
 - Recurring with rules and Tax year show no + when held sideways (Back + New / Export, no ⋯). Owner to decide.
 - Second field focused while the keyboard is already up does not auto-scroll.
 - Review/edit and other sheets opened from the add flow (its category/currency pickers) still old style.
