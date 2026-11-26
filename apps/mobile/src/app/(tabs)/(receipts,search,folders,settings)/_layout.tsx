@@ -63,6 +63,21 @@ export default function TabStack() {
     >
       {/* SPIKE (iOS): any sheet body as a native sheet page (NativeSheetHost). */}
       <Stack.Screen name="sheet" options={{ presentation: "modal", headerShown: true }} />
+      <Stack.Screen
+        name="photo"
+        options={{
+          presentation: "fullScreenModal",
+          // A header (empty, see-through) keeps the native toolbar for the checkmark.
+          headerShown: true,
+          headerTransparent: true,
+          title: "",
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: "transparent" },
+          headerTintColor: "#fff",
+          statusBarStyle: "light",
+          contentStyle: { backgroundColor: "#000" },
+        }}
+      />
       {/* SPIKE (iOS): native filter sheet with Apple's bar (Cancel, Apply). */}
       <Stack.Screen name="search-filter" options={{ presentation: "modal", headerShown: true, title: t("search.filters") }} />
     </Stack>

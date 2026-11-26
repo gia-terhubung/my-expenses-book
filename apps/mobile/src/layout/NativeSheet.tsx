@@ -1,5 +1,12 @@
 import { router, Stack, type Href } from "expo-router";
-import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -26,7 +33,18 @@ export function useNativeSheets(): boolean {
   return Platform.OS === "ios" && useContext(TabStackContext);
 }
 
-export function NativeSheetHost({ visible, onClose, children }: { visible: boolean; onClose(): void; children: ReactNode }) {
+export function NativeSheetHost({
+  visible,
+  onClose,
+  children,
+  route = "/sheet",
+}: {
+  visible: boolean;
+  onClose(): void;
+  children: ReactNode;
+  /** `/sheet` (card) or `/photo` (full screen, black). */
+  route?: "/sheet" | "/photo";
+}) {
   const open = useRef(false);
   const close = useRef(onClose);
   close.current = onClose;
@@ -53,7 +71,7 @@ export function NativeSheetHost({ visible, onClose, children }: { visible: boole
         },
       };
       emit();
-      router.push("/sheet" as unknown as Href);
+      router.push(route as unknown as Href);
     } else if (!visible && open.current) {
       open.current = false;
       router.back();
@@ -80,7 +98,11 @@ export function NativeSheetPage() {
     () => entry,
   );
   useEffect(() => () => entry?.dismissed(), []);
-  return <NativeSheetContext.Provider value>{current?.element ?? null}</NativeSheetContext.Provider>;
+  return (
+    <NativeSheetContext.Provider value>
+      {current?.element ?? null}
+    </NativeSheetContext.Provider>
+  );
 }
 
 /** Apple sheet bar: title on top; X (cancel) and checkmark (done/save) in the bottom toolbar. Icons, so they move into the Duo column. */
@@ -106,7 +128,11 @@ export function SheetBar({
       <Stack.Toolbar placement="bottom">
         <Stack.Toolbar.Spacer />
         {onCancel ? (
-          <Stack.Toolbar.Button icon="xmark" accessibilityLabel={t("common.cancel")} onPress={onCancel}>
+          <Stack.Toolbar.Button
+            icon="xmark"
+            accessibilityLabel={t("common.cancel")}
+            onPress={onCancel}
+          >
             {t("common.cancel")}
           </Stack.Toolbar.Button>
         ) : null}
