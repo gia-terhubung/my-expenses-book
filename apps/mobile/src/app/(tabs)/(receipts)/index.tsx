@@ -21,7 +21,7 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 export default function ReceiptsTab() {
   return (
-    <TabScreen toolbar>
+    <TabScreen toolbar bleed>
       <ReceiptsScreen />
     </TabScreen>
   );

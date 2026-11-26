@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next";
 import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
 
 import { FloatingAddButton } from "./FloatingAddButton";
-import { useInNativeTabs, useNavSpike } from "./navSpike";
+import { ContentInsetsContext, useInNativeTabs, useNavSpike } from "./navSpike";
+import { useLayout } from "./useLayout";
 
 /**
  * SPIKE: the + on an iOS native tab screen. Rendered inside each tab screen so it reads that
@@ -40,10 +41,30 @@ function ToolbarPlus() {
  * SPIKE: a tab screen on iOS native tabs. Pads the content by the tab's own side insets (they
  * include the iPhone Duo side column), then adds the +. Off native tabs it is a plain pass-through.
  */
-export function TabScreen({ children, toolbar = false }: { children: ReactNode; toolbar?: boolean }) {
+export function TabScreen({
+  children,
+  toolbar = false,
+  bleed = false,
+}: {
+  children: ReactNode;
+  toolbar?: boolean;
+  /** Full width: backgrounds run under the side column, content pads via ContentInsetsContext. Single pane only. */
+  bleed?: boolean;
+}) {
   const inNativeTabs = useInNativeTabs();
   const insets = useSafeAreaInsets();
+  const { split } = useLayout();
   if (!inNativeTabs) return <>{children}</>;
+  if (bleed && !split) {
+    return (
+      <ContentInsetsContext.Provider value={{ left: insets.left, right: insets.right }}>
+        <View style={{ flex: 1 }}>
+          {children}
+          <TabPlus toolbar={toolbar} />
+        </View>
+      </ContentInsetsContext.Provider>
+    );
+  }
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1, paddingLeft: insets.left, paddingRight: insets.right }}>{children}</View>

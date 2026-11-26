@@ -26,3 +26,11 @@ export function useNavSpike(): NavSpike {
 /** True inside the iOS NativeTabs navigator (set by `(tabs)/_layout.tsx`). */
 export const NativeTabsContext = createContext(false);
 export const useInNativeTabs = () => useContext(NativeTabsContext);
+
+/**
+ * SPIKE: side insets a full-width tab screen leaves to its content (the iPhone Duo side column).
+ * Backgrounds (the slip) bleed under the column; text and rows pad by these. 0 everywhere else.
+ */
+export type ContentInsets = { left: number; right: number };
+export const ContentInsetsContext = createContext<ContentInsets>({ left: 0, right: 0 });
+export const useContentInsets = () => useContext(ContentInsetsContext);

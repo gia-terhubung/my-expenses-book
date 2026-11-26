@@ -7,6 +7,7 @@ import { useDataVersion } from "@/db/changes";
 import { listCategories } from "@/db/repositories/categories";
 import type { ReceiptFilter } from "@/db/repositories/receiptQueries";
 import type { Receipt } from "@/db/types";
+import { useContentInsets } from "@/layout/navSpike";
 import { useTabBarSpace } from "@/layout/useTabBarSpace";
 import { usePref } from "@/prefs/PrefsProvider";
 import { categoryLabel } from "@/review/ReviewFields";
@@ -38,6 +39,7 @@ export function ReceiptList({
   const home = usePref("homeCurrency") ?? "USD";
   const version = useDataVersion();
   const tabBarSpace = useTabBarSpace();
+  const side = useContentInsets();
   const { rows, months, loadMore } = useReceiptQuery(filter);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const cats = useMemo(() => listCategories(db), [db, version]);
@@ -66,7 +68,7 @@ export function ReceiptList({
       ListHeaderComponent={ListHeaderComponent ?? undefined}
       ListEmptyComponent={empty}
       // 96 clears the wide-layout FAB; compact clears the floating tab bar.
-      contentContainerStyle={{ paddingBottom: Math.max(96, tabBarSpace), flexGrow: 1 }}
+      contentContainerStyle={{ paddingBottom: Math.max(96, tabBarSpace), paddingLeft: side.left, paddingRight: side.right, flexGrow: 1 }}
       style={{ backgroundColor: theme.colors.background }}
       renderSectionHeader={({ section }) => {
         const mt = months[section.month];

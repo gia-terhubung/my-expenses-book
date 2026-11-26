@@ -1,4 +1,4 @@
-import { router, type Href } from "expo-router";
+import { router, Stack, type Href } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -30,6 +30,8 @@ type Props = {
   onEdit(id: string): void;
   onDeleted(): void;
   onBack?: () => void;
+  /** SPIKE (iOS): native header with Back, Edit and a ⋯ menu instead of the in-page header and buttons. */
+  nativeHeader?: boolean;
 };
 
 /** Wall-clock purchase time as recorded ("2026-11-03T10:15:00"), locale-formatted, no zone shift. */
@@ -37,14 +39,19 @@ function localDateTime(local: string, locale: string): string {
   const [d, time = "00:00"] = local.split("T");
   const [y, mo, day] = d.split("-").map(Number);
   const [h, mi] = time.split(":").map(Number);
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(
-    Date.UTC(y, mo - 1, day, h, mi),
-  );
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(Date.UTC(y, mo - 1, day, h, mi));
 }
 
 function isoDate(date: string, locale: string): string {
   const [y, mo, d] = date.split("-").map(Number);
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(Date.UTC(y, mo - 1, d));
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeZone: "UTC",
+  }).format(Date.UTC(y, mo - 1, d));
 }
 
 /**
@@ -52,7 +59,11 @@ function isoDate(date: string, locale: string): string {
  * Shown as "1 <receipt> = <rate> <home>", or flipped to "1 <home> = <1/rate> <receipt>" when the
  * rate is below 0.1 (e.g. IDR -> USD), so the number stays readable. Display only.
  */
-export function fxRateText(r: Receipt, locale: string, t: (k: string, o?: Record<string, unknown>) => string): string | null {
+export function fxRateText(
+  r: Receipt,
+  locale: string,
+  t: (k: string, o?: Record<string, unknown>) => string,
+): string | null {
   const home = r.homeCurrencyAtSave;
   if (!r.fxRate || !home || home === r.currency) return null;
   const rate = Number(r.fxRate);
@@ -60,14 +71,33 @@ export function fxRateText(r: Receipt, locale: string, t: (k: string, o?: Record
   const nf = new Intl.NumberFormat(locale, { maximumSignificantDigits: 6 });
   const pair =
     rate < 0.1
-      ? t("receipts.detail.fx", { from: home, rate: nf.format(1 / rate), to: r.currency })
-      : t("receipts.detail.fx", { from: r.currency, rate: nf.format(rate), to: home });
-  const parts = [pair, r.fxRateDate ? t("receipts.detail.rateOn", { date: isoDate(r.fxRateDate, locale) }) : t("receipts.detail.manualRate")];
+      ? t("receipts.detail.fx", {
+          from: home,
+          rate: nf.format(1 / rate),
+          to: r.currency,
+        })
+      : t("receipts.detail.fx", {
+          from: r.currency,
+          rate: nf.format(rate),
+          to: home,
+        });
+  const parts = [
+    pair,
+    r.fxRateDate
+      ? t("receipts.detail.rateOn", { date: isoDate(r.fxRateDate, locale) })
+      : t("receipts.detail.manualRate"),
+  ];
   if (r.fxApproximate) parts.push(t("receipts.detail.approximate"));
   return parts.join(" · ");
 }
 
-export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
+export function ReceiptDetail({
+  id,
+  onEdit,
+  onDeleted,
+  onBack,
+  nativeHeader = false,
+}: Props) {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
@@ -86,20 +116,36 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
   const receipt = useMemo(() => getReceipt(db, id), [db, id, version]);
   const pages = useMemo(() => listPages(db, id), [db, id, version]);
   const category = useMemo(
-    () => (receipt?.categoryId ? listCategories(db).find((c) => c.id === receipt.categoryId) : undefined),
+    () =>
+      receipt?.categoryId
+        ? listCategories(db).find((c) => c.id === receipt.categoryId)
+        : undefined,
     [db, receipt?.categoryId, version],
   );
   const folder = useMemo(
-    () => (receipt?.folderId ? listFolders(db).find((f) => f.id === receipt.folderId) : undefined),
+    () =>
+      receipt?.folderId
+        ? listFolders(db).find((f) => f.id === receipt.folderId)
+        : undefined,
     [db, receipt?.folderId, version],
   );
   /* eslint-enable react-hooks/exhaustive-deps */
 
   if (!receipt) {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingHorizontal: theme.spacing.lg, gap: theme.spacing.md }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: theme.colors.background,
+          padding: theme.spacing.xl,
+          paddingHorizontal: theme.spacing.lg,
+          gap: theme.spacing.md,
+        }}
+      >
         <ScreenHeader title={t("document.title")} onBack={onBack ?? null} />
-        <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("receipts.detail.missing")}</Text>
+        <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>
+          {t("receipts.detail.missing")}
+        </Text>
       </View>
     );
   }
@@ -108,41 +154,107 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
   const fx = fxRateText(receipt, locale, t);
 
   const confirmDelete = () =>
-    Alert.alert(t("receipts.detail.deleteTitle"), t("receipts.detail.deleteMessage"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("common.delete"),
-        style: "destructive",
-        onPress: () => {
-          setDeleting(true);
-          discardReceipt(db, images, receipt.id).then(
-            () => {
-              setDeleting(false);
-              onDeleted();
-            },
-            (e: unknown) => {
-              setDeleting(false);
-              if (__DEV__) console.warn("receipt delete failed", e);
-              Alert.alert(t("receipts.detail.deleteFailed"));
-            },
-          );
+    Alert.alert(
+      t("receipts.detail.deleteTitle"),
+      t("receipts.detail.deleteMessage"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: () => {
+            setDeleting(true);
+            discardReceipt(db, images, receipt.id).then(
+              () => {
+                setDeleting(false);
+                onDeleted();
+              },
+              (e: unknown) => {
+                setDeleting(false);
+                if (__DEV__) console.warn("receipt delete failed", e);
+                Alert.alert(t("receipts.detail.deleteFailed"));
+              },
+            );
+          },
         },
-      },
-    ]);
+      ],
+    );
 
   const field = (label: string, value: string) => (
     <View style={{ gap: theme.spacing.xs }}>
-      <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{label}</Text>
-      <Text style={[theme.type.body, { color: theme.colors.text }]}>{value}</Text>
+      <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>
+        {label}
+      </Text>
+      <Text style={[theme.type.body, { color: theme.colors.text }]}>
+        {value}
+      </Text>
     </View>
   );
 
-  const action = (label: string, onPress: () => void, tone: "default" | "danger" = "default", disabled = false) => (
-    <Button label={label} onPress={onPress} tone={tone} disabled={disabled} style={{ flexGrow: 1 }} />
+  const action = (
+    label: string,
+    onPress: () => void,
+    tone: "default" | "danger" = "default",
+    disabled = false,
+  ) => (
+    <Button
+      label={label}
+      onPress={onPress}
+      tone={tone}
+      disabled={disabled}
+      style={{ flexGrow: 1 }}
+    />
   );
+
+  const title = receipt.merchant ?? t("receipts.unknownMerchant");
+  const canRepeat =
+    receipt.status === "confirmed" && receipt.recurringRuleId === null;
+  const repeat = () =>
+    router.push({
+      pathname: "/recurring/[id]",
+      params: { id: "new", from: receipt.id },
+    } as unknown as Href);
 
   return (
     <>
+      {nativeHeader ? (
+        <>
+          <Stack.Screen options={{ headerShown: true, title }} />
+          <Stack.Toolbar placement="right">
+            <Stack.Toolbar.Button
+              icon="pencil"
+              accessibilityLabel={t("receipts.detail.edit")}
+              onPress={() => onEdit(receipt.id)}
+            >
+              {t("receipts.detail.edit")}
+            </Stack.Toolbar.Button>
+            <Stack.Toolbar.Menu
+              icon="ellipsis"
+              accessibilityLabel={t("common.more")}
+            >
+              <Stack.Toolbar.MenuAction
+                icon="folder"
+                onPress={() => setPicking(true)}
+              >
+                {t("receipts.detail.move")}
+              </Stack.Toolbar.MenuAction>
+              {canRepeat ? (
+                <Stack.Toolbar.MenuAction icon="repeat" onPress={repeat}>
+                  {t("recurring.repeatThis")}
+                </Stack.Toolbar.MenuAction>
+              ) : null}
+              <Stack.Toolbar.MenuAction
+                icon="trash"
+                destructive
+                disabled={deleting}
+                onPress={confirmDelete}
+              >
+                {t("common.delete")}
+              </Stack.Toolbar.MenuAction>
+            </Stack.Toolbar.Menu>
+          </Stack.Toolbar>
+        </>
+      ) : null}
       <ScrollView
         testID="receipt-detail-scroll"
         contentInsetAdjustmentBehavior="never"
@@ -158,34 +270,61 @@ export function ReceiptDetail({ id, onEdit, onDeleted, onBack }: Props) {
         }}
       >
         <View style={{ gap: theme.spacing.xs }}>
-          <ScreenHeader title={receipt.merchant ?? t("receipts.unknownMerchant")} titleStyle="headline" onBack={onBack ?? null} />
-          <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{localDateTime(receipt.purchasedAtLocal, locale)}</Text>
+          {nativeHeader ? null : (
+            <ScreenHeader
+              title={title}
+              titleStyle="headline"
+              onBack={onBack ?? null}
+            />
+          )}
+          <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>
+            {localDateTime(receipt.purchasedAtLocal, locale)}
+          </Text>
         </View>
         <View style={{ gap: theme.spacing.xs }}>
-          <Text style={[theme.type.title, { color: theme.colors.text }]}>{formatMoney(receipt.totalMinor, receipt.currency, locale)}</Text>
-          {conv ? <Text style={[theme.type.body, { color: theme.colors.text }]}>{conv}</Text> : null}
+          <Text style={[theme.type.title, { color: theme.colors.text }]}>
+            {formatMoney(receipt.totalMinor, receipt.currency, locale)}
+          </Text>
+          {conv ? (
+            <Text style={[theme.type.body, { color: theme.colors.text }]}>
+              {conv}
+            </Text>
+          ) : null}
           {fx ? (
-            <Text testID="fx-line" style={[theme.type.body, { color: theme.colors.textMuted }]}>
+            <Text
+              testID="fx-line"
+              style={[theme.type.body, { color: theme.colors.textMuted }]}
+            >
               {fx}
             </Text>
           ) : null}
         </View>
-        <View testID="receipt-detail-actions" style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
-          {action(t("receipts.detail.edit"), () => onEdit(receipt.id))}
-          {action(t("receipts.detail.move"), () => setPicking(true))}
-          {/* A receipt a rule already owns is not offered again (it would move to the new rule). */}
-          {receipt.status === "confirmed" && receipt.recurringRuleId === null
-            ? action(t("recurring.repeatThis"), () =>
-                router.push({ pathname: "/recurring/[id]", params: { id: "new", from: receipt.id } } as unknown as Href),
-              )
-            : null}
-          {action(t("common.delete"), confirmDelete, "danger", deleting)}
-        </View>
+        {nativeHeader ? null : (
+          <View
+            testID="receipt-detail-actions"
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: theme.spacing.sm,
+            }}
+          >
+            {action(t("receipts.detail.edit"), () => onEdit(receipt.id))}
+            {action(t("receipts.detail.move"), () => setPicking(true))}
+            {/* A receipt a rule already owns is not offered again (it would move to the new rule). */}
+            {canRepeat ? action(t("recurring.repeatThis"), repeat) : null}
+            {action(t("common.delete"), confirmDelete, "danger", deleting)}
+          </View>
+        )}
         {/* Under the actions: the photo is what people open a receipt to read. */}
         {pages.length > 0 ? <PageViewer pages={pages} /> : null}
-        {field(t("receipts.detail.category"), category ? categoryLabel(category, t) : t("review.noCategory"))}
+        {field(
+          t("receipts.detail.category"),
+          category ? categoryLabel(category, t) : t("review.noCategory"),
+        )}
         {field(t("receipts.detail.folder"), folder?.name ?? t("folders.none"))}
-        {receipt.notes ? field(t("receipts.detail.notes"), receipt.notes) : null}
+        {receipt.notes
+          ? field(t("receipts.detail.notes"), receipt.notes)
+          : null}
       </ScrollView>
       <FolderPicker
         visible={picking}
