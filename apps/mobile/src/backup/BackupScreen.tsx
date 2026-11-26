@@ -2,15 +2,14 @@ import * as DocumentPicker from "expo-document-picker";
 import Constants from "expo-constants";
 import { router, usePreventRemove, type Href } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import {
+  FORM_BOTTOM_ROOM,
+  KEYBOARD_SCROLL_PROPS,
+} from "@/layout/keyboardScroll";
 import { Button } from "@/components/Button";
 import { dateToLocalString } from "@/components/dateString";
 import { ErrorPanel } from "@/components/ErrorPanel";
@@ -42,10 +41,7 @@ import {
 } from "./errors";
 import { fileOpsSink, fileSource } from "./expoBytes";
 import { exportBackup } from "./exportBackup";
-import {
-  importBackup,
-  type RestoreMode,
-} from "./importBackup";
+import { importBackup, type RestoreMode } from "./importBackup";
 import { validatePassphrase } from "./passphrase";
 import { MIN_PASSPHRASE } from "./kdf";
 import { restoreLease } from "./restoreLease";
@@ -454,6 +450,7 @@ export function BackupScreen({
 
   return (
     <ScrollView
+      {...KEYBOARD_SCROLL_PROPS}
       testID="backup-scroll"
       contentInsetAdjustmentBehavior="never"
       style={{ backgroundColor: theme.colors.background }}

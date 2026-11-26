@@ -4,6 +4,10 @@ import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import {
+  KEYBOARD_SCROLL_PROPS,
+  useKeyboardForm,
+} from "@/layout/keyboardScroll";
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
 import { DateField } from "@/components/DateField";
@@ -74,6 +78,7 @@ function SheetBody({
 }: Props & { native?: boolean }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { scrollProps: keyboardScroll, bottomRoom } = useKeyboardForm();
   const insets = useSafeAreaInsets();
   const sheetTop = useSheetTopInset();
   const db = useDb();
@@ -165,10 +170,12 @@ function SheetBody({
         </View>
       )}
       <ScrollView
+        {...KEYBOARD_SCROLL_PROPS}
+        {...keyboardScroll}
         contentContainerStyle={{
           padding: theme.spacing.lg,
           gap: theme.spacing.sm,
-          paddingBottom: insets.bottom + theme.spacing.xl,
+          paddingBottom: insets.bottom + theme.spacing.xl + bottomRoom,
         }}
       >
         {heading(t("search.date"))}

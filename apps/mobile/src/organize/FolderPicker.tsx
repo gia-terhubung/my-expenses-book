@@ -3,6 +3,10 @@ import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import {
+  KEYBOARD_SCROLL_PROPS,
+  useKeyboardForm,
+} from "@/layout/keyboardScroll";
 import { AppModal } from "@/components/AppModal";
 import {
   NativeSheetHost,
@@ -30,6 +34,7 @@ type Props = {
 export function FolderPicker({ visible, value, onChange, onClose }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { scrollProps: keyboardScroll, bottomRoom } = useKeyboardForm();
   const insets = useSafeAreaInsets();
   const sheetTop = useSheetTopInset();
   const nativeSheets = useNativeSheets();
@@ -104,8 +109,12 @@ export function FolderPicker({ visible, value, onChange, onClose }: Props) {
           </View>
         )}
         <ScrollView
-          contentContainerStyle={{ gap: theme.spacing.sm }}
-          keyboardShouldPersistTaps="handled"
+          {...KEYBOARD_SCROLL_PROPS}
+          {...keyboardScroll}
+          contentContainerStyle={{
+            gap: theme.spacing.sm,
+            paddingBottom: bottomRoom,
+          }}
         >
           <View
             accessibilityRole="radiogroup"

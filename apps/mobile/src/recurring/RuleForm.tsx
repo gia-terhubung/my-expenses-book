@@ -14,6 +14,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import {
+  KEYBOARD_SCROLL_PROPS,
+  useKeyboardForm,
+} from "@/layout/keyboardScroll";
 import { deviceTimeZone } from "@/capture/localTime";
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
@@ -264,6 +268,7 @@ export function RuleForm({
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
+  const { scrollProps: keyboardScroll, bottomRoom } = useKeyboardForm();
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const version = useDataVersion();
@@ -461,15 +466,17 @@ export function RuleForm({
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      // iOS: the scroll view keeps clear of the keyboard itself (KEYBOARD_SCROLL_PROPS).
+      behavior={undefined}
       style={{ flex: 1, backgroundColor: theme.colors.background }}
     >
       <ScrollView
         testID="rule-form-scroll"
-        keyboardShouldPersistTaps="handled"
+        {...KEYBOARD_SCROLL_PROPS}
+        {...keyboardScroll}
         contentContainerStyle={{
           padding: theme.spacing.lg,
-          paddingBottom: theme.spacing.xxl,
+          paddingBottom: theme.spacing.xxl + bottomRoom,
         }}
       >
         <View

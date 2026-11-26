@@ -13,6 +13,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import {
+  KEYBOARD_SCROLL_PROPS,
+  useKeyboardForm,
+} from "@/layout/keyboardScroll";
 import { Button } from "@/components/Button";
 import { useDb } from "@/db/DatabaseProvider";
 import { listCategories } from "@/db/repositories/categories";
@@ -53,6 +57,7 @@ const hiddenView = {
 export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { scrollProps: keyboardScroll, bottomRoom } = useKeyboardForm();
   const insets = useSafeAreaInsets();
   const sheetTop = useSheetTopInset();
   const keyboardVisible = useKeyboardVisible();
@@ -263,11 +268,13 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
 
   const formScroll = (
     <ScrollView
-      keyboardShouldPersistTaps="handled"
+      {...KEYBOARD_SCROLL_PROPS}
+      {...keyboardScroll}
       // The bar is hidden while typing: dragging the form puts the keyboard away and brings it back.
       keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
       contentContainerStyle={{
         padding: theme.spacing.lg,
+        paddingBottom: theme.spacing.lg + bottomRoom,
         gap: theme.spacing.lg,
       }}
     >
@@ -323,7 +330,8 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      // iOS native header: the scroll view keeps clear of the keyboard itself (KEYBOARD_SCROLL_PROPS).
+      behavior={Platform.OS === "ios" && !nativeHeader ? "padding" : undefined}
       style={{ flex: 1, backgroundColor: theme.colors.background }}
     >
       {nativeBars}

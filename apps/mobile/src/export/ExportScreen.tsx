@@ -4,6 +4,10 @@ import { Platform, ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import {
+  KEYBOARD_SCROLL_PROPS,
+  useKeyboardForm,
+} from "@/layout/keyboardScroll";
 import { Button } from "@/components/Button";
 import { DateField } from "@/components/DateField";
 import { dateToLocalString } from "@/components/dateString";
@@ -61,6 +65,7 @@ export function ExportScreen({
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
+  const { scrollProps: keyboardScroll, bottomRoom } = useKeyboardForm();
   const insets = useSafeAreaInsets();
   const db = useDb();
   const store = useImageStore();
@@ -189,13 +194,15 @@ export function ExportScreen({
   return (
     <StatusBarInset>
       <ScrollView
+        {...KEYBOARD_SCROLL_PROPS}
+        {...keyboardScroll}
         testID="export-scroll"
         style={{ backgroundColor: theme.colors.background }}
         contentContainerStyle={{
           padding: theme.spacing.xl,
           paddingHorizontal: theme.spacing.lg,
           paddingTop: theme.spacing.lg,
-          paddingBottom: insets.bottom + theme.spacing.xl,
+          paddingBottom: insets.bottom + theme.spacing.xl + bottomRoom,
         }}
       >
         <View
