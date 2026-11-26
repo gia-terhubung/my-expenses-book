@@ -42,39 +42,41 @@ choice for the +, non-goals). Read it in full before Checkpoint 0.
 Do all of this first, so the Duo pass needs no rebuilds or restarts. Check that the app launches on the
 Duo simulator after each step; the owner does not review yet.
 
-- [ ] A1 Setup: `git switch -c spike/duo-native-nav`; start Metro; open the app on the **Duo simulator
+- [x] A1 Setup: `git switch -c spike/duo-native-nav`; start Metro; open the app on the **Duo simulator
       only**. If the iOS dev build fails on `NativeTabs` (missing native code), rebuild the dev client once
       (`eas build --profile development --platform ios --local` or the project's usual path) and say so.
-- [ ] A2 Native tabs (`src/app/(tabs)/_layout.tsx`, `src/layout/tabs.ts`, `src/layout/useTabBarSpace.ts`):
+- [x] A2 Native tabs (`src/app/(tabs)/_layout.tsx`, `src/layout/tabs.ts`, `src/layout/useTabBarSpace.ts`):
   - branch on `Platform.OS`: `ios` renders `NativeTabs` with 4 `NativeTabs.Trigger`s in `TAB_ROUTES`
     order; everything else renders today's `Tabs` code unchanged; both inside `AddReceiptProvider`;
   - SF Symbols per tab in `tabs.ts` (`TAB_SF_SYMBOLS`): `doc.text`, `magnifyingglass`, `folder`,
     `gearshape`; labels from `TAB_LABEL_KEYS`;
   - `useTabBarSpace()` returns 0 under `NativeTabs` (Expo: `insets.bottom` already includes the bar).
-- [ ] A3 Dev-only switches (Settings → Developer tools, or constants), so the owner can compare without
+- [x] A3 Dev-only switches (Settings → Developer tools, or constants), so the owner can compare without
       a restart: tab placement `sidebar` / `tabBar`; + variant C / D.
-- [ ] A4 + variant C (floating): extract the round + from `BottomTabs` into
+- [x] A4 + variant C (floating): extract the round + from `BottomTabs` into
       `src/layout/FloatingAddButton.tsx`, absolute, `bottom: insets.bottom + 16`, on the side
       `useVerticalBarEdgeIOS()` returns (`'leading'` = left with `insets.left + 16`, `'trailing'` or
       `null` = right with `insets.right + 16`), `onPress` = `open()`. In a split it must sit on the
       window's outer edge (spec, "Split View").
-- [ ] A5 + variant D (native bottom toolbar) on the Receipts tab only: wrap the tab in its own `Stack`
+- [x] A5 + variant D (native bottom toolbar) on the Receipts tab only: wrap the tab in its own `Stack`
       (move `(tabs)/index.tsx` to `(tabs)/(receipts)/index.tsx` with a `(receipts)/_layout.tsx` `Stack`),
       add `Stack.Toolbar placement="bottom"` with one `Stack.Toolbar.Button` (icon `plus`, label
       "Add receipt") whose press calls `open()`.
-- [ ] A6 Folder screen header (`src/organize/CollectionScreen.tsx`, route `src/app/folder/[id].tsx`):
+- [x] A6 Folder screen header (`src/organize/CollectionScreen.tsx`, route `src/app/folder/[id].tsx`):
       native header; Export as `Stack.Toolbar placement="right"` button; Rename and Delete in a
       `Stack.Toolbar.Menu` ("⋯"). Keep today's Delete confirmation.
 
 ## Phase B: iPhone Duo pass (one simulator session)
 
+Outer screen (closed, upright and sideways) DONE 2026-11-26; see the spec, "Session results". Resume at B4.
+
 The owner sets each pose in Device Hub. Show one item at a time; fix small things on the spot.
 
-- [ ] B1 Closed: tabs at the bottom of the right side column? Look of the native tab bar next to the slip
+- [x] B1 Closed: tabs at the bottom of the right side column? Look of the native tab bar next to the slip
       header?
-- [ ] B2 Closed: + variant C (floating, beside the column) against D (inside the column). Provisional
+- [x] B2 Closed: + variant C (floating, beside the column) against D (inside the column). Provisional
       pick; it is confirmed on the plain iPhone in Phase D.
-- [ ] B3 Closed: folder screen; Back, Export and ⋯ at the top of the column.
+- [x] B3 Closed: folder screen; Back, Export and ⋯ at the top of the column.
 - [ ] B4 Open, held wide: `sidebar` against `tabBar` placement (lean `tabBar`). **Owner picks.**
 - [ ] B5 Open, held tall: horizontal bars; + position.
 - [ ] B6 Half open (book and tabletop): nothing tappable in the fold band from the tabs or the +.

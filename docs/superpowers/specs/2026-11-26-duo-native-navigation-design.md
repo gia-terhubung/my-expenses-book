@@ -109,3 +109,56 @@ to a stack screen), which changes the route structure; try it on the Receipts ta
 4. Does the current dev build already contain the native tab code (`react-native-screens`)? Expected yes.
 5. In Split View (Duo inner, iPad, Android foldables and tablets), where do the tabs, rail and + land, and
    are they on the outer edge and reachable?
+
+## Session results: iPhone Duo outer screen (2026-11-26) — DONE
+
+Owner approved the closed Duo (outer screen), held upright and held sideways. All work is on branch
+`spike/duo-native-nav` (23 commits, last `fabaa35`), not on `main`. Dev switches live in Settings →
+Developer tools (tab placement; + variant B/C/D/E). Default is B.
+
+Answers to the open questions: (1) yes, NativeTabs land at the bottom of the side column once the root
+stops padding the side inset (see below); (2) D does not work on the Duo (the bottom toolbar + sits behind
+the tab bar); plain iPhone still to check; (4) yes, the dev build has the native tab code, no rebuild.
+
+### What was decided and built
+
+- **Native tabs on iOS** (`src/app/(tabs)/_layout.tsx`): 4 tabs with SF Symbols. Android unchanged.
+- **Root cause of "tabs not in the column":** `SideSafeArea` padded the root by the 84 pt side inset, so
+  no native bar reached the column. On iOS the root no longer pads; stack screens pad via `contentStyle`,
+  tab roots via `TabScreen`. Receipts' green slip runs full width under the column; rows pad by the inset.
+- **Per-tab stacks** (shared group `(tabs)/(receipts,search,folders,settings)/`, anchors in
+  `unstable_settings`): pages opened from a tab keep the tab bar. Android: phone bottom bar hides on pushed
+  pages, rail stays.
+- **Native headers** on every page with Back (`ScreenHeader` → native header on iOS): Back, then the page's
+  own buttons, then the + last (receipt detail: Back, ✏️ Edit, ⋯ More, +).
+- **The + (variant B)**: in the side column on every page when the window has a side column; Home keeps a
+  floating + bottom-right (upright). The + opens Apple's menu: Scan receipt / Import from Photos / Add
+  manually (icon + word), each starting that flow directly (no add sheet). Home + uses `@expo/ui` Menu.
+  No column → floating + (plain iPhone, iPad). Empty Home and Android keep the add sheet.
+- **Short column** (window height < 560 pt, Duo held sideways): page extras fold into ⋯ (Edit, Export), the
+  + becomes an "Add receipt ›" submenu row at the top of ⋯; pages without ⋯ keep Back + + in the column;
+  Home's + goes into the column (no floating +).
+- **Search**: normal tab (Apple's search tab role dropped: doubled header items, Filter stopped working);
+  native search field at the top; Filter in the column; no + on Search.
+- **Sheets** (native sheet pages via `NativeSheetHost` + route `sheet`): Filters, folder/category forms,
+  folder picker, Info, Language/Currency/Tax year/Pay cycle pickers. Icons X (cancel) and green ✓ (done) in
+  the bottom toolbar = bottom of the Duo column. Text buttons stay in a sheet's top bar; icons move.
+- **Create/edit pages** have no tabs and no +, only X and ✓: recurring rule form (now a sheet), Export,
+  review/edit receipt (Discard = trash at top, review only; rule Delete stays in the page).
+- **Photo viewer**: native black full-screen page, white status icons, green ✓ at the bottom of the column.
+- **Keyboard**: `useKeyboardForm()` gives forms keyboard-height bottom room and scrolls the focused field
+  above the keyboard (review/edit, recurring, export, filters, folder picker).
+- **Crash fixed**: pages outside the tabs no longer ask for the add flow (`useMaybeAddReceiptContext`).
+
+### Still open (next sessions)
+
+- B4–B9: open Duo held wide (sidebar vs tabBar), held tall, half open, Split View, PiP, fold with a sheet open.
+- Recurring with rules and Tax year show no + when held sideways (Back + New / Export, no ⋯). Owner to decide.
+- Second field focused while the keyboard is already up does not auto-scroll.
+- Review/edit and other sheets opened from the add flow (its category/currency pickers) still old style.
+- Phase C (Android/Redmi), D (plain iPhone: X/✓ bottom toolbar vs tab bar, worst-case text sizes),
+  E (iPad).
+- Tests: tabsLayout.test.tsx (16 fail: jest runs as iOS) and tests importing old route paths
+  (`@/app/(tabs)/settings` etc.) need updating in the real implementation plan.
+- One native crash seen once right after a reload (Auto Layout exception in a navigation transition), not
+  reproduced.
