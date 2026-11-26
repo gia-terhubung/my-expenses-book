@@ -22,7 +22,10 @@ export function FloatingAddButton() {
   const insets = useSafeAreaInsets();
   const add = useAddReceiptContext();
   const edge = useVerticalBarEdgeIOS();
-  const side = edge === "leading" ? { left: insets.left + 16 } : { right: insets.right + 16 };
+  const side =
+    edge === "leading"
+      ? { left: insets.left + 16 }
+      : { right: insets.right + 16 };
   const size = theme.size.plus;
 
   const circle = (pressed: boolean) => (
@@ -34,7 +37,9 @@ export function FloatingAddButton() {
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: pressed ? theme.colors.primaryPressed : theme.colors.primary,
+          backgroundColor: pressed
+            ? theme.colors.primaryPressed
+            : theme.colors.primary,
           boxShadow: `inset 0 1px 0 rgba(255,255,255,0.22), ${theme.elevation.raised}`,
         },
       ]}
@@ -46,12 +51,24 @@ export function FloatingAddButton() {
   return (
     <View
       testID="floating-add"
-      style={[styles.anchor, side, { bottom: insets.bottom + 16, width: size, height: size }]}
+      style={[
+        styles.anchor,
+        side,
+        { bottom: insets.bottom + 16, width: size, height: size },
+      ]}
     >
       <Host matchContents>
-        <Menu label={<RNHostView matchContents>{circle(false)}</RNHostView>} modifiers={[accessibilityLabel(t("capture.add"))]}>
+        <Menu
+          label={<RNHostView matchContents>{circle(false)}</RNHostView>}
+          modifiers={[accessibilityLabel(t("capture.add"))]}
+        >
           {PLUS_CHOICES.map((c) => (
-            <Button key={c.mode} systemImage={c.icon} label={t(c.key)} onPress={() => void add.start(c.mode)} />
+            <Button
+              key={c.mode}
+              systemImage={c.icon}
+              label={t(c.key)}
+              onPress={() => void add.start(c.mode)}
+            />
           ))}
         </Menu>
       </Host>

@@ -1,5 +1,13 @@
-import { fireEvent, render, screen, within } from "@testing-library/react-native";
-import { BottomTabBarHeightContext, type BottomTabBarProps } from "expo-router/js-tabs";
+import {
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react-native";
+import {
+  BottomTabBarHeightContext,
+  type BottomTabBarProps,
+} from "expo-router/js-tabs";
 import { StyleSheet, Text } from "react-native";
 
 import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
@@ -26,13 +34,18 @@ const ROUTES = ["(receipts)", "search", "folders", "settings"];
 
 const props = (index = 0) =>
   ({
-    state: { index, routes: ROUTES.map((name) => ({ key: `${name}-key`, name })) },
+    state: {
+      index,
+      routes: ROUTES.map((name) => ({ key: `${name}-key`, name })),
+    },
     navigateToTab: jest.fn(),
   }) as unknown as BottomTabBarProps;
 
 function flat(node: { props: { style?: unknown } }) {
   const s = node.props.style;
-  return StyleSheet.flatten(typeof s === "function" ? s({ pressed: false }) : (s as object));
+  return StyleSheet.flatten(
+    typeof s === "function" ? s({ pressed: false }) : (s as object),
+  );
 }
 
 beforeAll(() => initI18n("id"));
@@ -52,19 +65,31 @@ describe("BottomTabs (floating duo)", () => {
     expect(tablist.props.accessibilityRole).toBe("tablist");
     expect(within(tablist).getAllByRole("tab")).toHaveLength(4);
     const add = screen.getByRole("button", { name: "Tambah struk" });
-    expect(within(tablist).queryByRole("button", { name: "Tambah struk" })).toBeNull();
+    expect(
+      within(tablist).queryByRole("button", { name: "Tambah struk" }),
+    ).toBeNull();
     expect(add).toBeTruthy();
   });
 
   it("bar sits insets.bottom + 12 above the screen bottom", async () => {
     await renderBar();
-    expect(flat(screen.getByTestId("tab-bar"))).toMatchObject({ position: "absolute", bottom: 59, left: 12, right: 12 });
+    expect(flat(screen.getByTestId("tab-bar"))).toMatchObject({
+      position: "absolute",
+      bottom: 59,
+      left: 12,
+      right: 12,
+    });
   });
 
   it("each tab's accessible name is its label only, icon hidden from a11y", async () => {
     await renderBar();
     const tabs = screen.getAllByRole("tab");
-    expect(tabs.map((tab) => tab.props.accessibilityLabel)).toEqual(["Struk", "Cari", "Folder", "Pengaturan"]);
+    expect(tabs.map((tab) => tab.props.accessibilityLabel)).toEqual([
+      "Struk",
+      "Cari",
+      "Folder",
+      "Pengaturan",
+    ]);
     for (const tab of tabs) {
       const icon = tab.children[0] as { props: Record<string, unknown> };
       expect(icon.props.accessible).toBe(false);
@@ -117,11 +142,17 @@ describe("BottomTabs (floating duo)", () => {
 
 describe("useTabBarSpace", () => {
   const Probe = () => <Text testID="space">{String(useTabBarSpace())}</Text>;
-  const inTabs = <BottomTabBarHeightContext.Provider value={0}><Probe /></BottomTabBarHeightContext.Provider>;
+  const inTabs = (
+    <BottomTabBarHeightContext.Provider value={0}>
+      <Probe />
+    </BottomTabBarHeightContext.Provider>
+  );
 
   it("compact tab screens clear the bar: inset + 12 + capsule + 24", async () => {
     await render(inTabs);
-    expect(screen.getByTestId("space")).toHaveTextContent(String(47 + 12 + light.size.capsule + 24));
+    expect(screen.getByTestId("space")).toHaveTextContent(
+      String(47 + 12 + light.size.capsule + 24),
+    );
   });
 
   beforeEach(() => {
@@ -131,7 +162,9 @@ describe("useTabBarSpace", () => {
   it("closed Duo sideways (bar, 594 content) still clears the bar", async () => {
     mockLayout = LAYOUTS.duoSideways;
     await render(inTabs);
-    expect(screen.getByTestId("space")).toHaveTextContent(String(47 + 12 + light.size.capsule + 24));
+    expect(screen.getByTestId("space")).toHaveTextContent(
+      String(47 + 12 + light.size.capsule + 24),
+    );
   });
 
   it("is 0 on wide layouts and outside the tabs navigator", async () => {

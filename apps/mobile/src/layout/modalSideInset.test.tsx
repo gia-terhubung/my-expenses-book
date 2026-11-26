@@ -1,4 +1,3 @@
-
 import { render, screen } from "@testing-library/react-native";
 import { Platform, StyleSheet, Text } from "react-native";
 
@@ -8,7 +7,9 @@ import { ModalSideInset } from "./ModalSideInset";
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 12, right: 84 }),
 }));
-jest.mock("@/theme/ThemeProvider", () => ({ useTheme: () => ({ colors: { background: "#F2F5F1" } }) }));
+jest.mock("@/theme/ThemeProvider", () => ({
+  useTheme: () => ({ colors: { background: "#F2F5F1" } }),
+}));
 
 describe("ModalSideInset", () => {
   it("pads modal content by the root side insets with the page background", async () => {
@@ -17,8 +18,15 @@ describe("ModalSideInset", () => {
         <Text>body</Text>
       </ModalSideInset>,
     );
-    const flat = StyleSheet.flatten(screen.getByTestId("modal-side-inset").props.style);
-    expect(flat).toMatchObject({ flex: 1, paddingLeft: 12, paddingRight: 84, backgroundColor: "#F2F5F1" });
+    const flat = StyleSheet.flatten(
+      screen.getByTestId("modal-side-inset").props.style,
+    );
+    expect(flat).toMatchObject({
+      flex: 1,
+      paddingLeft: 12,
+      paddingRight: 84,
+      backgroundColor: "#F2F5F1",
+    });
     expect(flat.paddingTop).toBeUndefined();
   });
 });

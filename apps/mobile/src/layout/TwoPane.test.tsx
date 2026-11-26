@@ -15,12 +15,16 @@ jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
 }));
 
 const mockInsets = { top: 0, bottom: 0, left: 0, right: 0 };
-jest.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => mockInsets }));
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => mockInsets,
+}));
 
 const mockDims = useWindowDimensions as jest.Mock;
-const setDims = (width: number, height: number) => mockDims.mockReturnValue({ width, height, scale: 2, fontScale: 1 });
+const setDims = (width: number, height: number) =>
+  mockDims.mockReturnValue({ width, height, scale: 2, fontScale: 1 });
 const setWidth = (width: number) => setDims(width, 800);
-const flatOf = (id: string) => StyleSheet.flatten(screen.getByTestId(id).props.style);
+const flatOf = (id: string) =>
+  StyleSheet.flatten(screen.getByTestId(id).props.style);
 
 beforeEach(() => {
   Object.assign(mockInsets, { top: 0, bottom: 0, left: 0, right: 0 });
@@ -35,7 +39,13 @@ describe("TwoPane", () => {
     mockInsets.right = 84;
     await render(<TwoPane primary={primary} secondary={secondary} />);
     const s = flatOf("pane-primary");
-    expect(s).toMatchObject({ flexGrow: 0, flexShrink: 0, flexBasis: "auto", width: 280, borderEndWidth: StyleSheet.hairlineWidth });
+    expect(s).toMatchObject({
+      flexGrow: 0,
+      flexShrink: 0,
+      flexBasis: "auto",
+      width: 280,
+      borderEndWidth: StyleSheet.hairlineWidth,
+    });
     expect(s.flex).toBeUndefined();
     expect(s.maxWidth).toBeUndefined();
   });
@@ -44,12 +54,20 @@ describe("TwoPane", () => {
     setDims(669, 951);
     const view = await render(<TwoPane primary={primary} secondary={null} />);
     const single = flatOf("pane-primary");
-    expect(single).toMatchObject({ flexGrow: 0, flexShrink: 0, flexBasis: "auto", width: "100%", borderEndWidth: 0 });
+    expect(single).toMatchObject({
+      flexGrow: 0,
+      flexShrink: 0,
+      flexBasis: "auto",
+      width: "100%",
+      borderEndWidth: 0,
+    });
     await view.unmount();
     setDims(951, 669);
     mockInsets.right = 84;
     await render(<TwoPane primary={primary} secondary={null} />);
-    expect(Object.keys(flatOf("pane-primary")).sort()).toEqual(Object.keys(single).sort());
+    expect(Object.keys(flatOf("pane-primary")).sort()).toEqual(
+      Object.keys(single).sort(),
+    );
   });
 
   it("detail pane is always { flexGrow 1, flexShrink 1, flexBasis 0, minWidth 0 }", async () => {
@@ -58,8 +76,15 @@ describe("TwoPane", () => {
       [400, 800],
     ]) {
       setDims(w, h);
-      const view = await render(<TwoPane primary={primary} secondary={secondary} />);
-      expect(flatOf("pane-secondary")).toMatchObject({ flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 });
+      const view = await render(
+        <TwoPane primary={primary} secondary={secondary} />,
+      );
+      expect(flatOf("pane-secondary")).toMatchObject({
+        flexGrow: 1,
+        flexShrink: 1,
+        flexBasis: 0,
+        minWidth: 0,
+      });
       await view.unmount();
     }
   });
@@ -115,18 +140,26 @@ describe("TwoPane", () => {
   it("placeholder pane uses the theme background (not white in dark mode)", async () => {
     setWidth(700);
     await render(<TwoPane primary={primary} secondary={null} />);
-    const style = StyleSheet.flatten(screen.getByTestId("pane-placeholder").props.style);
+    const style = StyleSheet.flatten(
+      screen.getByTestId("pane-placeholder").props.style,
+    );
     expect(style.backgroundColor).toBe(tokens.light.colors.background);
   });
 
   it("compact: the hidden pane is kept mounted but hidden from accessibility", async () => {
     setWidth(400);
     await render(<TwoPane primary={primary} secondary={secondary} />);
-    const hidden = screen.getByTestId("pane-primary", { includeHiddenElements: true });
-    expect(hidden.props.style).toEqual(expect.arrayContaining([expect.objectContaining({ display: "none" })]));
+    const hidden = screen.getByTestId("pane-primary", {
+      includeHiddenElements: true,
+    });
+    expect(hidden.props.style).toEqual(
+      expect.arrayContaining([expect.objectContaining({ display: "none" })]),
+    );
     expect(hidden.props.accessibilityElementsHidden).toBe(true);
     expect(hidden.props.importantForAccessibility).toBe("no-hide-descendants");
-    expect(screen.getByText("list", { includeHiddenElements: true })).toBeTruthy();
+    expect(
+      screen.getByText("list", { includeHiddenElements: true }),
+    ).toBeTruthy();
   });
 
   it("panes are not remounted across window-class changes", async () => {
@@ -138,7 +171,10 @@ describe("TwoPane", () => {
       return <Text>{name}</Text>;
     }
     const ui = (withDetail: boolean) => (
-      <TwoPane primary={<Probe name="list" />} secondary={withDetail ? <Probe name="detail" /> : null} />
+      <TwoPane
+        primary={<Probe name="list" />}
+        secondary={withDetail ? <Probe name="detail" /> : null}
+      />
     );
     setWidth(900);
     const view = await render(ui(true));

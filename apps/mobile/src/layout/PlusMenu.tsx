@@ -29,7 +29,8 @@ export const PlusClaimContext = createContext<(() => () => void) | null>(null);
 
 /**
  * Below this window height the side column cannot hold Back, two page buttons and the + above the
- * tab group (the folded iPhone Duo held sideways is 466 pt): the + floats and page buttons fold into ⋯.
+ * tab group (the folded iPhone Duo held sideways is 466 pt): page buttons fold into ⋯, and on a
+ * page with ⋯ the + becomes its "Add receipt" row (owner, 2026-11-26: no floating + there).
  * By available height, never by device model.
  */
 export const SHORT_COLUMN_HEIGHT = 560;
@@ -41,13 +42,12 @@ export function useShortColumn(): boolean {
   return edge !== null && height < SHORT_COLUMN_HEIGHT;
 }
 
-/** True when this page shows the + in the Duo side column (variant B with a tall side column). */
+/** True when this page shows the + in the Duo side column (variant B with a side column). */
 export function useColumnPlus(): boolean {
   const inNativeTabs = useInNativeTabs();
   const { plus } = useNavSpike();
   const edge = useVerticalBarEdgeIOS();
-  const short = useShortColumn();
-  return inNativeTabs && plus === "B" && edge !== null && !short;
+  return inNativeTabs && plus === "B" && edge !== null;
 }
 
 /**
@@ -57,10 +57,35 @@ export function useColumnPlus(): boolean {
  */
 export function useColumnPlusMenu(enabled = true) {
   const show = useColumnPlus() && enabled;
+  const short = useShortColumn();
   const claim = useContext(PlusClaimContext);
   useEffect(() => (show && claim ? claim() : undefined), [show, claim]);
   const menu = usePlusMenu();
-  return show ? menu : null;
+  const submenu = usePlusSubmenu();
+  // Short column: the + is the "Add receipt" row inside the page's ⋯ (placed by the page).
+  return {
+    menu: show && !short ? menu : null,
+    submenu: show && short ? submenu : null,
+  };
+}
+
+/** "Add receipt" as a submenu row (inside a page's ⋯ menu): Scan / Import / Add manually. */
+export function usePlusSubmenu() {
+  const { t } = useTranslation();
+  const add = useAddReceiptContext();
+  return (
+    <Stack.Toolbar.Menu icon="plus" title={t("capture.add")}>
+      {PLUS_CHOICES.map((c) => (
+        <Stack.Toolbar.MenuAction
+          key={c.mode}
+          icon={c.icon}
+          onPress={() => void add.start(c.mode)}
+        >
+          {t(c.key)}
+        </Stack.Toolbar.MenuAction>
+      ))}
+    </Stack.Toolbar.Menu>
+  );
 }
 
 /** The + menu element (inside a Stack.Toolbar). */

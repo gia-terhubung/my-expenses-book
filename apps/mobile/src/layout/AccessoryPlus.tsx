@@ -15,10 +15,23 @@ export function AccessoryPlus() {
       accessibilityRole="button"
       accessibilityLabel={t("capture.add")}
       onPress={add.open}
-      style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, minHeight: 44 }}
+      style={{
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        minHeight: 44,
+      }}
     >
       <Ionicons name="add" size={22} color={theme.colors.primary} />
-      <Text numberOfLines={1} style={[theme.type.body, { color: theme.colors.primary, fontWeight: "600" }]}>
+      <Text
+        numberOfLines={1}
+        style={[
+          theme.type.body,
+          { color: theme.colors.primary, fontWeight: "600" },
+        ]}
+      >
         {t("capture.add")}
       </Text>
     </Pressable>

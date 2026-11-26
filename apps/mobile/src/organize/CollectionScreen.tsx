@@ -35,7 +35,9 @@ export function CollectionScreen(props: Props) {
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
   const version = useDataVersion();
-  const plusMenu = useColumnPlusMenu(Platform.OS === "ios");
+  const { menu: plusMenu, submenu: plusSubmenu } = useColumnPlusMenu(
+    Platform.OS === "ios",
+  );
   const shortColumn = useShortColumn();
   const [renaming, setRenaming] = useState(false);
   const folderId = props.kind === "folder" ? props.folderId : null;
@@ -147,6 +149,7 @@ export function CollectionScreen(props: Props) {
                 icon="ellipsis"
                 accessibilityLabel={t("common.more")}
               >
+                {plusSubmenu}
                 {shortColumn ? (
                   <Stack.Toolbar.MenuAction
                     icon="square.and.arrow.up"

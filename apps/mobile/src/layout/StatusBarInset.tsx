@@ -10,13 +10,26 @@ import { useTheme } from "@/theme/ThemeProvider";
  * scroll content: content padded by the inset scrolls under the transparent Android status bar.
  * `color` paints the strip behind the status bar (Home: the slip green); defaults to the page.
  */
-export function StatusBarInset({ children, color }: { children: ReactNode; color?: string }) {
+export function StatusBarInset({
+  children,
+  color,
+}: {
+  children: ReactNode;
+  color?: string;
+}) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   // SPIKE (iOS): under a native header the screen already starts below the status bar.
   const headerShown = useContext(HeaderShownContext);
   return (
-    <View testID="status-bar-inset" style={{ flex: 1, paddingTop: headerShown ? 0 : insets.top, backgroundColor: color ?? theme.colors.background }}>
+    <View
+      testID="status-bar-inset"
+      style={{
+        flex: 1,
+        paddingTop: headerShown ? 0 : insets.top,
+        backgroundColor: color ?? theme.colors.background,
+      }}
+    >
       {children}
     </View>
   );

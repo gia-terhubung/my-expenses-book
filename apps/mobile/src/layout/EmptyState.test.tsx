@@ -7,7 +7,9 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 30, bottom: 0, left: 0, right: 0 }),
 }));
 
-const paddingTop = () => StyleSheet.flatten(screen.getByTestId("empty-state").props.style).paddingTop as number;
+const paddingTop = () =>
+  StyleSheet.flatten(screen.getByTestId("empty-state").props.style)
+    .paddingTop as number;
 
 describe("EmptyState", () => {
   it("adds the top inset by default; topInset={false} leaves it to the host", async () => {

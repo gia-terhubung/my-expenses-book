@@ -16,7 +16,12 @@ export function ModalSideInset({ children }: { children: ReactNode }) {
   return (
     <View
       testID="modal-side-inset"
-      style={{ flex: 1, paddingLeft: left, paddingRight: right, backgroundColor: theme.colors.background }}
+      style={{
+        flex: 1,
+        paddingLeft: left,
+        paddingRight: right,
+        backgroundColor: theme.colors.background,
+      }}
     >
       {children}
     </View>

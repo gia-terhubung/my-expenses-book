@@ -106,7 +106,8 @@ export function ReceiptDetail({
   const images = useImageStore();
   // Compact detail shown over a tab's list: clear the floating tab bar.
   const tabBarSpace = useTabBarSpace();
-  const plusMenu = useColumnPlusMenu(nativeHeader);
+  const { menu: plusMenu, submenu: plusSubmenu } =
+    useColumnPlusMenu(nativeHeader);
   const shortColumn = useShortColumn();
   const insets = useSafeAreaInsets();
   const home = usePref("homeCurrency") ?? "USD";
@@ -237,6 +238,7 @@ export function ReceiptDetail({
               icon="ellipsis"
               accessibilityLabel={t("common.more")}
             >
+              {plusSubmenu}
               {shortColumn ? (
                 <Stack.Toolbar.MenuAction
                   icon="pencil"

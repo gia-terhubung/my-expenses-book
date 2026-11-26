@@ -2,7 +2,12 @@ import { Platform, Pressable, Text, View } from "react-native";
 
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { setNavSpike, useNavSpike, type PlusVariant, type TabPlacement } from "./navSpike";
+import {
+  setNavSpike,
+  useNavSpike,
+  type PlusVariant,
+  type TabPlacement,
+} from "./navSpike";
 
 const PLACEMENTS: TabPlacement[] = ["tabBar", "sidebar", "automatic"];
 const PLUS: PlusVariant[] = ["B", "C", "D", "E"];
@@ -28,19 +33,55 @@ export function NavSpikeSwitches() {
         backgroundColor: on ? theme.colors.tonal : "transparent",
       }}
     >
-      <Text style={[theme.type.body, { color: on ? theme.colors.primary : theme.colors.text }]}>{label}</Text>
+      <Text
+        style={[
+          theme.type.body,
+          { color: on ? theme.colors.primary : theme.colors.text },
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
   const row = (title: string, chips: React.ReactNode) => (
     <View style={{ gap: theme.spacing.xs }}>
-      <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{title}</Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>{chips}</View>
+      <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>
+        {title}
+      </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: theme.spacing.sm,
+        }}
+      >
+        {chips}
+      </View>
     </View>
   );
   return (
     <View style={{ gap: theme.spacing.md, marginTop: theme.spacing.md }}>
-      {row("Tab placement (iOS 27+)", PLACEMENTS.map((p) => chip(p, nav.placement === p, () => setNavSpike({ placement: p }))))}
-      {row("+ variant (D = toolbar on every tab page)", PLUS.map((p) => chip({ B: "B under Back", C: "C floating", D: "D toolbar", E: "E accessory" }[p], nav.plus === p, () => setNavSpike({ plus: p }))))}
+      {row(
+        "Tab placement (iOS 27+)",
+        PLACEMENTS.map((p) =>
+          chip(p, nav.placement === p, () => setNavSpike({ placement: p })),
+        ),
+      )}
+      {row(
+        "+ variant (D = toolbar on every tab page)",
+        PLUS.map((p) =>
+          chip(
+            {
+              B: "B under Back",
+              C: "C floating",
+              D: "D toolbar",
+              E: "E accessory",
+            }[p],
+            nav.plus === p,
+            () => setNavSpike({ plus: p }),
+          ),
+        ),
+      )}
     </View>
   );
 }

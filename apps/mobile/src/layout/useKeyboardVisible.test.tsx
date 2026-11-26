@@ -11,7 +11,10 @@ const original = Platform.OS;
 beforeEach(() => {
   listeners = {};
   removed.length = 0;
-  jest.spyOn(Keyboard, "addListener").mockImplementation(((event: string, cb: Cb) => {
+  jest.spyOn(Keyboard, "addListener").mockImplementation(((
+    event: string,
+    cb: Cb,
+  ) => {
     listeners[event] = cb;
     return { remove: () => removed.push(event) };
   }) as never);

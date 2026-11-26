@@ -20,10 +20,16 @@ export function BottomTabs({ state, navigateToTab }: BottomTabBarProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const add = useAddReceiptContext();
-  const highlight = theme.scheme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)";
+  const highlight =
+    theme.scheme === "dark"
+      ? "rgba(255,255,255,0.06)"
+      : "rgba(255,255,255,0.55)";
 
   return (
-    <View testID="tab-bar" style={[styles.bar, { bottom: insets.bottom + TAB_BAR_LIFT }]}>
+    <View
+      testID="tab-bar"
+      style={[styles.bar, { bottom: insets.bottom + TAB_BAR_LIFT }]}
+    >
       <View
         testID="tab-capsule"
         accessibilityRole="tablist"
@@ -49,7 +55,10 @@ export function BottomTabs({ state, navigateToTab }: BottomTabBarProps) {
               accessibilityLabel={t(TAB_LABEL_KEYS[name])}
               accessibilityState={{ selected: focused }}
               onPress={() => navigateToTab(route.key)}
-              style={[styles.tab, focused ? { backgroundColor: theme.colors.tonal } : null]}
+              style={[
+                styles.tab,
+                focused ? { backgroundColor: theme.colors.tonal } : null,
+              ]}
             >
               <Ionicons
                 name={TAB_ICONS[name]}
@@ -82,7 +91,9 @@ export function BottomTabs({ state, navigateToTab }: BottomTabBarProps) {
             width: theme.size.plus,
             height: theme.size.plus,
             borderRadius: theme.size.plus / 2,
-            backgroundColor: pressed ? theme.colors.primaryPressed : theme.colors.primary,
+            backgroundColor: pressed
+              ? theme.colors.primaryPressed
+              : theme.colors.primary,
             boxShadow: `inset 0 1px 0 rgba(255,255,255,0.22), ${theme.elevation.raised}`,
           },
         ]}
@@ -94,9 +105,31 @@ export function BottomTabs({ state, navigateToTab }: BottomTabBarProps) {
 }
 
 const styles = StyleSheet.create({
-  bar: { position: "absolute", left: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 8 },
-  capsule: { flex: 1, flexDirection: "row", borderWidth: 1, paddingHorizontal: 8, paddingVertical: 6 },
-  tab: { flex: 1, minWidth: 0, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, borderRadius: 24, paddingHorizontal: 4 },
+  bar: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  capsule: {
+    flex: 1,
+    flexDirection: "row",
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  tab: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+    borderRadius: 24,
+    paddingHorizontal: 4,
+  },
   label: { fontSize: 10, lineHeight: 13, fontWeight: "600" },
   plus: { alignItems: "center", justifyContent: "center" },
 });

@@ -28,17 +28,16 @@ export function TabPlus({ home = false }: { home?: boolean }) {
   // Variant D is added to every page of a tab stack by its layout (TabStackPlus), not here.
   const edge = useVerticalBarEdgeIOS();
   // B without a side column (plain iPhone, iPad) falls back to the floating +.
-  // Home keeps the floating + near the thumb (owner, 2026-11-26); other pages put it in the column.
+  // Home keeps the floating + near the thumb (owner, 2026-11-26), except in a short column, where the
+  // + goes into the column (owner: no floating + held sideways); other pages put it in the column.
   const short = useShortColumn();
   const floating =
-    plus === "C" || (plus === "B" && (edge === null || home || short));
+    plus === "C" || (plus === "B" && (edge === null || (home && !short)));
   if (!inNativeTabs || !floating) return null;
   return <FloatingAddButton />;
 }
 
 /** Home floats its +; Search (its bar is the search field) and sheets (left slot is Cancel) have none. */
-/** Tab roots render their own floating + (TabScreen). */
-const TAB_ROOT_ROUTES = new Set(["index", "search", "folders", "settings"]);
 const NO_HEADER_PLUS = new Set([
   "index",
   "search",
@@ -69,28 +68,16 @@ export function TabStackPlus({
     <PlusClaimContext.Provider value={claim}>
       {children}
       {inNativeTabs && plus === "D" ? <ToolbarPlus /> : null}
+      {/* Short column: Home has no ⋯, so its + goes into the column too (no floating +). */}
       {inNativeTabs &&
       plus === "B" &&
       edge !== null &&
-      !short &&
-      !NO_HEADER_PLUS.has(routeName) &&
-      claims === 0 ? (
+      claims === 0 &&
+      (!NO_HEADER_PLUS.has(routeName) || (short && routeName === "index")) ? (
         <HeaderPlus />
-      ) : null}
-      {/* Short column: the + floats on every page (no room for it in the column); tab roots have their own. */}
-      {inNativeTabs &&
-      plus === "B" &&
-      short &&
-      !NO_HEADER_PLUS.has(routeName) &&
-      !TAB_ROOT_ROUTES.has(routeName) ? (
-        <TabPlusFloating />
       ) : null}
     </PlusClaimContext.Provider>
   );
-}
-
-function TabPlusFloating() {
-  return <FloatingAddButton />;
 }
 
 /** Variant B: the + menu on the right of the header, so in the Duo column it comes after Back. */
