@@ -17,9 +17,11 @@ Español (España) and Português (Brasil). Do this when you submit; nothing her
 | `store/screenshots/out/play/tablet/<lang>/` | Play 7" and 10" tablet screenshots, 1440 × 2560 |
 | `store/screenshots/out/play/feature/<lang>.png` | Play feature graphic, 1024 × 500, one per language |
 
-`<lang>` is `en`, `id`, `es` or `pt-BR`. Each folder has seven files, `00-free` to `06-search`.
+`<lang>` is `en`, `id`, `es` or `pt-BR`. Each folder has eight files, `00-free` to `07-trips`.
 Upload them in that order: the first three are what people see in search results. `00-free` is the
-"zero receipt" (free, no ads, works offline) and always goes first.
+"zero receipt" (free, no ads, works offline) and always goes first; `01-private` is the privacy
+receipt (stored on this phone, encrypted, app lock). Both are drawn by `tools/promo.swift`.
+`02-scan` carries a yellow mark from the receipt's TOTAL to the Total field (`marks.json`).
 
 The `out/` folders are not in git: they are rebuilt by `store/screenshots/tools/render.sh`. If
 they are missing, see "Rebuilding the screenshots" at the end.
@@ -63,9 +65,9 @@ Alternative for the text only: `npx eas-cli@latest metadata:push` from `apps/mob
 1. Select the language in the language menu.
 2. On the version page, scroll to **Previews and Screenshots**.
 3. Upload each set by display size:
-   - **iPhone 6.9" Display**: drag in the seven files from `appstore/iphone-6.9/<lang>/`.
+   - **iPhone 6.9" Display**: drag in the eight files from `appstore/iphone-6.9/<lang>/`.
      Apple scales these down for every smaller iPhone, so no other iPhone size is needed.
-   - **iPad 13" Display**: the seven files from `appstore/ipad-13/<lang>/`.
+   - **iPad 13" Display**: the eight files from `appstore/ipad-13/<lang>/`.
    - **iPhone Duo**: the outer-display set from `appstore/duo-outer/<lang>/` and the
      inner-display set from `appstore/duo-inner/<lang>/`, each in its own slot.
 4. Check the order after uploading: drag to reorder so that 00 comes first.
@@ -94,8 +96,8 @@ Store language to Play language:
 4. **Graphics**:
    - **App icon**: 512 × 512 PNG.
    - **Feature graphic**: `play/feature/en.png` (1024 × 500). Play needs it before you can publish.
-   - **Phone screenshots**: the seven files from `play/phone/en/`.
-   - **7-inch tablet screenshots** and **10-inch tablet screenshots**: the seven files from
+   - **Phone screenshots**: the eight files from `play/phone/en/`.
+   - **7-inch tablet screenshots** and **10-inch tablet screenshots**: the eight files from
      `play/tablet/en/` in each. At least four per tablet size is what Play asks for before it
      features the app on tablets.
 5. Click **Save**.
@@ -137,5 +139,6 @@ Needed after a UI change, or when `out/` is gone.
    This takes about 5 minutes per language.
 6. Build every size: `tools/render.sh`.
 7. Feature graphics: `tools/feature-graphic.swift`; its header has the usage. Pass
-   `zero-receipt.json` as the slips file and the `00-free` caption from `captions.json` as the
-   subtitle. `render.sh` already draws slide `00-free` with `tools/promo.swift`.
+   `zero-receipt.json` as the slips file and the `feature` caption from `captions.json` as the
+   subtitle. `render.sh` already draws slides `00-free` and `01-private` with `tools/promo.swift`.
+8. Check everything: `tools/check.sh`. It prints `ok`, or one `FAIL:` line per problem.

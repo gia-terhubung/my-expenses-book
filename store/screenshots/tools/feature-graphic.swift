@@ -1,7 +1,7 @@
 // Play Store feature graphic, 1024 x 500, one per language: slip green with the icon, the app
 // name and the store subtitle on the left; a tilted paper receipt on the right whose TOTAL line
 // carries the yellow highlighter, and the app's torn edge along the bottom. The current graphic is
-// fed zero-receipt.json and the 00-free caption from captions.json as the subtitle.
+// fed zero-receipt.json and the "feature" caption from captions.json as the subtitle.
 // Usage: swift feature-graphic.swift <bold.ttf> <extrabold.ttf> <icon.png> <slips.json> <lang> <subtitle> <out.png>
 import AppKit
 

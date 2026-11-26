@@ -8,7 +8,8 @@ an account, a value or a device), **store** (a form or setting in App Store Conn
 
 - [x] Website live at https://meb.terhubung.app with `/privacy` and `/terms`; the app's `PRIVACY_POLICY_URL`
       (`apps/mobile/src/about/links.ts`) and `apps/mobile/store.config.json` point to it.
-- [x] Store screenshots and feature graphics, 4 languages (`store/screenshots/out/`, git-ignored).
+- [x] Store screenshots and feature graphics, 4 languages, 8 slides with the privacy story
+      (`store/screenshots/out/`, git-ignored; `tools/check.sh` verifies them).
 - [x] Store text, 4 languages: `apps/mobile/store.config.json` (App Store), `docs/store/play-listing.md` (Play).
 - [x] Privacy answers for both stores: `docs/store/privacy-answers.md`.
 - [x] iOS: encryption export flag (`usesNonExemptEncryption: false`), privacy manifest (no tracking, no data
