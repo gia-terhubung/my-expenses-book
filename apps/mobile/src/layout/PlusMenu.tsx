@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect } from "react";
 import { useWindowDimensions } from "react-native";
 import { useTranslation } from "react-i18next";
 
-import { useMaybeAddReceiptContext } from "@/capture/AddReceiptProvider";
+import { useMaybeAddReceiptContext } from "@/capture/addReceiptContext";
 import type { CaptureChoice } from "@/capture/CaptureSheet";
 import { useTheme } from "@/theme/ThemeProvider";
 

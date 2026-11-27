@@ -34,13 +34,19 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: mockTop, bottom: 0, left: 0, right: 0 }),
   initialWindowMetrics: null,
 }));
-jest.mock("expo-router", () => ({
-  get router() {
-    return mockRouter;
-  },
-  useLocalSearchParams: () => mockParams,
-  usePreventRemove: () => () => undefined,
-}));
+jest.mock("expo-router", () =>
+  // Object.assign keeps the getters lazy (a spread would read them before the mocks exist).
+  Object.assign(
+    {
+      get router() {
+        return mockRouter;
+      },
+      useLocalSearchParams: () => mockParams,
+      usePreventRemove: () => () => undefined,
+    },
+    jest.requireActual("../../test/expoRouterStack").stackMock,
+  ),
+);
 
 // Mount counters around the real fields and page viewer: a remount on fold would drop focus,
 // local picker state and the decrypted page views.

@@ -1,11 +1,13 @@
-import { createContext, useContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import type { CaptureChoice } from "./CaptureSheet";
+import { AddReceiptContext } from "./addReceiptContext";
 import { useAddReceipt } from "./useAddReceipt";
 
-export type AddReceipt = { open(): void; start(mode: CaptureChoice): Promise<void> };
-
-const AddReceiptContext = createContext<AddReceipt | null>(null);
+export {
+  useAddReceiptContext,
+  useMaybeAddReceiptContext,
+  type AddReceipt,
+} from "./addReceiptContext";
 
 /**
  * One add-receipt flow and one sheet for the whole tabs navigator. The sheet lives above the bar
@@ -19,15 +21,4 @@ export function AddReceiptProvider({ children }: { children: ReactNode }) {
       {add.sheet}
     </AddReceiptContext.Provider>
   );
-}
-
-export function useAddReceiptContext(): AddReceipt {
-  const ctx = useContext(AddReceiptContext);
-  if (!ctx) throw new Error("useAddReceiptContext must be used inside AddReceiptProvider");
-  return ctx;
-}
-
-/** The add flow if this screen is inside the tabs, else null (pages outside the tabs have no +). */
-export function useMaybeAddReceiptContext(): AddReceipt | null {
-  return useContext(AddReceiptContext);
 }

@@ -27,11 +27,17 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: mockBottom, left: 0, right: 0 }),
 }));
 const mockRouter = { push: jest.fn() };
-jest.mock("expo-router", () => ({
-  get router() {
-    return mockRouter;
-  },
-}));
+jest.mock("expo-router", () =>
+  // Object.assign keeps the getters lazy (a spread would read them before the mocks exist).
+  Object.assign(
+    {
+      get router() {
+        return mockRouter;
+      },
+    },
+    jest.requireActual("../../test/expoRouterStack").stackMock,
+  ),
+);
 
 function seed(over: Partial<NewReceiptInput> = {}) {
   return createReceipt(mockDb, {

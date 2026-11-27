@@ -7,6 +7,7 @@ import { ScreenHeader } from "./ScreenHeader";
 
 const mockRouter = { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) };
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   router: {
     back: () => mockRouter.back(),
     replace: (...a: unknown[]) => mockRouter.replace(...a),

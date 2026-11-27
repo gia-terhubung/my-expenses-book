@@ -25,6 +25,7 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: mockTop, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   router: { back: () => mockRouter.back() },
   useLocalSearchParams: () => mockParams,
 }));

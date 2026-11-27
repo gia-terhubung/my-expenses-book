@@ -23,7 +23,8 @@ jest.mock("@/components/AppModal", () => {
     },
   };
 });
-jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock, router: { push: jest.fn() } }));
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => "db" }));
 jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
 const mockCreateManualDraft = jest.fn((..._args: unknown[]) => "draft-1");

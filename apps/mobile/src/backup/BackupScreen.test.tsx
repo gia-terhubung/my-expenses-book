@@ -49,6 +49,7 @@ jest.mock("react-native-safe-area-context", () => ({
 // Latest usePreventRemove call: whether leaving the screen is blocked.
 let mockPrevent: { prevent: boolean; cb?: () => void } = { prevent: false };
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   router: { push: (...a: unknown[]) => mockPush(...a) },
   usePreventRemove: (prevent: boolean, cb?: () => void) => {
     mockPrevent = { prevent, cb };

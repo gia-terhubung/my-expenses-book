@@ -11,6 +11,7 @@ jest.mock("@/prefs/PrefsProvider", () => ({
 }));
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   router: { push: (...a: unknown[]) => mockPush(...a) },
   Link: require("react-native").Text,
   useFocusEffect: (cb: () => void) => require("react").useEffect(cb, []),

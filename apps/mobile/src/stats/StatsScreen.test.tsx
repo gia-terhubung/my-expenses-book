@@ -25,6 +25,7 @@ jest.mock("@/capture/useAddReceipt", () => ({
   useAddReceipt: () => ({ open: jest.fn(), start: (...a: unknown[]) => mockStart(...a), sheet: null }),
 }));
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   router: {
     back: () => mockRouter.back(),
     push: (...a: unknown[]) => mockRouter.push(...a),
