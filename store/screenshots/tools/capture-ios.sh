@@ -51,6 +51,14 @@ case "$LANG_" in en) QUERY=coffee ;; id) QUERY=kopi ;; es) QUERY=farmacia ;; pt-
 case "$LANG_" in en) LOC=en_US; L1=en-US ;; id) LOC=id_ID; L1=id ;; es) LOC=es_ES; L1=es-ES ;; pt-BR) LOC=pt_BR; L1=pt-BR ;; esac
 timeout 20 xcrun simctl spawn "$UDID" defaults write -g AppleLocale "$LOC"
 timeout 20 xcrun simctl spawn "$UDID" defaults write -g AppleLanguages -array "$L1" en
+# REBOOT=1: restart the simulator so the system takes the language (the iPad status bar shows the
+# date, which otherwise stays in the previous language).
+if [ "${REBOOT:-}" = 1 ]; then
+  timeout 60 xcrun simctl shutdown "$UDID" >/dev/null 2>&1
+  timeout 120 xcrun simctl boot "$UDID" >/dev/null 2>&1
+  timeout 180 xcrun simctl bootstatus "$UDID" >/dev/null 2>&1
+  sleep 5
+fi
 
 # Some simulators ask "Open in My Expenses Book?" on every deep link: accept it when shown.
 # OPEN_X/OPEN_Y tap the alert's Open button by position (system alerts are not in the app's tree).
@@ -71,6 +79,28 @@ start=$(wc -l < "$LOG" | tr -d ' ')
 shot() { metro_clean_since "$LOG" "$start" || exit 1; timeout 30 axe screenshot --udid "$UDID" --output "$OUT/$1.png" >/dev/null 2>&1 && echo "  $1"; }
 tap() { timeout 30 axe tap -x "$1" -y "$2" --udid "$UDID" >/dev/null 2>&1; }
 
+# Centre of the first element matching: tab <name> (the tab-bar button) or row (a list row:
+# "<day>, <merchant>, …"). Rows and tabs move with the layout and the language.
+find_xy() {
+  timeout 30 axe describe-ui --udid "$UDID" 2>/dev/null | python3 -c '
+import json, re, sys
+kind, name = sys.argv[1], (sys.argv[2] if len(sys.argv) > 2 else "")
+def hit(e):
+    l, r = e.get("AXLabel") or "", e.get("role") or ""
+    if kind == "tab": return l == name and ("Radio" in r or "Tab" in r)
+    return re.match(r"^\d+, ", l) is not None
+def walk(e):
+    if hit(e):
+        f = e["frame"]; print(int(f["x"] + f["width"] / 2), int(f["y"] + f["height"] / 2)); sys.exit()
+    for c in e.get("children") or []: walk(c)
+for e in json.load(sys.stdin): walk(e)' "$@"
+}
+tap_found() { local xy; xy=$(find_xy "$@"); [ -n "$xy" ] && tap $xy; }
+# HOME_ROW_X / TRIP_ROW_X / SEARCH_ROW_X: a position, or "first" for the first list row.
+pick_row() { # <x or first> <y>
+  if [ "$1" = first ]; then tap_found row; else tap "$1" "$2"; fi
+}
+
 want() { [ -z "${SHOTS:-}" ] || [[ " $SHOTS " == *" $1 "* ]]; }
 echo "$LANG_ -> $OUT"
 # axe rotate is relative: rotate only while the active display is still upright.
@@ -79,24 +109,13 @@ if [ "${ROTATE:-}" = landscape ] && timeout 30 axe displays --udid "$UDID" 2>/de
 fi
 want 01-review && { fresh review; timeout 30 axe swipe --start-x "${X_MID:-220}" --start-y "${Y_SWIPE_FROM:-700}" --end-x "${X_MID:-220}" --end-y "${Y_SWIPE_TO:-520}" --udid "$UDID" >/dev/null 2>&1; sleep 3; shot 01-review; }
 # HOME_ROW_X/Y (split layouts): select a receipt so the detail pane is not empty.
-want 02-home && { fresh home; [ -n "${HOME_ROW_X:-}" ] && { tap "$HOME_ROW_X" "$HOME_ROW_Y"; sleep 3; }; shot 02-home; }
+want 02-home && { fresh home; [ -n "${HOME_ROW_X:-}" ] && { pick_row "$HOME_ROW_X" "${HOME_ROW_Y:-}"; sleep 3; }; shot 02-home; }
 # The full-screen viewer at fit: the whole receipt, sharp. (A 2.5x zoom cut every line in half.)
 want 03-zoom && { fresh review; tap "${X_PHOTO:-${X_MID:-220}}" "${Y_PHOTO:-300}"; sleep 4; shot 03-zoom; }
 want 04-stats && { fresh stats; shot 04-stats; }
-want 05-trip && { fresh trip; [ -n "${TRIP_ROW_X:-}" ] && { tap "$TRIP_ROW_X" "$TRIP_ROW_Y"; sleep 3; }; shot 05-trip; }
-want 06-search && { fresh home; timeout 30 axe tap --label "$(label "$LANG_" search)" --udid "$UDID" >/dev/null 2>&1; sleep 3; tap "${X_FIELD:-180}" "${Y_FIELD:-117}"; sleep 2
+want 05-trip && { fresh trip; [ -n "${TRIP_ROW_X:-}" ] && { pick_row "$TRIP_ROW_X" "${TRIP_ROW_Y:-}"; sleep 3; }; shot 05-trip; }
+want 06-search && { fresh home; tap_found tab "$(label "$LANG_" search)"; sleep 3; tap "${X_FIELD:-180}" "${Y_FIELD:-117}"; sleep 2
 timeout 30 axe type "$QUERY" --udid "$UDID" >/dev/null 2>&1; sleep 3
 tap "${X_BLANK:-${X_MID:-220}}" "${Y_BLANK:-60}"; sleep 2
-# SEARCH_ROW_X=first: tap the first result row by its label (rows read "<day>, <merchant>, …"), as
-# the list's top moves with the language (a long total wraps).
-if [ "${SEARCH_ROW_X:-}" = first ]; then
-  xy=$(timeout 30 axe describe-ui --udid "$UDID" 2>/dev/null | python3 -c '
-import json, re, sys
-def walk(e):
-    if re.match(r"^\d+, ", e.get("AXLabel") or ""):
-        f = e["frame"]; print(int(f["x"] + f["width"] / 2), int(f["y"] + f["height"] / 2)); sys.exit()
-    for c in e.get("children") or []: walk(c)
-for e in json.load(sys.stdin): walk(e)')
-  [ -n "$xy" ] && { tap $xy; sleep 3; }
-elif [ -n "${SEARCH_ROW_X:-}" ]; then tap "$SEARCH_ROW_X" "$SEARCH_ROW_Y"; sleep 3; fi
+[ -n "${SEARCH_ROW_X:-}" ] && { pick_row "$SEARCH_ROW_X" "${SEARCH_ROW_Y:-}"; sleep 3; }
 shot 06-search; }
