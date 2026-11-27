@@ -87,4 +87,16 @@ want 05-trip && { fresh trip; [ -n "${TRIP_ROW_X:-}" ] && { tap "$TRIP_ROW_X" "$
 want 06-search && { fresh home; timeout 30 axe tap --label "$(label "$LANG_" search)" --udid "$UDID" >/dev/null 2>&1; sleep 3; tap "${X_FIELD:-180}" "${Y_FIELD:-117}"; sleep 2
 timeout 30 axe type "$QUERY" --udid "$UDID" >/dev/null 2>&1; sleep 3
 tap "${X_BLANK:-${X_MID:-220}}" "${Y_BLANK:-60}"; sleep 2
-[ -n "${SEARCH_ROW_X:-}" ] && { tap "$SEARCH_ROW_X" "$SEARCH_ROW_Y"; sleep 3; }; shot 06-search; }
+# SEARCH_ROW_X=first: tap the first result row by its label (rows read "<day>, <merchant>, …"), as
+# the list's top moves with the language (a long total wraps).
+if [ "${SEARCH_ROW_X:-}" = first ]; then
+  xy=$(timeout 30 axe describe-ui --udid "$UDID" 2>/dev/null | python3 -c '
+import json, re, sys
+def walk(e):
+    if re.match(r"^\d+, ", e.get("AXLabel") or ""):
+        f = e["frame"]; print(int(f["x"] + f["width"] / 2), int(f["y"] + f["height"] / 2)); sys.exit()
+    for c in e.get("children") or []: walk(c)
+for e in json.load(sys.stdin): walk(e)')
+  [ -n "$xy" ] && { tap $xy; sleep 3; }
+elif [ -n "${SEARCH_ROW_X:-}" ]; then tap "$SEARCH_ROW_X" "$SEARCH_ROW_Y"; sleep 3; fi
+shot 06-search; }
