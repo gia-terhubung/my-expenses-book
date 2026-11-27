@@ -10,6 +10,7 @@ import { initI18n } from "@/i18n";
 import { LAYOUTS } from "@/layout/testing/layouts";
 
 import { CollectionScreen } from "./CollectionScreen";
+import { useAndroidPlatform } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 const mockRouter = { push: jest.fn(), back: jest.fn(), setParams: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) };
@@ -66,6 +67,9 @@ beforeEach(() => {
   mockDb = testDb();
   jest.clearAllMocks();
 });
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+useAndroidPlatform();
 
 describe("CollectionScreen", () => {
   it("folder view shows only that folder's receipts with a total", async () => {

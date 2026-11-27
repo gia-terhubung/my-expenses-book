@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
 
-import Settings from "@/app/(tabs)/settings";
+import Settings from "@/app/(tabs)/(receipts,search,folders,settings)/settings";
 import { initI18n } from "@/i18n";
 import { tokens } from "@/theme/tokens";
 

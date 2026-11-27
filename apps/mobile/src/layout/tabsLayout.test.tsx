@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { act, fireEvent, screen, within } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
 import { setStatusBarStyle } from "expo-status-bar";
@@ -12,10 +12,12 @@ import { LAYOUTS } from "@/layout/testing/layouts";
 import { useLayout } from "@/layout/useLayout";
 
 import TabsLayout from "@/app/(tabs)/_layout";
-import Folders from "@/app/(tabs)/folders";
-import Index from "@/app/(tabs)/(receipts)/index";
-import Search from "@/app/(tabs)/search";
-import Settings from "@/app/(tabs)/settings";
+// The whole module: its unstable_settings give each tab its first page.
+import * as TabStack from "@/app/(tabs)/(receipts,search,folders,settings)/_layout";
+import Folders from "@/app/(tabs)/(receipts,search,folders,settings)/folders";
+import Index from "@/app/(tabs)/(receipts,search,folders,settings)/index";
+import Search from "@/app/(tabs)/(receipts,search,folders,settings)/search";
+import Settings from "@/app/(tabs)/(receipts,search,folders,settings)/settings";
 
 // Settings reads prefs; the real provider needs native crypto/MMKV.
 jest.mock("@/prefs/PrefsProvider", () => ({
@@ -78,24 +80,33 @@ function renderApp(initialUrl = "/") {
   return renderRouter(
     {
       "(tabs)/_layout": TabsLayout,
-      "(tabs)/(receipts)/index": Index,
-      "(tabs)/search": Search,
-      "(tabs)/folders": Folders,
-      "(tabs)/settings": Settings,
+      "(tabs)/(receipts,search,folders,settings)/_layout": TabStack,
+      "(tabs)/(receipts,search,folders,settings)/index": Index,
+      "(tabs)/(receipts,search,folders,settings)/search": Search,
+      "(tabs)/(receipts,search,folders,settings)/folders": Folders,
+      "(tabs)/(receipts,search,folders,settings)/settings": Settings,
       "review/[id]": ReviewStub,
     },
     { initialUrl },
   );
 }
 
-beforeAll(() => initI18n("en"));
+// iOS uses Apple's NativeTabs (nativeTabsLayout.test.tsx); this file covers Android's JS tabs.
+const originalOS = Platform.OS;
+beforeAll(() => {
+  Platform.OS = "android";
+  return initI18n("en");
+});
+afterAll(() => {
+  Platform.OS = originalOS;
+});
 beforeEach(() => {
   mockDb = testDb();
   mockDrafts = [];
   (setStatusBarStyle as jest.Mock).mockClear();
 });
 
-describe("tabs layout", () => {
+describe("tabs layout (Android)", () => {
   it("compact: bottom tab bar, no side rail, 4 labels", async () => {
     setLayout(LAYOUTS.phone);
     await renderApp();
@@ -148,7 +159,11 @@ describe("tabs layout", () => {
 
   it("one add sheet survives bar <-> rail (fold and unfold with the sheet up)", async () => {
     setLayout(LAYOUTS.phone);
-    await renderApp("/search");
+    await renderApp();
+    // By tab press: with shared tab groups the bare URL "/search" opens Search inside Receipts' stack.
+    await act(async () =>
+      fireEvent.press(within(await screen.findByTestId("tab-bar")).getByText("Search")),
+    );
     await act(async () =>
       fireEvent.press(
         within(await screen.findByTestId("tab-bar")).getByRole("button", {

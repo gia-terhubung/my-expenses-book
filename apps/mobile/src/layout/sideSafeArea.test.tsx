@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 import { render, screen } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { Platform, Text } from "react-native";
 
 import { SideSafeArea, useSideInsets } from "./SideSafeArea";
 
@@ -17,17 +17,38 @@ jest.mock("@/theme/ThemeProvider", () => ({
   useTheme: () => ({ colors: { background: "#F2F5F1" } }),
 }));
 
+const rootStyle = () =>
+  Object.assign({}, ...[screen.getByTestId("side-safe-area").props.style].flat());
+
 describe("SideSafeArea", () => {
-  it("keeps content out of the side strips the device reserves (folded iPhone Duo: right 84)", async () => {
+  const originalOS = Platform.OS;
+  afterEach(() => {
+    Platform.OS = originalOS;
+  });
+
+  it("ios: the root does not pad the sides, so native bars reach the iPhone Duo side column", async () => {
+    Platform.OS = "ios";
     await render(
       <SideSafeArea>
         <Text>body</Text>
       </SideSafeArea>,
     );
-    const flat = Object.assign(
-      {},
-      ...[screen.getByTestId("side-safe-area").props.style].flat(),
+    expect(rootStyle()).toMatchObject({
+      flex: 1,
+      paddingLeft: 0,
+      paddingRight: 0,
+      backgroundColor: "#F2F5F1",
+    });
+  });
+
+  it("android: keeps content out of the side strips the device reserves (cutout held sideways)", async () => {
+    Platform.OS = "android";
+    await render(
+      <SideSafeArea>
+        <Text>body</Text>
+      </SideSafeArea>,
     );
+    const flat = rootStyle();
     expect(flat).toMatchObject({
       flex: 1,
       paddingLeft: 12,

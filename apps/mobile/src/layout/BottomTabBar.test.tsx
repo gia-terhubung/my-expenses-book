@@ -8,7 +8,7 @@ import {
   BottomTabBarHeightContext,
   type BottomTabBarProps,
 } from "expo-router/js-tabs";
-import { StyleSheet, Text } from "react-native";
+import { Platform, StyleSheet, Text } from "react-native";
 
 import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
 import { initI18n } from "@/i18n";
@@ -18,6 +18,7 @@ import { tokens } from "@/theme/tokens";
 
 import { BottomTabs } from "./BottomTabBar";
 import { useTabBarSpace } from "./useTabBarSpace";
+import { TAB_ROUTES } from "./tabs";
 
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 47, left: 0, right: 0 }),
@@ -30,7 +31,7 @@ let mockLayout: Layout = LAYOUTS.phone;
 jest.mock("./useLayout", () => ({ useLayout: () => mockLayout }));
 
 const light = tokens.light;
-const ROUTES = ["(receipts)", "search", "folders", "settings"];
+const ROUTES = TAB_ROUTES;
 
 const props = (index = 0) =>
   ({
@@ -48,7 +49,15 @@ function flat(node: { props: { style?: unknown } }) {
   );
 }
 
-beforeAll(() => initI18n("id"));
+// Android only: iOS uses Apple's NativeTabs (jest-expo runs as iOS).
+const originalOS = Platform.OS;
+beforeAll(() => {
+  Platform.OS = "android";
+  return initI18n("id");
+});
+afterAll(() => {
+  Platform.OS = originalOS;
+});
 
 const renderBar = (index = 0) =>
   render(

@@ -5,7 +5,7 @@ import {
   within,
 } from "@testing-library/react-native";
 import type { BottomTabBarProps } from "expo-router/js-tabs";
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
 import { initI18n } from "@/i18n";
@@ -13,6 +13,7 @@ import { LAYOUTS } from "@/layout/testing/layouts";
 import { tokens } from "@/theme/tokens";
 
 import { SideRail, type RailVariant } from "./SideRail";
+import { TAB_ROUTES } from "./tabs";
 
 let mockLayout: (typeof LAYOUTS)[keyof typeof LAYOUTS] = LAYOUTS.phone;
 jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
@@ -24,7 +25,7 @@ jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => null }));
 jest.mock("@/prefs/PrefsProvider", () => ({ usePref: () => "IDR" }));
 
 const light = tokens.light;
-const ROUTES = ["(receipts)", "search", "folders", "settings"];
+const ROUTES = TAB_ROUTES;
 
 const props = (index = 0) =>
   ({
@@ -49,7 +50,15 @@ const renderRail = (variant: RailVariant, index = 0) =>
     </AddReceiptProvider>,
   );
 
-beforeAll(() => initI18n("id"));
+// Android only: iOS uses Apple's NativeTabs (jest-expo runs as iOS).
+const originalOS = Platform.OS;
+beforeAll(() => {
+  Platform.OS = "android";
+  return initI18n("id");
+});
+afterAll(() => {
+  Platform.OS = originalOS;
+});
 beforeEach(() => {
   mockLayout = LAYOUTS.phone;
 });

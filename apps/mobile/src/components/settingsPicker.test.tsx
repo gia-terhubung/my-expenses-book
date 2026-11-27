@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { useEffect, useState } from "react";
 
-import Settings from "@/app/(tabs)/settings";
+import Settings from "@/app/(tabs)/(receipts,search,folders,settings)/settings";
 import { initI18n } from "@/i18n";
 import { AppObscuredContext } from "@/lock/appObscured";
 

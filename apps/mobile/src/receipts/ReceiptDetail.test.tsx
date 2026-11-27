@@ -12,6 +12,7 @@ import { formatMoney } from "@/money/money";
 import { categoryLabel } from "@/review/ReviewFields";
 
 import { ReceiptDetail } from "./ReceiptDetail";
+import { useAndroidPlatform } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 const mockImages = {
@@ -68,6 +69,9 @@ beforeEach(() => {
 });
 
 const noop = () => {};
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+useAndroidPlatform();
 
 describe("ReceiptDetail", () => {
   it("content is a centred column at most 640 wide (deep-linked on a wide screen)", async () => {

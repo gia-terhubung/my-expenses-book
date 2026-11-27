@@ -8,6 +8,7 @@ import { initI18n } from "@/i18n";
 import type { FileOps } from "@/images/store";
 
 import { ExportScreen } from "./ExportScreen";
+import { useAndroidPlatform } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockParams: Record<string, string> = {};
@@ -71,6 +72,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockShare.mockResolvedValue(undefined);
 });
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+useAndroidPlatform();
 
 describe("ExportScreen", () => {
   it("keeps the status-bar inset outside the scrolling content (no scroll under the status bar)", async () => {

@@ -10,6 +10,7 @@ import type { Layout } from "@/layout/layout";
 
 import { setPendingSelection, takePendingSelection } from "./pendingSelection";
 import { ReceiptListDetail } from "./ReceiptListDetail";
+import { useAndroidPlatform } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockLayout: Layout = LAYOUTS.phone;
@@ -106,6 +107,9 @@ beforeEach(() => {
   mockMounts.detail = 0;
   jest.clearAllMocks();
 });
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+useAndroidPlatform();
 
 describe("ReceiptListDetail", () => {
   it("not split: row press pushes the document route", async () => {

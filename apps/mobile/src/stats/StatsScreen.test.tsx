@@ -8,6 +8,7 @@ import { i18n, initI18n } from "@/i18n";
 import { formatMoney } from "@/money/money";
 
 import { StatsScreen } from "./StatsScreen";
+import { useAndroidPlatform } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockStartMonth = 1;
@@ -67,6 +68,9 @@ beforeEach(() => {
   mockMonthStart = 1;
   jest.clearAllMocks();
 });
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+useAndroidPlatform();
 
 describe("StatsScreen month starts on", () => {
   it("25th: month total, range subtitle and November bar follow the pay period", async () => {

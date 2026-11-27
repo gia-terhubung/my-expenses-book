@@ -9,6 +9,15 @@ import { initI18n } from "@/i18n";
 import { ensurePermissionForDraftRule, rescheduleAll } from "./notify";
 import { createRule, listRules, softDeleteRule } from "./rules";
 import { RuleForm, validateRuleValues, type RuleFormValues } from "./RuleForm";
+import { useAndroidPlatform } from "../../test/androidPlatform";
+
+// Native header and sheet toolbars render as plain views; router calls are recorded.
+jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
+  router: { back: jest.fn(), push: jest.fn(), replace: jest.fn(), canGoBack: () => true },
+  useNavigation: () => ({ addListener: () => () => {}, setOptions: jest.fn() }),
+  usePreventRemove: jest.fn(),
+}));
 
 let mockDb: AppDb;
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));
@@ -117,6 +126,9 @@ async function pressTwice(el: ReturnType<typeof screen.getByTestId>) {
     click({ nativeEvent: {} });
   });
 }
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+useAndroidPlatform();
 
 describe("RuleForm", () => {
   it("'Repeat this…' prefills merchant, amount, currency, category, folder, notes and the receipt's date", async () => {
