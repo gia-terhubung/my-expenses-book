@@ -27,12 +27,13 @@ export default function ModalsLayout() {
       screenLayout={({ children }) => (
         <SheetRouteContext.Provider value="/picker">{children}</SheetRouteContext.Provider>
       )}
-      screenOptions={{
+      // Per-route options here, not in <Stack.Screen> children, so the route order never changes after
+      // the stack's state is built (see the tab stacks' ROUTE_NAMES_CHANGED fix).
+      screenOptions={({ route }) => ({
         ...base,
         contentStyle: { ...base.contentStyle, paddingLeft: side.left, paddingRight: side.right },
-      }}
-    >
-      <Stack.Screen name="picker" options={{ presentation: "modal", headerShown: true }} />
-    </Stack>
+        ...(route.name === "picker" ? { presentation: "modal" as const, headerShown: true } : null),
+      })}
+    />
   );
 }

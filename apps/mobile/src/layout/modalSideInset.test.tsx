@@ -31,7 +31,15 @@ describe("ModalSideInset", () => {
   });
 });
 
-let mockStackProps: { screenOptions?: { contentStyle?: object; headerShown?: boolean } } = {};
+type MockOptions = { contentStyle?: object; headerShown?: boolean; presentation?: string };
+let mockStackProps: {
+  screenOptions?: MockOptions | ((a: { route: { name: string } }) => MockOptions);
+  children?: unknown;
+} = {};
+const optionsFor = (name: string) => {
+  const o = mockStackProps.screenOptions;
+  return typeof o === "function" ? o({ route: { name } }) : o;
+};
 jest.mock("expo-router", () => {
   const mockRn = jest.requireActual("react-native");
   return {
@@ -55,16 +63,24 @@ describe("(modals) layout", () => {
     await render(<ModalsLayout />);
     expect(screen.queryByTestId("modal-side-inset")).toBeNull();
     expect(screen.getByTestId("modals-stack")).toBeTruthy();
-    expect(mockStackProps.screenOptions?.contentStyle).toMatchObject({
+    expect(optionsFor("review/[id]")?.contentStyle).toMatchObject({
       paddingLeft: 12,
       paddingRight: 84,
     });
+  });
+
+  it("ios: the picker is a native sheet set through screenOptions, with no declared screens (route order stays fixed)", async () => {
+    Platform.OS = "ios";
+    await render(<ModalsLayout />);
+    expect(mockStackProps.children).toBeUndefined();
+    expect(optionsFor("picker")).toMatchObject({ presentation: "modal", headerShown: true });
+    expect(optionsFor("export")?.presentation).toBeUndefined();
   });
 
   it("android: no wrapper and no padding (the root SideSafeArea already insets the native modal)", async () => {
     Platform.OS = "android";
     await render(<ModalsLayout />);
     expect(screen.queryByTestId("modal-side-inset")).toBeNull();
-    expect(mockStackProps.screenOptions).toEqual({ headerShown: false });
+    expect(optionsFor("review/[id]")).toEqual({ headerShown: false });
   });
 });
