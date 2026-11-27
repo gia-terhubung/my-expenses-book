@@ -6,7 +6,33 @@
 # Usage: capture-ios.sh <udid> <lang> <outdir> <metro-log>
 # SHOTS="02-home 04-stats" re-shoots only those screens (default: all six).
 # Coordinates below are in points for a 440x956 pt portrait phone; other layouts pass their own.
+# ROTATE=landscape turns the device sideways before capturing (the open Duo, held wide).
+#        capture-ios.sh --self-test
 set -u
+HERE=$(cd "$(dirname "$0")" && pwd)
+ROOT=$(cd "$HERE/../../.." && pwd)
+
+# A tab's label in a language (the native tab bar is tapped by label, not by position).
+label() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["tabs"][sys.argv[2]])' "$ROOT/apps/mobile/src/i18n/locales/$1.json" "$2"; }
+# Stop when Metro logged an error since <line>: a dev error overlay would end up in the screenshot.
+metro_clean_since() { # <log> <line>
+  if tail -n +"$(($2 + 1))" "$1" | grep -q ' ERROR '; then
+    echo "FAIL: Metro error during capture:" >&2
+    tail -n +"$(($2 + 1))" "$1" | grep ' ERROR ' | head -3 >&2
+    return 1
+  fi
+}
+
+if [ "${1:-}" = --self-test ]; then
+  t=$(mktemp); fails=0
+  [ "$(label es search)" = Buscar ] && echo "PASS tab label lookup" || { echo "FAIL tab label lookup"; fails=1; }
+  printf 'old ERROR before the start\nstart\n' > "$t"
+  metro_clean_since "$t" 1 2>/dev/null && echo "PASS clean log since start" || { echo "FAIL clean log since start"; fails=1; }
+  printf ' ERROR  The action was not handled\n' >> "$t"
+  metro_clean_since "$t" 1 2>/dev/null && { echo "FAIL capture stops when the Metro log shows an ERROR"; fails=1; } || echo "PASS capture stops when the Metro log shows an ERROR"
+  rm -f "$t"; exit $fails
+fi
+
 UDID=$1; LANG_=$2; OUT=$3; LOG=$4
 BUNDLE=com.terhubung.myexpensesbook
 DEV="myexpensesbook://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
@@ -41,11 +67,13 @@ fresh() { # cold launch, seed, open $1 (home|review|stats|trip)
   for _ in $(seq 1 40); do [ "$(grep -c "STORE_SHOTS_DONE" "$LOG")" -gt "$before" ] && break; sleep 1; done
   sleep "${SCREEN_WAIT:-6}"
 }
-shot() { timeout 30 axe screenshot --udid "$UDID" --output "$OUT/$1.png" >/dev/null 2>&1 && echo "  $1"; }
+start=$(wc -l < "$LOG" | tr -d ' ')
+shot() { metro_clean_since "$LOG" "$start" || exit 1; timeout 30 axe screenshot --udid "$UDID" --output "$OUT/$1.png" >/dev/null 2>&1 && echo "  $1"; }
 tap() { timeout 30 axe tap -x "$1" -y "$2" --udid "$UDID" >/dev/null 2>&1; }
 
 want() { [ -z "${SHOTS:-}" ] || [[ " $SHOTS " == *" $1 "* ]]; }
 echo "$LANG_ -> $OUT"
+if [ "${ROTATE:-}" = landscape ]; then timeout 30 axe rotate left --udid "$UDID" >/dev/null 2>&1 || timeout 30 xcrun simctl io "$UDID" rotate left >/dev/null 2>&1; sleep 3; fi
 want 01-review && { fresh review; timeout 30 axe swipe --start-x "${X_MID:-220}" --start-y "${Y_SWIPE_FROM:-700}" --end-x "${X_MID:-220}" --end-y "${Y_SWIPE_TO:-520}" --udid "$UDID" >/dev/null 2>&1; sleep 3; shot 01-review; }
 # HOME_ROW_X/Y (split layouts): select a receipt so the detail pane is not empty.
 want 02-home && { fresh home; [ -n "${HOME_ROW_X:-}" ] && { tap "$HOME_ROW_X" "$HOME_ROW_Y"; sleep 3; }; shot 02-home; }
@@ -53,7 +81,7 @@ want 02-home && { fresh home; [ -n "${HOME_ROW_X:-}" ] && { tap "$HOME_ROW_X" "$
 want 03-zoom && { fresh review; tap "${X_PHOTO:-${X_MID:-220}}" "${Y_PHOTO:-300}"; sleep 4; shot 03-zoom; }
 want 04-stats && { fresh stats; shot 04-stats; }
 want 05-trip && { fresh trip; [ -n "${TRIP_ROW_X:-}" ] && { tap "$TRIP_ROW_X" "$TRIP_ROW_Y"; sleep 3; }; shot 05-trip; }
-want 06-search && { fresh home; tap "${X_SEARCH_TAB:-145}" "${Y_TABS:-877}"; sleep 3; tap "${X_FIELD:-180}" "${Y_FIELD:-117}"; sleep 2
+want 06-search && { fresh home; timeout 30 axe tap --label "$(label "$LANG_" search)" --udid "$UDID" >/dev/null 2>&1; sleep 3; tap "${X_FIELD:-180}" "${Y_FIELD:-117}"; sleep 2
 timeout 30 axe type "$QUERY" --udid "$UDID" >/dev/null 2>&1; sleep 3
 tap "${X_BLANK:-${X_MID:-220}}" "${Y_BLANK:-60}"; sleep 2
 [ -n "${SEARCH_ROW_X:-}" ] && { tap "$SEARCH_ROW_X" "$SEARCH_ROW_Y"; sleep 3; }; shot 06-search; }
