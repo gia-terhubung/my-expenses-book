@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { rootStackOptions } from "@/layout/stackOptions";
 import { TabStackContext } from "@/layout/NativeSheet";
-import { useNavSpike } from "@/layout/navSpike";
 import { TabStackPlus } from "@/layout/TabPlus";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -28,11 +27,10 @@ export default function TabStack() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const base = rootStackOptions(t, theme.colors);
-  const { plus } = useNavSpike();
   const edge = useVerticalBarEdgeIOS();
-  // Variant B on a side column: tab roots get an empty, see-through header so the + can sit in it.
+  // On a side column: tab roots get an empty, see-through header so the + can sit in it.
   const rootHeader =
-    plus === "B" && edge !== null
+    edge !== null
       ? {
           ...base,
           headerShown: true,
@@ -55,7 +53,7 @@ export default function TabStack() {
           ? rootHeader
           : {
               ...base,
-              // The + is a left header item (variant B); keep Back next to it instead of replacing it.
+              // The + is a header item; keep Back next to it instead of replacing it.
               headerBackVisible: true,
               contentStyle: { ...base.contentStyle, paddingLeft: insets.left, paddingRight: insets.right },
             }

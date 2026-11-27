@@ -5,9 +5,8 @@ import { Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
-import { AccessoryPlus } from "@/layout/AccessoryPlus";
 import { BottomTabs } from "@/layout/BottomTabBar";
-import { NativeTabsContext, useNavSpike } from "@/layout/navSpike";
+import { NativeTabsContext } from "@/layout/navSpike";
 import { SideRail } from "@/layout/SideRail";
 import { TAB_LABEL_KEYS, TAB_ROUTES, TAB_SF_SYMBOLS } from "@/layout/tabs";
 import { useLayout } from "@/layout/useLayout";
@@ -26,7 +25,6 @@ export default function TabsLayout() {
 function IosTabs() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { placement, plus } = useNavSpike();
   // SPIKE workaround (react-native-screens #4989 / #5115): on an iPhone Duo cold launch the tab bar
   // misses the side column until a later layout pass. Mount it hidden, show it after 500 ms.
   const [ready, setReady] = useState(false);
@@ -36,12 +34,7 @@ function IosTabs() {
   }, []);
   return (
     <NativeTabsContext.Provider value>
-      <NativeTabs hidden={!ready} preferredPlacement={placement} tintColor={theme.colors.primary}>
-        {plus === "E" ? (
-          <NativeTabs.BottomAccessory>
-            <AccessoryPlus />
-          </NativeTabs.BottomAccessory>
-        ) : null}
+      <NativeTabs hidden={!ready} preferredPlacement="tabBar" tintColor={theme.colors.primary}>
         {TAB_ROUTES.map((name) => (
           <NativeTabs.Trigger key={name} name={name}>
             <NativeTabs.Trigger.Icon sf={TAB_SF_SYMBOLS[name]} />

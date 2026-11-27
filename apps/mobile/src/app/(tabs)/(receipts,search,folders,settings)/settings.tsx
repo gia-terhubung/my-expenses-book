@@ -42,7 +42,6 @@ import { resolveHomeCurrency, resolveLanguage } from "@/i18n/resolve";
 import type { LockTimeout } from "@/prefs/prefs";
 import { usePref, usePrefs } from "@/prefs/PrefsProvider";
 import { useSheetTopInset } from "@/layout/useSheetTopInset";
-import { NavSpikeSwitches } from "@/layout/NavSpikeSwitches";
 import {
   NativeSheetHost,
   SheetBar,
@@ -485,7 +484,6 @@ function SettingsScreen() {
               <Link href="/ai-spike">AI spike</Link>
               <Link href="/db-check">DB check</Link>
               <Link href="/ocr-check">OCR check</Link>
-              <NavSpikeSwitches />
             </View>
           )}
         </View>

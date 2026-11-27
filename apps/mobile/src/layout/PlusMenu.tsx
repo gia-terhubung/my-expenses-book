@@ -8,7 +8,7 @@ import { useMaybeAddReceiptContext } from "@/capture/AddReceiptProvider";
 import type { CaptureChoice } from "@/capture/CaptureSheet";
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { useInNativeTabs, useNavSpike } from "./navSpike";
+import { useInNativeTabs } from "./navSpike";
 
 /**
  * SPIKE (iOS, owner 2026-11-26): the + opens Apple's menu (icon + word per row) instead of the
@@ -42,12 +42,11 @@ export function useShortColumn(): boolean {
   return edge !== null && height < SHORT_COLUMN_HEIGHT;
 }
 
-/** True when this page shows the + in the Duo side column (variant B with a side column). */
+/** True when this page shows the + in the Duo side column. */
 export function useColumnPlus(): boolean {
   const inNativeTabs = useInNativeTabs();
-  const { plus } = useNavSpike();
   const edge = useVerticalBarEdgeIOS();
-  return inNativeTabs && plus === "B" && edge !== null;
+  return inNativeTabs && edge !== null;
 }
 
 /**
@@ -57,8 +56,9 @@ export function useColumnPlus(): boolean {
  */
 export function useColumnPlusMenu(enabled = true) {
   // Outside the tabs (modals: export, review) there is no add flow and no +.
-  const show =
-    useColumnPlus() && enabled && useMaybeAddReceiptContext() !== null;
+  const columnPlus = useColumnPlus();
+  const addFlow = useMaybeAddReceiptContext();
+  const show = columnPlus && enabled && addFlow !== null;
   const short = useShortColumn();
   const claim = useContext(PlusClaimContext);
   useEffect(() => (show && claim ? claim() : undefined), [show, claim]);

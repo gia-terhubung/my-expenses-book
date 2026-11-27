@@ -3,16 +3,12 @@ import { useVerticalBarEdgeIOS } from "expo-status-bar";
 import { useCallback, useState, type ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
-
-import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
 
 import { FloatingAddButton } from "./FloatingAddButton";
 import {
   ContentInsetsContext,
   TabRootContext,
   useInNativeTabs,
-  useNavSpike,
 } from "./navSpike";
 import { PlusClaimContext, usePlusMenu, useShortColumn } from "./PlusMenu";
 import { useLayout } from "./useLayout";
@@ -24,15 +20,12 @@ import { useLayout } from "./useLayout";
  */
 export function TabPlus({ home = false }: { home?: boolean }) {
   const inNativeTabs = useInNativeTabs();
-  const { plus } = useNavSpike();
-  // Variant D is added to every page of a tab stack by its layout (TabStackPlus), not here.
   const edge = useVerticalBarEdgeIOS();
-  // B without a side column (plain iPhone, iPad) falls back to the floating +.
+  // Without a side column (plain iPhone, iPad) the + floats.
   // Home keeps the floating + near the thumb (owner, 2026-11-26), except in a short column, where the
   // + goes into the column (owner: no floating + held sideways); other pages put it in the column.
   const short = useShortColumn();
-  const floating =
-    plus === "C" || (plus === "B" && (edge === null || (home && !short)));
+  const floating = edge === null || (home && !short);
   if (!inNativeTabs || !floating) return null;
   return <FloatingAddButton />;
 }
@@ -47,7 +40,7 @@ const NO_HEADER_PLUS = new Set([
   "recurring/[id]",
 ]);
 
-/** SPIKE: variant D on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */
+/** SPIKE: the column + on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */
 export function TabStackPlus({
   children,
   routeName,
@@ -56,7 +49,6 @@ export function TabStackPlus({
   routeName: string;
 }) {
   const inNativeTabs = useInNativeTabs();
-  const { plus } = useNavSpike();
   const edge = useVerticalBarEdgeIOS();
   const short = useShortColumn();
   // A page with its own right-side buttons puts the + last among them (PlusToolbarMenu) and claims it.
@@ -68,10 +60,8 @@ export function TabStackPlus({
   return (
     <PlusClaimContext.Provider value={claim}>
       {children}
-      {inNativeTabs && plus === "D" ? <ToolbarPlus /> : null}
       {/* Short column: Home has no ⋯, so its + goes into the column too (no floating +). */}
       {inNativeTabs &&
-      plus === "B" &&
       edge !== null &&
       claims === 0 &&
       (!NO_HEADER_PLUS.has(routeName) || (short && routeName === "index")) ? (
@@ -81,28 +71,10 @@ export function TabStackPlus({
   );
 }
 
-/** Variant B: the + menu on the right of the header, so in the Duo column it comes after Back. */
+/** The + menu on the right of the header, so in the Duo column it comes after Back. */
 function HeaderPlus() {
   const menu = usePlusMenu();
   return <Stack.Toolbar placement="right">{menu}</Stack.Toolbar>;
-}
-
-function ToolbarPlus() {
-  const { t } = useTranslation();
-  const add = useAddReceiptContext();
-  return (
-    <Stack.Toolbar placement="bottom">
-      <Stack.Toolbar.Spacer />
-      <Stack.Toolbar.Button
-        icon="plus"
-        variant="prominent"
-        accessibilityLabel={t("capture.add")}
-        onPress={add.open}
-      >
-        {t("capture.add")}
-      </Stack.Toolbar.Button>
-    </Stack.Toolbar>
-  );
 }
 
 /**
