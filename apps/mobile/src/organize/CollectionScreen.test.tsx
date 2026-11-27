@@ -10,6 +10,7 @@ import { initI18n } from "@/i18n";
 import { LAYOUTS } from "@/layout/testing/layouts";
 
 import { CollectionScreen } from "./CollectionScreen";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 const mockRouter = { push: jest.fn(), back: jest.fn(), setParams: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) };
@@ -23,13 +24,19 @@ jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock("expo-router", () => ({
-  get router() {
-    return mockRouter;
-  },
-  useLocalSearchParams: () => ({}),
-  useFocusEffect: () => undefined,
-}));
+jest.mock("expo-router", () =>
+  // Object.assign keeps the getters lazy (a spread would read them before the mocks exist).
+  Object.assign(
+    {
+      get router() {
+        return mockRouter;
+      },
+      useLocalSearchParams: () => ({}),
+      useFocusEffect: () => undefined,
+    },
+    jest.requireActual("../../test/expoRouterStack").stackMock,
+  ),
+);
 
 function seed(
   merchant: string,
@@ -60,6 +67,9 @@ beforeEach(() => {
   mockDb = testDb();
   jest.clearAllMocks();
 });
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+runAsAndroid();
 
 describe("CollectionScreen", () => {
   it("folder view shows only that folder's receipts with a total", async () => {

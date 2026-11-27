@@ -20,6 +20,8 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 import { totalLine } from "./format";
 import { slipAmountText } from "./slipAmount";
+import { useContentInsets } from "@/layout/navContext";
+
 import { SlipEdge } from "./SlipEdge";
 
 // Building Intl formatters is slow on Hermes; the slip re-renders on every data change.
@@ -45,6 +47,7 @@ function splitPrefix(text: string): [string, string, string] | null {
  * sideways) it is one row: "This month" and "See statistics ›".
  */
 export function TotalsHeader() {
+  const side = useContentInsets();
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
@@ -157,7 +160,11 @@ export function TotalsHeader() {
       onPress={() => router.push("/stats" as Href)}
       style={({ pressed }) => ({
         backgroundColor: colors.slip,
-        paddingHorizontal: spacing.lg,
+        // Bleeds under the iPhone Duo side column; the text keeps its gutter.
+        marginLeft: -side.left,
+        marginRight: -side.right,
+        paddingLeft: spacing.lg + side.left,
+        paddingRight: spacing.lg + side.right,
         paddingTop: spacing.sm,
         paddingBottom: spacing.xl,
         marginBottom: spacing.md,

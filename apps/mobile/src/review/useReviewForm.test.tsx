@@ -33,15 +33,21 @@ jest.mock("@/prefs/PrefsProvider", () => ({
 type PreventCallback = (o: { data: { action: unknown }; repeat: () => void }) => void;
 let mockPrevent: { prevent: boolean; cb?: PreventCallback } = { prevent: false };
 const mockDisablePrevention = jest.fn();
-jest.mock("expo-router", () => ({
-  get router() {
-    return mockRouter;
-  },
-  usePreventRemove: (prevent: boolean, cb?: PreventCallback) => {
-    mockPrevent = { prevent, cb };
-    return mockDisablePrevention;
-  },
-}));
+jest.mock("expo-router", () =>
+  // Object.assign keeps the getters lazy (a spread would read them before the mocks exist).
+  Object.assign(
+    {
+      get router() {
+        return mockRouter;
+      },
+      usePreventRemove: (prevent: boolean, cb?: PreventCallback) => {
+        mockPrevent = { prevent, cb };
+        return mockDisablePrevention;
+      },
+    },
+    jest.requireActual("../../test/expoRouterStack").stackMock,
+  ),
+);
 
 type AppStateListener = (s: string) => void;
 let appStateListener: AppStateListener | null = null;

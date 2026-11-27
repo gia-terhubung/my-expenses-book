@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams, type Href } from "expo-router";
+import { Platform } from "react-native";
 
 import { StatusBarInset } from "@/layout/StatusBarInset";
 import { useLayout } from "@/layout/useLayout";
@@ -12,14 +13,21 @@ import { ReceiptDetail } from "@/receipts/ReceiptDetail";
 export default function DocumentScreen() {
   const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
   usePopToSelection(id, useLayout().split, from === "list");
-  return (
-    <StatusBarInset>
-      <ReceiptDetail
-        id={id}
-        onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
-        onEdit={(rid) => router.push({ pathname: "/edit/[id]", params: { id: rid } } as unknown as Href)}
-        onDeleted={() => router.back()}
-      />
-    </StatusBarInset>
+  // iOS: native header, so Back, Edit and ⋯ move into the iPhone Duo side column.
+  const nativeHeader = Platform.OS === "ios";
+  const detail = (
+    <ReceiptDetail
+      nativeHeader={nativeHeader}
+      id={id}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+      onEdit={(rid) =>
+        router.push({
+          pathname: "/edit/[id]",
+          params: { id: rid },
+        } as unknown as Href)
+      }
+      onDeleted={() => router.back()}
+    />
   );
+  return nativeHeader ? detail : <StatusBarInset>{detail}</StatusBarInset>;
 }

@@ -1,6 +1,6 @@
-import { router, type Href } from "expo-router";
+import { router, Stack, type Href } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Platform, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/Button";
@@ -18,6 +18,7 @@ import { totalLine } from "@/receipts/format";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { taxYearLabel, taxYearRange } from "@/taxYear/taxYear";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { useColumnPlusMenu, useShortColumn } from "@/layout/PlusMenu";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { FolderForm } from "./FolderForm";
@@ -34,6 +35,10 @@ export function CollectionScreen(props: Props) {
   const home = usePref("homeCurrency") ?? "USD";
   const startMonth = usePref("taxYearStartMonth") ?? 1;
   const version = useDataVersion();
+  const { menu: plusMenu, submenu: plusSubmenu } = useColumnPlusMenu(
+    Platform.OS === "ios",
+  );
+  const shortColumn = useShortColumn();
   const [renaming, setRenaming] = useState(false);
   const folderId = props.kind === "folder" ? props.folderId : null;
   const year = props.kind === "taxYear" ? props.year : null;
@@ -62,10 +67,22 @@ export function CollectionScreen(props: Props) {
   // Deleted / unknown folder, or a tax-year param that isn't a number: say so and offer a way out.
   const missing = folderId !== null ? !folder : !Number.isFinite(year);
   if (missing) {
-    const leave = () => (router.canGoBack() ? router.back() : router.replace("/folders" as unknown as Href));
+    const leave = () =>
+      router.canGoBack()
+        ? router.back()
+        : router.replace("/folders" as unknown as Href);
     return (
-      <EmptyState title={t(folderId !== null ? "folders.notFound" : "folders.taxYearInvalid")}>
-        <Button variant="quiet" label={t("common.back")} onPress={leave} style={{ alignSelf: "flex-start" }} />
+      <EmptyState
+        title={t(
+          folderId !== null ? "folders.notFound" : "folders.taxYearInvalid",
+        )}
+      >
+        <Button
+          variant="quiet"
+          label={t("common.back")}
+          onPress={leave}
+          style={{ alignSelf: "flex-start" }}
+        />
       </EmptyState>
     );
   }
@@ -91,7 +108,10 @@ export function CollectionScreen(props: Props) {
   const openExport = () =>
     router.push({
       pathname: "/export",
-      params: folderId !== null ? { folderId } : taxYearRange(year as number, startMonth),
+      params:
+        folderId !== null
+          ? { folderId }
+          : taxYearRange(year as number, startMonth),
     } as unknown as Href);
 
   const action = (label: string, onPress: () => void, destructive = false) => (
@@ -104,8 +124,64 @@ export function CollectionScreen(props: Props) {
     />
   );
 
+  // iOS: a native header, so on the iPhone Duo Back, Export and ⋯ move into the side column.
+  const nativeHeader = Platform.OS === "ios";
+
   return (
     <>
+      {nativeHeader ? (
+        <>
+          <Stack.Screen
+            options={{ headerShown: true, title, headerLargeTitle: false }}
+          />
+          <Stack.Toolbar placement="right">
+            {shortColumn ? null : (
+              <Stack.Toolbar.Button
+                icon="square.and.arrow.up"
+                accessibilityLabel={t("export.title")}
+                onPress={openExport}
+              >
+                {t("export.title")}
+              </Stack.Toolbar.Button>
+            )}
+            {/* Folders always have ⋯ (Rename, Delete); a tax year only in a short column. */}
+            {folder || shortColumn ? (
+              <Stack.Toolbar.Menu
+                icon="ellipsis"
+                accessibilityLabel={t("common.more")}
+              >
+                {plusSubmenu}
+                {shortColumn ? (
+                  <Stack.Toolbar.MenuAction
+                    icon="square.and.arrow.up"
+                    onPress={openExport}
+                  >
+                    {t("export.title")}
+                  </Stack.Toolbar.MenuAction>
+                ) : null}
+                {folder ? (
+                  <>
+                    <Stack.Toolbar.MenuAction
+                      icon="pencil"
+                      onPress={() => setRenaming(true)}
+                    >
+                      {t("folders.rename")}
+                    </Stack.Toolbar.MenuAction>
+                    <Stack.Toolbar.MenuAction
+                      icon="trash"
+                      destructive
+                      onPress={confirmDelete}
+                    >
+                      {t("common.delete")}
+                    </Stack.Toolbar.MenuAction>
+                  </>
+                ) : null}
+              </Stack.Toolbar.Menu>
+            ) : null}
+            {plusMenu}
+          </Stack.Toolbar>
+        </>
+      ) : null}
       <ReceiptListDetail
         filter={filter}
         ListHeaderComponent={
@@ -116,7 +192,7 @@ export function CollectionScreen(props: Props) {
               paddingBottom: theme.spacing.md,
             }}
           >
-            <ScreenHeader title={title} />
+            {nativeHeader ? null : <ScreenHeader title={title} />}
             <Text
               testID="collection-total"
               style={[theme.type.headline, { color: theme.colors.text }]}
@@ -126,15 +202,23 @@ export function CollectionScreen(props: Props) {
               )}
             </Text>
             {/* Wraps on narrow phones / long translations instead of clipping the last action. */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.md }}>
-              {action(t("export.title"), openExport)}
-              {folder ? (
-                <>
-                  {action(t("folders.rename"), () => setRenaming(true))}
-                  {action(t("common.delete"), confirmDelete, true)}
-                </>
-              ) : null}
-            </View>
+            {nativeHeader ? null : (
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: theme.spacing.md,
+                }}
+              >
+                {action(t("export.title"), openExport)}
+                {folder ? (
+                  <>
+                    {action(t("folders.rename"), () => setRenaming(true))}
+                    {action(t("common.delete"), confirmDelete, true)}
+                  </>
+                ) : null}
+              </View>
+            )}
           </View>
         }
         empty={<EmptyState title={t("folders.noReceipts")} topInset={false} />}

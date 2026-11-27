@@ -10,6 +10,7 @@ import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
 import { openReview } from "@/capture/useAddReceipt";
 import { useDb } from "@/db/DatabaseProvider";
 import { listDraftIds } from "@/db/repositories/receipts";
+import { TabScreen } from "@/layout/TabPlus";
 import { useLayout } from "@/layout/useLayout";
 import { FeedEmpty } from "@/receipts/FeedEmpty";
 import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
@@ -18,7 +19,15 @@ import { CatchUpBanner } from "@/recurring/CatchUpBanner";
 import { themedStatusBarStyle } from "@/theme/ThemedStatusBar";
 import { useTheme } from "@/theme/ThemeProvider";
 
-export default function ReceiptsScreen() {
+export default function ReceiptsTab() {
+  return (
+    <TabScreen home bleed>
+      <ReceiptsScreen />
+    </TabScreen>
+  );
+}
+
+function ReceiptsScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const db = useDb();

@@ -1,8 +1,13 @@
+import { Stack } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import {
+  KEYBOARD_SCROLL_PROPS,
+  useKeyboardForm,
+} from "@/layout/keyboardScroll";
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
 import { DateField } from "@/components/DateField";
@@ -24,7 +29,14 @@ type Props = {
   onClose(): void;
 };
 
-export const PRESETS: DatePreset[] = ["all", "thisMonth", "lastMonth", "thisTaxYear", "lastTaxYear", "custom"];
+export const PRESETS: DatePreset[] = [
+  "all",
+  "thisMonth",
+  "lastMonth",
+  "thisTaxYear",
+  "lastTaxYear",
+  "custom",
+];
 
 /** Filter sheet: edits a draft; Apply commits it, Cancel (or dismissing) discards it. */
 export function FilterSheet(props: Props) {
@@ -41,9 +53,32 @@ export function FilterSheet(props: Props) {
   );
 }
 
-function SheetBody({ value, onApply, onClose }: Props) {
+/** iOS: the sheet body as a native sheet page, with Cancel and Apply in Apple's bar. */
+export function FilterSheetPage({
+  value,
+  onApply,
+  onClose,
+}: Omit<Props, "visible">) {
+  return (
+    <SheetBody
+      visible
+      value={value}
+      onApply={onApply}
+      onClose={onClose}
+      native
+    />
+  );
+}
+
+function SheetBody({
+  value,
+  onApply,
+  onClose,
+  native = false,
+}: Props & { native?: boolean }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { scrollProps: keyboardScroll, bottomRoom } = useKeyboardForm();
   const insets = useSafeAreaInsets();
   const sheetTop = useSheetTopInset();
   const db = useDb();
@@ -61,45 +96,111 @@ function SheetBody({ value, onApply, onClose }: Props) {
     });
 
   const heading = (label: string) => (
-    <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text, marginTop: theme.spacing.lg }]}>
+    <Text
+      accessibilityRole="header"
+      style={[
+        theme.type.headline,
+        { color: theme.colors.text, marginTop: theme.spacing.lg },
+      ]}
+    >
       {label}
     </Text>
   );
   const action = (label: string, onPress: () => void) => (
-    <Button variant="quiet" label={label} onPress={onPress} style={{ paddingHorizontal: theme.spacing.sm }} />
+    <Button
+      variant="quiet"
+      label={label}
+      onPress={onPress}
+      style={{ paddingHorizontal: theme.spacing.sm }}
+    />
   );
 
   return (
-    <View testID="filter-sheet" style={{ flex: 1, backgroundColor: theme.colors.background, paddingTop: sheetTop + theme.spacing.lg }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: theme.spacing.md,
-        }}
-      >
-        {action(t("common.cancel"), onClose)}
-        <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
-          {t("search.filters")}
-        </Text>
-        {action(t("search.apply"), () => onApply(draft))}
-      </View>
+    <View
+      testID="filter-sheet"
+      style={{
+        flex: 1,
+        backgroundColor: theme.colors.background,
+        paddingTop: native ? 0 : sheetTop + theme.spacing.lg,
+      }}
+    >
+      {native ? (
+        <>
+          <Stack.Screen
+            options={{ headerShown: true, title: t("search.filters") }}
+          />
+          {/* Bottom toolbar, so X and checkmark sit at the bottom of the Duo column (thumb reach). */}
+          <Stack.Toolbar placement="bottom">
+            <Stack.Toolbar.Spacer />
+            <Stack.Toolbar.Button
+              icon="xmark"
+              accessibilityLabel={t("common.cancel")}
+              onPress={onClose}
+            >
+              {t("common.cancel")}
+            </Stack.Toolbar.Button>
+            <Stack.Toolbar.Button
+              icon="checkmark"
+              variant="prominent"
+              tintColor={theme.colors.primary}
+              accessibilityLabel={t("search.apply")}
+              onPress={() => onApply(draft)}
+            >
+              {t("search.apply")}
+            </Stack.Toolbar.Button>
+          </Stack.Toolbar>
+        </>
+      ) : (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: theme.spacing.md,
+          }}
+        >
+          {action(t("common.cancel"), onClose)}
+          <Text
+            accessibilityRole="header"
+            style={[theme.type.headline, { color: theme.colors.text }]}
+          >
+            {t("search.filters")}
+          </Text>
+          {action(t("search.apply"), () => onApply(draft))}
+        </View>
+      )}
       <ScrollView
+        {...KEYBOARD_SCROLL_PROPS}
+        {...keyboardScroll}
         contentContainerStyle={{
           padding: theme.spacing.lg,
           gap: theme.spacing.sm,
-          paddingBottom: insets.bottom + theme.spacing.xl,
+          paddingBottom: insets.bottom + theme.spacing.xl + bottomRoom,
         }}
       >
         {heading(t("search.date"))}
         {PRESETS.map((p) => (
-          <OptionRow key={p} label={t(`search.preset.${p}`)} selected={draft.preset === p} onPress={() => patch({ preset: p })} />
+          <OptionRow
+            key={p}
+            label={t(`search.preset.${p}`)}
+            selected={draft.preset === p}
+            onPress={() => patch({ preset: p })}
+          />
         ))}
         {draft.preset === "custom" ? (
           <View style={{ gap: theme.spacing.md }}>
-            <DateField label={t("search.from")} value={draft.from} onChange={(from) => patch({ from })} placeholder={t("review.datePlaceholder")} />
-            <DateField label={t("search.to")} value={draft.to} onChange={(to) => patch({ to })} placeholder={t("review.datePlaceholder")} />
+            <DateField
+              label={t("search.from")}
+              value={draft.from}
+              onChange={(from) => patch({ from })}
+              placeholder={t("review.datePlaceholder")}
+            />
+            <DateField
+              label={t("search.to")}
+              value={draft.to}
+              onChange={(to) => patch({ to })}
+              placeholder={t("review.datePlaceholder")}
+            />
           </View>
         ) : null}
 
@@ -108,21 +209,49 @@ function SheetBody({ value, onApply, onClose }: Props) {
           const checked = draft.categoryIds.includes(c.id);
           const label = categoryLabel(c, (k) => t(k));
           return (
-            <OptionRow key={c.id} role="checkbox" label={label} selected={checked} onPress={() => toggleCategory(c.id)} />
+            <OptionRow
+              key={c.id}
+              role="checkbox"
+              label={label}
+              selected={checked}
+              onPress={() => toggleCategory(c.id)}
+            />
           );
         })}
 
         {heading(t("review.folder"))}
-        <OptionRow label={t("search.anyFolder")} selected={draft.folderId === undefined} onPress={() => patch({ folderId: undefined })} />
-        <OptionRow label={t("folders.none")} selected={draft.folderId === null} onPress={() => patch({ folderId: null })} />
+        <OptionRow
+          label={t("search.anyFolder")}
+          selected={draft.folderId === undefined}
+          onPress={() => patch({ folderId: undefined })}
+        />
+        <OptionRow
+          label={t("folders.none")}
+          selected={draft.folderId === null}
+          onPress={() => patch({ folderId: null })}
+        />
         {folders.map((f) => (
-          <OptionRow key={f.id} label={f.name} selected={draft.folderId === f.id} onPress={() => patch({ folderId: f.id })} />
+          <OptionRow
+            key={f.id}
+            label={f.name}
+            selected={draft.folderId === f.id}
+            onPress={() => patch({ folderId: f.id })}
+          />
         ))}
 
         {heading(t("review.currency"))}
-        <OptionRow label={t("search.anyCurrency")} selected={draft.currency === undefined} onPress={() => patch({ currency: undefined })} />
+        <OptionRow
+          label={t("search.anyCurrency")}
+          selected={draft.currency === undefined}
+          onPress={() => patch({ currency: undefined })}
+        />
         {currencies.map((c) => (
-          <OptionRow key={c} label={c} selected={draft.currency === c} onPress={() => patch({ currency: c })} />
+          <OptionRow
+            key={c}
+            label={c}
+            selected={draft.currency === c}
+            onPress={() => patch({ currency: c })}
+          />
         ))}
 
         <OptionRow
@@ -132,7 +261,15 @@ function SheetBody({ value, onApply, onClose }: Props) {
           onPress={() => patch({ unconverted: !draft.unconverted })}
         />
         {/* Inline, not an (i): this is already a sheet, and a sheet on a sheet is avoided (spec 6.4). */}
-        <Text style={[theme.type.caption, { color: theme.colors.textMuted, paddingHorizontal: theme.spacing.xs }]}>
+        <Text
+          style={[
+            theme.type.caption,
+            {
+              color: theme.colors.textMuted,
+              paddingHorizontal: theme.spacing.xs,
+            },
+          ]}
+        >
           {t("info.unconverted.summary")}
         </Text>
       </ScrollView>

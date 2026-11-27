@@ -18,6 +18,7 @@ import {
   WrongPassphraseError,
 } from "./errors";
 import { restoreLease } from "./restoreLease";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 const mockPrefsMap: Record<string, unknown> = {};
@@ -49,6 +50,7 @@ jest.mock("react-native-safe-area-context", () => ({
 // Latest usePreventRemove call: whether leaving the screen is blocked.
 let mockPrevent: { prevent: boolean; cb?: () => void } = { prevent: false };
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   router: { push: (...a: unknown[]) => mockPush(...a) },
   usePreventRemove: (prevent: boolean, cb?: () => void) => {
     mockPrevent = { prevent, cb };
@@ -100,6 +102,9 @@ const fill = async (p: string, c: string) => {
   await fireEvent.changeText(screen.getByLabelText("Confirm passphrase"), c);
 };
 const alertButtons = (spy: jest.SpyInstance) => spy.mock.calls[0][2] as AlertButton[];
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+runAsAndroid();
 
 describe("backup", () => {
   it("mismatch disables Back up now", async () => {

@@ -42,87 +42,95 @@ choice for the +, non-goals). Read it in full before Checkpoint 0.
 Do all of this first, so the Duo pass needs no rebuilds or restarts. Check that the app launches on the
 Duo simulator after each step; the owner does not review yet.
 
-- [ ] A1 Setup: `git switch -c spike/duo-native-nav`; start Metro; open the app on the **Duo simulator
+- [x] A1 Setup: `git switch -c spike/duo-native-nav`; start Metro; open the app on the **Duo simulator
       only**. If the iOS dev build fails on `NativeTabs` (missing native code), rebuild the dev client once
       (`eas build --profile development --platform ios --local` or the project's usual path) and say so.
-- [ ] A2 Native tabs (`src/app/(tabs)/_layout.tsx`, `src/layout/tabs.ts`, `src/layout/useTabBarSpace.ts`):
+- [x] A2 Native tabs (`src/app/(tabs)/_layout.tsx`, `src/layout/tabs.ts`, `src/layout/useTabBarSpace.ts`):
   - branch on `Platform.OS`: `ios` renders `NativeTabs` with 4 `NativeTabs.Trigger`s in `TAB_ROUTES`
     order; everything else renders today's `Tabs` code unchanged; both inside `AddReceiptProvider`;
   - SF Symbols per tab in `tabs.ts` (`TAB_SF_SYMBOLS`): `doc.text`, `magnifyingglass`, `folder`,
     `gearshape`; labels from `TAB_LABEL_KEYS`;
   - `useTabBarSpace()` returns 0 under `NativeTabs` (Expo: `insets.bottom` already includes the bar).
-- [ ] A3 Dev-only switches (Settings → Developer tools, or constants), so the owner can compare without
+- [x] A3 Dev-only switches (Settings → Developer tools, or constants), so the owner can compare without
       a restart: tab placement `sidebar` / `tabBar`; + variant C / D.
-- [ ] A4 + variant C (floating): extract the round + from `BottomTabs` into
+- [x] A4 + variant C (floating): extract the round + from `BottomTabs` into
       `src/layout/FloatingAddButton.tsx`, absolute, `bottom: insets.bottom + 16`, on the side
       `useVerticalBarEdgeIOS()` returns (`'leading'` = left with `insets.left + 16`, `'trailing'` or
       `null` = right with `insets.right + 16`), `onPress` = `open()`. In a split it must sit on the
       window's outer edge (spec, "Split View").
-- [ ] A5 + variant D (native bottom toolbar) on the Receipts tab only: wrap the tab in its own `Stack`
+- [x] A5 + variant D (native bottom toolbar) on the Receipts tab only: wrap the tab in its own `Stack`
       (move `(tabs)/index.tsx` to `(tabs)/(receipts)/index.tsx` with a `(receipts)/_layout.tsx` `Stack`),
       add `Stack.Toolbar placement="bottom"` with one `Stack.Toolbar.Button` (icon `plus`, label
       "Add receipt") whose press calls `open()`.
-- [ ] A6 Folder screen header (`src/organize/CollectionScreen.tsx`, route `src/app/folder/[id].tsx`):
+- [x] A6 Folder screen header (`src/organize/CollectionScreen.tsx`, route `src/app/folder/[id].tsx`):
       native header; Export as `Stack.Toolbar placement="right"` button; Rename and Delete in a
       `Stack.Toolbar.Menu` ("⋯"). Keep today's Delete confirmation.
 
 ## Phase B: iPhone Duo pass (one simulator session)
 
+Phase B DONE 2026-11-26 (owner): outer screen, open screen (landscape and portrait) and Split View approved; see the spec, "Session results". Next: Phase C (Android).
+
 The owner sets each pose in Device Hub. Show one item at a time; fix small things on the spot.
 
-- [ ] B1 Closed: tabs at the bottom of the right side column? Look of the native tab bar next to the slip
+- [x] B1 Closed: tabs at the bottom of the right side column? Look of the native tab bar next to the slip
       header?
-- [ ] B2 Closed: + variant C (floating, beside the column) against D (inside the column). Provisional
+- [x] B2 Closed: + variant C (floating, beside the column) against D (inside the column). Provisional
       pick; it is confirmed on the plain iPhone in Phase D.
-- [ ] B3 Closed: folder screen; Back, Export and ⋯ at the top of the column.
-- [ ] B4 Open, held wide: `sidebar` against `tabBar` placement (lean `tabBar`). **Owner picks.**
-- [ ] B5 Open, held tall: horizontal bars; + position.
-- [ ] B6 Half open (book and tabletop): nothing tappable in the fold band from the tabs or the +.
-- [ ] B7 Split View 50/50: our app in the left half (469 pt) and in the right half; phone layout; bars
+- [x] B3 Closed: folder screen; Back, Export and ⋯ at the top of the column.
+- [x] B4 Open, held wide: `sidebar` against `tabBar` placement (lean `tabBar`). **Owner picks.**
+- [x] B5 Open, held tall: horizontal bars; + position.
+- [x] B6 Half open (book and tabletop): nothing tappable in the fold band from the tabs or the +.
+- [x] B7 Split View 50/50: our app in the left half (469 pt) and in the right half; phone layout; bars
       and + on the outer edge.
-- [ ] B8 A pinned picture-in-picture video at the top: the app gets shorter; tabs and + still reachable.
-- [ ] B9 Fold and unfold with the add sheet open: the sheet stays.
-- [ ] B10 Write the Duo results into the spec under "Session results". Close the Duo simulator.
+- [x] B8 A pinned picture-in-picture video at the top: the app gets shorter; tabs and + still reachable.
+- [x] B9 Fold and unfold with the add sheet open: the sheet stays.
+- [x] B10 Write the Duo results into the spec under "Session results". Close the Duo simulator.
 
 ## Phase C: Android pass (Redmi, then emulators)
 
-- [ ] C1 Rail at the bottom (`src/layout/SideRail.tsx`, `src/layout/SideRail.test.tsx`): the rail's
+DONE 2026-11-27: Redmi upright and sideways checked; split screen and emulators skipped by the owner.
+
+- [x] C1 Rail at the bottom (`src/layout/SideRail.tsx`, `src/layout/SideRail.test.tsx`): the rail's
       `ScrollView` content grows to fill (`flexGrow: 1`) and aligns to the end (`justifyContent:
       "flex-end"`), so the tabs sit just above the +. Short windows still scroll and every tab stays
       reachable above the + (the landscape-phone fix in commit 8928d88 must still hold). Update the test.
-- [ ] C2 Redmi upright: tabs, the +, the add sheet and the folder screen exactly as before.
-- [ ] C3 Redmi held sideways: icon rail with the tabs at the bottom, above the +.
-- [ ] C4 Redmi split screen top and bottom: short window; tabs, + and the add sheet usable.
-- [ ] C5 Android foldable emulator (Z Fold or Pixel Fold): unfolded rail at the bottom; split screen side by
+- [x] C2 Redmi upright: tabs, the +, the add sheet and the folder screen exactly as before.
+- [x] C3 Redmi held sideways: icon rail with the tabs at the bottom, above the +.
+- [x] C4 (skipped: owner, 2026-11-27, split screen not available on this Redmi) Redmi split screen top and bottom: short window; tabs, + and the add sheet usable.
+- [x] C5 (skipped: owner, 2026-11-27, no emulator on this Mac) Android foldable emulator (Z Fold or Pixel Fold): unfolded rail at the bottom; split screen side by
       side, our app in each half.
-- [ ] C6 Android tablet emulator: wide rail at the bottom; split screen, each half (rail or bottom bar by
+- [x] C6 (skipped: owner, 2026-11-27, no emulator on this Mac) Android tablet emulator: wide rail at the bottom; split screen, each half (rail or bottom bar by
       width).
-- [ ] C7 Write the Android results into the spec.
+- [x] C7 Write the Android results into the spec.
 
 ## Phase D: plain iPhone pass
 
+DONE 2026-11-27: owner tested the plain iPhone (iPhone 18 Pro Max sim) by hand and approved.
+
 One simulator, opened alone. Close it before Phase E.
 
-- [ ] D1 Native tab bar look next to the slip header.
-- [ ] D2 + variant C against D: does the bottom toolbar sit well with the tab bar? **Confirm the + pick
+- [x] D1 Native tab bar look next to the slip header.
+- [x] D2 (moot: dev switches removed in 22384da; + is variant B, floating on plain iPhone) + variant C against D: does the bottom toolbar sit well with the tab bar? **Confirm the + pick
       from B2.**
-- [ ] D3 Folder screen header: Back, Export, ⋯.
-- [ ] D4 Write the iPhone results into the spec. Close the iPhone simulator.
+- [x] D3 Folder screen header: Back, Export, ⋯.
+- [x] D4 Write the iPhone results into the spec. Close the iPhone simulator.
 
 ## Phase E: iPad pass
 
+DONE 2026-11-27: owner tested the iPad by hand and approved.
+
 One simulator, opened alone.
 
-- [ ] E1 Full screen: Apple's default placement; + bottom-right; folder screen header.
-- [ ] E2 Split View (half and one third) and Slide Over: compact width, tab bar, + on the outer edge.
-- [ ] E3 Write the iPad results into the spec. Close the iPad simulator.
+- [x] E1 Full screen: Apple's default placement; + bottom-right; folder screen header.
+- [x] E2 Split View (half and one third) and Slide Over: compact width, tab bar, + on the outer edge.
+- [x] E3 Write the iPad results into the spec. Close the iPad simulator.
 
 ## Phase F: wrap up the session
 
-- [ ] Finish "Session results" in the spec: tab placement, + variant, header pattern, anything the owner
+- [x] Finish "Session results" in the spec: tab placement, + variant, header pattern, anything the owner
       rejected, screenshots if the owner wants them kept. Remove the dev-only switches from the plan of
       record (they stay only on the spike branch).
-- [ ] Owner approves the spec. Then run superpowers:writing-plans for the real implementation from the
+- [x] Owner approves the spec (2026-11-27; plan: `docs/superpowers/plans/2026-11-27-native-navigation-implementation.md`). Then run superpowers:writing-plans for the real implementation from the
       spike's approved code: the remaining screens with own action buttons (found by the sweep:
       `src/review/ReceiptFormScreen.tsx` Discard/Save, `src/organize/CategoriesScreen.tsx`,
       `CategoryForm.tsx`, `FolderForm.tsx`, plus any other custom header), tests

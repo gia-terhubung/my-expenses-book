@@ -3,3 +3,5 @@
 **/spikes/receipts/
 **/spikes/ocr-dumps/
 **/spikes/ocr-samples/
+
+.claude/settings.local.json

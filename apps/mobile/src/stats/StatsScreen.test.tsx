@@ -8,6 +8,7 @@ import { i18n, initI18n } from "@/i18n";
 import { formatMoney } from "@/money/money";
 
 import { StatsScreen } from "./StatsScreen";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockStartMonth = 1;
@@ -25,6 +26,7 @@ jest.mock("@/capture/useAddReceipt", () => ({
   useAddReceipt: () => ({ open: jest.fn(), start: (...a: unknown[]) => mockStart(...a), sheet: null }),
 }));
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   router: {
     back: () => mockRouter.back(),
     push: (...a: unknown[]) => mockRouter.push(...a),
@@ -66,6 +68,9 @@ beforeEach(() => {
   mockMonthStart = 1;
   jest.clearAllMocks();
 });
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+runAsAndroid();
 
 describe("StatsScreen month starts on", () => {
   it("25th: month total, range subtitle and November bar follow the pay period", async () => {

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Frames preview</title>
+    <style>
+      body { margin: 0; padding: 40px; background: #e9ece8; display: flex; gap: 40px; align-items: flex-start; font: 600 28px system-ui; color: #1f5c4c; }
+      figure { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+      .clip { overflow: hidden; }
+      iframe { border: 0; transform-origin: 0 0; }
+    </style>
+  </head>
+  <body>
+    <script>
+      // One scaled slide per store set, side by side. Open with ?raws=<json {device: url}>.
+      const raws = JSON.parse(new URLSearchParams(location.search).get("raws") || "{}");
+      const sets = [
+        ["android", 1080, 1920, "Play phone"],
+        ["iphone", 1320, 2868, "iPhone"],
+        ["duo-closed", 1398, 2034, "Duo closed"],
+        ["duo-open", 2007, 2853, "Duo open"],
+        ["ipad", 2064, 2752, "iPad"],
+        ["tablet", 1440, 2560, "Play tablet"],
+      ];
+      const H = 900;
+      for (const [device, w, h, name] of sets) {
+        const s = H / h;
+        const fig = document.createElement("figure");
+        const clip = document.createElement("div");
+        clip.className = "clip";
+        Object.assign(clip.style, { width: `${w * s}px`, height: `${H}px` });
+        const f = document.createElement("iframe");
+        const q = new URLSearchParams({ w, h, device, caption: "Your monthly spending at a glance.", raw: raws[device] || "" });
+        f.src = `slide.html?${q}`;
+        Object.assign(f, { width: w, height: h });
+        f.style.transform = `scale(${s})`;
+        clip.append(f);
+        const cap = document.createElement("figcaption");
+        cap.textContent = name;
+        fig.append(clip, cap);
+        document.body.append(fig);
+      }
+    </script>
+  </body>
+</html>

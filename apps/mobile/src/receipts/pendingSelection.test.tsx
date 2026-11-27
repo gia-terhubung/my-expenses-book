@@ -8,6 +8,7 @@ import { setPendingSelection, takePendingSelection, usePopToSelection } from "./
 const mockNav = { goBack: jest.fn(), canGoBack: jest.fn(() => true) };
 let mockFocused = true;
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   useNavigation: () => mockNav,
   useIsFocused: () => mockFocused,
 }));

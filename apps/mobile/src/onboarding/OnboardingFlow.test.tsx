@@ -27,7 +27,8 @@ const mockReplace = jest.fn();
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock("expo-router", () => ({ router: { replace: (...a: unknown[]) => mockReplace(...a) } }));
+jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock, router: { replace: (...a: unknown[]) => mockReplace(...a) } }));
 jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
   __esModule: true,
   default: jest.fn(),

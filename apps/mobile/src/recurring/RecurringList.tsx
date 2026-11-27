@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Stack } from "expo-router";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -74,6 +75,20 @@ export function RecurringList({ selectedId, onSelect, onNew, onBack }: Props) {
     <ScreenHeader
       title={t("recurring.title")}
       onBack={onBack ?? null}
+      toolbar={
+        rules.length > 0 ? (
+          <Stack.Toolbar.Button icon="plus" accessibilityLabel={t("recurring.newTitle")} onPress={onNew}>
+            {t("recurring.new")}
+          </Stack.Toolbar.Button>
+        ) : null
+      }
+      menuItems={
+        rules.length > 0 ? (
+          <Stack.Toolbar.MenuAction icon="plus" onPress={onNew}>
+            {t("recurring.new")}
+          </Stack.Toolbar.MenuAction>
+        ) : null
+      }
       actions={
         rules.length > 0 ? (
           <Button testID="recurring-new" label={t("recurring.new")} accessibilityLabel={t("recurring.newTitle")} onPress={onNew} />

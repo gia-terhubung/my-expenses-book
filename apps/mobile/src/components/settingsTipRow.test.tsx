@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
 
-import Settings from "@/app/(tabs)/settings";
+import Settings from "@/app/(tabs)/(receipts,search,folders,settings)/settings";
 import { initI18n } from "@/i18n";
 import { tokens } from "@/theme/tokens";
 
@@ -12,6 +12,7 @@ jest.mock("@/prefs/PrefsProvider", () => ({
 jest.mock("expo-router", () => {
   const mockReact = jest.requireActual<typeof import("react")>("react");
   return {
+    ...jest.requireActual("../../test/expoRouterStack").stackMock,
     Link: jest.requireActual<typeof import("react-native")>("react-native").Text,
     useFocusEffect: (cb: () => void) => mockReact.useEffect(cb, []),
   };

@@ -9,12 +9,18 @@ import { StatusBarInset } from "./StatusBarInset";
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 40, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock("@/theme/ThemeProvider", () => ({ useTheme: () => ({ colors: { background: "#fff" } }) }));
+jest.mock("@/theme/ThemeProvider", () => ({
+  useTheme: () => ({ colors: { background: "#fff" } }),
+}));
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((n) => {
     const p = join(dir, n);
-    return statSync(p).isDirectory() ? files(p) : /\.tsx$/.test(n) && !/\.test\.tsx$/.test(n) ? [p] : [];
+    return statSync(p).isDirectory()
+      ? files(p)
+      : /\.tsx$/.test(n) && !/\.test\.tsx$/.test(n)
+        ? [p]
+        : [];
   });
 }
 
@@ -25,7 +31,10 @@ describe("StatusBarInset", () => {
         <Text>body</Text>
       </StatusBarInset>,
     );
-    const flat = Object.assign({}, ...[screen.getByTestId("status-bar-inset").props.style].flat());
+    const flat = Object.assign(
+      {},
+      ...[screen.getByTestId("status-bar-inset").props.style].flat(),
+    );
     expect(flat).toMatchObject({ flex: 1, paddingTop: 40 });
   });
 
@@ -35,7 +44,10 @@ describe("StatusBarInset", () => {
         <Text>body</Text>
       </StatusBarInset>,
     );
-    const flat = Object.assign({}, ...[screen.getByTestId("status-bar-inset").props.style].flat());
+    const flat = Object.assign(
+      {},
+      ...[screen.getByTestId("status-bar-inset").props.style].flat(),
+    );
     expect(flat).toMatchObject({ paddingTop: 40, backgroundColor: "#1F5C4C" });
   });
 
@@ -45,7 +57,10 @@ describe("StatusBarInset", () => {
         <Text>body</Text>
       </StatusBarInset>,
     );
-    const flat = Object.assign({}, ...[screen.getByTestId("status-bar-inset").props.style].flat());
+    const flat = Object.assign(
+      {},
+      ...[screen.getByTestId("status-bar-inset").props.style].flat(),
+    );
     expect(flat).toMatchObject({ backgroundColor: "#fff" });
   });
 
@@ -62,7 +77,9 @@ describe("StatusBarInset", () => {
     const offenders = files(root)
       .map((p) => relative(join(root, ".."), p))
       .filter((p) => !allowed.has(p))
-      .filter((p) => /insets\.top/.test(readFileSync(join(root, "..", p), "utf8")));
+      .filter((p) =>
+        /insets\.top/.test(readFileSync(join(root, "..", p), "utf8")),
+      );
     expect(offenders).toEqual([]);
   });
 });

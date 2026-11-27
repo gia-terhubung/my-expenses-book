@@ -1,0 +1,70 @@
+/* Store slide, "Sunshine" look (spec 2026-11-27-store-screenshots-sunshine-design.md). The window
+   is exactly the store size; slide.js sizes everything from it. */
+@font-face {
+  font-family: "Bricolage";
+  font-weight: 800;
+  src: url("../../../../apps/mobile/node_modules/@expo-google-fonts/bricolage-grotesque/800ExtraBold/BricolageGrotesque_800ExtraBold.ttf");
+}
+:root {
+  --sun: #ffd84a;
+  --green: #1f5c4c;
+  --ink: #0d0d0d;
+}
+html,
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--sun);
+}
+.caption {
+  position: absolute;
+  margin: 0;
+  color: var(--green);
+  font-family: "Bricolage", sans-serif;
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+}
+/* Green band along the bottom; its top edge is the app's torn-receipt zigzag. */
+.band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--green);
+}
+.band::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--zig) * -1);
+  height: var(--zig);
+  background: radial-gradient(circle at 50% 0, transparent calc(var(--zig) * 0.86), var(--green) calc(var(--zig) * 0.9))
+    0 0 / calc(var(--zig) * 2) var(--zig) repeat-x;
+}
+.device {
+  position: absolute;
+  background: var(--ink);
+  box-sizing: border-box;
+  box-shadow: 0 0.6vw 2.4vw rgba(18, 36, 31, 0.28);
+}
+.device .screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+}
+.device .screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.device .mark {
+  position: absolute;
+  background: var(--ink);
+}

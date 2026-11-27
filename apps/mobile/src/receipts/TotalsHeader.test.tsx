@@ -15,7 +15,8 @@ import { lightColors } from "@/theme/tokens";
 import { TotalsHeader } from "./TotalsHeader";
 
 const mockPush = jest.fn();
-jest.mock("expo-router", () => ({ router: { push: (...a: unknown[]) => mockPush(...a) } }));
+jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock, router: { push: (...a: unknown[]) => mockPush(...a) } }));
 
 let mockDb: AppDb;
 jest.mock("@/db/DatabaseProvider", () => ({ useDb: () => mockDb }));

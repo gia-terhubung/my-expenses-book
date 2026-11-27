@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import { NativeSheetHost, SheetBar, useNativeSheetRoute } from "@/layout/NativeSheet";
 import { Button } from "@/components/Button";
 import { DateField } from "@/components/DateField";
 import { CurrencyPicker, currencyName } from "@/components/CurrencyPicker";
@@ -296,6 +297,17 @@ export function CurrencyField({
   const insets = useSafeAreaInsets();
   const sheetTop = useSheetTopInset();
   const [open, setOpen] = useState(false);
+  const sheetRoute = useNativeSheetRoute();
+  const picker = (
+    <CurrencyPicker
+      lang={i18n.language}
+      value={value}
+      onChange={(c) => {
+        onChange(c);
+        setOpen(false);
+      }}
+    />
+  );
   return (
     <>
       <Pressable
@@ -315,7 +327,17 @@ export function CurrencyField({
       >
         <Text style={[theme.type.body, { color: theme.colors.text, fontWeight: "600" }]}>{value || "—"}</Text>
       </Pressable>
-      {open ? (
+      {sheetRoute ? (
+        // iOS: a native sheet page; X in Apple's bar moves into the iPhone Duo side column.
+        <NativeSheetHost visible={open} onClose={() => setOpen(false)} route={sheetRoute}>
+          {open ? (
+            <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingBottom: insets.bottom + theme.spacing.xl }}>
+              <SheetBar title={label} onCancel={() => setOpen(false)} />
+              {picker}
+            </View>
+          ) : null}
+        </NativeSheetHost>
+      ) : open ? (
         <AppModal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setOpen(false)}>
           <View
             style={{
@@ -333,14 +355,7 @@ export function CurrencyField({
               </Text>
               <Button variant="quiet" label={t("common.done")} onPress={() => setOpen(false)} />
             </View>
-            <CurrencyPicker
-              lang={i18n.language}
-              value={value}
-              onChange={(c) => {
-                onChange(c);
-                setOpen(false);
-              }}
-            />
+            {picker}
           </View>
         </AppModal>
       ) : null}

@@ -25,6 +25,7 @@ const mockRoute = {
 const mockRouter = { push: jest.fn(), dismiss: jest.fn(), replace: jest.fn(), dispatch: jest.fn() };
 const mockKey = (name: string) => (name === "lock" ? `lock-${mockRoute.seq}` : `${name}-k`);
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   useRootNavigationState: () => ({ key: "root" }),
   useNavigationContainerRef: () => ({
     getRootState: () => ({

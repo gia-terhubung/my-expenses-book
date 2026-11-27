@@ -33,10 +33,17 @@ export function EmptyState({
         },
       ]}
     >
-      <Text accessibilityRole="header" style={[theme.type.headline, { color: theme.colors.text }]}>
+      <Text
+        accessibilityRole="header"
+        style={[theme.type.headline, { color: theme.colors.text }]}
+      >
         {title}
       </Text>
-      {message ? <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{message}</Text> : null}
+      {message ? (
+        <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>
+          {message}
+        </Text>
+      ) : null}
       {children}
     </View>
   );

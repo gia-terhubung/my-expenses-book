@@ -4,6 +4,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/AppModal";
+import {
+  NativeSheetHost,
+  SheetBar,
+  useInNativeSheet,
+  useNativeSheets,
+} from "@/layout/NativeSheet";
 import { Button } from "@/components/Button";
 import { OptionRow } from "@/components/OptionRow";
 import { Input } from "@/components/Input";
@@ -22,6 +28,14 @@ type Props = {
 
 /** Sheet to name a new folder (project or trip) or rename an existing one. */
 export function FolderForm(props: Props) {
+  const native = useNativeSheets();
+  if (native) {
+    return (
+      <NativeSheetHost visible={props.visible} onClose={props.onClose}>
+        {props.visible ? <FormBody {...props} /> : null}
+      </NativeSheetHost>
+    );
+  }
   return (
     <AppModal
       visible={props.visible}
@@ -40,6 +54,7 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const sheetTop = useSheetTopInset();
+  const nativeSheet = useInNativeSheet();
   const [name, setName] = useState(initialName);
   const [kind, setKind] = useState<FolderKind>("project");
 
@@ -56,7 +71,9 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
           flex: 1,
           backgroundColor: theme.colors.background,
           padding: theme.spacing.xl,
-          paddingTop: sheetTop + theme.spacing.xl,
+          paddingTop: nativeSheet
+            ? theme.spacing.lg
+            : sheetTop + theme.spacing.xl,
           paddingBottom: insets.bottom + theme.spacing.xl,
         }}
       >
@@ -69,21 +86,35 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
             gap: theme.spacing.lg,
           }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Text
-              accessibilityRole="header"
-              style={[theme.type.title, { color: theme.colors.text }]}
+          {nativeSheet ? (
+            <SheetBar
+              title={t(create ? "folders.newTitle" : "folders.renameTitle")}
+              onCancel={onClose}
+              onDone={submit}
+              doneLabel={t(create ? "folders.create" : "common.save")}
+              doneDisabled={!trimmed}
+            />
+          ) : (
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
             >
-              {t(create ? "folders.newTitle" : "folders.renameTitle")}
-            </Text>
-            <Button variant="quiet" label={t("common.cancel")} onPress={onClose} />
-          </View>
+              <Text
+                accessibilityRole="header"
+                style={[theme.type.title, { color: theme.colors.text }]}
+              >
+                {t(create ? "folders.newTitle" : "folders.renameTitle")}
+              </Text>
+              <Button
+                variant="quiet"
+                label={t("common.cancel")}
+                onPress={onClose}
+              />
+            </View>
+          )}
           <Input
             value={name}
             onChangeText={setName}
@@ -123,12 +154,14 @@ function FormBody({ mode, initialName = "", onSubmit, onClose }: Props) {
               ))}
             </View>
           ) : null}
-          <Button
-            variant="primary"
-            label={t(create ? "folders.create" : "common.save")}
-            disabled={!trimmed}
-            onPress={submit}
-          />
+          {nativeSheet ? null : (
+            <Button
+              variant="primary"
+              label={t(create ? "folders.create" : "common.save")}
+              disabled={!trimmed}
+              onPress={submit}
+            />
+          )}
         </View>
       </View>
     </>

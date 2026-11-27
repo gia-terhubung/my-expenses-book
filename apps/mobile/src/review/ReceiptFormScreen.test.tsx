@@ -11,6 +11,7 @@ import type { Layout } from "@/layout/layout";
 import { createPrefs, type PrefsStore } from "@/prefs/prefs";
 
 import { ReceiptFormScreen } from "./ReceiptFormScreen";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockPrefs: PrefsStore;
@@ -34,13 +35,19 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: mockTop, bottom: 0, left: 0, right: 0 }),
   initialWindowMetrics: null,
 }));
-jest.mock("expo-router", () => ({
-  get router() {
-    return mockRouter;
-  },
-  useLocalSearchParams: () => mockParams,
-  usePreventRemove: () => () => undefined,
-}));
+jest.mock("expo-router", () =>
+  // Object.assign keeps the getters lazy (a spread would read them before the mocks exist).
+  Object.assign(
+    {
+      get router() {
+        return mockRouter;
+      },
+      useLocalSearchParams: () => mockParams,
+      usePreventRemove: () => () => undefined,
+    },
+    jest.requireActual("../../test/expoRouterStack").stackMock,
+  ),
+);
 
 // Mount counters around the real fields and page viewer: a remount on fold would drop focus,
 // local picker state and the decrypted page views.
@@ -106,6 +113,9 @@ beforeEach(() => {
   mockMounts.pages = 0;
   jest.clearAllMocks();
 });
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+runAsAndroid();
 
 describe("ReceiptFormScreen", () => {
   it("edit: typed values, fields and page viewer survive not split -> split -> not split", async () => {
@@ -182,7 +192,7 @@ describe("ReceiptFormScreen", () => {
     expect(screen.getByText("Review later")).toBeTruthy();
   });
 
-  it("Android: the header clears the status bar (the modal is full screen under it); iOS page sheet: no extra", async () => {
+  it("Android: the header clears the status bar (the modal is full screen under it); iOS: small gap under the native header", async () => {
     const original = Platform.OS;
     try {
       mockParams = { id: seed("confirmed").id };
@@ -193,7 +203,7 @@ describe("ReceiptFormScreen", () => {
       await view.unmount();
       Platform.OS = "ios";
       await render(<ReceiptFormScreen mode="edit" />);
-      expect(StyleSheet.flatten((await screen.findByTestId("form-header")).props.style).paddingTop).toBe(16);
+      expect(StyleSheet.flatten((await screen.findByTestId("form-header")).props.style).paddingTop).toBe(8);
     } finally {
       Platform.OS = original;
       mockTop = 0;

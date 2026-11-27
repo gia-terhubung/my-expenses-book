@@ -10,6 +10,7 @@ import type { Layout } from "@/layout/layout";
 
 import { setPendingSelection, takePendingSelection } from "./pendingSelection";
 import { ReceiptListDetail } from "./ReceiptListDetail";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockLayout: Layout = LAYOUTS.phone;
@@ -27,17 +28,23 @@ jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock("expo-router", () => ({
-  get router() {
-    return mockRouter;
-  },
-  useLocalSearchParams: () => mockParams,
-  // Runs the callback like a focused screen does, unless the test marks the screen unfocused.
-  useFocusEffect: (cb: () => void | (() => void)) => {
-    const { useEffect } = jest.requireActual("react");
-    useEffect(() => (mockFocused ? cb() : undefined), [cb]);
-  },
-}));
+jest.mock("expo-router", () =>
+  // Object.assign keeps the getters lazy (a spread would read them before the mocks exist).
+  Object.assign(
+    {
+      get router() {
+        return mockRouter;
+      },
+      useLocalSearchParams: () => mockParams,
+      // Runs the callback like a focused screen does, unless the test marks the screen unfocused.
+      useFocusEffect: (cb: () => void | (() => void)) => {
+        const { useEffect } = jest.requireActual("react");
+        useEffect(() => (mockFocused ? cb() : undefined), [cb]);
+      },
+    },
+    jest.requireActual("../../test/expoRouterStack").stackMock,
+  ),
+);
 let mockFocused = true;
 
 // Mount counters around the real list and detail: a remount would reset scroll offset, loaded
@@ -100,6 +107,9 @@ beforeEach(() => {
   mockMounts.detail = 0;
   jest.clearAllMocks();
 });
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+runAsAndroid();
 
 describe("ReceiptListDetail", () => {
   it("not split: row press pushes the document route", async () => {

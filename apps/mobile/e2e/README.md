@@ -11,6 +11,7 @@ dependency: iOS simulators use [AXe](https://github.com/cameroncooke/AXe) (`axe`
 | `catchup-undo.sh` | Dev clock 3 months ahead, app back to the foreground: "Added 3 recurring expenses."; Undo returns the feed to 1 row. |
 | `notify-prompt.sh` | Android only. Saving an auto-add rule asks nothing; saving the first draft-type rule shows the system notification prompt (R1). Needs an install that has never asked. |
 | `duo-fold.sh` | iPhone Duo only. Rule form keeps typed values across fold, unfold and rotation; two panes when open. |
+| `duo-nav.sh` | iPhone Duo only. Native navigation: the four tabs, Home's + menu (Scan / Import / Add manually), a folder page's Back, Export, ⋯ and + in the side column, the short column held sideways (+ inside ⋯), Filters kept across fold and unfold, tab bar (not sidebar) when open. |
 | `lib.sh` | Shared helpers (tap by label with wait/retry, fill and read back a field, assert visible, screenshots, dev clock, posture). |
 
 ## Run

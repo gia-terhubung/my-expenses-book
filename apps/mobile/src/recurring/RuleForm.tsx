@@ -14,6 +14,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
+import {
+  KEYBOARD_SCROLL_PROPS,
+  useKeyboardForm,
+} from "@/layout/keyboardScroll";
 import { deviceTimeZone } from "@/capture/localTime";
 import { AppModal } from "@/components/AppModal";
 import { Button } from "@/components/Button";
@@ -34,16 +38,33 @@ import { useSideInsets } from "@/layout/SideSafeArea";
 import { useLayout } from "@/layout/useLayout";
 import { FolderPicker } from "@/organize/FolderPicker";
 import { usePref } from "@/prefs/PrefsProvider";
-import { amountText, isKnownCurrency, isValidDate, parseAmountInput } from "@/review/form";
-import { CategoryChips, CurrencyField, FieldShell } from "@/review/ReviewFields";
+import {
+  amountText,
+  isKnownCurrency,
+  isValidDate,
+  parseAmountInput,
+} from "@/review/form";
+import {
+  CategoryChips,
+  CurrencyField,
+  FieldShell,
+} from "@/review/ReviewFields";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { SheetBar } from "@/layout/NativeSheet";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { deviceScheduler } from "./deviceScheduler";
 import { shortDate, weekdayName } from "./format";
 import { ensurePermissionForDraftRule } from "./notify";
 import { todayIn } from "./occurrences";
-import { createRule, createRuleFromReceipt, listRules, setPaused, softDeleteRule, updateRule } from "./rules";
+import {
+  createRule,
+  createRuleFromReceipt,
+  listRules,
+  setPaused,
+  softDeleteRule,
+  updateRule,
+} from "./rules";
 import { requestCatchUp, rescheduleRecurring } from "./useRecurringCatchUp";
 
 /** Editable rule fields, kept as typed. */
@@ -83,20 +104,29 @@ const dayFor = (date: string) => {
 
 export function validateRuleValues(v: RuleFormValues): RuleFormErrors {
   const e: RuleFormErrors = {};
-  if (!isKnownCurrency(v.currency)) e.currency = "review.errors.currencyUnknown";
+  if (!isKnownCurrency(v.currency))
+    e.currency = "review.errors.currencyUnknown";
   else {
     const amount = parseAmountInput(v.amount, v.currency);
     if (v.amount.trim() === "") e.amount = "review.errors.totalRequired";
-    else if (amount === null || amount <= 0) e.amount = "review.errors.totalInvalid";
+    else if (amount === null || amount <= 0)
+      e.amount = "review.errors.totalInvalid";
   }
-  if (v.frequency === "monthly" && !(v.monthDay === -1 || (Number.isInteger(v.monthDay) && v.monthDay >= 1 && v.monthDay <= 28))) {
+  if (
+    v.frequency === "monthly" &&
+    !(
+      v.monthDay === -1 ||
+      (Number.isInteger(v.monthDay) && v.monthDay >= 1 && v.monthDay <= 28)
+    )
+  ) {
     e.monthDay = "recurring.errors.dayInvalid";
   }
   if (v.startDate.trim() === "") e.startDate = "review.errors.dateRequired";
   else if (!isValidDate(v.startDate)) e.startDate = "review.errors.dateInvalid";
   if (v.endDate.trim() !== "") {
     if (!isValidDate(v.endDate)) e.endDate = "review.errors.dateInvalid";
-    else if (isValidDate(v.startDate) && v.endDate < v.startDate) e.endDate = "recurring.errors.endBeforeStart";
+    else if (isValidDate(v.startDate) && v.endDate < v.startDate)
+      e.endDate = "recurring.errors.endBeforeStart";
   }
   return e;
 }
@@ -159,7 +189,8 @@ function initialValues(
     const date = r.purchasedAtLocal.slice(0, 10);
     return {
       merchant: r.merchant ?? "",
-      amount: r.totalMinor === 0 ? "" : amountText(r.totalMinor, r.currency, locale),
+      amount:
+        r.totalMinor === 0 ? "" : amountText(r.totalMinor, r.currency, locale),
       currency: r.currency,
       categoryId: r.categoryId,
       folderId: r.folderId,
@@ -225,15 +256,28 @@ type Props = {
  * Create or edit a recurring rule. Values live here (above any layout switch), so fold, unfold and
  * rotation keep what was typed. Save is the last control in the scroll view, never pinned.
  */
-export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: Props) {
+export function RuleForm({
+  ruleId,
+  fromReceiptId,
+  onSaved,
+  onDeleted,
+  onBack,
+}: Props) {
+  // iOS: a create/edit page, so X and checkmark in the bottom toolbar, no tabs, no +.
+  const nativeBar = Platform.OS === "ios";
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";
   const theme = useTheme();
+  const { scrollProps: keyboardScroll, bottomRoom } = useKeyboardForm();
   const db = useDb();
   const home = usePref("homeCurrency") ?? "USD";
   const version = useDataVersion();
-  const [initial] = useState(() => initialValues(db, ruleId, fromReceiptId, home, locale));
-  const [values, setValues] = useState<RuleFormValues | null>(initial === "missing" ? null : initial);
+  const [initial] = useState(() =>
+    initialValues(db, ruleId, fromReceiptId, home, locale),
+  );
+  const [values, setValues] = useState<RuleFormValues | null>(
+    initial === "missing" ? null : initial,
+  );
   const [errors, setErrors] = useState<RuleFormErrors>({});
   const [saveFailed, setSaveFailed] = useState<string | null>(null);
   const [folderOpen, setFolderOpen] = useState(false);
@@ -249,16 +293,32 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
   const categories = useMemo(() => listCategories(db), [db]);
   // version: a folder created in the picker shows its name.
   const folderName = useMemo(
-    () => (values?.folderId ? listFolders(db).find((f) => f.id === values.folderId)?.name : undefined),
+    () =>
+      values?.folderId
+        ? listFolders(db).find((f) => f.id === values.folderId)?.name
+        : undefined,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [db, values?.folderId, version],
   );
 
   if (!values) {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingHorizontal: theme.spacing.lg, gap: theme.spacing.md }}>
-        <ScreenHeader title={t("recurring.editTitle")} onBack={onBack ?? null} />
-        <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("recurring.missing")}</Text>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: theme.colors.background,
+          padding: theme.spacing.xl,
+          paddingHorizontal: theme.spacing.lg,
+          gap: theme.spacing.md,
+        }}
+      >
+        <ScreenHeader
+          title={t("recurring.editTitle")}
+          onBack={onBack ?? null}
+        />
+        <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>
+          {t("recurring.missing")}
+        </Text>
       </View>
     );
   }
@@ -327,7 +387,11 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
     onDeleted();
   };
 
-  const input = (name: "merchant" | "amount" | "notes", label: string, props: TextInputProps = {}) => {
+  const input = (
+    name: "merchant" | "amount" | "notes",
+    label: string,
+    props: TextInputProps = {},
+  ) => {
     const error = name === "amount" ? errors.amount : undefined;
     return (
       <FieldShell label={label} hint={false} error={error}>
@@ -341,7 +405,13 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
           {...props}
           style={[
             theme.type.body,
-            { minHeight: 48, paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.sm, backgroundColor: theme.colors.surface, color: theme.colors.text },
+            {
+              minHeight: 48,
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: theme.spacing.sm,
+              backgroundColor: theme.colors.surface,
+              color: theme.colors.text,
+            },
             props.multiline && { minHeight: 88, textAlignVertical: "top" },
           ]}
         />
@@ -349,37 +419,110 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
     );
   };
 
-  const toggle = (label: string, value: boolean, onChange: (v: boolean) => void, help: string, testID: string) => (
+  const toggle = (
+    label: string,
+    value: boolean,
+    onChange: (v: boolean) => void,
+    help: string,
+    testID: string,
+  ) => (
     <View style={{ gap: theme.spacing.xs }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 48, gap: theme.spacing.md }}>
-        <Text style={[theme.type.body, { color: theme.colors.text, flex: 1 }]}>{label}</Text>
-        <Switch testID={testID} accessibilityLabel={label} accessibilityHint={help} value={value} onValueChange={onChange} trackColor={{ true: theme.colors.primary }} />
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          minHeight: 48,
+          gap: theme.spacing.md,
+        }}
+      >
+        <Text style={[theme.type.body, { color: theme.colors.text, flex: 1 }]}>
+          {label}
+        </Text>
+        <Switch
+          testID={testID}
+          accessibilityLabel={label}
+          accessibilityHint={help}
+          value={value}
+          onValueChange={onChange}
+          trackColor={{ true: theme.colors.primary }}
+        />
       </View>
-      <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>{help}</Text>
+      <Text style={[theme.type.caption, { color: theme.colors.textMuted }]}>
+        {help}
+      </Text>
     </View>
   );
 
   const readOnly = (text: string) => (
-    <Text testID="rule-repeats-on" style={[theme.type.body, { color: theme.colors.text }]}>
+    <Text
+      testID="rule-repeats-on"
+      style={[theme.type.body, { color: theme.colors.text }]}
+    >
       {text}
     </Text>
   );
   const validStart = isValidDate(values.startDate);
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <KeyboardAvoidingView
+      // iOS: the scroll view keeps clear of the keyboard itself (KEYBOARD_SCROLL_PROPS).
+      behavior={undefined}
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+    >
       <ScrollView
         testID="rule-form-scroll"
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ padding: theme.spacing.lg, paddingBottom: theme.spacing.xxl }}
+        {...KEYBOARD_SCROLL_PROPS}
+        {...keyboardScroll}
+        contentContainerStyle={{
+          padding: theme.spacing.lg,
+          paddingBottom: theme.spacing.xxl + bottomRoom,
+        }}
       >
-        <View style={{ width: "100%", maxWidth: 640, alignSelf: "center", gap: theme.spacing.lg }}>
-          <ScreenHeader title={t(ruleId ? "recurring.editTitle" : "recurring.newTitle")} onBack={onBack ?? null} />
-          {input("merchant", t("review.merchant"), { autoCapitalize: "words", autoCorrect: false })}
-          <View style={{ flexDirection: "row", gap: theme.spacing.md, flexWrap: "wrap" }}>
-            <View style={{ flexGrow: 2, flexBasis: 160 }}>{input("amount", t("recurring.amount"), { keyboardType: "decimal-pad" })}</View>
+        <View
+          style={{
+            width: "100%",
+            maxWidth: 640,
+            alignSelf: "center",
+            gap: theme.spacing.lg,
+          }}
+        >
+          {nativeBar ? (
+            <SheetBar
+              title={t(ruleId ? "recurring.editTitle" : "recurring.newTitle")}
+              onCancel={onBack ?? undefined}
+              onDone={save}
+              doneLabel={t("common.save")}
+              doneDisabled={savedValues === values}
+            />
+          ) : (
+            <ScreenHeader
+              title={t(ruleId ? "recurring.editTitle" : "recurring.newTitle")}
+              onBack={onBack ?? null}
+            />
+          )}
+          {input("merchant", t("review.merchant"), {
+            autoCapitalize: "words",
+            autoCorrect: false,
+          })}
+          <View
+            style={{
+              flexDirection: "row",
+              gap: theme.spacing.md,
+              flexWrap: "wrap",
+            }}
+          >
+            <View style={{ flexGrow: 2, flexBasis: 160 }}>
+              {input("amount", t("recurring.amount"), {
+                keyboardType: "decimal-pad",
+              })}
+            </View>
             <View style={{ flexGrow: 1, flexBasis: 110 }}>
-              <FieldShell label={t("review.currency")} hint={false} error={errors.currency}>
+              <FieldShell
+                label={t("review.currency")}
+                hint={false}
+                error={errors.currency}
+              >
                 <CurrencyField
                   label={t("review.currency")}
                   value={values.currency}
@@ -391,21 +534,42 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
           </View>
 
           <FieldShell label={t("recurring.repeats")} hint={false}>
-            <FrequencyControl value={values.frequency} onChange={(f) => set("frequency", f)} />
+            <FrequencyControl
+              value={values.frequency}
+              onChange={(f) => set("frequency", f)}
+            />
           </FieldShell>
           {values.frequency === "monthly" ? (
-            <FieldShell label={t("recurring.onDay")} hint={false} error={errors.monthDay}>
-              <DayGrid value={values.monthDay} onChange={(n) => set("monthDay", n)} allowLastDay />
+            <FieldShell
+              label={t("recurring.onDay")}
+              hint={false}
+              error={errors.monthDay}
+            >
+              <DayGrid
+                value={values.monthDay}
+                onChange={(n) => set("monthDay", n)}
+                allowLastDay
+              />
             </FieldShell>
           ) : validStart ? (
             readOnly(
               values.frequency === "weekly"
-                ? t("recurring.everyWeekday", { weekday: weekdayName(values.startDate, locale) })
-                : t("recurring.everyDate", { date: shortDate(values.startDate, locale) }),
+                ? t("recurring.everyWeekday", {
+                    weekday: weekdayName(values.startDate, locale),
+                  })
+                : t("recurring.everyDate", {
+                    date: shortDate(values.startDate, locale),
+                  }),
             )
           ) : null}
 
-          <View style={{ flexDirection: "row", gap: theme.spacing.md, flexWrap: "wrap" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: theme.spacing.md,
+              flexWrap: "wrap",
+            }}
+          >
             <View style={{ flexGrow: 1, flexBasis: 160 }}>
               <DateField
                 label={t("recurring.startDate")}
@@ -416,7 +580,9 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
                 testID="rule-start"
               />
             </View>
-            <View style={{ flexGrow: 1, flexBasis: 160, gap: theme.spacing.xs }}>
+            <View
+              style={{ flexGrow: 1, flexBasis: 160, gap: theme.spacing.xs }}
+            >
               <DateField
                 label={t("recurring.endDate")}
                 value={values.endDate}
@@ -426,7 +592,11 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
                 testID="rule-end"
               />
               {values.endDate ? (
-                <Button variant="quiet" label={t("recurring.removeEndDate")} onPress={() => set("endDate", "")} />
+                <Button
+                  variant="quiet"
+                  label={t("recurring.removeEndDate")}
+                  onPress={() => set("endDate", "")}
+                />
               ) : null}
             </View>
           </View>
@@ -438,10 +608,22 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
             t(values.autoAdd ? "recurring.autoAddOn" : "recurring.autoAddOff"),
             "rule-auto-add",
           )}
-          {ruleId ? toggle(t("recurring.paused"), values.paused, (v) => set("paused", v), t("recurring.pausedHelp"), "rule-paused") : null}
+          {ruleId
+            ? toggle(
+                t("recurring.paused"),
+                values.paused,
+                (v) => set("paused", v),
+                t("recurring.pausedHelp"),
+                "rule-paused",
+              )
+            : null}
 
           <FieldShell label={t("review.category")} hint={false}>
-            <CategoryChips categories={categories} value={values.categoryId} onChange={(id) => set("categoryId", id)} />
+            <CategoryChips
+              categories={categories}
+              value={values.categoryId}
+              onChange={(id) => set("categoryId", id)}
+            />
           </FieldShell>
           <FieldShell label={t("review.folder")} hint={false}>
             <Pressable
@@ -455,35 +637,85 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
                 borderRadius: theme.radius.md,
                 borderWidth: 1,
                 borderColor: theme.colors.border,
-                backgroundColor: pressed ? theme.colors.surfacePressed : theme.colors.surface,
+                backgroundColor: pressed
+                  ? theme.colors.surfacePressed
+                  : theme.colors.surface,
               })}
             >
-              <Text style={[theme.type.body, { color: folderName ? theme.colors.text : theme.colors.textMuted }]}>{folderName ?? t("folders.none")}</Text>
+              <Text
+                style={[
+                  theme.type.body,
+                  {
+                    color: folderName
+                      ? theme.colors.text
+                      : theme.colors.textMuted,
+                  },
+                ]}
+              >
+                {folderName ?? t("folders.none")}
+              </Text>
             </Pressable>
           </FieldShell>
-          {input("notes", t("review.notes"), { multiline: true, placeholder: t("review.optional") })}
+          {input("notes", t("review.notes"), {
+            multiline: true,
+            placeholder: t("review.optional"),
+          })}
 
           {values.tz !== device ? (
             <View testID="rule-tz" style={{ gap: theme.spacing.xs }}>
-              <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("recurring.timesIn", { tz: values.tz })}</Text>
-              <Button variant="quiet" label={t("recurring.useDeviceTz")} onPress={() => set("tz", device)} />
+              <Text
+                style={[theme.type.body, { color: theme.colors.textMuted }]}
+              >
+                {t("recurring.timesIn", { tz: values.tz })}
+              </Text>
+              <Button
+                variant="quiet"
+                label={t("recurring.useDeviceTz")}
+                onPress={() => set("tz", device)}
+              />
             </View>
           ) : null}
 
           {errorCount > 0 ? (
-            <Text accessibilityLiveRegion="polite" style={[theme.type.body, { color: theme.colors.danger }]}>
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[theme.type.body, { color: theme.colors.danger }]}
+            >
               {t("review.fixErrors")}
             </Text>
           ) : null}
           {saveFailed ? (
-            <Text accessibilityLiveRegion="polite" style={[theme.type.body, { color: theme.colors.danger }]}>
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[theme.type.body, { color: theme.colors.danger }]}
+            >
               {t(saveFailed)}
             </Text>
           ) : null}
-          <Button testID="rule-save" variant="primary" label={t("common.save")} onPress={save} disabled={savedValues === values} />
+          {nativeBar ? null : (
+            <Button
+              testID="rule-save"
+              variant="primary"
+              label={t("common.save")}
+              onPress={save}
+              disabled={savedValues === values}
+            />
+          )}
           {ruleId ? (
-            <View style={{ marginTop: theme.spacing.xl, paddingTop: theme.spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, borderColor: theme.colors.border }}>
-              <Button testID="rule-delete" tone="danger" label={t("recurring.delete")} onPress={() => setConfirmDelete(true)} />
+            <View
+              style={{
+                marginTop: theme.spacing.xl,
+                paddingTop: theme.spacing.lg,
+                borderTopWidth: StyleSheet.hairlineWidth,
+                borderColor: theme.colors.border,
+              }}
+            >
+              <Button
+                testID="rule-delete"
+                tone="danger"
+                label={t("recurring.delete")}
+                onPress={() => setConfirmDelete(true)}
+              />
             </View>
           ) : null}
         </View>
@@ -497,17 +729,31 @@ export function RuleForm({ ruleId, fromReceiptId, onSaved, onDeleted, onBack }: 
         }}
         onClose={() => setFolderOpen(false)}
       />
-      <ConfirmDeleteSheet visible={confirmDelete} onCancel={() => setConfirmDelete(false)} onConfirm={remove} disabled={deleted} />
+      <ConfirmDeleteSheet
+        visible={confirmDelete}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={remove}
+        disabled={deleted}
+      />
     </KeyboardAvoidingView>
   );
 }
 
 /** Weekly / Monthly / Yearly as three tonal choices, styled like the day grid's cells. */
-function FrequencyControl({ value, onChange }: { value: RecurringFrequency; onChange(f: RecurringFrequency): void }) {
+function FrequencyControl({
+  value,
+  onChange,
+}: {
+  value: RecurringFrequency;
+  onChange(f: RecurringFrequency): void;
+}) {
   const { t } = useTranslation();
   const { colors, type, spacing, radius } = useTheme();
   return (
-    <View accessibilityRole="radiogroup" style={{ flexDirection: "row", gap: spacing.xs }}>
+    <View
+      accessibilityRole="radiogroup"
+      style={{ flexDirection: "row", gap: spacing.xs }}
+    >
       {FREQUENCIES.map((f) => {
         const selected = f === value;
         return (
@@ -527,10 +773,22 @@ function FrequencyControl({ value, onChange }: { value: RecurringFrequency; onCh
               borderCurve: "continuous",
               borderWidth: 1,
               borderColor: selected ? colors.primary : colors.border,
-              backgroundColor: selected ? colors.tonal : pressed ? colors.tonalPressed : colors.surface,
+              backgroundColor: selected
+                ? colors.tonal
+                : pressed
+                  ? colors.tonalPressed
+                  : colors.surface,
             })}
           >
-            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[type.label, { color: selected ? colors.primary : colors.text }]}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+              style={[
+                type.label,
+                { color: selected ? colors.primary : colors.text },
+              ]}
+            >
               {t(`recurring.${f}`)}
             </Text>
           </Pressable>
@@ -558,20 +816,37 @@ function ConfirmDeleteSheet({
   const side = useSideInsets();
   const layout = useLayout();
   return (
-    <AppModal visible={visible} transparent animationType="slide" onRequestClose={onCancel} statusBarTranslucent navigationBarTranslucent>
+    <AppModal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onCancel}
+      statusBarTranslucent
+      navigationBarTranslucent
+    >
       <View style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("common.cancel")}
           onPress={onCancel}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)" }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.35)",
+          }}
         />
         <View style={{ paddingLeft: side.left, paddingRight: side.right }}>
           <View
             testID="rule-delete-sheet"
             style={{
               width: "100%",
-              maxWidth: layout.content >= SHEET_CARD_MIN_CONTENT ? SHEET_CARD_WIDTH : "100%",
+              maxWidth:
+                layout.content >= SHEET_CARD_MIN_CONTENT
+                  ? SHEET_CARD_WIDTH
+                  : "100%",
               alignSelf: "center",
               backgroundColor: theme.colors.surface,
               borderTopLeftRadius: theme.radius.sheet,
@@ -583,13 +858,38 @@ function ConfirmDeleteSheet({
               gap: theme.spacing.md,
             }}
           >
-            <View style={{ alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: theme.colors.border }} />
-            <Text accessibilityRole="header" style={[theme.type.title, { color: theme.colors.text }]}>
+            <View
+              style={{
+                alignSelf: "center",
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: theme.colors.border,
+              }}
+            />
+            <Text
+              accessibilityRole="header"
+              style={[theme.type.title, { color: theme.colors.text }]}
+            >
               {t("recurring.deleteTitle")}
             </Text>
-            <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>{t("recurring.deleteMessage")}</Text>
-            <Button testID="rule-delete-confirm" tone="danger" label={t("common.delete")} onPress={onConfirm} disabled={disabled} />
-            <Button variant="quiet" tone="muted" align="center" label={t("common.cancel")} onPress={onCancel} />
+            <Text style={[theme.type.body, { color: theme.colors.textMuted }]}>
+              {t("recurring.deleteMessage")}
+            </Text>
+            <Button
+              testID="rule-delete-confirm"
+              tone="danger"
+              label={t("common.delete")}
+              onPress={onConfirm}
+              disabled={disabled}
+            />
+            <Button
+              variant="quiet"
+              tone="muted"
+              align="center"
+              label={t("common.cancel")}
+              onPress={onCancel}
+            />
           </View>
         </View>
       </View>

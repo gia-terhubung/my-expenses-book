@@ -8,6 +8,7 @@ import { initI18n } from "@/i18n";
 import type { FileOps } from "@/images/store";
 
 import { ExportScreen } from "./ExportScreen";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockParams: Record<string, string> = {};
@@ -25,6 +26,7 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: mockTop, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
   router: { back: () => mockRouter.back() },
   useLocalSearchParams: () => mockParams,
 }));
@@ -70,6 +72,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockShare.mockResolvedValue(undefined);
 });
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+runAsAndroid();
 
 describe("ExportScreen", () => {
   it("keeps the status-bar inset outside the scrolling content (no scroll under the status bar)", async () => {

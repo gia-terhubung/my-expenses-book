@@ -16,6 +16,7 @@ import { monthlyEquivalent } from "./format";
 import { RECURRING_LIST_TEXT, RecurringList } from "./RecurringList";
 import { RecurringScreen } from "./RecurringScreen";
 import { createRule, listRules } from "./rules";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockFx: FxCache = { base: "idr", latestDate: null, fetchedAt: null, byDate: {} };
@@ -30,16 +31,22 @@ jest.mock("@/layout/useLayout", () => ({ useLayout: () => mockLayout }));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock("expo-router", () => ({
-  get router() {
-    return mockRouter;
-  },
-  useLocalSearchParams: () => mockParams,
-  useFocusEffect: (cb: () => void | (() => void)) => {
-    const { useEffect } = jest.requireActual("react");
-    useEffect(() => cb(), [cb]);
-  },
-}));
+jest.mock("expo-router", () =>
+  // Object.assign keeps the getters lazy (a spread would read them before the mocks exist).
+  Object.assign(
+    {
+      get router() {
+        return mockRouter;
+      },
+      useLocalSearchParams: () => mockParams,
+      useFocusEffect: (cb: () => void | (() => void)) => {
+        const { useEffect } = jest.requireActual("react");
+        useEffect(() => cb(), [cb]);
+      },
+    },
+    jest.requireActual("../../test/expoRouterStack").stackMock,
+  ),
+);
 jest.mock("@/components/DateField", () => ({ DateField: jest.requireActual("@/components/DateFieldText").DateFieldText }));
 jest.mock("@/dates/clock", () => ({
   ...jest.requireActual("@/dates/clock"),
@@ -85,6 +92,9 @@ beforeEach(() => {
 
 const noop = () => {};
 const idr = (minor: number) => formatMoney(minor, "IDR", "en");
+
+// The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
+runAsAndroid();
 
 describe("RecurringList", () => {
   it("each row shows merchant, amount, frequency and the next date", async () => {
