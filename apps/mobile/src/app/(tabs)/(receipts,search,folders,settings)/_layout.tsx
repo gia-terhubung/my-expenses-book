@@ -41,6 +41,33 @@ export default function TabStack() {
           scrollEdgeEffects: { top: "hidden" as const, bottom: "hidden" as const, left: "hidden" as const, right: "hidden" as const },
         }
       : base;
+  const page = {
+    ...base,
+    // The + is a header item; keep Back next to it instead of replacing it.
+    headerBackVisible: true,
+    contentStyle: { ...base.contentStyle, paddingLeft: insets.left, paddingRight: insets.right },
+  };
+  const SCREEN_OPTIONS: Record<string, object> = {
+    // Create/edit pages: a sheet over the tabs (no tab bar, no +), X and checkmark.
+    "recurring/[id]": { ...page, presentation: "modal", headerShown: true },
+    // iOS: any sheet body as a native sheet page (NativeSheetHost).
+    sheet: { ...page, presentation: "modal", headerShown: true },
+    photo: {
+      ...page,
+      presentation: "fullScreenModal",
+      // A header (empty, see-through) keeps the native toolbar for the checkmark.
+      headerShown: true,
+      headerTransparent: true,
+      title: "",
+      headerShadowVisible: false,
+      headerStyle: { backgroundColor: "transparent" },
+      headerTintColor: "#fff",
+      statusBarStyle: "light",
+      contentStyle: { backgroundColor: "#000" },
+    },
+    // iOS: native filter sheet with Apple's bar (Cancel, Apply).
+    "search-filter": { ...page, presentation: "modal", headerShown: true, title: t("search.filters") },
+  };
   return (
     <Stack
       screenLayout={({ children, route }) => (
@@ -50,38 +77,11 @@ export default function TabStack() {
           </SheetRouteContext.Provider>
         </TabStackContext.Provider>
       )}
-      screenOptions={({ route }) =>
-        TAB_ROOTS.has(route.name)
-          ? rootHeader
-          : {
-              ...base,
-              // The + is a header item; keep Back next to it instead of replacing it.
-              headerBackVisible: true,
-              contentStyle: { ...base.contentStyle, paddingLeft: insets.left, paddingRight: insets.right },
-            }
-      }
-    >
-      {/* iOS: any sheet body as a native sheet page (NativeSheetHost). */}
-      {/* Create/edit pages: a sheet over the tabs (no tab bar, no +), X and checkmark (owner, 2026-11-26). */}
-      <Stack.Screen name="recurring/[id]" options={{ presentation: "modal", headerShown: true }} />
-      <Stack.Screen name="sheet" options={{ presentation: "modal", headerShown: true }} />
-      <Stack.Screen
-        name="photo"
-        options={{
-          presentation: "fullScreenModal",
-          // A header (empty, see-through) keeps the native toolbar for the checkmark.
-          headerShown: true,
-          headerTransparent: true,
-          title: "",
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: "transparent" },
-          headerTintColor: "#fff",
-          statusBarStyle: "light",
-          contentStyle: { backgroundColor: "#000" },
-        }}
-      />
-      {/* iOS: native filter sheet with Apple's bar (Cancel, Apply). */}
-      <Stack.Screen name="search-filter" options={{ presentation: "modal", headerShown: true, title: t("search.filters") }} />
-    </Stack>
+      // Per-route options live here, not in <Stack.Screen> children: declared children reorder the
+      // stack's routes after its state was first built (anchor first), and the first re-render (the
+      // language set during onboarding) then sends ROUTE_NAMES_CHANGED, which the stacks of tabs not
+      // on screen cannot handle.
+      screenOptions={({ route }) => SCREEN_OPTIONS[route.name] ?? (TAB_ROOTS.has(route.name) ? rootHeader : page)}
+    />
   );
 }
