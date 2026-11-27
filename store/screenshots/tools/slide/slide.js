@@ -15,7 +15,7 @@
   const DEVICES = {
     iphone: { aspect: 1320 / 2868, bezel: 0.034, radius: 0.16, island: true },
     android: { aspect: 720 / 1640, bezel: 0.026, radius: 0.1, punch: true },
-    ipad: { aspect: 2064 / 2752, bezel: 0.04, radius: 0.06 },
+    ipad: { aspect: 2064 / 2752, bezel: 0.04, radius: 0.06, camera: true },
     tablet: { aspect: 2064 / 2752, bezel: 0.045, radius: 0.05 },
     "duo-closed": { aspect: 1398 / 2034, bezel: 0.03, radius: 0.12, spine: true },
     "duo-open": { aspect: 2853 / 2007, bezel: 0.022, radius: 0.05, fold: true },
@@ -53,7 +53,6 @@
   const top = capTop + capBox + W * 0.06;
   const free = H - top;
   let dw = W * (spec.aspect > 1 ? 0.9 : 0.78);
-  const bezel = dw * spec.bezel;
   const dh = (d) => (d - 2 * d * spec.bezel) / spec.aspect + 2 * d * spec.bezel;
   if (spec.aspect > 1 && dh(dw) > free * 0.8) dw = (free * 0.8) / (dh(dw) / dw);
   const device = document.createElement("div");
@@ -75,21 +74,44 @@
   img.src = q.get("raw");
   screen.append(img);
   device.append(screen);
-  if (spec.island) {
+  // Shape details that tell the devices apart (also listed in <body data-marks> for the tests).
+  const mark = (parent, style) => {
     const m = document.createElement("div");
     m.className = "mark";
-    const iw = dw * 0.3;
-    Object.assign(m.style, {
-      width: `${iw}px`,
-      height: `${dw * 0.085}px`,
-      left: `${(dw - 2 * b - iw) / 2}px`,
-      top: `${dw * 0.03}px`,
-      borderRadius: `${dw * 0.05}px`,
+    Object.assign(m.style, style);
+    parent.append(m);
+  };
+  const sw = dw - 2 * b; // screen width
+  const px = (n) => `${n}px`;
+  let marks = "plain";
+  if (spec.island) {
+    // iPhone: Dynamic Island.
+    mark(screen, { width: px(dw * 0.3), height: px(dw * 0.085), left: px((sw - dw * 0.3) / 2), top: px(dw * 0.03), borderRadius: px(dw * 0.05) });
+    marks = "island";
+  } else if (spec.punch) {
+    // Android: punch-hole camera.
+    const d = dw * 0.032;
+    mark(screen, { width: px(d), height: px(d), left: px((sw - d) / 2), top: px(dw * 0.026), borderRadius: "50%" });
+    marks = "punch";
+  } else if (spec.camera) {
+    // iPad: front camera in the top bezel.
+    const d = dw * 0.012;
+    mark(device, { width: px(d), height: px(d), left: px((dw - d) / 2), top: px((b - d) / 2), borderRadius: "50%", background: "#2c2c2c" });
+    marks = "camera";
+  } else if (spec.spine) {
+    // Duo closed: the hinge spine along the left edge.
+    mark(device, { width: px(dw * 0.035), height: px(dh(dw) * 0.94), left: px(-dw * 0.028), top: px(dh(dw) * 0.03), borderRadius: px(dw * 0.02), background: "#2b2b2b", zIndex: -1 });
+    marks = "spine";
+  } else if (spec.fold) {
+    // Duo open: the crease down the middle of the inner screen.
+    mark(screen, {
+      width: px(dw * 0.006), top: "0", bottom: "0", left: px((sw - dw * 0.006) / 2),
+      background: "linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.14), rgba(0,0,0,0))",
     });
-    screen.append(m);
+    marks = "fold";
   }
+  document.body.dataset.marks = marks;
   document.body.append(device);
-  void bezel;
 
   // Decide on the window's load event: the image (added before it) and the caption font have loaded
   // by then. Awaiting decode() instead raced Chrome's --dump-dom.
