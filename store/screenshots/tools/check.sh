@@ -9,7 +9,7 @@ exec python3 - $SECTIONS <<'PY'
 import json, os, subprocess, sys
 
 LANGS = ["en", "id", "es", "pt-BR"]
-DEVICES = ["iphone", "ipad", "duo-outer", "duo-inner"]
+DEVICES = ["iphone", "redmi", "ipad", "duo-outer", "duo-inner"]
 SLIDES = ["00-free", "01-private", "02-scan", "03-month", "04-readable", "05-stats", "06-search", "07-trips"]
 # Folder under out/ and its size, as in render.sh TARGETS.
 TARGETS = {
@@ -99,10 +99,10 @@ def marks():
                 fails.append(f"marks.json: {key} field rect starts inside the receipt row")
 
 def placement():
-    # Written by render.sh: every scan-slide mark must end above the page's bottom margin.
+    # Written by render-html.sh: every scan-slide mark must end above the green band.
     path = "out/.marks-placement"
     if not os.path.exists(path):
-        fails.append(f"{path} missing: run tools/render.sh")
+        fails.append(f"{path} missing: run tools/render-html.sh")
         return
     seen = set()
     for line in open(path):

@@ -122,4 +122,23 @@ done
 python3 -c 'import json,sys; c=json.load(open("captions.json"))["feature"]; sys.exit(0 if c["en"].startswith("Scan receipts and see where your money goes.") else 1)' &&
   pass "feature copy says what the app is" || fail "feature copy says what the app is" "captions.json feature.en"
 
+# 02-scan: the two marks are drawn and end above the green band (render-one reports them)
+m=$(python3 -c 'import json; r=json.load(open("marks.json"))["iphone/en"]; print(";".join("-" if x is None else ",".join(map(str,x)) for x in r))')
+if MARKS="$m" tools/render-one.sh appstore/iphone-6.9 en 02-scan iphone raw/iphone/en/01-review.png 1320 2868 "$T/scan.png" >"$T/log" 2>&1; then
+  read -r _ bottom limit < <(grep '^marks-bottom' "$T/log")
+  [ -n "${bottom:-}" ] && [ "$bottom" -le "$limit" ] && pass "02-scan marks drawn above the band" || fail "02-scan marks drawn above the band" "$(cat "$T/log")"
+else
+  fail "02-scan marks drawn above the band" "$(tail -1 "$T/log")"
+fi
+
+# check flags a set with fewer than 8 slides (on a copy, so out/ stays as it is)
+C="$T/check"; mkdir -p "$C/tools" "$C/out/appstore/iphone-6.9/en"
+cp tools/check.sh "$C/tools/"; cp captions.json zero-receipt.json private-receipt.json "$C/"
+for s in 00-free 01-private 02-scan 03-month 04-readable 05-stats 06-search; do : > "$C/out/appstore/iphone-6.9/en/$s.png"; done
+if "$C/tools/check.sh" files 2>/dev/null | grep -q 'out/appstore/iphone-6.9/en: unexpected \[\], missing \[.07-trips.\]'; then
+  pass "check flags a set with fewer than 8 slides"
+else
+  fail "check flags a set with fewer than 8 slides" "$("$C/tools/check.sh" files 2>&1 | head -3)"
+fi
+
 [ "$fails" -eq 0 ]

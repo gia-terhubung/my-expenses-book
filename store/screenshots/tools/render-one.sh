@@ -21,6 +21,8 @@ url=$(python3 -c '
 import json, os, sys, urllib.parse as u
 page, raw, cap, dev, w, h, lang = sys.argv[1:8]
 q = {"w": w, "h": h, "device": dev, "caption": cap}
+if os.environ.get("MARKS"):
+    q["marks"] = os.environ["MARKS"]
 if dev == "receipt":
     q["lines"] = json.dumps(json.load(open(raw))[lang], ensure_ascii=False)
 else:
@@ -32,9 +34,14 @@ flags=(--headless=new --hide-scrollbars --force-device-scale-factor=1 --allow-fi
   --virtual-time-budget=5000 "--window-size=$W,$H")
 # The page finishes asynchronously (font and image decode); a dump can land before it does.
 for _ in 1 2 3; do
-  status=$("$CHROME" "${flags[@]}" --dump-dom "$url" 2>/dev/null | sed -n 's/.*data-status="\([a-z]*\)".*/\1/p' | head -1)
+  dom=$("$CHROME" "${flags[@]}" --dump-dom "$url" 2>/dev/null)
+  status=$(printf '%s' "$dom" | sed -n 's/.*data-status="\([a-z]*\)".*/\1/p' | head -1)
   [ "$status" = loading ] || break
 done
+# 02-scan: "marks-bottom <lowest mark y> <band top>", collected by render-html.sh for check.sh.
+mb=$(printf '%s' "$dom" | sed -n 's/.*data-marks-bottom="\([0-9]*\)".*/\1/p' | head -1)
+ml=$(printf '%s' "$dom" | sed -n 's/.*data-marks-limit="\([0-9]*\)".*/\1/p' | head -1)
+[ -n "$mb" ] && echo "marks-bottom $mb $ml"
 if [ "$status" != ok ]; then
   echo "FAIL: ${status:-no page} ($TARGET/$LANG_/$SLIDE)"
   exit 1

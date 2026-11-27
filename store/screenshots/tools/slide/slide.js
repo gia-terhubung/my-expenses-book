@@ -3,6 +3,9 @@
 //   device    android | iphone | ipad | tablet | duo-closed | duo-open
 //   raw       capture to show on the device's screen (relative to this page or a file: URL)
 //   caption   the slide's caption text
+//   marks     02-scan only: "x,y,w,h;x,y,w,h" in raw px, the receipt's TOTAL row then the form field
+//             ("-" for a missing rect); drawn as yellow highlights joined by a dashed elbow. The lowest
+//             mark's page y and the band's top go to <body data-marks-bottom / data-marks-limit>.
 //   lines     device=receipt only: the slip's lines as JSON ("LABEL\tVALUE"; "" is a gap)
 // Sets <body data-status> to "ok", "overflow" (caption does not fit its box) or "aspect" (the
 // capture's shape differs from the device's screen by more than 2%), read by render-one.sh.
@@ -156,5 +159,52 @@
   const rawAspect = img.naturalWidth / img.naturalHeight;
   if (Math.abs(rawAspect / spec.aspect - 1) > 0.02) return status("aspect");
   if (cap.scrollHeight > cap.clientHeight + 1) return status("overflow");
+
+  const markSpec = q.get("marks");
+  if (markSpec) {
+    const k = sw / img.naturalWidth;
+    const pad = W * 0.006;
+    const rects = markSpec.split(";").map((m) => (m === "-" ? null : m.split(",").map(Number)));
+    const boxes = rects.map((r) => {
+      if (!r) return null;
+      const [x, y, w, h] = r;
+      const box = { left: x * k - pad, top: y * k - pad, width: w * k + 2 * pad, height: h * k + 2 * pad };
+      const el = document.createElement("div");
+      el.className = "scan-mark";
+      Object.assign(el.style, { left: px(box.left), top: px(box.top), width: px(box.width), height: px(box.height) });
+      screen.append(el);
+      return box;
+    });
+    const [row, field] = boxes;
+    if (row && field) {
+      // An elbow through the gutter left of the field, from the row's near end to the field.
+      const gx = field.left - W * 0.022;
+      const startX = row.left > gx ? row.left : row.left + row.width;
+      const ns = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(ns, "svg");
+      svg.setAttribute("class", "scan-line");
+      const path = document.createElementNS(ns, "path");
+      const ry = row.top + row.height / 2;
+      const fy = field.top + field.height / 2;
+      path.setAttribute("d", `M${startX},${ry} H${gx} V${fy} H${field.left}`);
+      path.setAttribute("stroke-width", `${W * 0.0045}`);
+      path.setAttribute("stroke-dasharray", `${W * 0.013} ${W * 0.009}`);
+      svg.append(path);
+      screen.append(svg);
+    }
+    // Keep every mark above the green band: shrink the device (from its top) until it fits.
+    const limit = H * 0.83 - W * 0.02;
+    const lowest = () => Math.max(...[...screen.querySelectorAll(".scan-mark")].map((m) => m.getBoundingClientRect().bottom));
+    let low = lowest();
+    if (low > limit) {
+      const devTop = device.getBoundingClientRect().top;
+      const f = (limit - devTop) / (low - devTop);
+      device.style.transformOrigin = "50% 0";
+      device.style.transform = `rotate(-4deg) scale(${f})`;
+      low = lowest();
+    }
+    document.body.dataset.marksBottom = String(Math.round(low));
+    document.body.dataset.marksLimit = String(Math.round(limit));
+  }
   status("ok");
 })();

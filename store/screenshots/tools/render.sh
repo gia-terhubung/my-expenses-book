@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Superseded on 2026-11-27 by tools/render-html.sh (the "Sunshine" look with device frames); kept for
+# the history of the previous store set.
 # Builds every store screenshot from the raw captures in raw/<device>/<lang>/NN-name.png,
 # renamed to the store slide order by SLIDES below.
 #   raw/iphone      -> out/appstore/iphone-6.9 (1320x2868) and out/play/phone (1080x1920)
