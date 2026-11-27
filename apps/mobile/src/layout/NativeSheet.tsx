@@ -28,6 +28,23 @@ export const TabStackContext = createContext(false);
 const NativeSheetContext = createContext(false);
 export const useInNativeSheet = () => useContext(NativeSheetContext);
 
+/**
+ * The route a sheet body opened from here is shown on: `/sheet` in a tab stack, `/picker` in the
+ * modals stack (review, edit, export). Null elsewhere.
+ */
+export type SheetRoute = "/sheet" | "/picker";
+export const SheetRouteContext = createContext<SheetRoute | null>(null);
+
+/**
+ * Where a picker opened from here should open as a native sheet page, or null for today's modal:
+ * off iOS, outside a sheet-capable stack, and inside a native sheet (one sheet body at a time).
+ */
+export function useNativeSheetRoute(): SheetRoute | null {
+  const route = useContext(SheetRouteContext);
+  const inSheet = useContext(NativeSheetContext);
+  return Platform.OS === "ios" && !inSheet ? route : null;
+}
+
 /** Whether a sheet opened from here should be a native sheet page. */
 export function useNativeSheets(): boolean {
   return Platform.OS === "ios" && useContext(TabStackContext);
@@ -42,8 +59,8 @@ export function NativeSheetHost({
   visible: boolean;
   onClose(): void;
   children: ReactNode;
-  /** `/sheet` (card) or `/photo` (full screen, black). */
-  route?: "/sheet" | "/photo";
+  /** `/sheet` (card), `/picker` (card over the modals stack) or `/photo` (full screen, black). */
+  route?: SheetRoute | "/photo";
 }) {
   const open = useRef(false);
   const close = useRef(onClose);

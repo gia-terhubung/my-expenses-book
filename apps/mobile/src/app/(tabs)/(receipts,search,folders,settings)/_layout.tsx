@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { rootStackOptions } from "@/layout/stackOptions";
-import { TabStackContext } from "@/layout/NativeSheet";
+import { SheetRouteContext, TabStackContext } from "@/layout/NativeSheet";
 import { TabStackPlus } from "@/layout/TabPlus";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -45,7 +45,9 @@ export default function TabStack() {
     <Stack
       screenLayout={({ children, route }) => (
         <TabStackContext.Provider value>
-          <TabStackPlus routeName={route.name}>{children}</TabStackPlus>
+          <SheetRouteContext.Provider value="/sheet">
+            <TabStackPlus routeName={route.name}>{children}</TabStackPlus>
+          </SheetRouteContext.Provider>
         </TabStackContext.Provider>
       )}
       screenOptions={({ route }) =>

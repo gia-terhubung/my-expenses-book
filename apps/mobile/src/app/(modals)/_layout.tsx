@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 
 import { useTranslation } from "react-i18next";
 
+import { SheetRouteContext } from "@/layout/NativeSheet";
 import { useSideInsets } from "@/layout/SideSafeArea";
 import { rootStackOptions } from "@/layout/stackOptions";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -22,10 +23,16 @@ export default function ModalsLayout() {
   const base = rootStackOptions(t, theme.colors);
   return (
     <Stack
+      // Pickers opened from these screens (currency) open as native sheet pages on `picker`.
+      screenLayout={({ children }) => (
+        <SheetRouteContext.Provider value="/picker">{children}</SheetRouteContext.Provider>
+      )}
       screenOptions={{
         ...base,
         contentStyle: { ...base.contentStyle, paddingLeft: side.left, paddingRight: side.right },
       }}
-    />
+    >
+      <Stack.Screen name="picker" options={{ presentation: "modal", headerShown: true }} />
+    </Stack>
   );
 }
