@@ -138,6 +138,15 @@ describe("SideRail", () => {
     ).toBeTruthy();
   });
 
+  it("the tabs sit at the bottom of the rail, just above the + (content grows and aligns to the end)", async () => {
+    await renderRail("icons");
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("rail-scroll").props.contentContainerStyle,
+      ),
+    ).toMatchObject({ flexGrow: 1, justifyContent: "flex-end" });
+  });
+
   it("short window (phone landscape, ~360 high): all four tabs fit above the + (48 dp tabs, tight gaps)", async () => {
     mockLayout = LAYOUTS.duoSideways;
     expect(mockLayout.short).toBe(true);

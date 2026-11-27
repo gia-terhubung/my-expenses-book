@@ -51,11 +51,14 @@ export function SideRail({
         },
       ]}
     >
-      {/* The tabs scroll (large text on a short window); the + below stays pinned and reachable. */}
+      {/* Tabs sit at the bottom, just above the + (thumb reach, like the iPhone Duo column). They
+          scroll on a short window or large text; the + below stays pinned and reachable. */}
       <ScrollView
         testID="rail-scroll"
         style={styles.scroll}
         contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "flex-end",
           gap: short ? theme.spacing.xs : theme.spacing.sm,
         }}
       >
