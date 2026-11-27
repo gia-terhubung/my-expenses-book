@@ -86,7 +86,9 @@ fresh() { # cold launch, seed, open $1 (home|review|stats|trip)
   timeout 60 xcrun simctl openurl "$UDID" "$DEV" >/dev/null 2>&1; accept; sleep "${BOOT_WAIT:-14}"
   local before; before=$(grep -c "STORE_SHOTS_DONE" "$LOG")
   timeout 60 xcrun simctl openurl "$UDID" "myexpensesbook://dev/store-shots?lang=$LANG_&today=$TODAY&w=$PW&h=$PH&then=$1&photo=http%3A%2F%2F127.0.0.1%3A8099%2F$LANG_.jpg" >/dev/null 2>&1; accept
-  for _ in $(seq 1 40); do [ "$(grep -c "STORE_SHOTS_DONE" "$LOG")" -gt "$before" ] && break; sleep 1; done
+  local ok=0
+  for _ in $(seq 1 40); do [ "$(grep -c "STORE_SHOTS_DONE" "$LOG")" -gt "$before" ] && { ok=1; break; }; sleep 1; done
+  [ "$ok" = 1 ] || { echo "FAIL: store data not seeded ($1); a database with other receipts needs FRESH=1" >&2; exit 1; }
   sleep "${SCREEN_WAIT:-6}"
 }
 start=$(wc -l < "$LOG" | tr -d ' ')
@@ -121,6 +123,12 @@ echo "$LANG_ -> $OUT"
 # axe rotate is relative: rotate only while the active display is still upright.
 if [ "${ROTATE:-}" = landscape ] && timeout 30 axe displays --udid "$UDID" 2>/dev/null | grep -A0 '^Active' | grep -q portrait; then
   timeout 30 axe rotate left --udid "$UDID" >/dev/null 2>&1; sleep 4
+fi
+# FRESH=1: wipe the app (the e2e helpers back up its data first) and finish onboarding, for a
+# simulator whose database holds other receipts (the seed refuses those).
+if [ "${FRESH:-}" = 1 ]; then
+  ( cd "$ROOT/apps/mobile" && E2E_ALLOW_WIPE=1 bash -c 'source e2e/lib.sh; e2e_init "$1" store-shots >/dev/null; e2e_fresh' _ "$UDID" ) ||
+    { echo "FAIL: onboarding after the wipe" >&2; exit 1; }
 fi
 # After a restart the first link lands on the launcher or the splash: open the app once first.
 [ -n "${REBOOT:-}" ] && fresh home
