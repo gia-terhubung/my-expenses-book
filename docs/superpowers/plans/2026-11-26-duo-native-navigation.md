@@ -130,7 +130,7 @@ One simulator, opened alone.
 - [x] Finish "Session results" in the spec: tab placement, + variant, header pattern, anything the owner
       rejected, screenshots if the owner wants them kept. Remove the dev-only switches from the plan of
       record (they stay only on the spike branch).
-- [ ] Owner approves the spec. Then run superpowers:writing-plans for the real implementation from the
+- [x] Owner approves the spec (2026-11-27; plan: `docs/superpowers/plans/2026-11-27-native-navigation-implementation.md`). Then run superpowers:writing-plans for the real implementation from the
       spike's approved code: the remaining screens with own action buttons (found by the sweep:
       `src/review/ReceiptFormScreen.tsx` Discard/Save, `src/organize/CategoriesScreen.tsx`,
       `CategoryForm.tsx`, `FolderForm.tsx`, plus any other custom header), tests
