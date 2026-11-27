@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { rootStackOptions } from "@/layout/stackOptions";
-import { SheetRouteContext, TabStackContext } from "@/layout/NativeSheet";
+import { PHOTO_SCREEN_OPTIONS, PhotoRouteContext, SheetRouteContext, TabStackContext } from "@/layout/NativeSheet";
 import { TabStackPlus } from "@/layout/TabPlus";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -56,19 +56,7 @@ export default function TabStack() {
     "recurring/[id]": { ...page, presentation: "modal", headerShown: true },
     // iOS: any sheet body as a native sheet page (NativeSheetHost).
     sheet: { ...page, presentation: "modal", headerShown: true },
-    photo: {
-      ...page,
-      presentation: "fullScreenModal",
-      // A header (empty, see-through) keeps the native toolbar for the checkmark.
-      headerShown: true,
-      headerTransparent: true,
-      title: "",
-      headerShadowVisible: false,
-      headerStyle: { backgroundColor: "transparent" },
-      headerTintColor: "#fff",
-      statusBarStyle: "light",
-      contentStyle: { backgroundColor: "#000" },
-    },
+    photo: { ...page, ...PHOTO_SCREEN_OPTIONS },
     // iOS: native filter sheet with Apple's bar (Cancel, Apply).
     "search-filter": { ...page, presentation: "modal", headerShown: true, title: t("search.filters") },
   };
@@ -77,7 +65,9 @@ export default function TabStack() {
       screenLayout={({ children, route }) => (
         <TabStackContext.Provider value>
           <SheetRouteContext.Provider value="/sheet">
-            <TabStackPlus routeName={route.name}>{children}</TabStackPlus>
+            <PhotoRouteContext.Provider value="/photo">
+              <TabStackPlus routeName={route.name}>{children}</TabStackPlus>
+            </PhotoRouteContext.Provider>
           </SheetRouteContext.Provider>
         </TabStackContext.Provider>
       )}

@@ -48,6 +48,31 @@ export function useNativeSheetRoute(): SheetRoute | null {
   return Platform.OS === "ios" && !inSheet ? route : null;
 }
 
+/**
+ * The black full-screen photo page for a receipt photo opened from here: `/photo` in a tab stack,
+ * `/review-photo` in the modals stack (review, edit). A native page sets its own light status icons;
+ * a React Native modal on iOS cannot (it kept them dark on black, the Duo's side column too).
+ */
+export type PhotoRoute = "/photo" | "/review-photo";
+export const PhotoRouteContext = createContext<PhotoRoute | null>(null);
+export function usePhotoRoute(): PhotoRoute | null {
+  const route = useContext(PhotoRouteContext);
+  return Platform.OS === "ios" ? route : null;
+}
+
+/** Stack options of the photo page: black, an empty see-through header that keeps the toolbar for the checkmark, light status icons. */
+export const PHOTO_SCREEN_OPTIONS = {
+  presentation: "fullScreenModal",
+  headerShown: true,
+  headerTransparent: true,
+  title: "",
+  headerShadowVisible: false,
+  headerStyle: { backgroundColor: "transparent" },
+  headerTintColor: "#fff",
+  statusBarStyle: "light",
+  contentStyle: { backgroundColor: "#000" },
+} as const;
+
 /** Whether a sheet opened from here should be a native sheet page. */
 export function useNativeSheets(): boolean {
   const inTabStack = useContext(TabStackContext);
@@ -66,7 +91,7 @@ export function NativeSheetHost({
   onClose(): void;
   children: ReactNode;
   /** `/sheet` (card), `/picker` (card over the modals stack) or `/photo` (full screen, black). */
-  route?: SheetRoute | "/photo";
+  route?: SheetRoute | PhotoRoute;
 }) {
   const open = useRef(false);
   const close = useRef(onClose);

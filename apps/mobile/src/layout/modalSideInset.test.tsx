@@ -31,7 +31,7 @@ describe("ModalSideInset", () => {
   });
 });
 
-type MockOptions = { contentStyle?: object; headerShown?: boolean; presentation?: string };
+type MockOptions = { contentStyle?: object; headerShown?: boolean; presentation?: string; statusBarStyle?: string };
 let mockStackProps: {
   screenOptions?: MockOptions | ((a: { route: { name: string } }) => MockOptions);
   children?: unknown;
@@ -75,6 +75,16 @@ describe("(modals) layout", () => {
     expect(mockStackProps.children).toBeUndefined();
     expect(optionsFor("picker")).toMatchObject({ presentation: "modal", headerShown: true });
     expect(optionsFor("export")?.presentation).toBeUndefined();
+  });
+
+  it("ios: the review's full-screen photo is a black native page with light status icons", async () => {
+    Platform.OS = "ios";
+    await render(<ModalsLayout />);
+    expect(optionsFor("review-photo")).toMatchObject({
+      presentation: "fullScreenModal",
+      statusBarStyle: "light",
+      contentStyle: { backgroundColor: "#000" },
+    });
   });
 
   it("android: no wrapper and no padding (the root SideSafeArea already insets the native modal)", async () => {

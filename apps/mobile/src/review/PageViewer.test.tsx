@@ -4,6 +4,8 @@ import { Dimensions, StyleSheet } from "react-native";
 import type { ReceiptPage } from "@/db/types";
 import { initI18n } from "@/i18n";
 
+import { PhotoRouteContext } from "@/layout/NativeSheet";
+
 import { PageViewer, viewerKey } from "./PageViewer";
 import { inlineCap } from "./zoomMath";
 
@@ -11,6 +13,11 @@ const mockImages = {
   openForView: jest.fn(async (p: string) => (p === "bad.jpg" ? Promise.reject(new Error("x")) : `file:///cache/view/${p}`)),
 };
 jest.mock("@/images/ImageStoreProvider", () => ({ useImageStore: () => mockImages }));
+const mockPush = jest.fn();
+jest.mock("expo-router", () => ({
+  ...jest.requireActual("../../test/expoRouterStack").stackMock,
+  router: { push: (...a: unknown[]) => mockPush(...a), back: jest.fn() },
+}));
 let mockInsets = { top: 0, bottom: 0, left: 0, right: 0 };
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => mockInsets,
@@ -128,6 +135,21 @@ describe("PageViewer full screen", () => {
     const bar = StyleSheet.flatten(screen.getByTestId("photo-done-bar").props.style);
     expect(bar).toMatchObject({ paddingBottom: 10 + 8, paddingRight: 84, alignItems: "center" });
     expect(bar.position).toBeUndefined();
+  });
+});
+
+describe("PageViewer native photo page (iOS)", () => {
+  it("in the review (modals stack) opens the black native photo page, not a modal", async () => {
+    mockPush.mockClear();
+    await render(
+      <PhotoRouteContext.Provider value="/review-photo">
+        <PageViewer pages={[page()]} />
+      </PhotoRouteContext.Provider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("inline-photo")).toBeTruthy());
+    await act(async () => fireEvent.press(screen.getByRole("imagebutton")));
+    expect(mockPush).toHaveBeenCalledWith("/review-photo");
+    expect(screen.queryByTestId("photo-viewer-area")).toBeNull();
   });
 });
 

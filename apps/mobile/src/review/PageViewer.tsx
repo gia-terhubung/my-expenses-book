@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import { AppModal } from "@/components/AppModal";
 import type { ReceiptPage } from "@/db/types";
 import { useImageStore } from "@/images/ImageStoreProvider";
-import { NativeSheetHost, useNativeSheets } from "@/layout/NativeSheet";
+import { NativeSheetHost, usePhotoRoute } from "@/layout/NativeSheet";
 import { useSideInsets } from "@/layout/SideSafeArea";
 import { themedStatusBarStyle } from "@/theme/ThemedStatusBar";
 import { SlipEdge } from "@/receipts/SlipEdge";
@@ -228,7 +228,7 @@ export function PageViewer({
   };
 
   const fullUri = full === null ? null : uris[full];
-  const nativeSheets = useNativeSheets();
+  const photoRoute = usePhotoRoute();
   // Light status icons over the black viewer (the Duo column sits on black too); themed again on close.
   const viewerOpen = full !== null;
   useEffect(() => {
@@ -239,9 +239,9 @@ export function PageViewer({
   return (
     <View style={[{ gap: theme.spacing.sm }, fill && { flex: 1 }]}>
       {pages.map(page)}
-      {nativeSheets ? (
+      {photoRoute ? (
         <NativeSheetHost
-          route="/photo"
+          route={photoRoute}
           visible={viewerOpen}
           onClose={() => setFull(null)}
         >

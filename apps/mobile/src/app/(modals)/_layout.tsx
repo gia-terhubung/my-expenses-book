@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 
 import { useTranslation } from "react-i18next";
 
-import { SheetRouteContext } from "@/layout/NativeSheet";
+import { PHOTO_SCREEN_OPTIONS, PhotoRouteContext, SheetRouteContext } from "@/layout/NativeSheet";
 import { useSideInsets } from "@/layout/SideSafeArea";
 import { rootStackOptions } from "@/layout/stackOptions";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -25,7 +25,9 @@ export default function ModalsLayout() {
     <Stack
       // Pickers opened from these screens (currency) open as native sheet pages on `picker`.
       screenLayout={({ children }) => (
-        <SheetRouteContext.Provider value="/picker">{children}</SheetRouteContext.Provider>
+        <SheetRouteContext.Provider value="/picker">
+          <PhotoRouteContext.Provider value="/review-photo">{children}</PhotoRouteContext.Provider>
+        </SheetRouteContext.Provider>
       )}
       // Per-route options here, not in <Stack.Screen> children, so the route order never changes after
       // the stack's state is built (see the tab stacks' ROUTE_NAMES_CHANGED fix).
@@ -33,6 +35,7 @@ export default function ModalsLayout() {
         ...base,
         contentStyle: { ...base.contentStyle, paddingLeft: side.left, paddingRight: side.right },
         ...(route.name === "picker" ? { presentation: "modal" as const, headerShown: true } : null),
+        ...(route.name === "review-photo" ? PHOTO_SCREEN_OPTIONS : null),
       })}
     />
   );
