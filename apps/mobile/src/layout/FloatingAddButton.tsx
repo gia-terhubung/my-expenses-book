@@ -6,7 +6,7 @@ import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
-import { useAddReceiptContext } from "@/capture/AddReceiptProvider";
+import { useAddReceiptContext } from "@/capture/addReceiptContext";
 import { useTheme } from "@/theme/ThemeProvider";
 
 import { PLUS_CHOICES } from "./PlusMenu";
