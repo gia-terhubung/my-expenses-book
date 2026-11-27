@@ -24,35 +24,45 @@ const KEYBOARD_GAP = 24;
 /**
  * Keeps the field being typed in above the keyboard on iOS (owner, 2026-11-26: the keyboard
  * covered Notes and the form could not scroll far enough). While the keyboard is up the form gets
- * extra bottom room of the keyboard's height, and when it opens the focused field is scrolled to sit
- * just above it. Spread `scrollProps` on the form's ScrollView and add `bottomRoom` to its bottom
+ * extra bottom room of the keyboard's height, and when it opens, or another field is focused while it is up,
+ * the focused field is scrolled to sit just above it. Spread `scrollProps` on the form's ScrollView and add `bottomRoom` to its bottom
  * padding. Works in page sheets and under native headers, where KeyboardAvoidingView's offset was off.
  */
 export function useKeyboardForm() {
   const ref = useRef<ScrollViewInstance>(null);
   const offset = useRef(0);
+  // Top of the open keyboard in window coordinates; null while it is down.
+  const keyboardTop = useRef<number | null>(null);
   const [kb, setKb] = useState(0);
+
+  const reveal = () => {
+    const top = keyboardTop.current;
+    const input = TextInput.State.currentlyFocusedInput();
+    if (top === null || !input || !ref.current) return;
+    input.measureInWindow((_x, y, _w, h) => {
+      const over = y + h + KEYBOARD_GAP - top;
+      if (over > 0) ref.current?.scrollTo({ y: offset.current + over, animated: true });
+    });
+  };
+  const revealSoon = () => setTimeout(reveal, 50);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
-    const reveal = (keyboardTop: number) => {
-      const input = TextInput.State.currentlyFocusedInput();
-      if (!input || !ref.current) return;
-      input.measureInWindow((_x, y, _w, h) => {
-        const over = y + h + KEYBOARD_GAP - keyboardTop;
-        if (over > 0) ref.current?.scrollTo({ y: offset.current + over, animated: true });
-      });
-    };
     const shown = Keyboard.addListener("keyboardDidShow", (e) => {
+      keyboardTop.current = e.endCoordinates.screenY;
       setKb(e.endCoordinates.height);
       // After the extra room has laid out.
-      setTimeout(() => reveal(e.endCoordinates.screenY), 50);
+      revealSoon();
     });
-    const hidden = Keyboard.addListener("keyboardWillHide", () => setKb(0));
+    const hidden = Keyboard.addListener("keyboardWillHide", () => {
+      keyboardTop.current = null;
+      setKb(0);
+    });
     return () => {
       shown.remove();
       hidden.remove();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const scrollProps = {
@@ -60,6 +70,11 @@ export function useKeyboardForm() {
     scrollEventThrottle: 16,
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       offset.current = e.nativeEvent.contentOffset.y;
+    },
+    // A field focused while the keyboard is already up (focus bubbles from the TextInput): no
+    // keyboardDidShow comes, so reveal it here.
+    onFocus: () => {
+      if (keyboardTop.current !== null) revealSoon();
     },
   };
   return { scrollProps, bottomRoom: FORM_BOTTOM_ROOM + kb };
