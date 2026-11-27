@@ -21,8 +21,11 @@
     android: { aspect: 720 / 1640, bezel: 0.026, radius: 0.1, punch: true },
     ipad: { aspect: 2064 / 2752, bezel: 0.04, radius: 0.06, camera: true },
     tablet: { aspect: 2064 / 2752, bezel: 0.045, radius: 0.05 },
-    "duo-closed": { aspect: 1398 / 2034, bezel: 0.03, radius: 0.12, spine: true },
-    "duo-open": { aspect: 2853 / 2007, bezel: 0.022, radius: 0.05, fold: true },
+    // iPhone Duo, from the simulator's display masks (iPhone Duo.simdevicetype). Closed: a "D", square
+    // on the hinge (left) side, 52 pt corners on the right of a 466 pt screen. Open: 120 px corners on
+    // the 1252 px short side; held sideways, the fold runs top to bottom through the middle.
+    "duo-closed": { aspect: 1398 / 2034, bezel: 0.028, spine: true, corners: (sw) => { const r = (52 / 466) * sw; return [0, r, r, 0]; } },
+    "duo-open": { aspect: 2853 / 2007, bezel: 0.018, fold: true, corners: (sw, sh) => { const r = (120 / 1252) * sh; return [r, r, r, r]; } },
   };
   const receipt = q.get("device") === "receipt";
   const spec = DEVICES[q.get("device")];
@@ -91,7 +94,7 @@
   }
 
   // Device size: as wide as fits, but a sideways device also may not be taller than the free space.
-  let dw = W * (spec.aspect > 1 ? 0.9 : 0.78);
+  let dw = W * (spec.aspect > 1 ? 0.94 : 0.78);
   const dh = (d) => (d - 2 * d * spec.bezel) / spec.aspect + 2 * d * spec.bezel;
   if (spec.aspect > 1 && dh(dw) > free * 0.8) dw = (free * 0.8) / (dh(dw) / dw);
   const device = document.createElement("div");
@@ -101,14 +104,17 @@
     width: `${dw}px`,
     height: `${dh(dw)}px`,
     left: `${(W - dw) / 2}px`,
-    top: `${spec.aspect > 1 ? top + (free * 0.83 - dh(dw)) / 2 : top}px`,
+    // A sideways device is centred between the caption and the green band (the band is 17% of H).
+    top: `${spec.aspect > 1 ? top + (free - H * 0.17 - dh(dw)) / 2 : top}px`,
     padding: `${b}px`,
-    borderRadius: `${dw * spec.radius}px`,
     transform: "rotate(-4deg)",
   });
   const screen = document.createElement("div");
   screen.className = "screen";
-  screen.style.borderRadius = `${Math.max(dw * spec.radius - b, 0)}px`;
+  // Corners: the screen's own (per corner where the device has them), the body's follow outside the bezel.
+  const sr = spec.corners ? spec.corners(dw - 2 * b, dh(dw) - 2 * b) : Array(4).fill(Math.max(dw * spec.radius - b, 0));
+  screen.style.borderRadius = sr.map((r) => `${r}px`).join(" ");
+  device.style.borderRadius = sr.map((r) => `${r > 0 ? r + b : b * 0.6}px`).join(" ");
   const img = document.createElement("img");
   img.src = q.get("raw");
   screen.append(img);
@@ -138,15 +144,21 @@
     mark(device, { width: px(d), height: px(d), left: px((dw - d) / 2), top: px((b - d) / 2), borderRadius: "50%", background: "#2c2c2c" });
     marks = "camera";
   } else if (spec.spine) {
-    // Duo closed: the hinge spine along the left edge.
-    mark(device, { width: px(dw * 0.035), height: px(dh(dw) * 0.94), left: px(-dw * 0.028), top: px(dh(dw) * 0.03), borderRadius: px(dw * 0.02), background: "#2b2b2b", zIndex: -1 });
+    // Duo closed: the hinge, a rounded metal barrel along the flat left edge.
+    mark(device, {
+      width: px(dw * 0.05), top: "0", bottom: "0", left: px(-dw * 0.03), borderRadius: px(dw * 0.025), zIndex: -1,
+      background: "linear-gradient(90deg, #1b1b1b, #5b5f5d 45%, #2a2a2a 70%, #141414)",
+    });
     marks = "spine";
   } else if (spec.fold) {
-    // Duo open: the crease down the middle of the inner screen.
-    mark(screen, {
-      width: px(dw * 0.006), top: "0", bottom: "0", left: px((sw - dw * 0.006) / 2),
-      background: "linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.14), rgba(0,0,0,0))",
-    });
+    // Duo open: the hinge knuckles at the top and bottom edges, in line with the fold. No line across
+    // the screen (owner, 2026-11-27).
+    for (const edge of ["top", "bottom"]) {
+      mark(device, {
+        width: px(dw * 0.05), height: px(dw * 0.012), left: px((dw - dw * 0.05) / 2), [edge]: px(-dw * 0.008),
+        borderRadius: px(dw * 0.006), background: "linear-gradient(90deg, #1b1b1b, #5b5f5d 45%, #141414)", zIndex: -1,
+      });
+    }
     marks = "fold";
   }
   document.body.dataset.marks = marks;

@@ -32,8 +32,10 @@ duo-inner appstore/duo-inner 2007 2853 duo-open"
 
 marks() { python3 -c 'import json,sys; r=json.load(open("marks.json")).get(sys.argv[1]); print(";".join("-" if x is None else ",".join(map(str,x)) for x in r) if r else "")' "$1"; }
 
-: > out/.marks-placement.new
+if [ -n "${ONLY:-}" ]; then grep -v "^$ONLY/" out/.marks-placement > out/.marks-placement.new 2>/dev/null || :; else : > out/.marks-placement.new; fi
 while read -r dev target w h frame; do
+  # ONLY=<target folder> rebuilds just that set (e.g. ONLY=appstore/duo-inner).
+  [ -n "${ONLY:-}" ] && [ "$target" != "$ONLY" ] && continue
   for lang in $LANGS; do
     dir="out/$target/$lang"
     mkdir -p "$dir"
@@ -60,6 +62,7 @@ while read -r dev target w h frame; do
 done <<< "$TARGETS"
 mv out/.marks-placement.new out/.marks-placement
 
+[ -n "${ONLY:-}" ] && { [ "$problems" -eq 0 ] || exit 1; exit 0; }
 mkdir -p out/play/feature
 for lang in $LANGS; do
   PAGE=tools/slide/feature.html tools/render-one.sh play/feature "$lang" feature receipt zero-receipt.json 1024 500 "out/play/feature/$lang.png" ||
