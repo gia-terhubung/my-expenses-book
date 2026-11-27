@@ -75,7 +75,9 @@ fi
 # Some simulators ask "Open in My Expenses Book?" on every deep link: accept it when shown.
 # OPEN_X/OPEN_Y tap the alert's Open button by position (system alerts are not in the app's tree).
 accept() {
-  sleep 3
+  # Soon after the link: if no alert came, the tap lands before the seeded screen opens (on the
+  # empty detail pane or the launcher), never on a form field.
+  sleep "${ACCEPT_WAIT:-1.2}"
   if [ -n "${OPEN_X:-}" ]; then timeout 15 axe tap -x "$OPEN_X" -y "$OPEN_Y" --udid "$UDID" >/dev/null 2>&1
   else timeout 15 axe tap --label "Open" --udid "$UDID" >/dev/null 2>&1; fi
 }
@@ -122,7 +124,8 @@ if [ "${ROTATE:-}" = landscape ] && timeout 30 axe displays --udid "$UDID" 2>/de
 fi
 # After a restart the first link lands on the launcher or the splash: open the app once first.
 [ -n "${REBOOT:-}" ] && fresh home
-want 01-review && { fresh review; timeout 30 axe swipe --start-x "${X_MID:-220}" --start-y "${Y_SWIPE_FROM:-700}" --end-x "${X_MID:-220}" --end-y "${Y_SWIPE_TO:-520}" --udid "$UDID" >/dev/null 2>&1; sleep 3; shot 01-review; }
+# Equal Y_SWIPE_FROM and Y_SWIPE_TO means no scroll (a zero-length swipe would be a tap).
+want 01-review && { fresh review; [ "${Y_SWIPE_FROM:-700}" = "${Y_SWIPE_TO:-520}" ] || timeout 30 axe swipe --start-x "${X_MID:-220}" --start-y "${Y_SWIPE_FROM:-700}" --end-x "${X_MID:-220}" --end-y "${Y_SWIPE_TO:-520}" --udid "$UDID" >/dev/null 2>&1; sleep 3; shot 01-review; }
 # HOME_ROW_X/Y (split layouts): select a receipt so the detail pane is not empty.
 want 02-home && { fresh home; [ -n "${HOME_ROW_X:-}" ] && { pick_row "$HOME_ROW_X" "${HOME_ROW_Y:-}"; sleep 3; }; shot 02-home; }
 # The full-screen viewer at fit: the whole receipt, sharp. (A 2.5x zoom cut every line in half.)
