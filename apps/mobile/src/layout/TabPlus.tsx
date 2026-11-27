@@ -30,6 +30,8 @@ export function TabPlus({ home = false }: { home?: boolean }) {
   return <FloatingAddButton />;
 }
 
+const NO_INSETS = { left: 0, right: 0 };
+
 /** Home floats its +; Search (its bar is the search field) and sheets (left slot is Cancel) have none. */
 const NO_HEADER_PLUS = new Set([
   "index",
@@ -97,34 +99,27 @@ export function TabScreen({
   const { split } = useLayout();
   if (!inNativeTabs)
     return <TabRootContext.Provider value>{children}</TabRootContext.Provider>;
-  if (bleed && !split) {
-    return (
-      <TabRootContext.Provider value>
-        <ContentInsetsContext.Provider
-          value={{ left: insets.left, right: insets.right }}
-        >
-          <View style={{ flex: 1 }}>
-            {children}
-            <TabPlus home={home} />
-          </View>
-        </ContentInsetsContext.Provider>
-      </TabRootContext.Provider>
-    );
-  }
+  // The same element tree in both cases: a fold or rotation changes `split`, and a different tree
+  // would remount the whole tab (closing its sheets and losing what was typed in them).
+  const full = bleed && !split;
   return (
     <TabRootContext.Provider value>
-      <View style={{ flex: 1 }}>
-        <View
-          style={{
-            flex: 1,
-            paddingLeft: insets.left,
-            paddingRight: insets.right,
-          }}
-        >
-          {children}
+      <ContentInsetsContext.Provider
+        value={full ? { left: insets.left, right: insets.right } : NO_INSETS}
+      >
+        <View style={{ flex: 1 }}>
+          <View
+            style={{
+              flex: 1,
+              paddingLeft: full ? 0 : insets.left,
+              paddingRight: full ? 0 : insets.right,
+            }}
+          >
+            {children}
+          </View>
+          <TabPlus home={home} />
         </View>
-        <TabPlus home={home} />
-      </View>
+      </ContentInsetsContext.Provider>
     </TabRootContext.Provider>
   );
 }

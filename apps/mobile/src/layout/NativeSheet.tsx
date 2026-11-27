@@ -49,7 +49,9 @@ export function useNativeSheetRoute(): SheetRoute | null {
 /** Whether a sheet opened from here should be a native sheet page. */
 export function useNativeSheets(): boolean {
   const inTabStack = useContext(TabStackContext);
-  return Platform.OS === "ios" && inTabStack;
+  // One sheet body at a time: a host inside a sheet body would replace the body it sits in.
+  const inSheet = useContext(NativeSheetContext);
+  return Platform.OS === "ios" && inTabStack && !inSheet;
 }
 
 export function NativeSheetHost({
@@ -118,7 +120,10 @@ export function NativeSheetPage() {
     (fn) => (listeners.add(fn), () => listeners.delete(fn)),
     () => entry,
   );
-  useEffect(() => () => entry?.dismissed(), []);
+  // Report only the body this page opened with: by the time the page goes away, the next sheet
+  // may already have replaced the shared entry.
+  const mine = useRef(entry);
+  useEffect(() => () => mine.current?.dismissed(), []);
   return (
     <NativeSheetContext.Provider value>
       {current?.element ?? null}

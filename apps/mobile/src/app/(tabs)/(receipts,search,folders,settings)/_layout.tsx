@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { useVerticalBarEdgeIOS } from "expo-status-bar";
+import { Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -41,11 +42,14 @@ export default function TabStack() {
           scrollEdgeEffects: { top: "hidden" as const, bottom: "hidden" as const, left: "hidden" as const, right: "hidden" as const },
         }
       : base;
+  const ios = Platform.OS === "ios";
   const page = {
     ...base,
     // The + is a header item; keep Back next to it instead of replacing it.
     headerBackVisible: true,
-    contentStyle: { ...base.contentStyle, paddingLeft: insets.left, paddingRight: insets.right },
+    // iOS: the root does not pad the sides (native bars must reach the Duo column), so pages do.
+    // Android: the root SideSafeArea already pads them; padding again would inset twice.
+    contentStyle: ios ? { ...base.contentStyle, paddingLeft: insets.left, paddingRight: insets.right } : base.contentStyle,
   };
   const SCREEN_OPTIONS: Record<string, object> = {
     // Create/edit pages: a sheet over the tabs (no tab bar, no +), X and checkmark.
@@ -81,7 +85,8 @@ export default function TabStack() {
       // stack's routes after its state was first built (anchor first), and the first re-render (the
       // language set during onboarding) then sends ROUTE_NAMES_CHANGED, which the stacks of tabs not
       // on screen cannot handle.
-      screenOptions={({ route }) => SCREEN_OPTIONS[route.name] ?? (TAB_ROOTS.has(route.name) ? rootHeader : page)}
+      // iOS only: native sheets and the photo page; on Android these routes keep their own headers.
+      screenOptions={({ route }) => (ios && SCREEN_OPTIONS[route.name]) || (TAB_ROOTS.has(route.name) ? rootHeader : page)}
     />
   );
 }
