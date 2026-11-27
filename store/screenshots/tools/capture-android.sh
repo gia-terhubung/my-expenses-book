@@ -32,6 +32,7 @@ if [ "${1:-}" = --self-test ]; then
 fi
 
 SERIAL=$1; LANG_=$2; OUT=$3; LOG=$4
+[ -f "$LOG" ] || { echo "FAIL: Metro log not found: '$LOG'" >&2; exit 1; }
 BUNDLE=com.terhubung.myexpensesbook
 DEV="exp+my-expenses-book://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
 TODAY=${TODAY:-2026-11-24}
