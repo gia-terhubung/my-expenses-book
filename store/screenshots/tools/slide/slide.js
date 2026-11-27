@@ -195,12 +195,14 @@
     // Keep every mark above the green band: shrink the device (from its top) until it fits.
     const limit = H * 0.83 - W * 0.02;
     const lowest = () => Math.max(...[...screen.querySelectorAll(".scan-mark")].map((m) => m.getBoundingClientRect().bottom));
+    // The tilt makes the shrink not quite linear: repeat with a small margin until it fits.
     let low = lowest();
-    if (low > limit) {
+    let scale = 1;
+    for (let i = 0; i < 4 && low > limit; i++) {
       const devTop = device.getBoundingClientRect().top;
-      const f = (limit - devTop) / (low - devTop);
+      scale *= ((limit - devTop) / (low - devTop)) * 0.995;
       device.style.transformOrigin = "50% 0";
-      device.style.transform = `rotate(-4deg) scale(${f})`;
+      device.style.transform = `rotate(-4deg) scale(${scale})`;
       low = lowest();
     }
     document.body.dataset.marksBottom = String(Math.round(low));
