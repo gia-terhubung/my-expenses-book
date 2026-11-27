@@ -1,7 +1,53 @@
 # iPhone Duo and iPad: native navigation (design)
 
-Date: 2026-11-26. Status: draft. The direction is agreed in conversation; the details are settled in a
-live review session (see the plan). Plan: `docs/superpowers/plans/2026-11-26-duo-native-navigation.md`.
+Date: 2026-11-26. Status: **final, awaiting owner approval** (2026-11-27). The live review session is done
+on every device; "Final decisions" below is the plan of record and overrides earlier sections where they
+differ. Session plan: `docs/superpowers/plans/2026-11-26-duo-native-navigation.md`. Spike code: branch
+`spike/duo-native-nav`.
+
+## Final decisions (plan of record, 2026-11-27)
+
+**Tab placement**
+- iOS (iPhone, iPhone Duo, iPad): `NativeTabs` with `preferredPlacement="tabBar"`, 4 tabs with SF Symbols.
+  On the Duo the tab bar sits at the bottom of the side column, closed and open. Not `sidebar`.
+- Android: our JS tabs stay. Phone: bottom bar (hides on pages pushed inside a tab). Wider windows:
+  `SideRail` with the tabs at the **bottom**, just above the +.
+- Each tab has its own native `Stack`, so pages opened from a tab keep the tab bar.
+- Search is a normal tab (Apple's search tab role dropped: doubled header items, Filter broke).
+
+**The + (variant B)**
+- Window with a Duo side column: the + is the last header item in the column, after Back and the
+  page's own buttons. Home also floats it bottom-right when held upright.
+- No side column (plain iPhone, iPad): floating + bottom-right, above the tab bar, on the outer edge.
+- Short column (window height < 560 pt): page extras fold into ⋯ and the + becomes an "Add receipt ›"
+  row at the top of ⋯; Home's + goes into the column.
+- iOS: the + opens Apple's native menu (Scan receipt / Import from Photos / Add manually, icon + word),
+  each starting its flow directly. Empty Home and Android keep the add sheet.
+- None on Search, sheets, the photo viewer or create/edit pages.
+
+**Header pattern**
+- Every pushed page uses the native header: Back, then the page's own buttons, then the + last.
+- Sheets (`NativeSheetHost`): icon X (cancel) and green ✓ (done) in the bottom toolbar (the bottom of the
+  Duo column); text buttons stay in the sheet's top bar.
+- Create/edit pages: no tabs and no +, only X and ✓; destructive actions (Discard) as a trash icon at
+  the top.
+
+**Rejected**
+- A (`prominent` tab opening an Add page): loses the sheet-over-screen flow.
+- `disabled` prominent tab used as a button: against Apple's tab-bar guidance.
+- C (only a floating + everywhere): kept only as the no-column fallback inside B.
+- D (native bottom toolbar +): on the Duo it sits behind the tab bar.
+- E (`NativeTabs.BottomAccessory` +): not chosen.
+- `sidebar` placement on the open Duo: `tabBar` keeps the tabs in thumb reach, in the same place as the
+  closed screen.
+- The dev switches (tab placement, + variant) were removed in `22384da`; they are not part of the
+  real implementation.
+
+**Not tested (accepted by the owner)**
+- Android split screen (not on the Redmi), Android foldable and tablet emulators (none on this Mac).
+- Duo half open, PiP and fold-with-sheet-open were not walked step by step.
+
+**Screenshots**: none kept from the session.
 
 ## Intent
 

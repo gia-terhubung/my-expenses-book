@@ -127,7 +127,7 @@ One simulator, opened alone.
 
 ## Phase F: wrap up the session
 
-- [ ] Finish "Session results" in the spec: tab placement, + variant, header pattern, anything the owner
+- [x] Finish "Session results" in the spec: tab placement, + variant, header pattern, anything the owner
       rejected, screenshots if the owner wants them kept. Remove the dev-only switches from the plan of
       record (they stay only on the spike branch).
 - [ ] Owner approves the spec. Then run superpowers:writing-plans for the real implementation from the
