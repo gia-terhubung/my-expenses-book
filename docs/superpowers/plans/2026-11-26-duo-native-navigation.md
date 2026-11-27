@@ -88,6 +88,8 @@ The owner sets each pose in Device Hub. Show one item at a time; fix small thing
 
 ## Phase C: Android pass (Redmi, then emulators)
 
+DONE 2026-11-27: Redmi upright and sideways checked; split screen and emulators skipped by the owner.
+
 - [x] C1 Rail at the bottom (`src/layout/SideRail.tsx`, `src/layout/SideRail.test.tsx`): the rail's
       `ScrollView` content grows to fill (`flexGrow: 1`) and aligns to the end (`justifyContent:
       "flex-end"`), so the tabs sit just above the +. Short windows still scroll and every tab stays
@@ -95,11 +97,11 @@ The owner sets each pose in Device Hub. Show one item at a time; fix small thing
 - [x] C2 Redmi upright: tabs, the +, the add sheet and the folder screen exactly as before.
 - [x] C3 Redmi held sideways: icon rail with the tabs at the bottom, above the +.
 - [x] C4 (skipped: owner, 2026-11-27, split screen not available on this Redmi) Redmi split screen top and bottom: short window; tabs, + and the add sheet usable.
-- [ ] C5 Android foldable emulator (Z Fold or Pixel Fold): unfolded rail at the bottom; split screen side by
+- [x] C5 (skipped: owner, 2026-11-27, no emulator on this Mac) Android foldable emulator (Z Fold or Pixel Fold): unfolded rail at the bottom; split screen side by
       side, our app in each half.
-- [ ] C6 Android tablet emulator: wide rail at the bottom; split screen, each half (rail or bottom bar by
+- [x] C6 (skipped: owner, 2026-11-27, no emulator on this Mac) Android tablet emulator: wide rail at the bottom; split screen, each half (rail or bottom bar by
       width).
-- [ ] C7 Write the Android results into the spec.
+- [x] C7 Write the Android results into the spec.
 
 ## Phase D: plain iPhone pass
 

@@ -159,13 +159,27 @@ the tab bar); plain iPhone still to check; (4) yes, the dev build has the native
   (column + when the window has a side column, floating + otherwise). Variants C/D/E and
   `AccessoryPlus` deleted.
 
+### Android (2026-11-27)
+
+- **Rail at the bottom** (`src/layout/SideRail.tsx`, commit `fc8b829`): the rail's `ScrollView` content
+  grows to fill (`flexGrow: 1`) and aligns to the end (`justifyContent: "flex-end"`), so the tabs sit just
+  above the +, like the tab group at the bottom of the iPhone Duo column. Short windows still scroll; the +
+  stays pinned outside the scroll. New test in `SideRail.test.tsx`.
+- **Redmi upright** (model 2409BRN2CY): bottom bar with the + on the right, unchanged.
+- **Redmi sideways**: icon rail with all four tabs above the +, none hidden. The window is short, so the
+  tabs already fill the rail; the bottom alignment shows only on taller windows.
+- **Not tested** (owner skipped): Redmi split screen (not available on this phone); Android foldable and
+  tablet emulators (no emulator on this Mac). Taller rails (unfolded foldable, tablet, wide rail) rely on
+  the unit test until a device or emulator is available.
+
 ### Still open (next sessions)
 
 - Open Duo was approved by the owner by hand; tab placement stays at the dev default (tabBar). Half open, PiP and fold-with-sheet-open were not walked step by step.
 - Recurring with rules and Tax year show no + when held sideways (Back + New / Export, no ⋯). Owner to decide.
 - Second field focused while the keyboard is already up does not auto-scroll.
 - Review/edit and other sheets opened from the add flow (its category/currency pickers) still old style.
-- Phase C (Android/Redmi). Phase D (plain iPhone) approved by the owner by hand on 2026-11-27.
+- Phase C (Android) done on the Redmi 2026-11-27; foldable/tablet emulators and split screen not
+  tested. Phase D (plain iPhone) approved by the owner by hand on 2026-11-27.
   Phase E (iPad) approved by the owner by hand on 2026-11-27.
 - Tests: tabsLayout.test.tsx (16 fail: jest runs as iOS) and tests importing old route paths
   (`@/app/(tabs)/settings` etc.) need updating in the real implementation plan.
