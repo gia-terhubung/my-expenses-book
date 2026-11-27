@@ -73,7 +73,10 @@ tap() { timeout 30 axe tap -x "$1" -y "$2" --udid "$UDID" >/dev/null 2>&1; }
 
 want() { [ -z "${SHOTS:-}" ] || [[ " $SHOTS " == *" $1 "* ]]; }
 echo "$LANG_ -> $OUT"
-if [ "${ROTATE:-}" = landscape ]; then timeout 30 axe rotate left --udid "$UDID" >/dev/null 2>&1 || timeout 30 xcrun simctl io "$UDID" rotate left >/dev/null 2>&1; sleep 3; fi
+# axe rotate is relative: rotate only while the active display is still upright.
+if [ "${ROTATE:-}" = landscape ] && timeout 30 axe displays --udid "$UDID" 2>/dev/null | grep -A0 '^Active' | grep -q portrait; then
+  timeout 30 axe rotate left --udid "$UDID" >/dev/null 2>&1; sleep 4
+fi
 want 01-review && { fresh review; timeout 30 axe swipe --start-x "${X_MID:-220}" --start-y "${Y_SWIPE_FROM:-700}" --end-x "${X_MID:-220}" --end-y "${Y_SWIPE_TO:-520}" --udid "$UDID" >/dev/null 2>&1; sleep 3; shot 01-review; }
 # HOME_ROW_X/Y (split layouts): select a receipt so the detail pane is not empty.
 want 02-home && { fresh home; [ -n "${HOME_ROW_X:-}" ] && { tap "$HOME_ROW_X" "$HOME_ROW_Y"; sleep 3; }; shot 02-home; }
