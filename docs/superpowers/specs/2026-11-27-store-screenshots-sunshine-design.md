@@ -19,10 +19,9 @@ recaptured anyway: the app now uses Apple's native tabs and headers on iOS.
   - a green band along the bottom with the app's torn-receipt (zigzag) edge.
 - Each set framed in **its own device's shape**: Android phone (punch-hole camera), iPhone (Dynamic
   Island), iPhone Duo closed (with its spine), iPhone Duo open (with the centre fold), iPad (even bezel).
-- **Duo open: both orientations** (owner, 2026-11-27). The upright set (2007 × 2853) is the one for
-  the App Store's Duo slot, because nobody could confirm the slot takes a sideways image. A sideways set
-  (2853 × 2007, list and receipt side by side) is made too, for the slot if it turns out to accept it,
-  and for the website.
+- **Duo open: upright image, sideways phone** (owner, 2026-11-27). The image stays upright at
+  2007 × 2853 (the size the App Store's Duo slot is known to take), and the open Duo inside it is drawn
+  held sideways, showing the sideways capture: list and receipt side by side.
 - **Play phone captured on the Redmi**, not reused from the iPhone (today's Play phone images are
   iPhone captures).
 - Same 8 slides, same order, same captions in en, id, es, pt-BR:
@@ -63,8 +62,7 @@ recaptured anyway: the app now uses Apple's native tabs and headers on iOS.
   | App Store iPhone 6.9" | 1320 × 2868 | iPhone 18 Pro Max sim |
   | App Store iPad 13" | 2064 × 2752 | iPad Pro 13" (M5) sim |
   | App Store Duo outer | 1398 × 2034 | iPhone Duo sim `06C208F7…`, closed |
-  | App Store Duo inner | 2007 × 2853 (upright, unchanged) | iPhone Duo sim, open, upright |
-  | Duo inner sideways (extra set) | 2853 × 2007 | iPhone Duo sim, open, held sideways |
+  | App Store Duo inner | 2007 × 2853 (upright image, sideways phone inside) | iPhone Duo sim, open, held sideways |
   | Play phone | 1080 × 1920 | Redmi (2409BRN2CY, 720 × 1640 screen) |
   | Play tablet | 1440 × 2560 | iPad captures |
   | Play feature | 1024 × 500 | none (drawn) |
@@ -96,24 +94,23 @@ recaptured anyway: the app now uses Apple's native tabs and headers on iOS.
   `node_modules`, and draws the frame for `device` in CSS.
 - **Render**: `tools/render-html.sh` runs Chrome headless with `--screenshot --window-size=W,H` per
   slide and language, then `sips` flattens to no alpha and checks the size. Output goes to the same
-  `out/` folders (git-ignored), so `docs/store/submit-screenshots-and-languages.md` stays valid; the
-  sideways Duo set goes to `out/appstore/duo-inner-sideways/` and gets a line in that doc.
+  `out/` folders (git-ignored), so `docs/store/submit-screenshots-and-languages.md` stays valid.
 - **00-free and 01-private** (the drawn receipts, no capture): rebuilt in the same template as a
   receipt card instead of a phone, from `zero-receipt.json` and `private-receipt.json`.
 - **02-scan marks** (the yellow TOTAL-to-field highlight) keep their positions from `marks.json`,
   remeasured on the new captures.
 - **Capture**:
-  - iOS: `tools/capture-ios.sh` as today, with the new screens; the Duo open is captured upright and
-    sideways.
+  - iOS: `tools/capture-ios.sh` as today, with the new screens; the Duo open is captured held sideways.
   - Android: new `tools/capture-android.sh` using `adb` (deep link, `screencap`), same 6 screens.
-- `tools/check.sh` updated for the sideways Duo set and the Play phone source.
+- `tools/check.sh` updated for the Play phone source.
 - **Frames per set**: Play phone → Android phone frame; iPhone → iPhone frame; Duo outer → Duo closed;
-  Duo inner (both orientations) → Duo open with its centre fold; iPad → iPad frame; Play tablet →
+  Duo inner → Duo open, drawn sideways, with its centre fold; iPad → iPad frame; Play tablet →
   plain tablet frame.
 
 ## Left to the builder
 
 - Exact frame dimensions, corner radii and tilt per device, matched to the mockup's proportions.
-- Where the caption wraps per language (the pt-BR 02-scan caption already wraps to 3 lines on the
-  upright Duo; sideways it has more room).
+- Where the caption wraps per language (the pt-BR 02-scan caption already wraps to 3 lines on the Duo).
+- How large the sideways Duo sits on the upright page (it is wider than tall, so the caption gets
+  more room above it).
 - How the receipt-card slides (00, 01) sit on the yellow page.
