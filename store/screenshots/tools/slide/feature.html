@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Play feature graphic</title>
+    <link rel="stylesheet" href="slide.css" />
+    <style>
+      /* 1024 x 500: icon, name and what the app does on the left; the zero receipt on the right. */
+      .left { position: absolute; left: 56px; top: 64px; width: 520px; }
+      .left img { width: 88px; height: 88px; border-radius: 20px; display: block; box-shadow: 0 4px 14px rgba(18, 36, 31, 0.22); }
+      .name { margin: 20px 0 10px; font: 800 44px/1.02 "Bricolage", sans-serif; color: var(--green); letter-spacing: -0.01em; }
+      .what { margin: 0; max-height: 132px; overflow: hidden; font: 600 27px/1.22 system-ui, -apple-system, sans-serif; color: #24302c; }
+    </style>
+  </head>
+  <body data-status="loading">
+    <div class="left">
+      <img src="../../../../apps/mobile/assets/images/icon.png" alt="" />
+      <h1 class="name">My Expenses Book</h1>
+      <p class="what" id="what"></p>
+    </div>
+    <script>
+      // Query: caption (the "feature" copy), lines (zero-receipt slip as JSON). Same status contract
+      // as slide.html: ok | overflow.
+      (async () => {
+        const q = new URLSearchParams(location.search);
+        const what = document.getElementById("what");
+        what.textContent = q.get("caption") || "";
+
+        const band = document.createElement("div");
+        band.className = "band";
+        band.style.height = "64px";
+        band.style.setProperty("--zig", "12px");
+        document.body.append(band);
+
+        const card = document.createElement("div");
+        card.className = "receipt";
+        Object.assign(card.style, { width: "300px", left: "650px", top: "34px", fontSize: "17px", padding: "26px 22px" });
+        card.style.setProperty("--zig", "14px");
+        for (const line of JSON.parse(q.get("lines") || "[]")) {
+          const [label, value] = line.split("\t");
+          const row = document.createElement("div");
+          if (line === "") row.className = "gap";
+          else if (value === undefined) row.className = "head";
+          else row.className = label.startsWith("TOTAL") ? "row total" : "row";
+          if (label.startsWith("TOTAL")) card.append(Object.assign(document.createElement("div"), { className: "rule" }));
+          if (value === undefined) row.textContent = line;
+          else row.append(Object.assign(document.createElement("span"), { textContent: label }), Object.assign(document.createElement("span"), { textContent: value }));
+          card.append(row);
+        }
+        document.body.append(card);
+
+        if (document.readyState !== "complete") await new Promise((r) => addEventListener("load", r, { once: true }));
+        const tooTall = card.getBoundingClientRect().bottom > 500 + 40; // may run into the band, not off the page
+        document.body.dataset.status = what.scrollHeight > what.clientHeight + 1 || tooTall ? "overflow" : "ok";
+      })();
+    </script>
+  </body>
+</html>

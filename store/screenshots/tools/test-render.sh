@@ -109,4 +109,17 @@ done <<LIST
 01-private private-receipt.json pt-BR 1320 2868
 LIST
 
+# Play feature graphic: 1024 x 500, yellow, new copy that says what the app is
+for lang in en id es pt-BR; do
+  out="$T/feature-$lang.png"
+  if PAGE=tools/slide/feature.html tools/render-one.sh play/feature "$lang" feature receipt zero-receipt.json 1024 500 "$out" >"$T/log" 2>&1; then
+    got=$(probe "$out" 12 12 | tr '\n' ' ')
+    [ "$got" = "1024 500 alpha=no #FFD84A " ] && pass "feature $lang" || fail "feature $lang" "$got"
+  else
+    fail "feature $lang" "$(tail -1 "$T/log")"
+  fi
+done
+python3 -c 'import json,sys; c=json.load(open("captions.json"))["feature"]; sys.exit(0 if c["en"].startswith("Scan receipts and see where your money goes.") else 1)' &&
+  pass "feature copy says what the app is" || fail "feature copy says what the app is" "captions.json feature.en"
+
 [ "$fails" -eq 0 ]
