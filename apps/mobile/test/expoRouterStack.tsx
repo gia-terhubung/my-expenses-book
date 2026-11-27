@@ -5,7 +5,7 @@
  *
  *   jest.mock("expo-router", () => ({ ...jest.requireActual("../../test/expoRouterStack").stackMock, router: … }));
  */
-import type { ReactNode } from "react";
+import { Children, Fragment, isValidElement, type ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
 type ItemProps = {
@@ -31,8 +31,10 @@ function Menu({ children, accessibilityLabel, title }: ItemProps & { title?: str
   return <View accessibilityLabel={accessibilityLabel ?? title}>{children}</View>;
 }
 
-function Toolbar({ children }: { children?: ReactNode; placement?: string }) {
-  return <View>{children}</View>;
+// Like the native toolbar, only direct children count: a fragment's items are not shown.
+function Toolbar({ children, placement = "bottom" }: { children?: ReactNode; placement?: string }) {
+  const direct = Children.toArray(children).filter((c) => !(isValidElement(c) && c.type === Fragment));
+  return <View testID={`toolbar-${placement}`}>{direct}</View>;
 }
 Toolbar.Button = Action;
 Toolbar.Menu = Menu;

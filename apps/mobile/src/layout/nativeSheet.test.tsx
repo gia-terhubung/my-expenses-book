@@ -1,7 +1,9 @@
-import { act, render } from "@testing-library/react-native";
+import { act, render, screen, within } from "@testing-library/react-native";
 import { Text } from "react-native";
 
-import { NativeSheetHost, NativeSheetPage, TabStackContext, useNativeSheets } from "./NativeSheet";
+import { initI18n } from "@/i18n";
+
+import { NativeSheetHost, NativeSheetPage, SheetBar, TabStackContext, useNativeSheets } from "./NativeSheet";
 
 /** One sheet body at a time: a page going away must only close the sheet it showed. */
 const mockRouter = { push: jest.fn(), back: jest.fn() };
@@ -10,6 +12,7 @@ jest.mock("expo-router", () => ({
   router: { push: (...a: unknown[]) => mockRouter.push(...a), back: () => mockRouter.back() },
 }));
 
+beforeAll(() => initI18n("en"));
 beforeEach(() => jest.clearAllMocks());
 
 it("a closing sheet page does not close the next sheet that opened meanwhile", async () => {
@@ -54,4 +57,19 @@ it("inside a sheet body, pickers do not open another native sheet", async () => 
     </TabStackContext.Provider>,
   );
   expect(inner).toBe(false);
+});
+
+describe("SheetBar", () => {
+  it("a sheet puts X and ✓ in the bottom toolbar (bottom of the Duo column)", async () => {
+    await render(<SheetBar title="New" onCancel={() => {}} onDone={() => {}} doneLabel="Save" />);
+    expect(within(screen.getByTestId("toolbar-bottom")).getByRole("button", { name: "Save" })).toBeTruthy();
+  });
+
+  it("a form inside a page with tabs puts X and ✓ at the top of the column, clear of the tab bar", async () => {
+    await render(<SheetBar title="New" onCancel={() => {}} onDone={() => {}} doneLabel="Save" placement="top" />);
+    expect(screen.queryByTestId("toolbar-bottom")).toBeNull();
+    const top = within(screen.getByTestId("toolbar-right"));
+    expect(top.getByRole("button", { name: "Cancel" })).toBeTruthy();
+    expect(top.getByRole("button", { name: "Save" })).toBeTruthy();
+  });
 });

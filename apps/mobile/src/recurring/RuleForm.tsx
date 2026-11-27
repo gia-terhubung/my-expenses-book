@@ -250,6 +250,8 @@ type Props = {
   onDeleted(): void;
   /** Shown as "‹ Back" when the form replaces the list (one pane). */
   onBack?: () => void;
+  /** iOS: shown inside the Recurring page, which keeps the tab bar: X and ✓ go to the top of the column. */
+  inPage?: boolean;
 };
 
 /**
@@ -262,6 +264,7 @@ export function RuleForm({
   onSaved,
   onDeleted,
   onBack,
+  inPage = false,
 }: Props) {
   // iOS: a create/edit page, so X and checkmark in the bottom toolbar, no tabs, no +.
   const nativeBar = Platform.OS === "ios";
@@ -494,6 +497,7 @@ export function RuleForm({
               onDone={save}
               doneLabel={t("common.save")}
               doneDisabled={savedValues === values}
+              placement={inPage ? "top" : "bottom"}
             />
           ) : (
             <ScreenHeader

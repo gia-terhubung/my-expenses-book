@@ -52,6 +52,7 @@ export function RecurringScreen() {
         onSaved={(rule) => router.setParams({ selected: rule.id })}
         onDeleted={clear}
         onBack={!split ? clear : undefined}
+        inPage
       />
     </StatusBarInset>
   ) : split ? (

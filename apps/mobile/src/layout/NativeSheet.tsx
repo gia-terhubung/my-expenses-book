@@ -12,6 +12,8 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/theme/ThemeProvider";
 
+import { useColumnPlusMenu } from "./PlusMenu";
+
 /**
  * iOS: show an existing sheet body as a native sheet page (route `sheet` in tab stacks, `picker`
  * in the modals stack), so
@@ -131,7 +133,12 @@ export function NativeSheetPage() {
   );
 }
 
-/** Apple sheet bar: title on top; X (cancel) and checkmark (done/save) in the bottom toolbar. Icons, so they move into the Duo column. */
+/**
+ * Apple sheet bar: title on top; X (cancel) and checkmark (done/save) as icons, so they move into
+ * the Duo column. A sheet puts them in the bottom toolbar, near the thumb. A form shown inside a page
+ * that keeps the tab bar (`placement="top"`) puts them at the top of the column instead, after Back
+ * and before the +, because the tab bar takes the bottom there.
+ */
 export function SheetBar({
   title,
   onCancel,
@@ -139,6 +146,7 @@ export function SheetBar({
   doneLabel,
   doneDisabled = false,
   doneIcon = "checkmark",
+  placement = "bottom",
 }: {
   title: string;
   onCancel?: () => void;
@@ -147,39 +155,59 @@ export function SheetBar({
   doneDisabled?: boolean;
   /** SF Symbol for the confirm button (checkmark by default). */
   doneIcon?: "checkmark";
+  placement?: "bottom" | "top";
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const top = placement === "top";
+  const { menu: plusMenu } = useColumnPlusMenu(top);
+  // Native toolbars read their direct children only, so these stay a list, not a fragment.
+  const buttons = [
+    onCancel ? (
+      <Stack.Toolbar.Button
+        key="cancel"
+        icon="xmark"
+        accessibilityLabel={t("common.cancel")}
+        onPress={onCancel}
+      >
+        {t("common.cancel")}
+      </Stack.Toolbar.Button>
+    ) : null,
+    onDone ? (
+      <Stack.Toolbar.Button
+        key="done"
+        icon={doneIcon}
+        variant="prominent"
+        tintColor={theme.colors.primary}
+        accessibilityLabel={doneLabel ?? t("common.done")}
+        disabled={doneDisabled}
+        onPress={onDone}
+      >
+        {doneLabel ?? t("common.done")}
+      </Stack.Toolbar.Button>
+    ) : null,
+  ];
   return (
     <>
+      {/* In a page, keep its Back; a sheet has none. */}
       <Stack.Screen
-        options={{ title, headerShown: true, headerBackVisible: false }}
+        options={
+          top
+            ? { title }
+            : { title, headerShown: true, headerBackVisible: false }
+        }
       />
-      {/* Bottom toolbar: X and checkmark sit at the bottom of the Duo column, near the thumb (owner, 2026-11-26). */}
-      <Stack.Toolbar placement="bottom">
-        <Stack.Toolbar.Spacer />
-        {onCancel ? (
-          <Stack.Toolbar.Button
-            icon="xmark"
-            accessibilityLabel={t("common.cancel")}
-            onPress={onCancel}
-          >
-            {t("common.cancel")}
-          </Stack.Toolbar.Button>
-        ) : null}
-        {onDone ? (
-          <Stack.Toolbar.Button
-            icon={doneIcon}
-            variant="prominent"
-            tintColor={theme.colors.primary}
-            accessibilityLabel={doneLabel ?? t("common.done")}
-            disabled={doneDisabled}
-            onPress={onDone}
-          >
-            {doneLabel ?? t("common.done")}
-          </Stack.Toolbar.Button>
-        ) : null}
-      </Stack.Toolbar>
+      {top ? (
+        <Stack.Toolbar placement="right">
+          {buttons}
+          {plusMenu}
+        </Stack.Toolbar>
+      ) : (
+        <Stack.Toolbar placement="bottom">
+          <Stack.Toolbar.Spacer />
+          {buttons}
+        </Stack.Toolbar>
+      )}
     </>
   );
 }
