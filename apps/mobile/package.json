@@ -66,6 +66,8 @@
   },
   "scripts": {
     "start": "expo start",
+    "dev": "expo start --dev-client",
+    "dev:clear": "expo start --dev-client --clear",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "lint": "expo lint",
