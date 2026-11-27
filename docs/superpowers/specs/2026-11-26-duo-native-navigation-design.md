@@ -1,6 +1,6 @@
 # iPhone Duo and iPad: native navigation (design)
 
-Date: 2026-11-26. Status: **approved by the owner 2026-11-27**. Implementation plan:
+Date: 2026-11-26. Status: **implemented 2026-11-27** (approved by the owner the same day). Implementation plan:
 `docs/superpowers/plans/2026-11-27-native-navigation-implementation.md`. The live review session is done
 on every device; "Final decisions" below is the plan of record and overrides earlier sections where they
 differ. Session plan: `docs/superpowers/plans/2026-11-26-duo-native-navigation.md`. Spike code: branch
