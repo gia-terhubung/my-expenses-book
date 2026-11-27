@@ -103,13 +103,15 @@ The owner sets each pose in Device Hub. Show one item at a time; fix small thing
 
 ## Phase D: plain iPhone pass
 
+DONE 2026-11-27: owner tested the plain iPhone (iPhone 18 Pro Max sim) by hand and approved.
+
 One simulator, opened alone. Close it before Phase E.
 
-- [ ] D1 Native tab bar look next to the slip header.
-- [ ] D2 + variant C against D: does the bottom toolbar sit well with the tab bar? **Confirm the + pick
+- [x] D1 Native tab bar look next to the slip header.
+- [x] D2 (moot: dev switches removed in 22384da; + is variant B, floating on plain iPhone) + variant C against D: does the bottom toolbar sit well with the tab bar? **Confirm the + pick
       from B2.**
-- [ ] D3 Folder screen header: Back, Export, ⋯.
-- [ ] D4 Write the iPhone results into the spec. Close the iPhone simulator.
+- [x] D3 Folder screen header: Back, Export, ⋯.
+- [x] D4 Write the iPhone results into the spec. Close the iPhone simulator.
 
 ## Phase E: iPad pass
 

@@ -114,7 +114,7 @@ to a stack screen), which changes the route structure; try it on the Receipts ta
 
 Owner approved the closed Duo (outer screen), held upright and held sideways, and after testing by hand the open Duo (landscape and portrait) and Split View. Phase B is done. All work is on branch
 `spike/duo-native-nav` (23 commits, last `fabaa35`), not on `main`. Dev switches live in Settings →
-Developer tools (tab placement; + variant B/C/D/E). Default is B.
+Developer tools (tab placement; + variant B/C/D/E). Default is B. (Removed 2026-11-27, see below.)
 
 Answers to the open questions: (1) yes, NativeTabs land at the bottom of the side column once the root
 stops padding the side inset (see below); (2) D does not work on the Duo (the bottom toolbar + sits behind
@@ -150,13 +150,22 @@ the tab bar); plain iPhone still to check; (4) yes, the dev build has the native
   above the keyboard (review/edit, recurring, export, filters, folder picker).
 - **Crash fixed**: pages outside the tabs no longer ask for the add flow (`useMaybeAddReceiptContext`).
 
+### Plain iPhone and dev switches (2026-11-27)
+
+- Owner tested the plain iPhone (iPhone 18 Pro Max simulator) by hand and approved: native tab bar,
+  floating + bottom-right above the tab bar, folder header. Phase D done.
+- An earlier "+ behind Ajustes" came from a variant picked by hand in the dev switches; gone after reload.
+- Dev switches removed (`22384da`): tab placement is always `tabBar`, the + is always variant B
+  (column + when the window has a side column, floating + otherwise). Variants C/D/E and
+  `AccessoryPlus` deleted.
+
 ### Still open (next sessions)
 
 - Open Duo was approved by the owner by hand; tab placement stays at the dev default (tabBar). Half open, PiP and fold-with-sheet-open were not walked step by step.
 - Recurring with rules and Tax year show no + when held sideways (Back + New / Export, no ⋯). Owner to decide.
 - Second field focused while the keyboard is already up does not auto-scroll.
 - Review/edit and other sheets opened from the add flow (its category/currency pickers) still old style.
-- Phase C (Android/Redmi) and D (plain iPhone: X/✓ bottom toolbar vs tab bar, worst-case text sizes).
+- Phase C (Android/Redmi). Phase D (plain iPhone) approved by the owner by hand on 2026-11-27.
   Phase E (iPad) approved by the owner by hand on 2026-11-27.
 - Tests: tabsLayout.test.tsx (16 fail: jest runs as iOS) and tests importing old route paths
   (`@/app/(tabs)/settings` etc.) need updating in the real implementation plan.
