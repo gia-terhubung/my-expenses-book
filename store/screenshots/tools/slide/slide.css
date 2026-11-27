@@ -68,3 +68,33 @@ body {
   position: absolute;
   background: var(--ink);
 }
+
+/* Paper receipt (00-free, 01-private): mono print, torn top and bottom, TOTAL on the highlighter. */
+.receipt {
+  position: absolute;
+  box-sizing: border-box;
+  background: #fbfaf6;
+  color: #24302c;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  line-height: 1.55;
+  transform: rotate(-4deg);
+  filter: drop-shadow(0 0.6vw 1.6vw rgba(18, 36, 31, 0.25));
+}
+.receipt::before,
+.receipt::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--zig);
+  background: radial-gradient(circle at 50% 0, transparent calc(var(--zig) * 0.86), #fbfaf6 calc(var(--zig) * 0.9))
+    0 0 / calc(var(--zig) * 2) var(--zig) repeat-x;
+}
+.receipt::before { top: calc(var(--zig) * -1); transform: scaleY(-1); }
+.receipt::after { bottom: calc(var(--zig) * -1); }
+.receipt .head { text-align: center; font-weight: 700; letter-spacing: 0.06em; }
+.receipt .foot { text-align: center; font-weight: 700; }
+.receipt .gap { height: 0.8em; }
+.receipt .row { display: flex; justify-content: space-between; gap: 1em; }
+.receipt .rule { border-top: 0.12em dashed #9aa6a1; margin: 0.4em 0; }
+.receipt .total { font-weight: 800; background: var(--sun); padding: 0.15em 0.4em; margin: 0 -0.4em; border-radius: 0.2em; }

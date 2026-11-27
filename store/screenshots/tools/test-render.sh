@@ -93,4 +93,20 @@ duo-closed $T/duo-closed.png 1398 2034 spine
 duo-open $T/duo-open.png 2007 2853 fold
 LIST
 
+# receipt slides (00-free, 01-private) render from their slips
+while read -r slide slip lang w h; do
+  out="$T/$slide-$lang-$w.png"
+  if tools/render-one.sh test "$lang" "$slide" receipt "$slip" "$w" "$h" "$out" >"$T/log" 2>&1; then
+    got=$(probe "$out")
+    [ "$got" = "$w $h alpha=no" ] && pass "$slide $lang $w x $h renders" || fail "$slide $lang $w x $h renders" "$got"
+  else
+    fail "$slide $lang $w x $h renders" "$(tail -1 "$T/log")"
+  fi
+done <<LIST
+00-free zero-receipt.json en 1320 2868
+00-free zero-receipt.json pt-BR 2007 2853
+01-private private-receipt.json en 2007 2853
+01-private private-receipt.json pt-BR 1320 2868
+LIST
+
 [ "$fails" -eq 0 ]

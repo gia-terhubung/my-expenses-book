@@ -3,6 +3,7 @@
 //   device    android | iphone | ipad | tablet | duo-closed | duo-open
 //   raw       capture to show on the device's screen (relative to this page or a file: URL)
 //   caption   the slide's caption text
+//   lines     device=receipt only: the slip's lines as JSON ("LABEL\tVALUE"; "" is a gap)
 // Sets <body data-status> to "ok", "overflow" (caption does not fit its box) or "aspect" (the
 // capture's shape differs from the device's screen by more than 2%), read by render-one.sh.
 (async () => {
@@ -20,8 +21,9 @@
     "duo-closed": { aspect: 1398 / 2034, bezel: 0.03, radius: 0.12, spine: true },
     "duo-open": { aspect: 2853 / 2007, bezel: 0.022, radius: 0.05, fold: true },
   };
+  const receipt = q.get("device") === "receipt";
   const spec = DEVICES[q.get("device")];
-  if (!spec) return status("device");
+  if (!spec && !receipt) return status("device");
 
   // Page: caption on top, band at the bottom, device in between (tipped, may run off the bottom).
   const gutter = W * 0.07;
@@ -49,9 +51,43 @@
   band.style.setProperty("--zig", `${zig}px`);
   document.body.append(band);
 
-  // Device size: as wide as fits, but a sideways device also may not be taller than the free space.
   const top = capTop + capBox + W * 0.06;
   const free = H - top;
+  const loaded = () =>
+    document.readyState === "complete" ? Promise.resolve() : new Promise((r) => addEventListener("load", r, { once: true }));
+
+  if (receipt) {
+    // A paper receipt instead of a device (00-free, 01-private), tipped like the devices.
+    const lines = JSON.parse(q.get("lines") || "[]");
+    const rw = Math.min(W * 0.86, H * 0.42);
+    const fs = rw * 0.06;
+    const card = document.createElement("div");
+    card.className = "receipt";
+    Object.assign(card.style, { width: `${rw}px`, left: `${(W - rw) / 2}px`, fontSize: `${fs}px`, padding: `${fs * 1.6}px ${fs * 1.4}px` });
+    card.style.setProperty("--zig", `${fs * 0.9}px`);
+    lines.forEach((line, i) => {
+      const row = document.createElement("div");
+      const [label, value] = line.split("\t");
+      if (line === "") row.className = "gap";
+      else if (value === undefined) row.className = i === 0 ? "head" : "foot";
+      else row.className = label.startsWith("TOTAL") ? "row total" : "row";
+      if (label.startsWith("TOTAL")) card.append(Object.assign(document.createElement("div"), { className: "rule" }));
+      if (value === undefined) row.textContent = line;
+      else row.append(Object.assign(document.createElement("span"), { textContent: label }), Object.assign(document.createElement("span"), { textContent: value }));
+      card.append(row);
+    });
+    document.body.append(card);
+    await loaded();
+    // Centre it in the free space above the band.
+    // In the free space above the band, a little below centre (the band takes the bottom 17%).
+    card.style.top = `${top + Math.max((free - H * 0.17 - card.offsetHeight) * 0.6, 0)}px`;
+    document.body.dataset.marks = "receipt";
+    if (cap.scrollHeight > cap.clientHeight + 1) return status("overflow");
+    if (card.getBoundingClientRect().bottom > H) return status("overflow");
+    return status("ok");
+  }
+
+  // Device size: as wide as fits, but a sideways device also may not be taller than the free space.
   let dw = W * (spec.aspect > 1 ? 0.9 : 0.78);
   const dh = (d) => (d - 2 * d * spec.bezel) / spec.aspect + 2 * d * spec.bezel;
   if (spec.aspect > 1 && dh(dw) > free * 0.8) dw = (free * 0.8) / (dh(dw) / dw);
@@ -115,7 +151,7 @@
 
   // Decide on the window's load event: the image (added before it) and the caption font have loaded
   // by then. Awaiting decode() instead raced Chrome's --dump-dom.
-  if (document.readyState !== "complete") await new Promise((r) => addEventListener("load", r, { once: true }));
+  await loaded();
   if (!img.naturalWidth) return status("raw");
   const rawAspect = img.naturalWidth / img.naturalHeight;
   if (Math.abs(rawAspect / spec.aspect - 1) > 0.02) return status("aspect");

@@ -4,7 +4,8 @@
 # Usage: tools/render-one.sh <target> <lang> <slide> <device> <raw> <w> <h> <out.png>
 #   target  out/ folder name, e.g. appstore/iphone-6.9 (only used in messages)
 #   slide   caption key in captions.json, e.g. 03-month
-#   raw     capture shown on the device (path relative to store/screenshots)
+#   raw     capture shown on the device (path relative to store/screenshots); for device "receipt",
+#           the slip JSON (zero-receipt.json, private-receipt.json) whose <lang> lines are printed
 # CAPTION_OVERRIDE replaces the caption text (tests). PAGE overrides the template (default slide.html).
 # Prints "FAIL: <status>" and exits 1 when the page reports anything but ok.
 set -u
@@ -17,11 +18,15 @@ mkdir -p out "$(dirname "$OUT")"
 
 caption=${CAPTION_OVERRIDE:-$(python3 -c 'import json,sys; print(json.load(open("captions.json"))[sys.argv[1]][sys.argv[2]])' "$SLIDE" "$LANG_")}
 url=$(python3 -c '
-import os, sys, urllib.parse as u
-page, raw, cap, dev, w, h = sys.argv[1:7]
-q = u.urlencode({"w": w, "h": h, "device": dev, "caption": cap, "raw": "file://" + os.path.abspath(raw)})
-print("file://" + os.path.abspath(page) + "?" + q)
-' "${PAGE:-tools/slide/slide.html}" "$RAW" "$caption" "$DEVICE" "$W" "$H")
+import json, os, sys, urllib.parse as u
+page, raw, cap, dev, w, h, lang = sys.argv[1:8]
+q = {"w": w, "h": h, "device": dev, "caption": cap}
+if dev == "receipt":
+    q["lines"] = json.dumps(json.load(open(raw))[lang], ensure_ascii=False)
+else:
+    q["raw"] = "file://" + os.path.abspath(raw)
+print("file://" + os.path.abspath(page) + "?" + u.urlencode(q))
+' "${PAGE:-tools/slide/slide.html}" "$RAW" "$caption" "$DEVICE" "$W" "$H" "$LANG_")
 
 flags=(--headless=new --hide-scrollbars --force-device-scale-factor=1 --allow-file-access-from-files
   --virtual-time-budget=5000 "--window-size=$W,$H")
