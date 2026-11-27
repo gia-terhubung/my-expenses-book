@@ -12,8 +12,12 @@ jest.mock("expo-router/native-tabs", () => {
     mockTabs.triggers.push(name);
     return <>{children}</>;
   };
-  Trigger.Icon = () => null;
-  Trigger.Label = () => null;
+  Trigger.Icon = function Icon() {
+    return null;
+  };
+  Trigger.Label = function Label() {
+    return null;
+  };
   const NativeTabs = ({ children, ...props }: { children?: ReactNode }) => {
     mockTabs.props = props;
     return <>{children}</>;

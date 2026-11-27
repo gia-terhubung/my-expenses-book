@@ -330,7 +330,7 @@ export function PageViewer({
 }
 
 /**
- * SPIKE (iOS, tab stacks): the full-screen photo as a native black page; Done is Apple's checkmark
+ * iOS, tab stacks: the full-screen photo as a native black page; Done is Apple's checkmark
  * in the bottom toolbar, so on the iPhone Duo it sits at the bottom of the side column and the photo
  * gets the full height.
  */

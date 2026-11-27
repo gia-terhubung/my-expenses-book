@@ -1,7 +1,7 @@
 import type { SearchState } from "./filterState";
 
 /**
- * SPIKE: hands the committed filters and the apply step from Search to the native filter sheet
+ * Hands the committed filters and the apply step from Search to the native filter sheet
  * route (iOS). In memory; set right before opening the sheet.
  */
 type Pending = { value: SearchState; onApply(next: SearchState): void };

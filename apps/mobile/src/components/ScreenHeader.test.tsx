@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 
 import { initI18n } from "@/i18n";
 
-import { useAndroidPlatform } from "../../test/androidPlatform";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 import { ScreenHeader } from "./ScreenHeader";
 
@@ -42,7 +42,7 @@ beforeEach(() => {
 });
 
 describe("ScreenHeader (Android: in-page header)", () => {
-  useAndroidPlatform();
+  runAsAndroid();
 
   it("back has label 'Back', 48dp, and calls onBack", async () => {
     const onBack = jest.fn();

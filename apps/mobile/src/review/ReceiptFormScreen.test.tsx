@@ -11,7 +11,7 @@ import type { Layout } from "@/layout/layout";
 import { createPrefs, type PrefsStore } from "@/prefs/prefs";
 
 import { ReceiptFormScreen } from "./ReceiptFormScreen";
-import { useAndroidPlatform } from "../../test/androidPlatform";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockPrefs: PrefsStore;
@@ -115,7 +115,7 @@ beforeEach(() => {
 });
 
 // The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
-useAndroidPlatform();
+runAsAndroid();
 
 describe("ReceiptFormScreen", () => {
   it("edit: typed values, fields and page viewer survive not split -> split -> not split", async () => {

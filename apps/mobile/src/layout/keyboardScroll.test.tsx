@@ -9,15 +9,18 @@ const listeners: Record<string, Listener> = {};
 let scrollTo: jest.Mock;
 let fieldY = 0;
 
+/** Points the hook's ref at the ScrollView with a spy for scrollTo (outside the component). */
+function attach(target: { current: unknown }, node: unknown) {
+  if (node) (node as unknown as { scrollTo: unknown }).scrollTo = scrollTo;
+  target.current = node;
+}
+
 function Form() {
   const { scrollProps, bottomRoom } = useKeyboardForm();
   return (
     <ScrollView
       {...scrollProps}
-      ref={(node) => {
-        if (node) (node as { scrollTo: unknown }).scrollTo = scrollTo;
-        (scrollProps.ref as { current: unknown }).current = node;
-      }}
+      ref={(node) => attach(scrollProps.ref as { current: unknown }, node)}
       contentContainerStyle={{ paddingBottom: bottomRoom }}
     >
       <TextInput testID="a" />

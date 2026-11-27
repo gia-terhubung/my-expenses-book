@@ -18,7 +18,7 @@ export const unstable_settings = {
 const TAB_ROOTS = new Set(["index", "search", "folders", "settings"]);
 
 /**
- * SPIKE: each tab has its own Stack (Apple's pattern), so pages opened from a tab keep the tab bar
+ * Each tab has its own Stack (Apple's pattern), so pages opened from a tab keep the tab bar
  * (on the iPhone Duo: the side column). Shared group: every tab can open the same pages.
  * Tab roots pad themselves (TabScreen); pages pushed on top pad by the tab's side insets here.
  */
@@ -61,7 +61,7 @@ export default function TabStack() {
             }
       }
     >
-      {/* SPIKE (iOS): any sheet body as a native sheet page (NativeSheetHost). */}
+      {/* iOS: any sheet body as a native sheet page (NativeSheetHost). */}
       {/* Create/edit pages: a sheet over the tabs (no tab bar, no +), X and checkmark (owner, 2026-11-26). */}
       <Stack.Screen name="recurring/[id]" options={{ presentation: "modal", headerShown: true }} />
       <Stack.Screen name="sheet" options={{ presentation: "modal", headerShown: true }} />
@@ -80,7 +80,7 @@ export default function TabStack() {
           contentStyle: { backgroundColor: "#000" },
         }}
       />
-      {/* SPIKE (iOS): native filter sheet with Apple's bar (Cancel, Apply). */}
+      {/* iOS: native filter sheet with Apple's bar (Cancel, Apply). */}
       <Stack.Screen name="search-filter" options={{ presentation: "modal", headerShown: true, title: t("search.filters") }} />
     </Stack>
   );

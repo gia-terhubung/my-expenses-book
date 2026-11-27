@@ -65,7 +65,7 @@ export function FolderPicker({ visible, value, onChange, onClose }: Props) {
     onChange(folder.id);
   };
 
-  // SPIKE (iOS): native sheet page with the X at the bottom of the Duo column.
+  // iOS: native sheet page with the X at the bottom of the Duo column.
   const body = (native: boolean) => (
     <View
       style={{

@@ -18,7 +18,7 @@ import { ReceiptListDetail } from "@/receipts/ReceiptListDetail";
 import { categoryLabel } from "@/review/ReviewFields";
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { useInNativeTabs } from "@/layout/navSpike";
+import { useInNativeTabs } from "@/layout/navContext";
 
 import { setFilterRequest } from "./filterBridge";
 import { FilterSheet } from "./FilterSheet";
@@ -60,7 +60,7 @@ export function SearchScreen() {
   }
   const [queryText, setQueryText] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
-  // SPIKE (iOS native tabs): Apple's search tab and native search field, Filter as a header button.
+  // iOS native tabs: the native search field, Filter as a header button.
   const nativeSearch = useInNativeTabs();
 
   useEffect(() => {

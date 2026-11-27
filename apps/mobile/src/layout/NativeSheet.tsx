@@ -13,7 +13,8 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/theme/ThemeProvider";
 
 /**
- * SPIKE (iOS, tab stacks): show an existing sheet body as a native sheet page (route `sheet`), so
+ * iOS: show an existing sheet body as a native sheet page (route `sheet` in tab stacks, `picker`
+ * in the modals stack), so
  * its X and checkmark are Apple bar items that move into the iPhone Duo side column. The host keeps
  * today's `visible` / `onClose` contract; the body reads `useInNativeSheet()` and renders `SheetBar`
  * instead of its own header and buttons.
@@ -47,7 +48,8 @@ export function useNativeSheetRoute(): SheetRoute | null {
 
 /** Whether a sheet opened from here should be a native sheet page. */
 export function useNativeSheets(): boolean {
-  return Platform.OS === "ios" && useContext(TabStackContext);
+  const inTabStack = useContext(TabStackContext);
+  return Platform.OS === "ios" && inTabStack;
 }
 
 export function NativeSheetHost({
@@ -64,7 +66,9 @@ export function NativeSheetHost({
 }) {
   const open = useRef(false);
   const close = useRef(onClose);
-  close.current = onClose;
+  useEffect(() => {
+    close.current = onClose;
+  });
 
   // Keep the page showing the latest body (state lives in the parent).
   useEffect(() => {

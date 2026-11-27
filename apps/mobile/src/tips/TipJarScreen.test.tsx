@@ -9,7 +9,7 @@ import type { TipProduct } from "@/payments/types";
 import { tokens } from "@/theme/tokens";
 
 import { TipJarScreen } from "./TipJarScreen";
-import { useAndroidPlatform } from "../../test/androidPlatform";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 // Native header and sheet toolbars render as plain views; router calls are recorded.
 jest.mock("expo-router", () => ({
@@ -38,7 +38,7 @@ beforeAll(() => initI18n("en"));
 const LABELS = ["Espresso, $2.99", "Black coffee, $4.99", "Cappuccino, $9.99"];
 
 // The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
-useAndroidPlatform();
+runAsAndroid();
 
 describe("TipJarScreen", () => {
   it("connects on mount, lists the three tiers with store prices, disconnects on unmount", async () => {

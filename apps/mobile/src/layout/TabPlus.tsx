@@ -9,12 +9,12 @@ import {
   ContentInsetsContext,
   TabRootContext,
   useInNativeTabs,
-} from "./navSpike";
+} from "./navContext";
 import { PlusClaimContext, usePlusMenu, useShortColumn } from "./PlusMenu";
 import { useLayout } from "./useLayout";
 
 /**
- * SPIKE: the + on an iOS native tab screen. Rendered inside each tab screen so it reads that
+ * The + on an iOS native tab screen. Rendered inside each tab screen so it reads that
  * screen's safe area (NativeTabs gives each tab its own, which already includes the tab bar or the
  * Duo side column). Renders nothing off iOS native tabs.
  */
@@ -40,7 +40,7 @@ const NO_HEADER_PLUS = new Set([
   "recurring/[id]",
 ]);
 
-/** SPIKE: the column + on every page of a tab stack (owner, 2026-11-26). Used as the stack's screenLayout. */
+/** The column + on every page of a tab stack. Used as the stack's screenLayout. */
 export function TabStackPlus({
   children,
   routeName,
@@ -78,7 +78,7 @@ function HeaderPlus() {
 }
 
 /**
- * SPIKE: a tab screen on iOS native tabs. Pads the content by the tab's own side insets (they
+ * A tab screen on iOS native tabs. Pads the content by the tab's own side insets (they
  * include the iPhone Duo side column), then adds the +. Off native tabs it is a plain pass-through.
  */
 export function TabScreen({

@@ -13,7 +13,7 @@ import { ReceiptDetail } from "@/receipts/ReceiptDetail";
 export default function DocumentScreen() {
   const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
   usePopToSelection(id, useLayout().split, from === "list");
-  // SPIKE (iOS): native header, so Back, Edit and ⋯ move into the iPhone Duo side column.
+  // iOS: native header, so Back, Edit and ⋯ move into the iPhone Duo side column.
   const nativeHeader = Platform.OS === "ios";
   const detail = (
     <ReceiptDetail

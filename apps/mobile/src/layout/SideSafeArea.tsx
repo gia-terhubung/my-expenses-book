@@ -20,7 +20,7 @@ export function SideSafeArea({ children }: { children: ReactNode }) {
     () => ({ left: insets.left, right: insets.right }),
     [insets.left, insets.right],
   );
-  // SPIKE: on iOS the native tabs, headers and toolbars must reach the Duo side column to move into it,
+  // On iOS the native tabs, headers and toolbars must reach the Duo side column to move into it,
   // so the root does not pad; screens read their own safe area.
   const pad = Platform.OS !== "ios";
   return (

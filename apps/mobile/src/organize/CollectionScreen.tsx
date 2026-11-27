@@ -124,7 +124,7 @@ export function CollectionScreen(props: Props) {
     />
   );
 
-  // SPIKE (iOS): a native header, so on the iPhone Duo Back, Export and ⋯ move into the side column.
+  // iOS: a native header, so on the iPhone Duo Back, Export and ⋯ move into the side column.
   const nativeHeader = Platform.OS === "ios";
 
   return (

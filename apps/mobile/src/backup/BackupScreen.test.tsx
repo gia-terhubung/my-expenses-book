@@ -18,7 +18,7 @@ import {
   WrongPassphraseError,
 } from "./errors";
 import { restoreLease } from "./restoreLease";
-import { useAndroidPlatform } from "../../test/androidPlatform";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 const mockPrefsMap: Record<string, unknown> = {};
@@ -104,7 +104,7 @@ const fill = async (p: string, c: string) => {
 const alertButtons = (spy: jest.SpyInstance) => spy.mock.calls[0][2] as AlertButton[];
 
 // The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
-useAndroidPlatform();
+runAsAndroid();
 
 describe("backup", () => {
   it("mismatch disables Back up now", async () => {

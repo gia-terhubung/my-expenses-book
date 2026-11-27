@@ -214,7 +214,7 @@ export function ExportScreen({
           }}
         >
           {Platform.OS === "ios" ? (
-            // SPIKE (iOS): X closes, checkmark runs the export (owner, 2026-11-26: create pages get X and checkmark).
+            // iOS: X closes, checkmark runs the export (create pages get X and checkmark).
             <SheetBar
               title={t("export.title")}
               onCancel={() => (router.canGoBack() ? router.back() : undefined)}

@@ -137,7 +137,7 @@ export function ReceiptFormScreen({ mode }: { mode: ReviewFormMode }) {
   const sideBySide = split;
   const errorCount = Object.values(form.errors).filter(Boolean).length;
 
-  // SPIKE (iOS): native header (Later/Cancel left, Discard and Save right) instead of the in-page
+  // iOS: native header (Later/Cancel left, Discard and Save right) instead of the in-page
   // header and the bottom bar, so on the iPhone Duo they move into the side column.
   const nativeHeader = Platform.OS === "ios";
   const title = t(editing ? "review.editTitle" : "review.title");

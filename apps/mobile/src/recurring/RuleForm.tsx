@@ -263,7 +263,7 @@ export function RuleForm({
   onDeleted,
   onBack,
 }: Props) {
-  // SPIKE (iOS): a create/edit page, so X and checkmark in the bottom toolbar, no tabs, no + (owner, 2026-11-26).
+  // iOS: a create/edit page, so X and checkmark in the bottom toolbar, no tabs, no +.
   const nativeBar = Platform.OS === "ios";
   const { t, i18n } = useTranslation();
   const locale = i18n?.language || "en";

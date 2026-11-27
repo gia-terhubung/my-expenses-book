@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { AddReceiptProvider } from "@/capture/AddReceiptProvider";
 import { BottomTabs } from "@/layout/BottomTabBar";
-import { NativeTabsContext } from "@/layout/navSpike";
+import { NativeTabsContext } from "@/layout/navContext";
 import { SideRail } from "@/layout/SideRail";
 import { TAB_LABEL_KEYS, TAB_ROUTES, TAB_SF_SYMBOLS } from "@/layout/tabs";
 import { useLayout } from "@/layout/useLayout";
@@ -25,7 +25,7 @@ export default function TabsLayout() {
 function IosTabs() {
   const { t } = useTranslation();
   const theme = useTheme();
-  // SPIKE workaround (react-native-screens #4989 / #5115): on an iPhone Duo cold launch the tab bar
+  // Workaround (react-native-screens #4989 / #5115): on an iPhone Duo cold launch the tab bar
   // misses the side column until a later layout pass. Mount it hidden, show it after 500 ms.
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -53,7 +53,7 @@ function JsTabs() {
     <Tabs
       tabBar={(props) => {
         if (!bar) return <SideRail {...props} variant={nav === "iconRail" ? "icons" : "labels"} />;
-        // SPIKE: phone width hides the bar on pages pushed inside a tab (Google's phone pattern); the rail stays.
+        // Phone width hides the bar on pages pushed inside a tab (Google's phone pattern); the rail stays.
         const nested = (props.state.routes[props.state.index] as { state?: { index?: number } } | undefined)?.state;
         return nested && (nested.index ?? 0) > 0 ? null : <BottomTabs {...props} />;
       }}

@@ -2,7 +2,7 @@ import { router, Stack } from "expo-router";
 import type { ReactNode } from "react";
 import { Platform, Text, View } from "react-native";
 
-import { useInTabRoot } from "@/layout/navSpike";
+import { useInTabRoot } from "@/layout/navContext";
 import { useColumnPlusMenu } from "@/layout/PlusMenu";
 import { useTranslation } from "react-i18next";
 
@@ -32,7 +32,7 @@ export function ScreenHeader({
   onBack?: (() => void) | null;
   actions?: ReactNode;
   titleStyle?: "title" | "headline";
-  /** SPIKE (iOS): `Stack.Toolbar` items for the native header (they replace `actions` there). */
+  /** iOS: `Stack.Toolbar` items for the native header (they replace `actions` there). */
   toolbar?: ReactNode;
   /**
    * iOS short side column: `Stack.Toolbar.MenuAction` rows that replace `toolbar` there, inside a ⋯
@@ -46,7 +46,7 @@ export function ScreenHeader({
   const { menu: plusMenu, submenu: plusSubmenu } = useColumnPlusMenu(
     Platform.OS === "ios" && onBack !== null && !inTabRoot && toolbar != null,
   );
-  // SPIKE (iOS): a page with a back control on a stack screen uses the native header, so Back and its
+  // iOS: a page with a back control on a stack screen uses the native header, so Back and its
   // actions move into the iPhone Duo side column. Not on a tab root (its detail pane has no stack header).
   if (Platform.OS === "ios" && onBack !== null && !inTabRoot) {
     return (

@@ -53,7 +53,7 @@ export function FilterSheet(props: Props) {
   );
 }
 
-/** SPIKE (iOS): the sheet body as a native sheet page, with Cancel and Apply in Apple's bar. */
+/** iOS: the sheet body as a native sheet page, with Cancel and Apply in Apple's bar. */
 export function FilterSheetPage({
   value,
   onApply,
@@ -129,7 +129,7 @@ function SheetBody({
           <Stack.Screen
             options={{ headerShown: true, title: t("search.filters") }}
           />
-          {/* SPIKE: bottom toolbar, so X and checkmark sit at the bottom of the Duo column (thumb reach). */}
+          {/* Bottom toolbar, so X and checkmark sit at the bottom of the Duo column (thumb reach). */}
           <Stack.Toolbar placement="bottom">
             <Stack.Toolbar.Spacer />
             <Stack.Toolbar.Button

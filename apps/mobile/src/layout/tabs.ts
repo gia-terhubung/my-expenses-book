@@ -2,7 +2,7 @@ import type Ionicons from "@expo/vector-icons/Ionicons";
 
 /**
  * Tab route names under (tabs); the order here is the display order. Each tab is a group with its
- * own Stack (SPIKE), so pages opened from a tab keep the tab bar.
+ * own Stack, so pages opened from a tab keep the tab bar.
  */
 export const TAB_ROUTES = ["(receipts)", "(search)", "(folders)", "(settings)"] as const;
 export type TabRoute = (typeof TAB_ROUTES)[number];

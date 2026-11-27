@@ -37,13 +37,22 @@ function Toolbar({ children }: { children?: ReactNode; placement?: string }) {
 Toolbar.Button = Action;
 Toolbar.Menu = Menu;
 Toolbar.MenuAction = Action;
-Toolbar.Spacer = () => null;
-Toolbar.View = ({ children }: { children?: ReactNode }) => <View>{children}</View>;
+function Spacer() {
+  return null;
+}
+function ToolbarView({ children }: { children?: ReactNode }) {
+  return <View>{children}</View>;
+}
+Toolbar.Spacer = Spacer;
+Toolbar.View = ToolbarView;
 
 function Stack({ children }: { children?: ReactNode }) {
   return <View>{children}</View>;
 }
-Stack.Screen = (_: { options?: unknown; name?: string }) => null;
+function Screen(_: { options?: unknown; name?: string }) {
+  return null;
+}
+Stack.Screen = Screen;
 Stack.Toolbar = Toolbar;
 
 export const stackMock = { Stack };

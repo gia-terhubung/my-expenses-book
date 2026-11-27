@@ -20,7 +20,7 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 import { totalLine } from "./format";
 import { slipAmountText } from "./slipAmount";
-import { useContentInsets } from "@/layout/navSpike";
+import { useContentInsets } from "@/layout/navContext";
 
 import { SlipEdge } from "./SlipEdge";
 
@@ -160,7 +160,7 @@ export function TotalsHeader() {
       onPress={() => router.push("/stats" as Href)}
       style={({ pressed }) => ({
         backgroundColor: colors.slip,
-        // Bleeds under the iPhone Duo side column (SPIKE); the text keeps its gutter.
+        // Bleeds under the iPhone Duo side column; the text keeps its gutter.
         marginLeft: -side.left,
         marginRight: -side.right,
         paddingLeft: spacing.lg + side.left,

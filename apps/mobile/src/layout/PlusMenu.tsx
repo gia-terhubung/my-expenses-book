@@ -8,10 +8,10 @@ import { useMaybeAddReceiptContext } from "@/capture/addReceiptContext";
 import type { CaptureChoice } from "@/capture/CaptureSheet";
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { useInNativeTabs } from "./navSpike";
+import { useInNativeTabs } from "./navContext";
 
 /**
- * SPIKE (iOS, owner 2026-11-26): the + opens Apple's menu (icon + word per row) instead of the
+ * iOS: the + opens Apple's menu (icon + word per row) instead of the
  * add sheet, and in the Duo side column it comes after the page's own buttons.
  */
 export const PLUS_CHOICES: {

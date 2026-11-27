@@ -9,7 +9,7 @@ import { CollectionScreen } from "@/organize/CollectionScreen";
 import { RecurringList } from "@/recurring/RecurringList";
 import { createRule } from "@/recurring/rules";
 
-import { NativeTabsContext } from "./navSpike";
+import { NativeTabsContext } from "./navContext";
 
 /**
  * iOS, iPhone Duo side column (spec "Final decisions", short column < 560 pt): pages without their

@@ -19,7 +19,7 @@ export default function ModalsLayout() {
   const theme = useTheme();
   const side = useSideInsets();
   if (Platform.OS !== "ios") return <Stack screenOptions={{ headerShown: false }} />;
-  // SPIKE (iOS): pad the screen content, not the stack, so native headers reach the Duo side column.
+  // iOS: pad the screen content, not the stack, so native headers reach the Duo side column.
   const base = rootStackOptions(t, theme.colors);
   return (
     <Stack

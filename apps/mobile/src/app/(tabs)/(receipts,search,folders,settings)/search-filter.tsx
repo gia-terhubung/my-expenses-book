@@ -4,7 +4,7 @@ import { getFilterRequest } from "@/search/filterBridge";
 import { FilterSheetPage } from "@/search/FilterSheet";
 import { EMPTY_SEARCH } from "@/search/filterState";
 
-/** SPIKE (iOS): Search filters as a native sheet page (Cancel and Apply in Apple's bar). */
+/** iOS: Search filters as a native sheet page (Cancel and Apply in Apple's bar). */
 export default function SearchFilterRoute() {
   const request = getFilterRequest();
   return (

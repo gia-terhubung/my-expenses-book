@@ -16,7 +16,7 @@ import { monthlyEquivalent } from "./format";
 import { RECURRING_LIST_TEXT, RecurringList } from "./RecurringList";
 import { RecurringScreen } from "./RecurringScreen";
 import { createRule, listRules } from "./rules";
-import { useAndroidPlatform } from "../../test/androidPlatform";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockFx: FxCache = { base: "idr", latestDate: null, fetchedAt: null, byDate: {} };
@@ -94,7 +94,7 @@ const noop = () => {};
 const idr = (minor: number) => formatMoney(minor, "IDR", "en");
 
 // The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
-useAndroidPlatform();
+runAsAndroid();
 
 describe("RecurringList", () => {
   it("each row shows merchant, amount, frequency and the next date", async () => {

@@ -19,7 +19,7 @@ export function StatusBarInset({
 }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  // SPIKE (iOS): under a native header the screen already starts below the status bar.
+  // iOS: under a native header the screen already starts below the status bar.
   const headerShown = useContext(HeaderShownContext);
   return (
     <View

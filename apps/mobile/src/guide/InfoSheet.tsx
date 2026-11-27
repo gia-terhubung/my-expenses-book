@@ -31,7 +31,7 @@ export function InfoSheet({
   const insets = useSafeAreaInsets();
   const sheetTop = useSheetTopInset();
   const nativeSheets = useNativeSheets();
-  // SPIKE (iOS): native sheet page with the checkmark (Done) at the bottom of the Duo column.
+  // iOS: native sheet page with the checkmark (Done) at the bottom of the Duo column.
   const body = (native: boolean) => (
     <View
       style={{

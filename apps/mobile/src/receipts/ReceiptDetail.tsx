@@ -31,7 +31,7 @@ type Props = {
   onEdit(id: string): void;
   onDeleted(): void;
   onBack?: () => void;
-  /** SPIKE (iOS): native header with Back, Edit and a ⋯ menu instead of the in-page header and buttons. */
+  /** iOS: native header with Back, Edit and a ⋯ menu instead of the in-page header and buttons. */
   nativeHeader?: boolean;
 };
 

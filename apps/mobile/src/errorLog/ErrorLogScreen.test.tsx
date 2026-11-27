@@ -7,7 +7,7 @@ import type { KV } from "@/prefs/prefs";
 
 import { createErrorLog } from "./errorLog";
 import { ErrorLogScreen } from "./ErrorLogScreen";
-import { useAndroidPlatform } from "../../test/androidPlatform";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 // Native header and sheet toolbars render as plain views; router calls are recorded.
 jest.mock("expo-router", () => ({
@@ -50,7 +50,7 @@ beforeAll(() => initI18n("en"));
 beforeEach(() => mockShare.mockReset().mockResolvedValue(undefined));
 
 // The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
-useAndroidPlatform();
+runAsAndroid();
 
 describe("ErrorLogScreen", () => {
   it("shows the empty copy when nothing is logged", async () => {

@@ -7,7 +7,7 @@ import { useDataVersion } from "@/db/changes";
 import { listCategories } from "@/db/repositories/categories";
 import type { ReceiptFilter } from "@/db/repositories/receiptQueries";
 import type { Receipt } from "@/db/types";
-import { useContentInsets } from "@/layout/navSpike";
+import { useContentInsets } from "@/layout/navContext";
 import { useTabBarSpace } from "@/layout/useTabBarSpace";
 import { usePref } from "@/prefs/PrefsProvider";
 import { categoryLabel } from "@/review/ReviewFields";

@@ -5,7 +5,7 @@ import { StyleSheet, Text } from "react-native";
 import { AddReceiptContext, type AddReceipt } from "@/capture/addReceiptContext";
 import { initI18n } from "@/i18n";
 
-import { NativeTabsContext } from "./navSpike";
+import { NativeTabsContext } from "./navContext";
 import { SHORT_COLUMN_HEIGHT, useColumnPlusMenu } from "./PlusMenu";
 import { TabPlus, TabStackPlus } from "./TabPlus";
 
@@ -198,9 +198,9 @@ describe("+ placement (iOS native tabs)", () => {
 
   it("useColumnPlusMenu outside the add flow (modals) returns no menu and does not throw", async () => {
     mockEdge = "trailing";
-    let result: ReturnType<typeof useColumnPlusMenu> | undefined;
+    const report = jest.fn();
     function Page() {
-      result = useColumnPlusMenu();
+      report(useColumnPlusMenu());
       return null;
     }
     await render(
@@ -208,7 +208,7 @@ describe("+ placement (iOS native tabs)", () => {
         <Page />
       </Tabs>,
     );
-    expect(result).toEqual({ menu: null, submenu: null });
+    expect(report).toHaveBeenLastCalledWith({ menu: null, submenu: null });
   });
 
   it("off native tabs (Android, modals) there is no floating +", async () => {

@@ -75,7 +75,7 @@ function AppStack() {
   const theme = useTheme();
   const side = useSideInsets();
   const base = rootStackOptions(t, theme.colors);
-  // SPIKE (iOS): the root no longer pads the sides (SideSafeArea), so native headers and toolbars can
+  // iOS: the root no longer pads the sides (SideSafeArea), so native headers and toolbars can
   // move into the iPhone Duo side column; the screen content pads instead.
   const screenOptions =
     Platform.OS === "ios"
@@ -83,12 +83,12 @@ function AppStack() {
       : base;
   return (
     <Stack screenOptions={screenOptions}>
-      {/* SPIKE (iOS): tab screens pad their own sides (TabScreen), so the native tab bar reaches the Duo column. */}
+      {/* iOS: tab screens pad their own sides (TabScreen), so the native tab bar reaches the Duo column. */}
       <Stack.Screen name="(tabs)" options={{ contentStyle: { backgroundColor: theme.colors.background } }} />
       {/* Capture + review flow; /lock (fullScreenModal) still presents above it. */}
       <Stack.Screen
         name="(modals)"
-        // SPIKE (iOS): the modal stack pads its own screens; padding here too would inset twice.
+        // iOS: the modal stack pads its own screens; padding here too would inset twice.
         options={{ presentation: "modal", contentStyle: { backgroundColor: theme.colors.background } }}
       />
       {/* Settings → Show guide; listed before lock so the lock screen still presents above it. */}

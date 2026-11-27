@@ -10,7 +10,7 @@ import type { Layout } from "@/layout/layout";
 
 import { setPendingSelection, takePendingSelection } from "./pendingSelection";
 import { ReceiptListDetail } from "./ReceiptListDetail";
-import { useAndroidPlatform } from "../../test/androidPlatform";
+import { runAsAndroid } from "../../test/androidPlatform";
 
 let mockDb: AppDb;
 let mockLayout: Layout = LAYOUTS.phone;
@@ -109,7 +109,7 @@ beforeEach(() => {
 });
 
 // The in-page header and footer are Android's; iOS uses the native header (ScreenHeader.test).
-useAndroidPlatform();
+runAsAndroid();
 
 describe("ReceiptListDetail", () => {
   it("not split: row press pushes the document route", async () => {
