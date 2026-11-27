@@ -28,11 +28,11 @@ sleep 1
 # --- B: folder page header in the column --------------------------------------------------------
 tap "Folders"
 tap_containing "New folder"
-fill "Folder name" "Duo Trip"
+fill "Folder name" "Bali"
 # Return in the name field may already create it; then there is no Create to tap.
 sleep 1; see "Create" && tap "Create"
-assert_see "Duo Trip"
-tap_containing "Duo Trip"
+assert_see "Bali"
+tap_containing "Bali"
 assert_see "Back"
 assert_see "Export"
 assert_see "More"
