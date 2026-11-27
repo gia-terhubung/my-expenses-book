@@ -135,7 +135,7 @@ export function CollectionScreen(props: Props) {
             options={{ headerShown: true, title, headerLargeTitle: false }}
           />
           <Stack.Toolbar placement="right">
-            {folder && shortColumn ? null : (
+            {shortColumn ? null : (
               <Stack.Toolbar.Button
                 icon="square.and.arrow.up"
                 accessibilityLabel={t("export.title")}
@@ -144,7 +144,8 @@ export function CollectionScreen(props: Props) {
                 {t("export.title")}
               </Stack.Toolbar.Button>
             )}
-            {folder ? (
+            {/* Folders always have ⋯ (Rename, Delete); a tax year only in a short column. */}
+            {folder || shortColumn ? (
               <Stack.Toolbar.Menu
                 icon="ellipsis"
                 accessibilityLabel={t("common.more")}
@@ -158,19 +159,23 @@ export function CollectionScreen(props: Props) {
                     {t("export.title")}
                   </Stack.Toolbar.MenuAction>
                 ) : null}
-                <Stack.Toolbar.MenuAction
-                  icon="pencil"
-                  onPress={() => setRenaming(true)}
-                >
-                  {t("folders.rename")}
-                </Stack.Toolbar.MenuAction>
-                <Stack.Toolbar.MenuAction
-                  icon="trash"
-                  destructive
-                  onPress={confirmDelete}
-                >
-                  {t("common.delete")}
-                </Stack.Toolbar.MenuAction>
+                {folder ? (
+                  <>
+                    <Stack.Toolbar.MenuAction
+                      icon="pencil"
+                      onPress={() => setRenaming(true)}
+                    >
+                      {t("folders.rename")}
+                    </Stack.Toolbar.MenuAction>
+                    <Stack.Toolbar.MenuAction
+                      icon="trash"
+                      destructive
+                      onPress={confirmDelete}
+                    >
+                      {t("common.delete")}
+                    </Stack.Toolbar.MenuAction>
+                  </>
+                ) : null}
               </Stack.Toolbar.Menu>
             ) : null}
             {plusMenu}

@@ -25,6 +25,7 @@ export function ScreenHeader({
   actions,
   titleStyle = "title",
   toolbar,
+  menuItems,
 }: {
   title: string;
   /** Defaults to going back (or Home when there is nothing to go back to); null hides the chevron. */
@@ -33,6 +34,11 @@ export function ScreenHeader({
   titleStyle?: "title" | "headline";
   /** SPIKE (iOS): `Stack.Toolbar` items for the native header (they replace `actions` there). */
   toolbar?: ReactNode;
+  /**
+   * iOS short side column: `Stack.Toolbar.MenuAction` rows that replace `toolbar` there, inside a ⋯
+   * menu whose first row is "Add receipt" (the + does not fit beside the buttons).
+   */
+  menuItems?: ReactNode;
 }) {
   const { t } = useTranslation();
   const { colors, type, spacing, size } = useTheme();
@@ -46,7 +52,14 @@ export function ScreenHeader({
     return (
       <>
         <Stack.Screen options={{ headerShown: true, title }} />
-        {toolbar ? (
+        {plusSubmenu && menuItems ? (
+          <Stack.Toolbar placement="right">
+            <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel={t("common.more")}>
+              {plusSubmenu}
+              {menuItems}
+            </Stack.Toolbar.Menu>
+          </Stack.Toolbar>
+        ) : toolbar ? (
           <Stack.Toolbar placement="right">
             {toolbar}
             {plusMenu}

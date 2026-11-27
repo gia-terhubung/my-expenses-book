@@ -82,6 +82,13 @@ export function RecurringList({ selectedId, onSelect, onNew, onBack }: Props) {
           </Stack.Toolbar.Button>
         ) : null
       }
+      menuItems={
+        rules.length > 0 ? (
+          <Stack.Toolbar.MenuAction icon="plus" onPress={onNew}>
+            {t("recurring.new")}
+          </Stack.Toolbar.MenuAction>
+        ) : null
+      }
       actions={
         rules.length > 0 ? (
           <Button testID="recurring-new" label={t("recurring.new")} accessibilityLabel={t("recurring.newTitle")} onPress={onNew} />
